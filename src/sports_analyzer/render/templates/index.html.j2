@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>比賽分析</title>
+<meta name="description" content="每日自動更新：模型勝率 vs 市場賠率">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e4e2db;
+    --model: #2f6f5e; --market: #b0693a; --accent: #2f6f5e; --good: #2f6f5e; --bad: #a63d2f;
+    --chip: #ecebe5; --warn-bg: #fbf3e2; --warn-ink: #6b4b12;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
+      --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
+      --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
+    --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
+    --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+         line-height: 1.5; font-size: 15px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-bottom: 20px; }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: .02em; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  h2 { font-size: 1.1rem; margin: 28px 0 10px; display: flex; align-items: center; gap: 10px; }
+  h2 .count { color: var(--muted); font-weight: 400; font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card .top { display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; }
+  .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+  .teams .name { font-weight: 600; font-size: 1.02rem; line-height: 1.25; }
+  .teams .away { text-align: right; }
+  .teams .vs { color: var(--muted); font-size: .8rem; }
+  .sub { color: var(--muted); font-size: .8rem; }
+  .bars { display: grid; grid-template-columns: 2.6em 1fr 3.2em 3.2em; gap: 4px 8px; align-items: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .bars .lab { color: var(--muted); }
+  .bar { position: relative; height: 10px; background: var(--chip); border-radius: 5px; overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
+  .bar .m { background: var(--model); }
+  .bar .k { background: var(--market); opacity: .55; }
+  .legend { display: flex; gap: 14px; font-size: .75rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .model-val { color: var(--model); font-weight: 600; }
+  .market-val { color: var(--market); }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: .82rem; }
+  .facts div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding: 2px 0; }
+  .facts span:first-child { color: var(--muted); }
+  .rec { border-top: 1px solid var(--line); padding-top: 10px; font-size: .9rem; }
+  .rec b { color: var(--accent); }
+  .chip { display: inline-block; background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: .75rem; margin-left: 6px; }
+  .chip.high { background: var(--good); color: #fff; }
+  .chip.mid { background: var(--market); color: #fff; }
+  .note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 6px 10px; font-size: .78rem; }
+  .none { color: var(--muted); font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: .78rem; }
+  tr:last-child td { border-bottom: 0; }
+  .scroll { overflow-x: auto; }
+  .kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 120px; }
+  .kpi b { display: block; font-size: 1.2rem; }
+  .kpi span { color: var(--muted); font-size: .78rem; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .78rem; border-top: 1px solid var(--line); padding-top: 14px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>比賽分析</h1>
+  <span class="meta">更新：{{ generated_local }}（台北時間）</span>
+  {% if credits_remaining is not none %}<span class="meta">The Odds API 剩餘點數：{{ credits_remaining }}</span>{% endif %}
+  {% if backtest %}<a class="meta" href="backtest.html">回測報告</a>{% endif %}
+</header>
+
+<section>
+  <h2>訊號 <span class="count">{{ signals|length }} 個 · 門檻 edge ≥ {{ (cfg.edge_threshold*100)|round(0)|int }}%</span></h2>
+  {% if ledger %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ ledger.pending }}</b><span>待結算</span></div>
+    <div class="kpi"><b>{{ ledger.settled }}</b><span>已結算</span></div>
+    <div class="kpi"><b>{{ '%.0f%%'|format(ledger.hit_rate*100) if ledger.hit_rate is not none else '—' }}</b><span>命中率</span></div>
+    <div class="kpi"><b class="{{ 'pos' if ledger.units and ledger.units > 0 else ('neg' if ledger.units and ledger.units < 0 else '') }}">{{ '%+.2f'|format(ledger.units) if ledger.settled else '—' }}</b><span>單位損益（每注 1）</span></div>
+    <div class="kpi"><b>{{ '%+.1f%%'|format(ledger.roi*100) if ledger.roi is not none else '—' }}</b><span>ROI</span></div>
+  </div>
+  {% endif %}
+  {% if signals %}
+  <div class="scroll"><table>
+    <tr><th>開賽</th><th>聯賽</th><th>比賽</th><th>市場</th><th>選項</th><th>模型</th><th>市場</th><th>Edge</th><th>最佳賠率</th><th>信心</th></tr>
+    {% for s in signals %}
+    <tr>
+      <td>{{ s.kickoff_local }}</td><td>{{ s.competition_name }}</td>
+      <td>{{ s.home }} vs {{ s.away }}</td><td>{{ s.market }}</td><td>{{ s.selection }}</td>
+      <td class="model-val">{{ '%.1f%%'|format(s.model_p*100) }}</td>
+      <td class="market-val">{{ '%.1f%%'|format(s.market_p*100) }}</td>
+      <td class="{{ 'pos' if s.edge > 0 else 'neg' }}">{{ '%+.1f'|format(s.edge*100) }}pp</td>
+      <td>{{ s.price }} <span class="sub">{{ s.book }}</span></td>
+      <td>{{ s.confidence }}{% if s.caveat %} <span class="sub">({{ s.caveat }})</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <p class="none">今天沒有超過門檻的訊號。沒訊號也是一種結果——市場定價合理時，不下注就是正確答案。</p>
+  {% endif %}
+</section>
+
+{% for comp in competitions %}
+<section>
+  <h2>{{ comp.name }} <span class="count">{{ comp.cards|length }} 場{% if comp.model %} · 模型樣本 {{ comp.model.n_matches }} 場 · 主場優勢 {{ comp.model.home_advantage }}{% endif %}</span></h2>
+  {% if comp.cards %}
+  <div class="grid">
+  {% for c in comp.cards %}
+    <article class="card">
+      <div class="top"><span>{{ c.kickoff_local }}{% if c.matchday %} · 第 {{ c.matchday }} 輪{% endif %}</span><span>{{ c.competition_name }}</span></div>
+      <div class="teams">
+        <div><div class="name">{{ c.home }}</div><div class="sub">{% if c.table.home %}第 {{ c.table.home.position }} 名 · {{ c.table.home.points }} 分{% endif %}{% if c.form.home %} · {{ c.form.home|replace(',', '') }}{% endif %}</div></div>
+        <div class="vs">vs</div>
+        <div class="away"><div class="name">{{ c.away }}</div><div class="sub">{% if c.table.away %}第 {{ c.table.away.position }} 名 · {{ c.table.away.points }} 分{% endif %}{% if c.form.away %} · {{ c.form.away|replace(',', '') }}{% endif %}</div></div>
+      </div>
+
+      {% if c.model.fitted %}
+      <div class="bars">
+        {% for key, lab in (('p_home','主勝'),('p_draw','和局'),('p_away','客勝')) %}
+        {% set mkt = c.market.h2h[key[2:]].fair if c.market and c.market.h2h else none %}
+        <span class="lab">{{ lab }}</span>
+        <div class="bar"><i class="k" style="width: {{ (mkt*100)|round(1) if mkt is not none else 0 }}%"></i><i class="m" style="width: {{ (c.model[key]*100)|round(1) }}%; opacity:.85"></i></div>
+        <span class="model-val">{{ '%.0f%%'|format(c.model[key]*100) }}</span>
+        <span class="market-val">{{ '%.0f%%'|format(mkt*100) if mkt is not none else '—' }}</span>
+        {% endfor %}
+      </div>
+      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
+      <div class="facts">
+        <div><span>預期進球</span><span>{{ c.model.lambda_home }} – {{ c.model.mu_away }}</span></div>
+        <div><span>最可能比分</span><span>{{ c.model.most_likely }}</span></div>
+        <div><span>大 2.5 球</span><span class="model-val">{{ '%.0f%%'|format(c.model.over25*100) }}{% if c.market and c.market.totals and c.market.totals.line == 2.5 %} <span class="market-val">/ {{ '%.0f%%'|format(c.market.totals.over.fair*100) }}</span>{% endif %}</span></div>
+        <div><span>攻／守排名</span><span>{{ c.model.home_attack_rank }}/{{ c.model.home_defence_rank }} vs {{ c.model.away_attack_rank }}/{{ c.model.away_defence_rank }} <span class="sub">(共{{ c.model.n_teams }})</span></span></div>
+        {% if c.market and c.market.spread %}<div><span>讓球 {{ '%+g'|format(c.market.spread.line) }}</span><span class="market-val">{{ '%.0f%%'|format(c.market.spread.home.fair*100) }} / {{ '%.0f%%'|format(c.market.spread.away.fair*100) }}</span></div>{% endif %}
+        {% if c.h2h %}<div><span>近期交手</span><span>{% for h in c.h2h[:2] %}{{ h.score }}{% if not loop.last %}, {% endif %}{% endfor %}</span></div>{% endif %}
+      </div>
+      {% else %}
+      <p class="none">尚無模型預測。</p>
+      {% endif %}
+
+      <div class="rec">
+        {% if c.recommendation %}
+          <b>{{ c.recommendation.selection }}</b> @ {{ c.recommendation.price }} <span class="sub">{{ c.recommendation.book }}</span>
+          <span class="chip {{ 'high' if c.recommendation.confidence == '高' else ('mid' if c.recommendation.confidence == '中' else '') }}">信心 {{ c.recommendation.confidence }}</span>
+          <div class="sub">模型 {{ '%.1f%%'|format(c.recommendation.model_p*100) }} vs 市場 {{ '%.1f%%'|format(c.recommendation.market_p*100) }} · edge {{ '%+.1f'|format(c.recommendation.edge*100) }}pp · 1/4 Kelly {{ '%.1f%%'|format(c.recommendation.kelly*100) }}</div>
+        {% else %}
+          <span class="none">無推薦（市場定價與模型接近）</span>
+        {% endif %}
+      </div>
+      {% for n in c.notes %}<div class="note">{{ n }}</div>{% endfor %}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  <p class="none">視窗內沒有比賽。</p>
+  {% endif %}
+</section>
+{% endfor %}
+
+{% if mlb %}
+<section>
+  <h2>MLB <span class="count">{{ mlb.games|length }} 場 · 先發投手（模型 Phase 3 建置中）</span></h2>
+  {% if mlb.games %}
+  <div class="scroll"><table>
+    <tr><th>開賽</th><th>客隊</th><th>先發</th><th>主隊</th><th>先發</th><th>球場</th></tr>
+    {% for g in mlb.games %}
+    <tr><td>{{ g.local }}</td><td>{{ g.away }}</td><td>{{ g.away_probable or '—' }}</td><td>{{ g.home }}</td><td>{{ g.home_probable or '—' }}</td><td class="sub">{{ g.venue or '' }}</td></tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<p class="none">今天沒有 MLB 比賽。</p>{% endif %}
+</section>
+{% endif %}
+
+<footer>
+  模型：Dixon-Coles（足球）。市場機率為多家國際莊家去水後的中位數，非台灣運彩盤口。數字是機率估計，不是保證；請自行判斷並控制風險。
+</footer>
+</div>
+</body>
+</html>

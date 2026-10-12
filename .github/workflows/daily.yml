@@ -1,0 +1,56 @@
+name: Daily analysis
+
+on:
+  schedule:
+    # 00:15 UTC = 08:15 台北時間 — football fixtures + odds for the next two days
+    - cron: "15 0 * * *"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Fixture window in days"
+        default: "2"
+        required: false
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Football — fetch, model, cards, ledger
+        run: python -m sports_analyzer.pipeline football --days "${{ github.event.inputs.days || '2' }}"
+
+      - name: MLB — schedule (model arrives in Phase 3)
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline mlb
+
+      - name: Render page
+        run: python -m sports_analyzer.pipeline render
+
+      - name: Commit snapshot, ledger and page
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/snapshots data/ledger.csv docs/index.html
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+          else
+            git commit -m "chore(daily): $(date -u +%Y-%m-%d) snapshot + page"
+            git push
+          fi

@@ -1,0 +1,66 @@
+{
+  "filters": {"season": "2026", "status": ["SCHEDULED", "TIMED", "FINISHED"]},
+  "resultSet": {"count": 4, "first": "2026-09-27", "last": "2026-10-18", "played": 2},
+  "competition": {"id": 2021, "name": "Premier League", "code": "PL", "type": "LEAGUE", "emblem": ""},
+  "matches": [
+    {
+      "id": 500001,
+      "utcDate": "2026-10-17T14:00:00Z",
+      "status": "TIMED",
+      "matchday": 8,
+      "stage": "REGULAR_SEASON",
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL"},
+      "season": {"id": 2500, "startDate": "2026-08-15", "endDate": "2027-05-23", "currentMatchday": 8},
+      "homeTeam": {"id": 57, "name": "Arsenal FC", "shortName": "Arsenal", "tla": "ARS"},
+      "awayTeam": {"id": 61, "name": "Chelsea FC", "shortName": "Chelsea", "tla": "CHE"},
+      "score": {"winner": null, "duration": "REGULAR", "fullTime": {"home": null, "away": null}, "halfTime": {"home": null, "away": null}}
+    },
+    {
+      "id": 500002,
+      "utcDate": "2026-10-18T15:30:00Z",
+      "status": "SCHEDULED",
+      "matchday": 8,
+      "stage": "REGULAR_SEASON",
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL"},
+      "season": {"id": 2500, "startDate": "2026-08-15", "endDate": "2027-05-23", "currentMatchday": 8},
+      "homeTeam": {"id": 76, "name": "Wolverhampton Wanderers FC", "shortName": "Wolverhampton", "tla": "WOL"},
+      "awayTeam": {"id": 397, "name": "Brighton & Hove Albion FC", "shortName": "Brighton Hove", "tla": "BHA"},
+      "score": {"winner": null, "duration": "REGULAR", "fullTime": {"home": null, "away": null}, "halfTime": {"home": null, "away": null}}
+    },
+    {
+      "id": 499990,
+      "utcDate": "2026-09-27T14:00:00Z",
+      "status": "FINISHED",
+      "matchday": 6,
+      "stage": "REGULAR_SEASON",
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL"},
+      "season": {"id": 2500, "startDate": "2026-08-15", "endDate": "2027-05-23", "currentMatchday": 8},
+      "homeTeam": {"id": 61, "name": "Chelsea FC", "shortName": "Chelsea", "tla": "CHE"},
+      "awayTeam": {"id": 57, "name": "Arsenal FC", "shortName": "Arsenal", "tla": "ARS"},
+      "score": {"winner": "DRAW", "duration": "REGULAR", "fullTime": {"home": 1, "away": 1}, "halfTime": {"home": 0, "away": 1}}
+    },
+    {
+      "id": 499991,
+      "utcDate": "2026-10-03T14:00:00Z",
+      "status": "FINISHED",
+      "matchday": 7,
+      "stage": "REGULAR_SEASON",
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL"},
+      "season": {"id": 2500, "startDate": "2026-08-15", "endDate": "2027-05-23", "currentMatchday": 8},
+      "homeTeam": {"id": 57, "name": "Arsenal FC", "shortName": "Arsenal", "tla": "ARS"},
+      "awayTeam": {"id": 76, "name": "Wolverhampton Wanderers FC", "shortName": "Wolverhampton", "tla": "WOL"},
+      "score": {"winner": "HOME_TEAM", "duration": "REGULAR", "fullTime": {"home": 2, "away": 0}, "halfTime": {"home": 1, "away": 0}}
+    },
+    {
+      "id": 499992,
+      "utcDate": "2026-10-04T14:00:00Z",
+      "status": "POSTPONED",
+      "matchday": 7,
+      "competition": {"id": 2021, "name": "Premier League", "code": "PL"},
+      "homeTeam": {"id": 397, "name": "Brighton & Hove Albion FC"},
+      "awayTeam": {"id": 61, "name": "Chelsea FC"},
+      "score": {"winner": null, "fullTime": {"home": null, "away": null}}
+    },
+    {"id": "broken", "utcDate": "not-a-date"}
+  ]
+}

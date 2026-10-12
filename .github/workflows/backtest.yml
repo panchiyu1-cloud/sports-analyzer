@@ -1,0 +1,63 @@
+name: History + backtest
+
+on:
+  schedule:
+    # Mondays 03:00 UTC (11:00 台北): refresh history CSVs and re-run the backtest
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "football-data.co.uk season codes, space separated"
+        default: "2425 2526 2627"
+        required: false
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Download history CSVs (football-data.co.uk)
+        run: |
+          set -e
+          mkdir -p data/history
+          for season in ${{ github.event.inputs.seasons || '2425 2526 2627' }}; do
+            for div in E0 SP1 D1 I1 F1; do
+              url="https://www.football-data.co.uk/mmz4281/${season}/${div}.csv"
+              out="data/history/${div}_${season}.csv"
+              if curl -fsSL --retry 3 -o "$out" "$url"; then
+                echo "ok   $out ($(wc -l < "$out") lines)"
+              else
+                echo "skip $url"; rm -f "$out"
+              fi
+            done
+          done
+
+      - name: Run backtest
+        run: python scripts/backtest_football.py data/history/*.csv
+
+      - name: Commit history + report
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/history data/backtest_summary.json docs/backtest.html
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+          else
+            git commit -m "chore(backtest): refresh history and report"
+            git push
+          fi

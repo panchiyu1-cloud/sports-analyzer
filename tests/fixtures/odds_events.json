@@ -1,0 +1,67 @@
+[
+  {
+    "id": "abc123",
+    "sport_key": "soccer_epl",
+    "sport_title": "EPL",
+    "commence_time": "2026-10-17T14:00:00Z",
+    "home_team": "Arsenal",
+    "away_team": "Chelsea",
+    "bookmakers": [
+      {
+        "key": "pinnacle", "title": "Pinnacle", "last_update": "2026-10-16T09:00:00Z",
+        "markets": [
+          {"key": "h2h", "last_update": "2026-10-16T09:00:00Z", "outcomes": [
+            {"name": "Arsenal", "price": 1.80}, {"name": "Chelsea", "price": 4.60}, {"name": "Draw", "price": 3.90}]},
+          {"key": "spreads", "last_update": "2026-10-16T09:00:00Z", "outcomes": [
+            {"name": "Arsenal", "price": 1.96, "point": -0.75}, {"name": "Chelsea", "price": 1.94, "point": 0.75}]},
+          {"key": "totals", "last_update": "2026-10-16T09:00:00Z", "outcomes": [
+            {"name": "Over", "price": 1.98, "point": 2.5}, {"name": "Under", "price": 1.92, "point": 2.5}]}
+        ]
+      },
+      {
+        "key": "betfair_ex_eu", "title": "Betfair", "last_update": "2026-10-16T09:00:00Z",
+        "markets": [
+          {"key": "h2h", "outcomes": [
+            {"name": "Arsenal", "price": 1.84}, {"name": "Chelsea", "price": 4.40}, {"name": "Draw", "price": 3.80}]},
+          {"key": "totals", "outcomes": [
+            {"name": "Over", "price": 2.02, "point": 2.5}, {"name": "Under", "price": 1.88, "point": 2.5},
+            {"name": "Over", "price": 1.55, "point": 2.0}, {"name": "Under", "price": 2.45, "point": 2.0}]}
+        ]
+      },
+      {
+        "key": "unibet_eu", "title": "Unibet", "last_update": "2026-10-16T09:00:00Z",
+        "markets": [
+          {"key": "h2h", "outcomes": [
+            {"name": "Arsenal", "price": 1.78}, {"name": "Chelsea", "price": 4.50}, {"name": "Draw", "price": 3.75}]},
+          {"key": "spreads", "outcomes": [
+            {"name": "Arsenal", "price": 1.90, "point": -0.75}, {"name": "Chelsea", "price": 1.98, "point": 0.75}]}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "def456",
+    "sport_key": "soccer_epl",
+    "sport_title": "EPL",
+    "commence_time": "2026-10-18T15:30:00Z",
+    "home_team": "Wolverhampton Wanderers",
+    "away_team": "Brighton and Hove Albion",
+    "bookmakers": [
+      {
+        "key": "pinnacle", "title": "Pinnacle",
+        "markets": [
+          {"key": "h2h", "outcomes": [
+            {"name": "Wolverhampton Wanderers", "price": 3.30}, {"name": "Brighton and Hove Albion", "price": 2.20}, {"name": "Draw", "price": 3.50}]}
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ghi789",
+    "sport_key": "soccer_epl",
+    "commence_time": "2026-10-19T13:00:00Z",
+    "home_team": "Everton",
+    "away_team": "Fulham",
+    "bookmakers": []
+  }
+]
