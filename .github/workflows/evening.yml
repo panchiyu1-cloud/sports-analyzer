@@ -1,0 +1,47 @@
+name: Evening football odds
+
+# 12:25 UTC = 20:25 台北: a second, cheaper international snapshot (h2h only,
+# 1 credit per competition with fixtures) a few hours before European
+# kick-offs. It gives the 運彩 bets taken in the morning their closing-line
+# value, and the 20:00 phone upload a fresh fair price to compare against.
+
+on:
+  schedule:
+    - cron: "25 12 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  evening:
+    runs-on: ubuntu-latest
+    env:
+      FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Football — fresh h2h consensus (fills CLV for morning 運彩 bets)
+        run: python -m sports_analyzer.pipeline football --days 1 --markets h2h
+      - name: Compare the latest 運彩 upload against it
+        run: python -m sports_analyzer.pipeline tw
+      - name: Commit
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/snapshots data/ledger.csv data/tw_ledger.csv docs/index.html
+          if git diff --cached --quiet; then echo "nothing changed"; else
+            git commit -m "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare"
+            git pull --rebase origin main || true
+            git push
+          fi

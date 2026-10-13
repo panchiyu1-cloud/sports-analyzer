@@ -85,6 +85,40 @@
 </header>
 
 <section>
+  <h2>運彩價值注 <span class="count">{{ tw_values|length }} 個 · 門檻 EV ≥ {{ (cfg.value_threshold*100)|round(0)|int }}%</span></h2>
+  {% if tw_reports %}
+  <p class="sub">{% for r in tw_reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場，對上 {{ r.matched }} 場（{{ r.file }}）{% if r.unknown_teams %} · 未對照隊名 {{ r.unknown_teams|length }} 個{% endif %}{% if not loop.last %}　|　{% endif %}{% endfor %}</p>
+  {% if tw_summary and (tw_summary.pending or tw_summary.settled) %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ tw_summary.pending }}</b><span>待結算</span></div>
+    <div class="kpi"><b>{{ tw_summary.settled }}</b><span>已結算</span></div>
+    <div class="kpi"><b>{{ '%.0f%%'|format(tw_summary.hit_rate*100) if tw_summary.hit_rate is not none else '—' }}</b><span>命中率</span></div>
+    <div class="kpi"><b class="{{ 'pos' if tw_summary.units > 0 else ('neg' if tw_summary.units < 0 else '') }}">{{ '%+.2f'|format(tw_summary.units) if tw_summary.settled else '—' }}</b><span>單位損益</span></div>
+    <div class="kpi"><b class="{{ 'pos' if tw_summary.avg_clv and tw_summary.avg_clv > 0 else ('neg' if tw_summary.avg_clv and tw_summary.avg_clv < 0 else '') }}">{{ '%+.1f%%'|format(tw_summary.avg_clv*100) if tw_summary.avg_clv is not none else '—' }}</b><span>平均 CLV（{{ tw_summary.n_clv }} 注）</span></div>
+  </div>
+  {% endif %}
+  {% if tw_values %}
+  <div class="scroll"><table>
+    <tr><th>開賽</th><th>聯賽</th><th>比賽（運彩名）</th><th>市場</th><th>選項</th><th>運彩賠率</th><th>公允賠率</th><th>EV</th><th>擷取</th></tr>
+    {% for v in tw_values %}
+    <tr>
+      <td>{{ v.kickoff_local }}</td><td>{{ v.competition_name }}</td>
+      <td>{{ v.away_zh }} @ {{ v.home_zh }}</td><td>{{ v.market }}</td><td><b>{{ v.selection }}</b></td>
+      <td class="model-val">{{ v.tw_price }}</td><td class="market-val">{{ v.fair_odds }}</td>
+      <td class="pos">{{ '%+.1f%%'|format(v.ev*100) }}</td><td class="sub">{{ v.captured_at[11:16] if v.captured_at else '' }}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。</p>
+  {% else %}
+  <p class="none">{% if tw_reports %}運彩目前沒有賠率高於公允價的注。{% else %}尚未收到運彩賠率上傳（手機捷徑設定好後會自動出現）。{% endif %}</p>
+  {% endif %}
+  {% else %}
+  <p class="none">尚未收到運彩賠率上傳（手機捷徑設定好後會自動出現）。</p>
+  {% endif %}
+</section>
+
+<section>
   <h2>{{ '訊號' if cfg.signals_validated else '模型分歧' }} <span class="count">{{ signals|length }} 個 · 門檻 edge ≥ {{ (cfg.edge_threshold*100)|round(0)|int }}pp</span></h2>
   {% if not cfg.signals_validated %}
   <div class="note" style="margin-bottom:10px">
@@ -151,6 +185,7 @@
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
         {% if c.market and c.market.h2h %}<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>{{ c.market.h2h.home.fair_odds }}</b> · 和 <b>{{ c.market.h2h.draw.fair_odds }}</b> · 客 <b>{{ c.market.h2h.away.fair_odds }}</b>{% if c.market.totals %} · 大{{ c.market.totals.line }} <b>{{ c.market.totals.over.fair_odds }}</b> / 小 <b>{{ c.market.totals.under.fair_odds }}</b>{% endif %}</span></div>{% endif %}
+        {% if c.tw and c.tw.h2h %}<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">{{ c.tw.captured_at[11:16] if c.tw.captured_at else '' }}</span></span><span>{% for side, lab in (('home','主'),('draw','和'),('away','客')) %}{% if c.tw.h2h[side] %}{{ lab }} <b class="{{ 'pos' if c.tw.h2h[side].ev >= cfg.value_threshold else '' }}">{{ c.tw.h2h[side].price }}</b><span class="sub">({{ '%+.0f%%'|format(c.tw.h2h[side].ev*100) }})</span>{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}{% if c.tw.totals %} · 大{{ c.tw.totals.line }} <b class="{{ 'pos' if c.tw.totals.over and c.tw.totals.over.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.over.price if c.tw.totals.over else '—' }}</b> / 小 <b class="{{ 'pos' if c.tw.totals.under and c.tw.totals.under.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.under.price if c.tw.totals.under else '—' }}</b>{% endif %}</span></div>{% endif %}
         <div><span>預期進球</span><span>{{ c.model.lambda_home }} – {{ c.model.mu_away }}</span></div>
         <div><span>最可能比分</span><span>{{ c.model.most_likely }}</span></div>
         <div><span>大 2.5 球</span><span class="model-val">{{ '%.0f%%'|format(c.model.over25*100) }}{% if c.market and c.market.totals and c.market.totals.line == 2.5 %} <span class="market-val">/ {{ '%.0f%%'|format(c.market.totals.over.fair*100) }}</span>{% endif %}</span></div>
@@ -184,14 +219,36 @@
 
 {% if mlb %}
 <section>
-  <h2>MLB <span class="count">{{ mlb.games|length }} 場 · 先發投手（模型 Phase 3 建置中）</span></h2>
+  <h2>MLB <span class="count">{{ mlb.games|length }} 場 · 市場公允賠率與 T-10 G 值（模型 Phase 3 建置中）</span></h2>
   {% if mlb.games %}
-  <div class="scroll"><table>
-    <tr><th>開賽</th><th>客隊</th><th>先發</th><th>主隊</th><th>先發</th><th>球場</th></tr>
-    {% for g in mlb.games %}
-    <tr><td>{{ g.local }}</td><td>{{ g.away }}</td><td>{{ g.away_probable or '—' }}</td><td>{{ g.home }}</td><td>{{ g.home_probable or '—' }}</td><td class="sub">{{ g.venue or '' }}</td></tr>
-    {% endfor %}
-  </table></div>
+  <div class="grid">
+  {% for g in mlb.games %}
+    <article class="card">
+      <div class="top"><span>{{ g.local }}</span><span>{{ g.status }}</span></div>
+      <div class="teams">
+        <div><div class="name">{{ g.away }}</div><div class="sub">{{ g.away_probable or '先發未定' }}</div></div>
+        <div class="vs">@</div>
+        <div class="away"><div class="name">{{ g.home }}</div><div class="sub">{{ g.home_probable or '先發未定' }}</div></div>
+      </div>
+      {% if g.market and g.market.h2h %}
+      <div class="facts">
+        <div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>客 <b>{{ g.market.h2h.away.fair_odds }}</b> · 主 <b>{{ g.market.h2h.home.fair_odds }}</b>{% if g.market.spread %} · 讓分 {{ '%+g'|format(g.market.spread.line) }} 主 <b>{{ g.market.spread.home.fair_odds }}</b> / 客 <b>{{ g.market.spread.away.fair_odds }}</b>{% endif %}{% if g.market.totals %} · 大小 {{ g.market.totals.line }} <b>{{ g.market.totals.over.fair_odds }}</b> / <b>{{ g.market.totals.under.fair_odds }}</b>{% endif %}</span></div>
+        {% if g.tw and g.tw.h2h %}<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">{{ g.tw.captured_at[11:16] if g.tw.captured_at else '' }}</span></span><span>{% if g.tw.h2h.away %}客 <b class="{{ 'pos' if g.tw.h2h.away.ev >= cfg.value_threshold else '' }}">{{ g.tw.h2h.away.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.h2h.away.ev*100) }})</span>{% endif %}{% if g.tw.h2h.home %} · 主 <b class="{{ 'pos' if g.tw.h2h.home.ev >= cfg.value_threshold else '' }}">{{ g.tw.h2h.home.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.h2h.home.ev*100) }})</span>{% endif %}{% if g.tw.spread and g.tw.spread.home %} · 讓分 主 <b class="{{ 'pos' if g.tw.spread.home.ev >= cfg.value_threshold else '' }}">{{ g.tw.spread.home.price }}</b> / 客 <b class="{{ 'pos' if g.tw.spread.away and g.tw.spread.away.ev >= cfg.value_threshold else '' }}">{{ g.tw.spread.away.price if g.tw.spread.away else '—' }}</b>{% endif %}{% if g.tw.totals and g.tw.totals.over %} · 大小 <b class="{{ 'pos' if g.tw.totals.over.ev >= cfg.value_threshold else '' }}">{{ g.tw.totals.over.price }}</b> / <b class="{{ 'pos' if g.tw.totals.under and g.tw.totals.under.ev >= cfg.value_threshold else '' }}">{{ g.tw.totals.under.price if g.tw.totals.under else '—' }}</b>{% endif %}</span></div>{% endif %}
+        <div><span>市場勝率</span><span class="market-val">客 {{ '%.0f%%'|format(g.market.h2h.away.fair*100) }} · 主 {{ '%.0f%%'|format(g.market.h2h.home.fair*100) }}</span></div>
+        <div><span>最佳賠率</span><span>{{ g.market.h2h.away.best }} / {{ g.market.h2h.home.best }} <span class="sub">({{ g.market.books }} 家)</span></span></div>
+        {% if g.t10 %}
+        <div style="grid-column: 1 / -1"><span>T-10 G 值（{{ '主' if g.t10.favourite == 'home' else '客' }}隊熱門）</span><span class="{{ 'model-val' if g.t10.signal else '' }}">{{ '%+.1f'|format(g.t10.g*100) }}pp{% if g.t10.signal == 'FAV_ML' %} → 熱門 ML{% elif g.t10.signal == 'DOG_PLUS_1_5' %} → 冷門 +1.5{% else %} → 無訊號（門檻 ±{{ (g.t10.threshold*100)|int }}pp）{% endif %}</span></div>
+        {% endif %}
+        {% if g.venue %}<div><span>球場</span><span>{{ g.venue }}</span></div>{% endif %}
+      </div>
+      {% else %}
+      <p class="none">尚無賠率。</p>
+      {% endif %}
+      {% for n in g.notes %}<div class="note">{{ n }}</div>{% endfor %}
+    </article>
+  {% endfor %}
+  </div>
+  <p class="sub">G 值用的是早上快照的賠率，不是 T-10 要求的開賽前 10 分鐘尾盤；尾盤請自行查詢後套用同一公式。</p>
   {% else %}<p class="none">今天沒有 MLB 比賽。</p>{% endif %}
 </section>
 {% endif %}

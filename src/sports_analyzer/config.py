@@ -17,6 +17,8 @@ DATA_DIR = ROOT / "data"
 SNAPSHOT_DIR = DATA_DIR / "snapshots"
 HISTORY_DIR = DATA_DIR / "history"
 LEDGER_PATH = DATA_DIR / "ledger.csv"
+TW_LEDGER_PATH = DATA_DIR / "tw_ledger.csv"
+TW_DIR = DATA_DIR / "tw"
 DOCS_DIR = ROOT / "docs"
 
 LOCAL_TZ = ZoneInfo("Asia/Taipei")
@@ -68,6 +70,8 @@ class ModelConfig:
     edge_high: float = 0.20
     # Flip to True only when a walk-forward backtest shows positive ROI for the signals.
     signals_validated: bool = False
+    # 運彩 price must beat the fair price by this much EV (fair_prob x price - 1) to count as a value bet.
+    value_threshold: float = 0.02
     # Do not recommend very long shots even with edge; variance is too high to judge.
     min_model_prob: float = 0.25
     # T-10 (baseball) G-value thresholds.

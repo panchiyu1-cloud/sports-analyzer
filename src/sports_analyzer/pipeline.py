@@ -20,7 +20,10 @@ from pathlib import Path
 from typing import Any
 
 from . import ledger as ledger_mod
+from . import tw_ledger
 from .analysis.football import build_cards
+from .analysis.mlb import build_cards as build_mlb_cards
+from .analysis.taiwan import annotate as annotate_tw
 from .config import (
     DATA_DIR,
     DOCS_DIR,
@@ -31,13 +34,16 @@ from .config import (
     MLB_ODDS_KEY,
     MODEL,
     SNAPSHOT_DIR,
+    TW_DIR,
+    TW_LEDGER_PATH,
     Competition,
     ModelConfig,
     Settings,
 )
+from .fetch import taiwan
 from .fetch.football import FootballDataClient, Match
 from .fetch.mlb import MlbClient
-from .fetch.odds import OddsClient, OddsEvent
+from .fetch.odds import DEFAULT_MARKETS, OddsClient, OddsEvent
 from .history import load_history
 from .models import dixon_coles as dc
 from .render.cards import render_index
@@ -46,7 +52,12 @@ log = logging.getLogger("sports_analyzer")
 
 
 # ------------------------------------------------------------------- football
-def run_football(settings: Settings, today: date, cfg: ModelConfig = MODEL) -> dict[str, Any]:
+def run_football(
+    settings: Settings,
+    today: date,
+    cfg: ModelConfig = MODEL,
+    markets: tuple[str, ...] = DEFAULT_MARKETS,
+) -> dict[str, Any]:
     fd = FootballDataClient(settings.football_data_token or "")
     odds = OddsClient(settings.odds_api_key or "", regions=settings.odds_regions)
 
@@ -86,7 +97,7 @@ def run_football(settings: Settings, today: date, cfg: ModelConfig = MODEL) -> d
         if not fixtures[comp.code]:
             odds_events[comp.code] = []
             continue
-        odds_events[comp.code] = odds.odds(comp.odds_key, commence_from=window_start, commence_to=window_end)
+        odds_events[comp.code] = odds.odds(comp.odds_key, commence_from=window_start, commence_to=window_end, markets=markets)
 
     # 4. Cards + signals.
     snapshot: dict[str, Any] = {
@@ -114,10 +125,20 @@ def run_football(settings: Settings, today: date, cfg: ModelConfig = MODEL) -> d
         )
         all_signals.extend(signals)
 
-    # 5. Ledger: add today's signals, settle anything that has finished.
+    # 4b. A cheap evening run (h2h only) keeps the morning's totals/spreads so the page
+    #     does not lose them; those blocks are marked stale and never used for CLV.
+    if set(markets) != set(DEFAULT_MARKETS):
+        _merge_previous_markets(snapshot, _latest_snapshot("football"))
+
+    # 5. Ledgers: add today's signals, settle anything that has finished (both ledgers).
+    finished = [m for rs in results.values() for m in rs if m.is_finished]
     added = ledger_mod.append_signals(LEDGER_PATH, all_signals)
-    settled = ledger_mod.settle_football(LEDGER_PATH, [m for rs in results.values() for m in rs])
-    log.info("ledger: %d new signals, %d settled", added, settled)
+    settled = ledger_mod.settle_football(LEDGER_PATH, finished)
+    tw_settled = tw_ledger.settle(TW_LEDGER_PATH, {str(m.id): (m.home_goals or 0, m.away_goals or 0) for m in finished}, "football")
+    # A later consensus for the same matches is the closing proxy for 運彩 bets taken earlier.
+    all_cards = [c for comp in snapshot["competitions"] for c in comp["cards"]]
+    clv_updated = tw_ledger.update_clv(TW_LEDGER_PATH, all_cards, "football")
+    log.info("ledger: %d new signals, %d settled | tw ledger: %d settled, %d CLV filled", added, settled, tw_settled, clv_updated)
 
     _write_snapshot(today, "football", snapshot)
     return snapshot
@@ -155,6 +176,25 @@ def _fit_or_none(comp: Competition, sample: list[dc.MatchResult], today: date, c
     return model
 
 
+def _merge_previous_markets(snapshot: dict[str, Any], previous: dict[str, Any] | None) -> None:
+    """Carry totals/spread consensus from the previous snapshot into cards that lack them."""
+    if not previous or previous.get("date") != snapshot.get("date"):
+        return
+    old_cards = {c["match_id"]: c for comp in previous.get("competitions", []) for c in comp.get("cards", [])}
+    for comp in snapshot["competitions"]:
+        for card in comp["cards"]:
+            old = old_cards.get(card["match_id"])
+            if not old or not old.get("market"):
+                continue
+            if card.get("market") is None:
+                card["market"] = {"books": old["market"].get("books", 0), "h2h": None, "totals": None, "spread": None}
+            for key in ("totals", "spread"):
+                if card["market"].get(key) is None and old["market"].get(key):
+                    card["market"][key] = {**old["market"][key], "stale": True}
+            if old.get("tw") and not card.get("tw"):
+                card["tw"] = old["tw"]
+
+
 def _name_check(results: list[Match], history: list, odds_events: list[OddsEvent]) -> dict[str, Any]:
     """Diagnostic: team keys that appear in only one source are alias-table gaps.
 
@@ -188,28 +228,68 @@ def _model_summary(model: dc.FittedModel | None) -> dict[str, Any] | None:
 
 
 # ------------------------------------------------------------------------ MLB
-def run_mlb(today_local: date) -> dict[str, Any]:
-    games = MlbClient().schedule(today_local)
+def run_mlb(today_local: date, settings: Settings | None = None, cfg: ModelConfig = MODEL) -> dict[str, Any]:
+    """Today's MLB games (Taipei date) with market consensus, fair odds and the T-10 G value."""
+    client = MlbClient()
+    games = client.schedule(today_local)
+    # Yesterday's finals settle the 運彩 ledger (the Taipei "day" spans two US dates).
+    finals = {
+        str(g.game_pk): (g.home_score or 0, g.away_score or 0)
+        for d in (today_local - timedelta(days=1), today_local - timedelta(days=2))
+        for g in client.schedule(d)
+        if g.is_final
+    }
+    tw_settled = tw_ledger.settle(TW_LEDGER_PATH, finals, "mlb")
+    log.info("mlb: %d games today, %d 運彩 rows settled", len(games), tw_settled)
+    events: list[OddsEvent] = []
+    credits = None
+    if games and settings and settings.odds_api_key:
+        odds = OddsClient(settings.odds_api_key, regions=settings.odds_regions)
+        start = datetime.combine(today_local, datetime.min.time(), tzinfo=LOCAL_TZ)
+        events = odds.odds(MLB_ODDS_KEY, commence_from=start, commence_to=start + timedelta(days=1))
+        credits = odds.credits_remaining()
+    cards = build_mlb_cards(games, events, cfg)
     snapshot = {
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "date": today_local.isoformat(),
-        "games": [
-            {
-                "game_pk": g.game_pk,
-                "local": g.game_date.astimezone(LOCAL_TZ).strftime("%m/%d %H:%M"),
-                "status": g.status,
-                "home": g.home,
-                "away": g.away,
-                "home_probable": g.home_probable,
-                "away_probable": g.away_probable,
-                "venue": g.venue,
-            }
-            for g in games
-        ],
+        "credits_remaining": credits,
+        "games": cards,
         "odds_key": MLB_ODDS_KEY,
     }
     _write_snapshot(today_local, "mlb", snapshot)
     return snapshot
+
+
+# ------------------------------------------------------------------ 運彩
+def run_tw(cfg: ModelConfig = MODEL) -> dict[str, Any]:
+    """Compare the newest 運彩 upload with the newest snapshots; record value bets."""
+    reports: dict[str, Any] = {}
+    football = _latest_snapshot("football")
+    games, path, parse_report = taiwan.load_latest(TW_DIR, "football")
+    if football and path:
+        cards = [c for comp in football["competitions"] for c in comp["cards"]]
+        rep = annotate_tw(cards, games, taiwan.stamp_from_name(path), cfg)
+        rep.update({"file": path.name, "unknown_teams": sorted(parse_report.unknown_teams), "unknown_markets": parse_report.unknown_markets})
+        football["tw_report"] = rep
+        rep["values_added"] = tw_ledger.append_values(TW_LEDGER_PATH, cards, "football")
+        _write_snapshot(date.fromisoformat(football["date"]), "football", football)
+        reports["football"] = rep
+        log.info("tw football: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
+    elif path is None:
+        log.info("tw football: no upload found under %s", TW_DIR / "football")
+
+    mlb = _latest_snapshot("mlb")
+    games, path, parse_report = taiwan.load_latest(TW_DIR, "baseball")
+    if mlb and path:
+        cards = mlb["games"]
+        rep = annotate_tw(cards, games, taiwan.stamp_from_name(path), cfg)
+        rep.update({"file": path.name, "unknown_teams": sorted(parse_report.unknown_teams), "unknown_markets": parse_report.unknown_markets})
+        mlb["tw_report"] = rep
+        rep["values_added"] = tw_ledger.append_values(TW_LEDGER_PATH, cards, "mlb")
+        _write_snapshot(date.fromisoformat(mlb["date"]), "mlb", mlb)
+        reports["mlb"] = rep
+        log.info("tw mlb: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
+    return reports
 
 
 # -------------------------------------------------------------------- render
@@ -241,6 +321,7 @@ def render_latest() -> Path:
         DOCS_DIR / "index.html",
         backtest_exists=(DOCS_DIR / "backtest.html").exists(),
         backtest_total=backtest_total,
+        tw_summary=tw_ledger.summary(tw_ledger.read(TW_LEDGER_PATH)),
     )
 
 
@@ -263,9 +344,10 @@ def _latest_snapshot(sport: str) -> dict[str, Any] | None:
 # ----------------------------------------------------------------------- CLI
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sports_analyzer.pipeline")
-    parser.add_argument("task", choices=["football", "mlb", "render"])
+    parser.add_argument("task", choices=["football", "mlb", "tw", "render"])
     parser.add_argument("--days", type=int, default=None, help="fixture window in days (default from env or 2)")
     parser.add_argument("--date", type=str, default=None, help="run as if today were YYYY-MM-DD (UTC)")
+    parser.add_argument("--markets", type=str, default=None, help="comma-separated odds markets, e.g. h2h (default h2h,spreads,totals)")
     parser.add_argument("--offline", action="store_true", help="skip the network and just re-render")
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
@@ -281,16 +363,23 @@ def main(argv: list[str] | None = None) -> int:
         out = render_latest()
         log.info("rendered %s", out)
         return 0
+    if args.task == "tw":
+        # Needs no network: the phone already uploaded the feed.
+        run_tw()
+        out = render_latest()
+        log.info("rendered %s", out)
+        return 0
 
     settings = Settings.from_env()
     if args.days is not None:
         settings = Settings(
             settings.football_data_token, settings.odds_api_key, settings.odds_regions, args.days
         )
+    markets = tuple(m.strip() for m in args.markets.split(",")) if args.markets else DEFAULT_MARKETS
     if args.task == "football":
-        run_football(settings, today)
+        run_football(settings, today, markets=markets)
     elif args.task == "mlb":
-        run_mlb(datetime.now(LOCAL_TZ).date() if not args.date else today)
+        run_mlb(datetime.now(LOCAL_TZ).date() if not args.date else today, settings)
     out = render_latest()
     log.info("rendered %s", out)
     return 0

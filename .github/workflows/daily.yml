@@ -36,21 +36,26 @@ jobs:
       - name: Football — fetch, model, cards, ledger
         run: python -m sports_analyzer.pipeline football --days "${{ github.event.inputs.days || '2' }}"
 
-      - name: MLB — schedule (model arrives in Phase 3)
+      - name: MLB — schedule, market consensus, T-10 G value
         continue-on-error: true
         run: python -m sports_analyzer.pipeline mlb
+
+      - name: 運彩 — compare the latest phone upload with fair odds
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline tw
 
       - name: Render page
         run: python -m sports_analyzer.pipeline render
 
-      - name: Commit snapshot, ledger and page
+      - name: Commit snapshot, ledgers and page
         run: |
           git config user.name "sports-analyzer bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/snapshots data/ledger.csv docs/index.html
+          git add data/snapshots data/ledger.csv data/tw_ledger.csv docs/index.html
           if git diff --cached --quiet; then
             echo "nothing changed"
           else
             git commit -m "chore(daily): $(date -u +%Y-%m-%d) snapshot + page"
+            git pull --rebase origin main || true
             git push
           fi

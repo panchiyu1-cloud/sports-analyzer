@@ -128,6 +128,9 @@ ALIASES: dict[str, str] = {
     "dinamo zagreb": "dinamo zagreb", "young boys": "young boys", "basel": "basel",
     "pafos": "pafos", "kairat": "kairat", "kairat almaty": "kairat", "ferencvaros": "ferencvaros", "ferencvarosi": "ferencvaros",
     "ludogorets": "ludogorets", "ludogorets razgrad": "ludogorets", "bruges": "club brugge",
+    # ---- MLB: the club dropped its city name in 2025; feeds disagree on what to call it
+    "oakland athletics": "athletics", "sacramento athletics": "athletics", "athletics": "athletics",
+    "st louis cardinals": "st louis cardinals", "saint louis cardinals": "st louis cardinals",
 }
 
 

@@ -65,20 +65,26 @@ def match_odds(fixture: Match, events: list[OddsEvent], tolerance_hours: float =
     return None
 
 
-def market_view(event: OddsEvent, method: str) -> dict[str, Any]:
-    """Consensus for 1X2, the main totals line and the main spread line."""
+def market_view(event: OddsEvent, method: str, totals_prefer: float | None = 2.5) -> dict[str, Any]:
+    """Consensus for the match-winner market (1X2, or two-way when no draw is quoted),
+    the main totals line and the main spread line."""
     view: dict[str, Any] = {"books": len(event.books), "h2h": None, "totals": None, "spread": None}
 
+    three_way = any("draw" in b.h2h for b in event.books)
+    if three_way:
+        outcomes: tuple[str, ...] = ("home", "draw", "away")
+    else:
+        outcomes = ("home", "away")
     h2h_quotes = [
-        (b.book, [b.h2h["home"], b.h2h["draw"], b.h2h["away"]])
+        (b.book, [b.h2h[o] for o in outcomes])
         for b in event.books
-        if {"home", "draw", "away"} <= b.h2h.keys()
+        if set(outcomes) <= b.h2h.keys()
     ]
-    c = market.consensus(("home", "draw", "away"), h2h_quotes, method)
+    c = market.consensus(outcomes, h2h_quotes, method)
     if c:
         view["h2h"] = {o: _side(c, o) for o in c.outcomes}
 
-    totals_line = _main_line([t.point for b in event.books for t in b.totals], prefer=2.5)
+    totals_line = _main_line([t.point for b in event.books for t in b.totals], prefer=totals_prefer)
     if totals_line is not None:
         quotes = [
             (b.book, [t.over_price, t.under_price])

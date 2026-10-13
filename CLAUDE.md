@@ -102,3 +102,16 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   recommendations because a ROI number looks good — check `data/backtest_summary.json["passed"]`.
 - What the page is for now: fair odds (1 / de-vigged consensus prob) so the
   owner can compare against the price he can actually get (台灣運彩).
+
+## 運彩 feed (Phase 4)
+- `blob3rd.sportslottery.com.tw/apidata/Pre/<sport>-Games.zh.json` is geo-blocked
+  outside Taiwan (CloudFront 403 from GitHub runners). The owner's iPhone
+  Shortcut uploads the raw file to `data/tw/<football|baseball>/<YYYY-MM-DD-HHmm>.json`;
+  never try to fetch it from Actions. Sport ids: football 34740.1, baseball 34731.1.
+- `fetch/taiwan.py` parses (price = 1 + pu/pd), `analysis/taiwan.py` compares
+  with the consensus (EV = fair_prob x price - 1), `tw_ledger.py` records value
+  bets, CLV (from a later consensus; stale carried-over blocks never count) and
+  settlement. Unknown Chinese names land in the snapshot's `tw_report.unknown_teams`:
+  add them to `TW_ALIASES`, do not fuzzy-match Chinese.
+- Workflows: `tw.yml` on push to data/tw/**; `evening.yml` 12:25 UTC h2h-only
+  refresh (1 credit per competition) for CLV; `daily.yml` runs the tw step too.

@@ -28,6 +28,12 @@ class MlbGame:
     home_probable: str | None
     away_probable: str | None
     venue: str | None
+    home_score: int | None = None
+    away_score: int | None = None
+
+    @property
+    def is_final(self) -> bool:
+        return self.status.startswith("Final") and self.home_score is not None and self.away_score is not None
 
 
 def parse_schedule(payload: dict[str, Any]) -> list[MlbGame]:
@@ -48,6 +54,8 @@ def parse_schedule(payload: dict[str, Any]) -> list[MlbGame]:
                         home_probable=_probable(teams["home"]),
                         away_probable=_probable(teams["away"]),
                         venue=(raw.get("venue") or {}).get("name"),
+                        home_score=_score(teams["home"]),
+                        away_score=_score(teams["away"]),
                     )
                 )
             except (KeyError, TypeError, ValueError) as exc:
@@ -58,6 +66,14 @@ def parse_schedule(payload: dict[str, Any]) -> list[MlbGame]:
 def _probable(side: dict[str, Any]) -> str | None:
     pitcher = side.get("probablePitcher") or {}
     return pitcher.get("fullName")
+
+
+def _score(side: dict[str, Any]) -> int | None:
+    value = side.get("score")
+    try:
+        return int(value) if value is not None else None
+    except (TypeError, ValueError):
+        return None
 
 
 class MlbClient:
