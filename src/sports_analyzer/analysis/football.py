@@ -138,6 +138,10 @@ def build_cards(
     for fx in sorted(fixtures, key=lambda m: m.utc_date):
         card = _base_card(comp, fx)
         notes: list[str] = []
+        if comp.is_cup:
+            # The pooled model links leagues only through the few cross-league matches,
+            # so club-vs-club comparisons across leagues are much noisier than domestic ones.
+            notes.append("跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋")
 
         pred = _predict(model, fx, cfg, notes)
         card["model"] = _model_block(model, pred, fx, cfg)
