@@ -84,6 +84,27 @@ class TaiwanFeedTests(unittest.TestCase):
 
     def test_non_list_payload(self):
         self.assertEqual(taiwan.parse_games({"oops": 1}), [])
+        self.assertEqual(taiwan.parse_games("nope"), [])
+
+    def test_parse_text_accepts_shortcut_reserialisations(self):
+        raw = (FIXTURES / "tw_games.json").read_text(encoding="utf-8")
+        games = json.loads(raw)
+        # 1. the feed as-is
+        self.assertEqual(len(taiwan.parse_text(raw)), 4)
+        # 2. one object per line (what Shortcuts' Combine Text produces)
+        ndjson = "\n".join(json.dumps(g, ensure_ascii=False) for g in games)
+        self.assertEqual(len(taiwan.parse_text(ndjson)), 4)
+        # 3. pretty-printed objects joined by newlines, no brackets, with a BOM
+        pretty = "﻿" + "\n".join(json.dumps(g, ensure_ascii=False, indent=2) for g in games)
+        self.assertEqual(len(taiwan.parse_text(pretty)), 4)
+        # 4. comma-separated objects without brackets
+        commas = ",".join(json.dumps(g, ensure_ascii=False) for g in games)
+        self.assertEqual(len(taiwan.parse_text(commas)), 4)
+        # 5. a single object
+        self.assertEqual(len(taiwan.parse_games(taiwan.parse_text(json.dumps(games[0], ensure_ascii=False)))), 1)
+        # garbage lines are skipped, valid ones kept
+        mixed = "not json at all\n" + json.dumps(games[0], ensure_ascii=False) + "\n???\n"
+        self.assertEqual(len(taiwan.parse_text(mixed)), 1)
 
 
 if __name__ == "__main__":

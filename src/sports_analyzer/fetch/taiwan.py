@@ -92,9 +92,45 @@ class ParseReport:
 
 
 # ----------------------------------------------------------------------- parsing
+def parse_text(text: str) -> Any:
+    """Parse the uploaded file leniently.
+
+    The iPhone Shortcut cannot always send the feed byte-for-byte: Shortcuts turns
+    a JSON array into a list and may re-serialise it as one object per line
+    (NDJSON) or as objects without the surrounding brackets. Accept all of those.
+    """
+    text = text.lstrip("﻿").strip()
+    try:
+        return json.loads(text)
+    except ValueError:
+        pass
+    decoder = json.JSONDecoder()
+    items: list[Any] = []
+    pos = 0
+    while pos < len(text):
+        while pos < len(text) and text[pos] in " \t\r\n,[]":
+            pos += 1
+        if pos >= len(text):
+            break
+        try:
+            obj, end = decoder.raw_decode(text, pos)
+        except ValueError:
+            # Skip to the next line and try again rather than giving up on the file.
+            nl = text.find("\n", pos)
+            if nl == -1:
+                break
+            pos = nl + 1
+            continue
+        items.append(obj)
+        pos = end
+    return items
+
+
 def parse_games(payload: Any, report: ParseReport | None = None) -> list[TwGame]:
     report = report if report is not None else ParseReport()
     games: list[TwGame] = []
+    if isinstance(payload, dict):
+        payload = [payload]
     if not isinstance(payload, list):
         log.warning("tw feed: expected a list, got %s", type(payload).__name__)
         return games
@@ -230,8 +266,8 @@ def load_latest(tw_dir: Path, sport: str) -> tuple[list[TwGame], Path | None, Pa
         return [], None, report
     path = files[-1]
     try:
-        payload = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, ValueError) as exc:
+        payload = parse_text(path.read_text(encoding="utf-8-sig"))
+    except OSError as exc:
         log.warning("tw feed: cannot read %s: %s", path.name, exc)
         return [], path, report
     games = parse_games(payload, report)
