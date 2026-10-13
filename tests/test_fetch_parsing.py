@@ -138,6 +138,24 @@ class HistoryCsvTests(unittest.TestCase):
         self.assertEqual(first.ah, (2.03, 1.92))
         self.assertEqual(rows[1].home, "manchester united")
         self.assertEqual(rows[2].home, "nottingham forest")
+        self.assertIsNone(first.h2h_close)  # sample file has no closing columns
+        self.assertIsNone(first.h2h_max)
+
+    def test_reads_closing_and_max_columns(self):
+        import tempfile
+
+        csv_text = (
+            "Div,Date,HomeTeam,AwayTeam,FTHG,FTAG,PSH,PSD,PSA,PSCH,PSCD,PSCA,MaxH,MaxD,MaxA,P>2.5,P<2.5,PC>2.5,PC<2.5\n"
+            "E0,20/09/2025,Arsenal,Chelsea,2,1,1.80,3.90,4.60,1.75,4.00,4.90,1.86,4.10,4.80,1.95,1.95,1.90,2.00\n"
+        )
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
+            fh.write(csv_text)
+            path = Path(fh.name)
+        rows = history.read_csv(path)
+        self.assertEqual(rows[0].h2h, (1.80, 3.90, 4.60))
+        self.assertEqual(rows[0].h2h_close, (1.75, 4.00, 4.90))
+        self.assertEqual(rows[0].h2h_max, (1.86, 4.10, 4.80))
+        self.assertEqual(rows[0].over25_close, (1.90, 2.00))
 
 
 class SessionThrottleTests(unittest.TestCase):

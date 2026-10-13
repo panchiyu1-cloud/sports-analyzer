@@ -105,7 +105,14 @@ def market_view(event: OddsEvent, method: str) -> dict[str, Any]:
 
 
 def _side(c: market.Consensus, outcome: str) -> dict[str, Any]:
-    return {"fair": round(c.prob(outcome), 4), "best": c.price(outcome), "book": c.book(outcome)}
+    """Fair probability, the fair decimal odds it implies, and the best price quoted."""
+    fair = c.prob(outcome)
+    return {
+        "fair": round(fair, 4),
+        "fair_odds": round(1.0 / fair, 2) if fair > 0 else None,
+        "best": c.price(outcome),
+        "book": c.book(outcome),
+    }
 
 
 def _main_line(points: list[float], prefer: float | None) -> float | None:

@@ -89,10 +89,10 @@
   {% if not cfg.signals_validated %}
   <div class="note" style="margin-bottom:10px">
     這些是「模型和市場看法差很多」的比賽，<b>不是下注建議</b>。
-    {% if backtest_total and backtest_total.bets_1x2.roi is not none %}
-    最近一次回測（{{ backtest_total.bets_1x2.n }} 注）平注 ROI 為 {{ '%+.1f%%'|format(backtest_total.bets_1x2.roi*100) }}：目前的模型還打不贏市場。
+    {% if backtest_total and backtest_total.clv is not none %}
+    最近回測（{{ backtest_total.generated }}）：模型對收盤線的 CLV 為 {{ '%+.1f%%'|format(backtest_total.clv*100) }}，代表模型沒有打敗市場的資訊。
     {% endif %}
-    帳本照常記錄，累積足夠場數後再評估。{% if backtest %}<a href="backtest.html">看回測報告</a>{% endif %}
+    要找價值，請比較下方卡片的「公允賠率」和你實際能買到的賠率。{% if backtest %}<a href="backtest.html">看回測報告</a>{% endif %}
   </div>
   {% endif %}
   {% if ledger %}
@@ -150,6 +150,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
+        {% if c.market and c.market.h2h %}<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>{{ c.market.h2h.home.fair_odds }}</b> · 和 <b>{{ c.market.h2h.draw.fair_odds }}</b> · 客 <b>{{ c.market.h2h.away.fair_odds }}</b>{% if c.market.totals %} · 大{{ c.market.totals.line }} <b>{{ c.market.totals.over.fair_odds }}</b> / 小 <b>{{ c.market.totals.under.fair_odds }}</b>{% endif %}</span></div>{% endif %}
         <div><span>預期進球</span><span>{{ c.model.lambda_home }} – {{ c.model.mu_away }}</span></div>
         <div><span>最可能比分</span><span>{{ c.model.most_likely }}</span></div>
         <div><span>大 2.5 球</span><span class="model-val">{{ '%.0f%%'|format(c.model.over25*100) }}{% if c.market and c.market.totals and c.market.totals.line == 2.5 %} <span class="market-val">/ {{ '%.0f%%'|format(c.market.totals.over.fair*100) }}</span>{% endif %}</span></div>
@@ -196,7 +197,7 @@
 {% endif %}
 
 <footer>
-  模型：Dixon-Coles（足球）。市場機率為多家國際莊家去水後的中位數，非台灣運彩盤口。數字是機率估計，不是保證；請自行判斷並控制風險。
+  模型：Dixon-Coles（足球）。市場機率為多家國際莊家去水後的中位數，非台灣運彩盤口。「公允賠率」= 1 ÷ 市場去水機率：你實際能買到的賠率高於它才有價值，低於它就是在付水錢。數字是機率估計，不是保證；請自行判斷並控制風險。
 </footer>
 </div>
 </body>

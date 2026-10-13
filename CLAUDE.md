@@ -87,6 +87,18 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 - Dixon-Coles: Poisson goals with attack/defence per team, home advantage,
   rho correction for 0-0 / 1-0 / 0-1 / 1-1, exponential time decay (xi per day).
 - De-vig: default "power" method; "multiplicative" kept for comparison.
+- Blend (`models/blend.py`): multinomial logit of log(model) and log(market)
+  with ridge towards "market only". Fitted walk-forward in the backtest.
 - T-10 G value (owner's baseball method): G = p + c - 1 with p = de-vigged
   favourite ML prob and c = de-vigged favourite -1.5 run-line prob;
   thresholds +/-6 percentage points. Lives in `models/market.py`.
+
+## Backtest verdict (2026-10-13) — read before touching thresholds
+- The backtest is two-stage walk-forward with closing-line value (CLV). CLV is
+  the acceptance test, not ROI: a strategy passes only if CLV - 2se > 0.
+- Result: raw model CLV -4.7%; blend learns a NEGATIVE model weight (a ~ -0.19);
+  blend log-loss == pre-match market, worse than closing; CLV negative at every
+  threshold and league. `signals_validated` stays False. Do not re-enable
+  recommendations because a ROI number looks good — check `data/backtest_summary.json["passed"]`.
+- What the page is for now: fair odds (1 / de-vigged consensus prob) so the
+  owner can compare against the price he can actually get (台灣運彩).

@@ -221,8 +221,17 @@ def render_latest() -> Path:
     backtest_total = None
     if backtest_path.exists():
         try:
-            backtest_total = json.loads(backtest_path.read_text(encoding="utf-8")).get("total")
-        except (OSError, ValueError):
+            bt = json.loads(backtest_path.read_text(encoding="utf-8"))
+            key = bt.get("strategies", {}).get("blend_pinnacle", {}).get("0.03", {})
+            backtest_total = {
+                "verdict": bt.get("verdict"),
+                "passed": bt.get("passed", False),
+                "n": key.get("n"),
+                "roi": key.get("roi"),
+                "clv": key.get("clv"),
+                "generated": bt.get("generated"),
+            }
+        except (OSError, ValueError, AttributeError):
             backtest_total = None
     return render_index(
         football,

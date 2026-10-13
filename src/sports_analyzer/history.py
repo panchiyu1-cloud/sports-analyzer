@@ -28,11 +28,15 @@ class HistoricalMatch:
     away: str
     home_goals: int
     away_goals: int
-    # closing odds (None when the column is missing)
-    h2h: tuple[float, float, float] | None  # home, draw, away
+    # Pre-match odds, collected Friday/Tuesday afternoon (None when the column is missing)
+    h2h: tuple[float, float, float] | None  # home, draw, away (Pinnacle, else Bet365)
     over25: tuple[float, float] | None  # over, under at 2.5
     ah_line: float | None
     ah: tuple[float, float] | None  # home, away
+    # Closing odds (same bookmaker order) and best pre-match price across books
+    h2h_close: tuple[float, float, float] | None = None
+    over25_close: tuple[float, float] | None = None
+    h2h_max: tuple[float, float, float] | None = None
 
     @property
     def result(self) -> MatchResult:
@@ -60,6 +64,9 @@ def read_csv(path: Path) -> list[HistoricalMatch]:
                         over25=_pair(row, ("P>2.5", "P<2.5")) or _pair(row, ("B365>2.5", "B365<2.5")),
                         ah_line=_float(row.get("AHh")),
                         ah=_pair(row, ("PAHH", "PAHA")) or _pair(row, ("B365AHH", "B365AHA")),
+                        h2h_close=_triple(row, ("PSCH", "PSCD", "PSCA")) or _triple(row, ("B365CH", "B365CD", "B365CA")),
+                        over25_close=_pair(row, ("PC>2.5", "PC<2.5")) or _pair(row, ("B365C>2.5", "B365C<2.5")),
+                        h2h_max=_triple(row, ("MaxH", "MaxD", "MaxA")),
                     )
                 )
             except (KeyError, ValueError) as exc:
