@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-13T00:50:04+00:00",
+ "generated_at": "2026-10-13T01:24:04+00:00",
  "date": "2026-10-13",
- "credits_remaining": 494,
+ "credits_remaining": 491,
  "competitions": [
   {
    "code": "PL",
@@ -192,17 +192,20 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.377,
-        "best": 2.68,
-        "book": "matchbook"
+        "fair": 0.3774,
+        "fair_odds": 2.65,
+        "best": 2.64,
+        "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2537,
+        "fair": 0.254,
+        "fair_odds": 3.94,
         "best": 3.9,
         "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.3693,
+        "fair": 0.3687,
+        "fair_odds": 2.71,
         "best": 2.7,
         "book": "betfair_ex_eu"
        }
@@ -210,12 +213,14 @@
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.6077,
+        "fair": 0.6039,
+        "fair_odds": 1.66,
         "best": 1.64,
         "book": "onexbet"
        },
        "under": {
-        "fair": 0.3923,
+        "fair": 0.3961,
+        "fair_odds": 2.52,
         "best": 2.46,
         "book": "onexbet"
        }
@@ -223,28 +228,31 @@
       "spread": {
        "line": 0.0,
        "home": {
-        "fair": 0.5052,
-        "best": 1.97,
-        "book": "matchbook"
+        "fair": 0.5059,
+        "fair_odds": 1.98,
+        "best": 1.96,
+        "book": "onexbet"
        },
        "away": {
-        "fair": 0.4948,
+        "fair": 0.4941,
+        "fair_odds": 2.02,
         "best": 2.0,
         "book": "matchbook"
        }
       }
      },
      "edges": {
-      "home": 0.0746,
-      "draw": -0.015,
-      "away": -0.0596,
-      "over": 0.0318,
-      "under": -0.0318,
-      "spread_home": 0.088,
-      "spread_away": -0.088
+      "home": 0.0742,
+      "draw": -0.0153,
+      "away": -0.059,
+      "over": 0.0356,
+      "under": -0.0356,
+      "spread_home": 0.0873,
+      "spread_away": -0.0873
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Sporting Clube de Portugal 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -312,16 +320,19 @@
       "h2h": {
        "home": {
         "fair": 0.2719,
+        "fair_odds": 3.68,
         "best": 3.74,
         "book": "onexbet"
        },
        "draw": {
         "fair": 0.2523,
+        "fair_odds": 3.96,
         "best": 3.86,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.4758,
+        "fair_odds": 2.1,
         "best": 2.12,
         "book": "betfair_ex_eu"
        }
@@ -330,11 +341,13 @@
        "line": 2.5,
        "over": {
         "fair": 0.581,
+        "fair_odds": 1.72,
         "best": 1.71,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.419,
+        "fair_odds": 2.39,
         "best": 2.32,
         "book": "onexbet"
        }
@@ -343,11 +356,13 @@
        "line": 0.5,
        "home": {
         "fair": 0.5318,
+        "fair_odds": 1.88,
         "best": 1.87,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.4682,
+        "fair_odds": 2.14,
         "best": 2.12,
         "book": "matchbook"
        }
@@ -364,6 +379,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Sabah FK 僅 1 場（建議 ≥ 6）",
       "資料不足：SK Slavia Praha 僅 1 場（建議 ≥ 6）"
      ]
@@ -431,17 +447,20 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.7876,
+        "fair": 0.788,
+        "fair_odds": 1.27,
         "best": 1.31,
         "book": "gtbets"
        },
        "draw": {
-        "fair": 0.1382,
+        "fair": 0.1376,
+        "fair_odds": 7.27,
         "best": 6.75,
         "book": "winamax_de"
        },
        "away": {
-        "fair": 0.0742,
+        "fair": 0.0744,
+        "fair_odds": 13.44,
         "best": 14.0,
         "book": "unibet_se"
        }
@@ -450,11 +469,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.469,
+        "fair_odds": 2.13,
         "best": 2.15,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.531,
+        "fair_odds": 1.88,
         "best": 1.86,
         "book": "coolbet"
        }
@@ -463,20 +484,22 @@
        "line": -1.5,
        "home": {
         "fair": 0.5618,
+        "fair_odds": 1.78,
         "best": 1.76,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.4382,
+        "fair_odds": 2.28,
         "best": 2.23,
         "book": "onexbet"
        }
       }
      },
      "edges": {
-      "home": 0.1774,
-      "draw": -0.1162,
-      "away": -0.0611,
+      "home": 0.177,
+      "draw": -0.1156,
+      "away": -0.0613,
       "over": 0.4949,
       "under": -0.4949,
       "spread_home": 0.3591,
@@ -484,6 +507,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Club Brugge KV 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -551,16 +575,19 @@
       "h2h": {
        "home": {
         "fair": 0.0976,
+        "fair_odds": 10.24,
         "best": 10.0,
         "book": "betfair_ex_eu"
        },
        "draw": {
         "fair": 0.1275,
+        "fair_odds": 7.84,
         "best": 7.5,
         "book": "unibet_nl"
        },
        "away": {
         "fair": 0.7749,
+        "fair_odds": 1.29,
         "best": 1.33,
         "book": "gtbets"
        }
@@ -569,11 +596,13 @@
        "line": 4.5,
        "over": {
         "fair": 0.4324,
+        "fair_odds": 2.31,
         "best": 2.28,
         "book": "matchbook"
        },
        "under": {
         "fair": 0.5676,
+        "fair_odds": 1.76,
         "best": 1.78,
         "book": "onexbet"
        }
@@ -582,11 +611,13 @@
        "line": 1.5,
        "home": {
         "fair": 0.4226,
+        "fair_odds": 2.37,
         "best": 2.32,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.5774,
+        "fair_odds": 1.73,
         "best": 1.71,
         "book": "onexbet"
        }
@@ -603,6 +634,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Galatasaray SK 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -670,16 +702,19 @@
       "h2h": {
        "home": {
         "fair": 0.5083,
+        "fair_odds": 1.97,
         "best": 2.0,
         "book": "onexbet"
        },
        "draw": {
         "fair": 0.2384,
+        "fair_odds": 4.19,
         "best": 4.11,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.2533,
+        "fair_odds": 3.95,
         "best": 4.0,
         "book": "betfair_ex_eu"
        }
@@ -688,11 +723,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.4304,
+        "fair_odds": 2.32,
         "best": 2.27,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.5696,
+        "fair_odds": 1.76,
         "best": 1.74,
         "book": "onexbet"
        }
@@ -701,12 +738,14 @@
        "line": -0.5,
        "home": {
         "fair": 0.5,
+        "fair_odds": 2.0,
         "best": 1.97,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.5,
-        "best": 2.0,
+        "fair_odds": 2.0,
+        "best": 2.02,
         "book": "matchbook"
        }
       }
@@ -721,7 +760,9 @@
       "spread_away": 0.038
      },
      "recommendation": null,
-     "notes": []
+     "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+     ]
     },
     {
      "sport": "football",
@@ -786,17 +827,20 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.8103,
+        "fair": 0.8101,
+        "fair_odds": 1.23,
         "best": 1.28,
         "book": "gtbets"
        },
        "draw": {
-        "fair": 0.1317,
+        "fair": 0.1318,
+        "fair_odds": 7.58,
         "best": 7.06,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.058,
+        "fair_odds": 17.24,
         "best": 16.5,
         "book": "betfair_ex_eu"
        }
@@ -805,11 +849,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.3885,
+        "fair_odds": 2.57,
         "best": 2.42,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.6115,
+        "fair_odds": 1.64,
         "best": 1.66,
         "book": "onexbet"
        }
@@ -818,19 +864,21 @@
        "line": -1.5,
        "home": {
         "fair": 0.5882,
+        "fair_odds": 1.7,
         "best": 1.68,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.4118,
+        "fair_odds": 2.43,
         "best": 2.38,
         "book": "onexbet"
        }
       }
      },
      "edges": {
-      "home": -0.1768,
-      "draw": 0.1231,
+      "home": -0.1766,
+      "draw": 0.123,
       "away": 0.0537,
       "over": -0.2243,
       "under": 0.2243,
@@ -851,7 +899,9 @@
       "kelly": 0.0969,
       "confidence": "高"
      },
-     "notes": []
+     "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+     ]
     },
     {
      "sport": "football",
@@ -916,17 +966,20 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.0347,
+        "fair": 0.0339,
+        "fair_odds": 29.52,
         "best": 27.0,
         "book": "nordicbet"
        },
        "draw": {
         "fair": 0.0566,
+        "fair_odds": 17.66,
         "best": 15.5,
         "book": "onexbet"
        },
        "away": {
-        "fair": 0.9087,
+        "fair": 0.9095,
+        "fair_odds": 1.1,
         "best": 1.12,
         "book": "betfair_ex_eu"
        }
@@ -935,11 +988,13 @@
        "line": 4.5,
        "over": {
         "fair": 0.4888,
+        "fair_odds": 2.05,
         "best": 1.99,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.5112,
+        "fair_odds": 1.96,
         "best": 2.0,
         "book": "matchbook"
        }
@@ -948,20 +1003,22 @@
        "line": 2.5,
        "home": {
         "fair": 0.4348,
+        "fair_odds": 2.3,
         "best": 2.24,
         "book": "betanysports"
        },
        "away": {
         "fair": 0.5652,
+        "fair_odds": 1.77,
         "best": 1.76,
         "book": "onexbet"
        }
       }
      },
      "edges": {
-      "home": 0.0061,
+      "home": 0.0069,
       "draw": 0.0171,
-      "away": -0.0233,
+      "away": -0.0241,
       "over": 0.0811,
       "under": -0.0811,
       "spread_home": -0.0269,
@@ -969,6 +1026,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Viking FK 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -1036,16 +1094,19 @@
       "h2h": {
        "home": {
         "fair": 0.5571,
+        "fair_odds": 1.79,
         "best": 1.81,
         "book": "onexbet"
        },
        "draw": {
         "fair": 0.2064,
+        "fair_odds": 4.84,
         "best": 4.9,
         "book": "winamax_de"
        },
        "away": {
         "fair": 0.2365,
+        "fair_odds": 4.23,
         "best": 4.25,
         "book": "nordicbet"
        }
@@ -1054,12 +1115,14 @@
        "line": 3.5,
        "over": {
         "fair": 0.5237,
+        "fair_odds": 1.91,
         "best": 1.89,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.4763,
-        "best": 2.1,
+        "fair_odds": 2.1,
+        "best": 2.12,
         "book": "matchbook"
        }
       },
@@ -1067,11 +1130,13 @@
        "line": -0.75,
        "home": {
         "fair": 0.5,
+        "fair_odds": 2.0,
         "best": 1.98,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.5,
+        "fair_odds": 2.0,
         "best": 1.98,
         "book": "matchbook"
        }
@@ -1088,6 +1153,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：PSV 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -1154,17 +1220,20 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.4514,
-        "best": 2.2,
-        "book": "betfair_ex_eu"
+        "fair": 0.4506,
+        "fair_odds": 2.22,
+        "best": 2.22,
+        "book": "matchbook"
        },
        "draw": {
-        "fair": 0.2573,
+        "fair": 0.2574,
+        "fair_odds": 3.88,
         "best": 3.85,
         "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.2913,
+        "fair": 0.292,
+        "fair_odds": 3.42,
         "best": 3.4,
         "book": "betfair_ex_eu"
        }
@@ -1173,11 +1242,13 @@
        "line": 2.5,
        "over": {
         "fair": 0.5918,
+        "fair_odds": 1.69,
         "best": 1.68,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.4082,
+        "fair_odds": 2.45,
         "best": 2.38,
         "book": "onexbet"
        }
@@ -1185,25 +1256,27 @@
       "spread": {
        "line": -0.25,
        "home": {
-        "fair": 0.5172,
+        "fair": 0.5154,
+        "fair_odds": 1.94,
         "best": 1.92,
         "book": "matchbook"
        },
        "away": {
-        "fair": 0.4828,
-        "best": 2.06,
+        "fair": 0.4846,
+        "fair_odds": 2.06,
+        "best": 2.04,
         "book": "matchbook"
        }
       }
      },
      "edges": {
-      "home": -0.0941,
-      "draw": 0.0133,
-      "away": 0.0808,
+      "home": -0.0933,
+      "draw": 0.0132,
+      "away": 0.0801,
       "over": -0.078,
       "under": 0.078,
-      "spread_home": -0.104,
-      "spread_away": 0.104
+      "spread_home": -0.1022,
+      "spread_away": 0.1022
      },
      "recommendation": {
       "market": "讓球",
@@ -1211,15 +1284,17 @@
       "selection": "SSC Napoli +0.25",
       "line": -0.25,
       "model_p": 0.5868,
-      "market_p": 0.4828,
-      "price": 2.06,
+      "market_p": 0.4846,
+      "price": 2.04,
       "book": "matchbook",
-      "edge": 0.104,
-      "ev": 0.2088,
-      "kelly": 0.0492,
+      "edge": 0.1022,
+      "ev": 0.197,
+      "kelly": 0.0474,
       "confidence": "低"
      },
-     "notes": []
+     "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+     ]
     },
     {
      "sport": "football",
@@ -1285,16 +1360,19 @@
       "h2h": {
        "home": {
         "fair": 0.0904,
+        "fair_odds": 11.06,
         "best": 10.5,
         "book": "betfair_ex_eu"
        },
        "draw": {
         "fair": 0.1441,
+        "fair_odds": 6.94,
         "best": 6.75,
         "book": "winamax_de"
        },
        "away": {
         "fair": 0.7655,
+        "fair_odds": 1.31,
         "best": 1.31,
         "book": "onexbet"
        }
@@ -1303,11 +1381,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.484,
+        "fair_odds": 2.07,
         "best": 2.01,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.516,
+        "fair_odds": 1.94,
         "best": 1.93,
         "book": "onexbet"
        }
@@ -1316,11 +1396,13 @@
        "line": 1.5,
        "home": {
         "fair": 0.4608,
+        "fair_odds": 2.17,
         "best": 2.14,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.5392,
+        "fair_odds": 1.85,
         "best": 1.83,
         "book": "onexbet"
        }
@@ -1337,6 +1419,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：LASK Linz 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -1404,16 +1487,19 @@
       "h2h": {
        "home": {
         "fair": 0.2705,
+        "fair_odds": 3.7,
         "best": 3.75,
         "book": "unibet_se"
        },
        "draw": {
         "fair": 0.2281,
+        "fair_odds": 4.38,
         "best": 4.32,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.5013,
+        "fair_odds": 1.99,
         "best": 2.02,
         "book": "betfair_ex_eu"
        }
@@ -1422,11 +1508,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.4581,
+        "fair_odds": 2.18,
         "best": 2.15,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.5419,
+        "fair_odds": 1.85,
         "best": 1.84,
         "book": "matchbook"
        }
@@ -1435,11 +1523,13 @@
        "line": 0.5,
        "home": {
         "fair": 0.5056,
+        "fair_odds": 1.98,
         "best": 1.97,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.4944,
+        "fair_odds": 2.02,
         "best": 2.02,
         "book": "matchbook"
        }
@@ -1456,6 +1546,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Feyenoord Rotterdam 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -1523,16 +1614,19 @@
       "h2h": {
        "home": {
         "fair": 0.2566,
+        "fair_odds": 3.9,
         "best": 3.88,
         "book": "onexbet"
        },
        "draw": {
         "fair": 0.2332,
+        "fair_odds": 4.29,
         "best": 4.2,
         "book": "unibet_se"
        },
        "away": {
         "fair": 0.5102,
+        "fair_odds": 1.96,
         "best": 1.99,
         "book": "betfair_ex_eu"
        }
@@ -1541,11 +1635,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.4712,
+        "fair_odds": 2.12,
         "best": 2.14,
         "book": "matchbook"
        },
        "under": {
         "fair": 0.5288,
+        "fair_odds": 1.89,
         "best": 1.88,
         "book": "onexbet"
        }
@@ -1554,11 +1650,13 @@
        "line": 0.5,
        "home": {
         "fair": 0.5,
+        "fair_odds": 2.0,
         "best": 1.98,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.5,
+        "fair_odds": 2.0,
         "best": 1.99,
         "book": "matchbook"
        }
@@ -1587,7 +1685,9 @@
       "kelly": 0.1214,
       "confidence": "高"
      },
-     "notes": []
+     "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+     ]
     },
     {
      "sport": "football",
@@ -1653,16 +1753,19 @@
       "h2h": {
        "home": {
         "fair": 0.4472,
+        "fair_odds": 2.24,
         "best": 2.28,
         "book": "gtbets"
        },
        "draw": {
         "fair": 0.2326,
+        "fair_odds": 4.3,
         "best": 4.2,
         "book": "betfair_ex_eu"
        },
        "away": {
         "fair": 0.3202,
+        "fair_odds": 3.12,
         "best": 3.15,
         "book": "betfair_ex_eu"
        }
@@ -1671,11 +1774,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.4551,
+        "fair_odds": 2.2,
         "best": 2.15,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.5449,
+        "fair_odds": 1.84,
         "best": 1.81,
         "book": "onexbet"
        }
@@ -1684,11 +1789,13 @@
        "line": -0.5,
        "home": {
         "fair": 0.4356,
+        "fair_odds": 2.3,
         "best": 2.21,
         "book": "betanysports"
        },
        "away": {
         "fair": 0.5644,
+        "fair_odds": 1.77,
         "best": 1.71,
         "book": "betonlineag"
        }
@@ -1717,7 +1824,9 @@
       "kelly": 0.0678,
       "confidence": "中"
      },
-     "notes": []
+     "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+     ]
     },
     {
      "sport": "football",
@@ -1783,16 +1892,19 @@
       "h2h": {
        "home": {
         "fair": 0.297,
+        "fair_odds": 3.37,
         "best": 3.35,
         "book": "betfair_ex_eu"
        },
        "draw": {
         "fair": 0.229,
+        "fair_odds": 4.37,
         "best": 4.25,
         "book": "unibet_se"
        },
        "away": {
         "fair": 0.474,
+        "fair_odds": 2.11,
         "best": 2.14,
         "book": "onexbet"
        }
@@ -1801,11 +1913,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.4769,
+        "fair_odds": 2.1,
         "best": 2.07,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.5231,
+        "fair_odds": 1.91,
         "best": 1.95,
         "book": "matchbook"
        }
@@ -1814,11 +1928,13 @@
        "line": 0.5,
        "home": {
         "fair": 0.5318,
+        "fair_odds": 1.88,
         "best": 1.89,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.4682,
+        "fair_odds": 2.14,
         "best": 2.1,
         "book": "matchbook"
        }
@@ -1835,6 +1951,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：FK Bodø/Glimt 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -1902,16 +2019,19 @@
       "h2h": {
        "home": {
         "fair": 0.592,
+        "fair_odds": 1.69,
         "best": 1.69,
         "book": "onexbet"
        },
        "draw": {
         "fair": 0.2267,
+        "fair_odds": 4.41,
         "best": 4.3,
         "book": "betfair_ex_eu"
        },
        "away": {
         "fair": 0.1813,
+        "fair_odds": 5.52,
         "best": 5.6,
         "book": "betfair_ex_eu"
        }
@@ -1920,11 +2040,13 @@
        "line": 2.5,
        "over": {
         "fair": 0.5787,
+        "fair_odds": 1.73,
         "best": 1.69,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.4213,
+        "fair_odds": 2.37,
         "best": 2.36,
         "book": "onexbet"
        }
@@ -1933,11 +2055,13 @@
        "line": -1.0,
        "home": {
         "fair": 0.4575,
+        "fair_odds": 2.19,
         "best": 2.11,
         "book": "coolbet"
        },
        "away": {
         "fair": 0.5425,
+        "fair_odds": 1.84,
         "best": 1.78,
         "book": "marathonbet"
        }
@@ -1954,6 +2078,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：Fenerbahçe SK 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -2021,16 +2146,19 @@
       "h2h": {
        "home": {
         "fair": 0.4693,
+        "fair_odds": 2.13,
         "best": 2.16,
         "book": "onexbet"
        },
        "draw": {
         "fair": 0.2538,
+        "fair_odds": 3.94,
         "best": 3.9,
         "book": "betfair_ex_eu"
        },
        "away": {
         "fair": 0.2768,
+        "fair_odds": 3.61,
         "best": 3.6,
         "book": "betfair_ex_eu"
        }
@@ -2039,11 +2167,13 @@
        "line": 2.5,
        "over": {
         "fair": 0.5635,
+        "fair_odds": 1.77,
         "best": 1.79,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.4365,
+        "fair_odds": 2.29,
         "best": 2.19,
         "book": "onexbet"
        }
@@ -2052,11 +2182,13 @@
        "line": -0.5,
        "home": {
         "fair": 0.4683,
+        "fair_odds": 2.14,
         "best": 2.12,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.5317,
+        "fair_odds": 1.88,
         "best": 1.87,
         "book": "matchbook"
        }
@@ -2073,6 +2205,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：FC Porto 僅 1 場（建議 ≥ 6）"
      ]
     },
@@ -2140,16 +2273,19 @@
       "h2h": {
        "home": {
         "fair": 0.3582,
+        "fair_odds": 2.79,
         "best": 2.76,
         "book": "betfair_ex_eu"
        },
        "draw": {
         "fair": 0.2798,
+        "fair_odds": 3.57,
         "best": 3.55,
         "book": "unibet_se"
        },
        "away": {
         "fair": 0.362,
+        "fair_odds": 2.76,
         "best": 2.77,
         "book": "onexbet"
        }
@@ -2158,11 +2294,13 @@
        "line": 2.5,
        "over": {
         "fair": 0.507,
+        "fair_odds": 1.97,
         "best": 1.95,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.493,
+        "fair_odds": 2.03,
         "best": 2.0,
         "book": "matchbook"
        }
@@ -2171,11 +2309,13 @@
        "line": -0.0,
        "home": {
         "fair": 0.4953,
+        "fair_odds": 2.02,
         "best": 1.99,
         "book": "matchbook"
        },
        "away": {
         "fair": 0.5047,
+        "fair_odds": 1.98,
         "best": 1.98,
         "book": "onexbet"
        }
@@ -2192,6 +2332,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：FK Shakhtar Donetsk 僅 1 場（建議 ≥ 6）",
       "資料不足：PAE AEK 僅 1 場（建議 ≥ 6）"
      ]
@@ -2260,16 +2401,19 @@
       "h2h": {
        "home": {
         "fair": 0.0926,
+        "fair_odds": 10.8,
         "best": 11.0,
         "book": "coolbet"
        },
        "draw": {
         "fair": 0.145,
+        "fair_odds": 6.9,
         "best": 6.6,
         "book": "betfair_ex_eu"
        },
        "away": {
         "fair": 0.7624,
+        "fair_odds": 1.31,
         "best": 1.31,
         "book": "onexbet"
        }
@@ -2278,11 +2422,13 @@
        "line": 3.5,
        "over": {
         "fair": 0.4972,
+        "fair_odds": 2.01,
         "best": 1.97,
         "book": "onexbet"
        },
        "under": {
         "fair": 0.5028,
+        "fair_odds": 1.99,
         "best": 1.99,
         "book": "matchbook"
        }
@@ -2291,11 +2437,13 @@
        "line": 1.5,
        "home": {
         "fair": 0.4547,
+        "fair_odds": 2.2,
         "best": 2.15,
         "book": "onexbet"
        },
        "away": {
         "fair": 0.5453,
+        "fair_odds": 1.83,
         "best": 1.81,
         "book": "onexbet"
        }
@@ -2312,6 +2460,7 @@
      },
      "recommendation": null,
      "notes": [
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：ŠK Slovan Bratislava 僅 1 場（建議 ≥ 6）"
      ]
     }
@@ -2353,12 +2502,12 @@
      "selection": "SSC Napoli +0.25",
      "line": -0.25,
      "model_p": 0.5868,
-     "market_p": 0.4828,
-     "price": 2.06,
+     "market_p": 0.4846,
+     "price": 2.04,
      "book": "matchbook",
-     "edge": 0.104,
-     "ev": 0.2088,
-     "kelly": 0.0492,
+     "edge": 0.1022,
+     "ev": 0.197,
+     "kelly": 0.0474,
      "confidence": "低"
     },
     {
