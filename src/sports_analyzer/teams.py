@@ -23,7 +23,8 @@ _DROP_TOKENS = {
     "hsc", "sco", "aj", "vfl", "vfb", "tsg", "fsv", "sv", "rcd", "ud", "cd", "sd", "ca",
     "club", "calcio", "balompie", "football", "de", "da", "di", "the", "1", "04", "05", "29",
     "1846", "1899", "1901", "1907", "1909", "1913", "1848", "acf", "ssd", "cp", "fk", "sk",
-    "bk", "if", "ff",
+    "bk", "if", "ff", "es", "kv", "sl", "gnk", "nk", "hnk", "pae", "bsc", "tc", "slc", "fsv",
+    "royale", "kc",
 }
 
 # normalised variant -> canonical key. Keep canonical keys plain English, lower-case.
@@ -98,16 +99,51 @@ ALIASES: dict[str, str] = {
     "auxerre": "auxerre", "le havre": "le havre", "saint etienne": "saint etienne", "st etienne": "saint etienne",
     "reims": "reims", "stade de reims": "reims", "lorient": "lorient", "metz": "metz",
     "paris": "paris fc", "paris fc": "paris fc",
+    "racing lens": "lens", "racing strasbourg alsace": "strasbourg", "troyes": "troyes",
+    "le mans": "le mans",
+    # ---- promoted / API long forms seen in 2026-27
+    "coventry city": "coventry", "coventry": "coventry", "hull city": "hull", "hull": "hull",
+    "deportivo la coruna": "la coruna", "la coruna": "la coruna", "deportivo": "la coruna",
+    "real racing santander": "santander", "racing santander": "santander", "santander": "santander",
+    "rayo vallecano madrid": "rayo vallecano", "real sociedad futbol": "real sociedad",
+    "malaga": "malaga", "paderborn": "paderborn", "elversberg": "elversberg", "schalke": "schalke",
+    "darmstadt": "darmstadt", "frosinone": "frosinone", "cremonese": "cremonese",
+    # ---- Champions League clubs outside the top five leagues (API name / odds name / CSV name)
+    "sporting clube portugal": "sporting cp", "sporting lisbon": "sporting cp", "sporting": "sporting cp", "sporting cp": "sporting cp",
+    "benfica": "benfica", "porto": "porto", "sporting braga": "braga", "braga": "braga",
+    "psv": "psv", "psv eindhoven": "psv", "feyenoord rotterdam": "feyenoord", "feyenoord": "feyenoord",
+    "ajax": "ajax", "ajax amsterdam": "ajax",
+    "club brugge": "club brugge", "club brugge kv": "club brugge", "brugge": "club brugge",
+    "union saint gilloise": "union sg", "union sg": "union sg", "union st gilloise": "union sg",
+    "galatasaray": "galatasaray", "fenerbahce": "fenerbahce", "besiktas": "besiktas",
+    "slavia praha": "slavia prague", "slavia prague": "slavia prague", "sparta praha": "sparta prague", "sparta prague": "sparta prague",
+    "sabah": "sabah", "sabah fa": "sabah", "qarabag": "qarabag", "qarabag agdam": "qarabag",
+    "viking": "viking", "bodo glimt": "bodo glimt", "molde": "molde",
+    "lask": "lask", "lask linz": "lask", "sturm graz": "sturm graz", "salzburg": "salzburg", "red bull salzburg": "salzburg",
+    "shakhtar": "shakhtar", "shakhtar donetsk": "shakhtar", "dynamo kyiv": "dynamo kyiv", "dynamo kiev": "dynamo kyiv",
+    "aek": "aek athens", "aek athens": "aek athens", "olympiacos": "olympiacos", "olympiakos": "olympiacos", "olympiacos piraeus": "olympiacos", "olympiakos piraeus": "olympiacos", "paok": "paok", "paok thessaloniki": "paok", "panathinaikos": "panathinaikos",
+    "slovan bratislava": "slovan bratislava", "celtic": "celtic", "rangers": "rangers",
+    "copenhagen": "copenhagen", "kobenhavn": "copenhagen", "fc copenhagen": "copenhagen", "fc kobenhavn": "copenhagen",
+    "red star belgrade": "red star", "crvena zvezda": "red star", "red star": "red star",
+    "dinamo zagreb": "dinamo zagreb", "young boys": "young boys", "basel": "basel",
+    "pafos": "pafos", "kairat": "kairat", "kairat almaty": "kairat", "ferencvaros": "ferencvaros", "ferencvarosi": "ferencvaros",
+    "ludogorets": "ludogorets", "ludogorets razgrad": "ludogorets", "bruges": "club brugge",
 }
+
+
+# Letters that NFKD does not decompose into base + accent.
+_TRANSLIT = str.maketrans({"ø": "o", "Ø": "O", "æ": "ae", "Æ": "AE", "ß": "ss", "đ": "d", "Đ": "D",
+                           "ł": "l", "Ł": "L", "ı": "i", "œ": "oe", "Œ": "OE"})
 
 
 def normalise(name: str) -> str:
     """Lower-case, strip accents and punctuation, drop legal-form tokens."""
-    text = unicodedata.normalize("NFKD", name)
+    text = unicodedata.normalize("NFKD", name.translate(_TRANSLIT))
     text = "".join(ch for ch in text if not unicodedata.combining(ch))
     text = text.lower().replace("&", " and ").replace("-", " ").replace(".", " ")
     text = re.sub(r"[^a-z0-9' ]+", " ", text)
-    tokens = [t for t in text.split() if t not in _DROP_TOKENS]
+    # Pure numbers are founding years or legal suffixes ("Paderborn 07", "Schalke 04").
+    tokens = [t for t in text.split() if t not in _DROP_TOKENS and not t.isdigit()]
     return " ".join(tokens).strip()
 
 

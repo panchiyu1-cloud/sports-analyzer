@@ -280,8 +280,13 @@ def _edges(pred: Prediction, mv: dict[str, Any]) -> dict[str, float]:
 
 
 def _recommend(card: dict[str, Any], pred: Prediction | None, cfg: ModelConfig) -> dict[str, Any] | None:
-    """Pick the single best edge that clears the thresholds; None if nothing does."""
-    if pred is None:
+    """Pick the single best edge that clears the thresholds; None if nothing does.
+
+    A team the model has seen fewer than `min_team_matches` times (typical for
+    Champions League clubs outside the top five leagues) gets no signal at all:
+    the first real run showed the model inventing 97% favourites from one match.
+    """
+    if pred is None or not card["model"].get("data_ok"):
         return None
     mv = card["market"]
     best: dict[str, Any] | None = None
@@ -306,9 +311,6 @@ def _recommend(card: dict[str, Any], pred: Prediction | None, cfg: ModelConfig) 
             "kelly": round(market.kelly_fraction(model_p, market_side["best"]), 4),
             "confidence": conf,
         }
-        if not card["model"].get("data_ok"):
-            candidate["confidence"] = "低"
-            candidate["caveat"] = "資料不足，信心下修"
         if best is None or candidate["edge"] > best["edge"]:
             best = candidate
     return best

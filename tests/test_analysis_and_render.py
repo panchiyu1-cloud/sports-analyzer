@@ -122,6 +122,23 @@ class BuildCardsTests(unittest.TestCase):
         self.assertTrue(all(c["market"] is None for c in cards))
         self.assertTrue(any("賠率" in n for n in cards[0]["notes"]))
 
+    def test_insufficient_data_team_gets_no_signal(self):
+        # Regression for the first live run: a club with one fitted match produced a 97% "edge".
+        thin = synthetic_pl_results() + [dc.MatchResult(date(2026, 10, 1), "club brugge", "arsenal", 0, 3)]
+        model = dc.fit(thin, as_of=date(2026, 10, 16))
+        fx = football.Match(9, "CL", datetime(2026, 10, 17, 14, tzinfo=timezone.utc), "TIMED", 3, "Arsenal FC", "Club Brugge KV")
+        ev = odds.OddsEvent("x", "soccer_uefa_champs_league", fx.utc_date, "Arsenal", "Club Brugge",
+                            (odds.BookOdds("pinnacle", {"home": 1.5, "draw": 4.5, "away": 6.5}),))
+        cards, signals = analysis.build_cards(
+            COMPETITION_BY_CODE["CL"], [fx], model, [], [], [], [ev], ModelConfig(edge_threshold=0.0, min_model_prob=0.0)
+        )
+        self.assertTrue(cards[0]["model"]["fitted"])
+        self.assertFalse(cards[0]["model"]["data_ok"])
+        self.assertIsNotNone(cards[0]["market"])  # odds matched via aliases
+        self.assertIsNone(cards[0]["recommendation"])
+        self.assertEqual(signals, [])
+        self.assertTrue(any("資料不足" in n for n in cards[0]["notes"]))
+
     def test_unknown_team_adds_note_without_crash(self):
         stranger = football.Match(1, "PL", datetime(2026, 10, 17, 14, tzinfo=timezone.utc), "TIMED", 8, "Fictional Town FC", "Arsenal FC")
         cards, _ = analysis.build_cards(COMPETITION_BY_CODE["PL"], [stranger], self.model, [], [], [], [], self.cfg)

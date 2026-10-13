@@ -95,6 +95,27 @@ class TeamNameTests(unittest.TestCase):
         self.assertEqual(teams.canonical("Club Atlético de Madrid"), "atletico madrid")
         self.assertEqual(teams.canonical("Ath Madrid"), "atletico madrid")
 
+    def test_champions_league_and_long_form_names(self):
+        pairs = [
+            ("Racing Club de Lens", "Lens"),
+            ("Sporting Clube de Portugal", "Sporting Lisbon"),
+            ("PSV", "PSV Eindhoven"),
+            ("FK Shakhtar Donetsk", "Shakhtar Donetsk"),
+            ("PAE AEK", "AEK Athens"),
+            ("Club Brugge KV", "Club Brugge"),
+            ("ŠK Slovan Bratislava", "Slovan Bratislava"),
+            ("LASK Linz", "LASK"),
+            ("FK Bodø/Glimt", "Bodo/Glimt"),
+            ("SK Slavia Praha", "Slavia Prague"),
+            ("Racing Club de Strasbourg Alsace", "Strasbourg"),
+            ("SC Paderborn 07", "Paderborn"),
+            ("RC Deportivo de La Coruña", "La Coruna"),
+            ("Coventry City FC", "Coventry"),
+            ("ES Troyes AC", "Troyes"),
+        ]
+        for a, b in pairs:
+            self.assertEqual(teams.canonical(a), teams.canonical(b), f"{a!r} vs {b!r}")
+
     def test_unknown_name_falls_back_to_normalised(self):
         self.assertEqual(teams.canonical("Fictional Town FC"), "fictional town")
 

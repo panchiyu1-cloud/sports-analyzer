@@ -109,6 +109,7 @@ def run_football(settings: Settings, today: date, cfg: ModelConfig = MODEL) -> d
                 "model": _model_summary(model),
                 "cards": cards,
                 "signals": signals,
+                "name_check": _name_check(results[comp.code], history[comp.code], odds_events[comp.code]),
             }
         )
         all_signals.extend(signals)
@@ -152,6 +153,26 @@ def _fit_or_none(comp: Competition, sample: list[dc.MatchResult], today: date, c
     log.info("%s: fitted on %d matches, %d teams, home adv %.3f, rho %.3f",
              comp.code, model.n_matches, len(model.teams), model.home_advantage, model.rho)
     return model
+
+
+def _name_check(results: list[Match], history: list, odds_events: list[OddsEvent]) -> dict[str, Any]:
+    """Diagnostic: team keys that appear in only one source are alias-table gaps.
+
+    Written into the snapshot so a mismatch is visible the morning after, instead
+    of silently splitting one club into two model entries.
+    """
+    api_keys = {m.home_key for m in results} | {m.away_key for m in results}
+    api_names = {m.home_key: m.home for m in results} | {m.away_key: m.away for m in results}
+    csv_keys = {h.home for h in history} | {h.away for h in history}
+    odds_keys = {e.home_key for e in odds_events} | {e.away_key for e in odds_events}
+    odds_names = {e.home_key: e.home for e in odds_events} | {e.away_key: e.away for e in odds_events}
+    out: dict[str, Any] = {}
+    if api_keys and csv_keys:
+        out["api_only"] = sorted(api_names[k] for k in api_keys - csv_keys)
+        out["csv_only"] = sorted(csv_keys - api_keys)
+    if odds_keys:
+        out["odds_unmatched"] = sorted(odds_names[k] for k in odds_keys - api_keys - csv_keys)
+    return out
 
 
 def _model_summary(model: dc.FittedModel | None) -> dict[str, Any] | None:
