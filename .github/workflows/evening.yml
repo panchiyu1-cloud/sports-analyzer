@@ -26,6 +26,8 @@ jobs:
       PYTHONPATH: src
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main  # a queued run starts from the newest commit, not the one that triggered it
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -41,11 +43,4 @@ jobs:
         run: python -m sports_analyzer.pipeline tw
       - name: Commit
         run: |
-          git config user.name "sports-analyzer bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/snapshots data/ledger.csv data/tw_ledger.csv docs/index.html
-          if git diff --cached --quiet; then echo "nothing changed"; else
-            git commit -m "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare"
-            git pull --rebase origin main || true
-            git push
-          fi
+          bash scripts/commit_generated.sh "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare" data/snapshots data/ledger.csv data/tw_ledger.csv docs/index.html
