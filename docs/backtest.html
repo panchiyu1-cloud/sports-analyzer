@@ -1,0 +1,56 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>回測報告</title>
+<style>
+:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--muted:#6b6a66;--line:#e4e2db;--good:#2f6f5e;--bad:#a63d2f}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141513;--card:#1d1f1c;--ink:#ecebe6;--muted:#9b9a94;--line:#2c2e2a;--good:#7fc4ad;--bad:#e08a7c}}
+:root[data-theme="dark"]{--bg:#141513;--card:#1d1f1c;--ink:#ecebe6;--muted:#9b9a94;--line:#2c2e2a;--good:#7fc4ad;--bad:#e08a7c}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 16px 64px}h1{font-size:1.4rem}h2{font-size:1.05rem;margin-top:28px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.9rem}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:500;font-size:.8rem}tr:last-child td{border-bottom:0}
+.pos{color:var(--good)}.neg{color:var(--bad)}.muted{color:var(--muted);font-size:.85rem}.scroll{overflow-x:auto}a{color:var(--good)}
+</style></head><body><div class="wrap">
+<h1>回測報告</h1>
+<p class="muted">產生：2026-10-13 · 門檻 edge ≥ 4pp · 模型最低機率 25% · 衰減 xi=0.0065 · <a href="index.html">回到分析頁</a></p>
+<h2>模型 vs 市場（越低越好）</h2>
+<p class="muted">市場 = 收盤賠率去水後的機率（Pinnacle 優先）。收盤盤口是最難打敗的基準；模型 log-loss 若明顯高於市場，代表模型比市場差。</p>
+<div class="scroll"><table><tr><th>聯賽</th><th>測試場數</th><th>模型 log-loss</th><th>市場 log-loss</th><th>差距</th><th>模型 Brier</th><th>市場 Brier</th><th>重新擬合次數</th></tr>
+
+<tr><td>德甲</td><td>533</td><td>1.0608</td><td>0.979</td>
+<td class="neg">+0.0818</td>
+<td>0.6224</td><td>0.5822</td><td>67</td></tr>
+<tr><td>英超</td><td>695</td><td>1.0437</td><td>1.0037</td>
+<td class="neg">+0.0400</td>
+<td>0.6184</td><td>0.6027</td><td>64</td></tr>
+<tr><td>法甲</td><td>542</td><td>1.0204</td><td>0.9684</td>
+<td class="neg">+0.0520</td>
+<td>0.6031</td><td>0.5753</td><td>71</td></tr>
+<tr><td>義甲</td><td>696</td><td>0.9957</td><td>0.9591</td>
+<td class="neg">+0.0366</td>
+<td>0.5938</td><td>0.5698</td><td>68</td></tr>
+<tr><td>西甲</td><td>713</td><td>0.9965</td><td>0.9569</td>
+<td class="neg">+0.0396</td>
+<td>0.5918</td><td>0.5664</td><td>79</td></tr>
+</table></div>
+<h2>平注策略（每注 1 單位，收盤價）</h2>
+<div class="scroll"><table><tr><th>聯賽</th><th>1X2 注數</th><th>1X2 損益</th><th>1X2 ROI</th><th>大小2.5 注數</th><th>大小 損益</th><th>大小 ROI</th></tr>
+<tr><td>德甲</td>
+<td>317</td><td class="neg">-55.76</td><td>-17.6%</td>
+<td>371</td><td class="neg">-38.91</td><td>-10.5%</td></tr><tr><td>英超</td>
+<td>442</td><td class="pos">+17.76</td><td>+4.0%</td>
+<td>470</td><td class="neg">-28.37</td><td>-6.0%</td></tr><tr><td>法甲</td>
+<td>356</td><td class="neg">-40.58</td><td>-11.4%</td>
+<td>393</td><td class="neg">-30.59</td><td>-7.8%</td></tr><tr><td>義甲</td>
+<td>452</td><td class="neg">-56.65</td><td>-12.5%</td>
+<td>498</td><td class="neg">-26.51</td><td>-5.3%</td></tr><tr><td>西甲</td>
+<td>453</td><td class="neg">-65.24</td><td>-14.4%</td>
+<td>492</td><td class="neg">-17.33</td><td>-3.5%</td></tr>
+<tr><td><b>合計</b></td><td>2020</td><td class="neg"><b>-200.47</b></td><td>-9.9%</td>
+<td>2224</td><td class="neg"><b>-141.71</b></td><td>-6.4%</td></tr>
+</table></div>
+<h2>1X2 依 edge 大小</h2>
+<div class="scroll"><table><tr><th>edge 區間</th><th>注數</th><th>損益</th><th>ROI</th></tr>
+<tr><td>4–7pp</td><td>668</td><td class="neg">-34.95</td><td>-5.2%</td></tr><tr><td>7–10pp</td><td>546</td><td class="neg">-51.35</td><td>-9.4%</td></tr><tr><td>≥10pp</td><td>806</td><td class="neg">-114.17</td><td>-14.2%</td></tr>
+</table></div>
+<p class="muted">注意：樣本數少於幾百注時，ROI 的隨機波動可以輕易超過 ±10%。請看 log-loss 差距與注數，不要只看損益。</p>
+</div></body></html>

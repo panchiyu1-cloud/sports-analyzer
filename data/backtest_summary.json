@@ -1,0 +1,245 @@
+{
+ "generated": "2026-10-13",
+ "config": {
+  "dc_xi": 0.0065,
+  "dc_max_goals": 10,
+  "min_team_matches": 6,
+  "edge_threshold": 0.04,
+  "edge_mid": 0.07,
+  "edge_high": 0.1,
+  "min_model_prob": 0.25,
+  "g_threshold": 0.06,
+  "devig_method": "power"
+ },
+ "leagues": [
+  {
+   "matches": 533,
+   "matches_with_odds": 533,
+   "logloss_model": 1.0608,
+   "logloss_market": 0.979,
+   "brier_model": 0.6224,
+   "brier_market": 0.5822,
+   "bets_1x2": {
+    "n": 317,
+    "units": -55.76,
+    "roi": -0.1759
+   },
+   "bets_ou25": {
+    "n": 371,
+    "units": -38.91,
+    "roi": -0.1049
+   },
+   "by_edge": {
+    "4–7pp": {
+     "n": 108,
+     "units": -4.12,
+     "roi": -0.0381
+    },
+    "7–10pp": {
+     "n": 78,
+     "units": -32.44,
+     "roi": -0.4159
+    },
+    "≥10pp": {
+     "n": 131,
+     "units": -19.2,
+     "roi": -0.1466
+    }
+   },
+   "code": "D1",
+   "name": "德甲",
+   "fits": 67,
+   "first_test_day": "2024-12-14",
+   "last_day": "2026-10-11"
+  },
+  {
+   "matches": 695,
+   "matches_with_odds": 695,
+   "logloss_model": 1.0437,
+   "logloss_market": 1.0037,
+   "brier_model": 0.6184,
+   "brier_market": 0.6027,
+   "bets_1x2": {
+    "n": 442,
+    "units": 17.76,
+    "roi": 0.0402
+   },
+   "bets_ou25": {
+    "n": 470,
+    "units": -28.37,
+    "roi": -0.0604
+   },
+   "by_edge": {
+    "4–7pp": {
+     "n": 154,
+     "units": 11.31,
+     "roi": 0.0734
+    },
+    "7–10pp": {
+     "n": 112,
+     "units": 12.09,
+     "roi": 0.1079
+    },
+    "≥10pp": {
+     "n": 176,
+     "units": -5.64,
+     "roi": -0.032
+    }
+   },
+   "code": "E0",
+   "name": "英超",
+   "fits": 64,
+   "first_test_day": "2024-11-29",
+   "last_day": "2026-10-12"
+  },
+  {
+   "matches": 542,
+   "matches_with_odds": 542,
+   "logloss_model": 1.0204,
+   "logloss_market": 0.9684,
+   "brier_model": 0.6031,
+   "brier_market": 0.5753,
+   "bets_1x2": {
+    "n": 356,
+    "units": -40.58,
+    "roi": -0.114
+   },
+   "bets_ou25": {
+    "n": 393,
+    "units": -30.59,
+    "roi": -0.0778
+   },
+   "by_edge": {
+    "4–7pp": {
+     "n": 108,
+     "units": -2.64,
+     "roi": -0.0244
+    },
+    "7–10pp": {
+     "n": 98,
+     "units": -7.62,
+     "roi": -0.0778
+    },
+    "≥10pp": {
+     "n": 150,
+     "units": -30.32,
+     "roi": -0.2021
+    }
+   },
+   "code": "F1",
+   "name": "法甲",
+   "fits": 71,
+   "first_test_day": "2024-12-07",
+   "last_day": "2026-10-11"
+  },
+  {
+   "matches": 696,
+   "matches_with_odds": 696,
+   "logloss_model": 0.9957,
+   "logloss_market": 0.9591,
+   "brier_model": 0.5938,
+   "brier_market": 0.5698,
+   "bets_1x2": {
+    "n": 452,
+    "units": -56.65,
+    "roi": -0.1253
+   },
+   "bets_ou25": {
+    "n": 498,
+    "units": -26.51,
+    "roi": -0.0532
+   },
+   "by_edge": {
+    "4–7pp": {
+     "n": 157,
+     "units": -23.92,
+     "roi": -0.1524
+    },
+    "7–10pp": {
+     "n": 122,
+     "units": -0.68,
+     "roi": -0.0056
+    },
+    "≥10pp": {
+     "n": 173,
+     "units": -32.05,
+     "roi": -0.1853
+    }
+   },
+   "code": "I1",
+   "name": "義甲",
+   "fits": 68,
+   "first_test_day": "2024-11-23",
+   "last_day": "2026-10-12"
+  },
+  {
+   "matches": 713,
+   "matches_with_odds": 713,
+   "logloss_model": 0.9965,
+   "logloss_market": 0.9569,
+   "brier_model": 0.5918,
+   "brier_market": 0.5664,
+   "bets_1x2": {
+    "n": 453,
+    "units": -65.24,
+    "roi": -0.144
+   },
+   "bets_ou25": {
+    "n": 492,
+    "units": -17.33,
+    "roi": -0.0352
+   },
+   "by_edge": {
+    "4–7pp": {
+     "n": 141,
+     "units": -15.58,
+     "roi": -0.1105
+    },
+    "7–10pp": {
+     "n": 136,
+     "units": -22.7,
+     "roi": -0.1669
+    },
+    "≥10pp": {
+     "n": 176,
+     "units": -26.96,
+     "roi": -0.1532
+    }
+   },
+   "code": "SP1",
+   "name": "西甲",
+   "fits": 79,
+   "first_test_day": "2024-11-09",
+   "last_day": "2026-10-12"
+  }
+ ],
+ "total": {
+  "bets_1x2": {
+   "n": 2020,
+   "units": -200.47,
+   "roi": -0.0992
+  },
+  "bets_ou25": {
+   "n": 2224,
+   "units": -141.71,
+   "roi": -0.0637
+  },
+  "by_edge": {
+   "4–7pp": {
+    "n": 668,
+    "units": -34.95,
+    "roi": -0.0523
+   },
+   "7–10pp": {
+    "n": 546,
+    "units": -51.35,
+    "roi": -0.094
+   },
+   "≥10pp": {
+    "n": 806,
+    "units": -114.17,
+    "roi": -0.1417
+   }
+  }
+ }
+}
