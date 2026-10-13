@@ -1,0 +1,2538 @@
+{
+ "generated_at": "2026-10-13T00:40:38+00:00",
+ "date": "2026-10-13",
+ "credits_remaining": 497,
+ "competitions": [
+  {
+   "code": "PL",
+   "name": "英超",
+   "model": {
+    "n_matches": 829,
+    "n_teams": 27,
+    "home_advantage": 0.184,
+    "rho": -0.113,
+    "as_of": "2026-10-13"
+   },
+   "cards": [],
+   "signals": []
+  },
+  {
+   "code": "PD",
+   "name": "西甲",
+   "model": {
+    "n_matches": 867,
+    "n_teams": 30,
+    "home_advantage": 0.321,
+    "rho": -0.111,
+    "as_of": "2026-10-13"
+   },
+   "cards": [],
+   "signals": []
+  },
+  {
+   "code": "BL1",
+   "name": "德甲",
+   "model": {
+    "n_matches": 667,
+    "n_teams": 25,
+    "home_advantage": 0.329,
+    "rho": 0.021,
+    "as_of": "2026-10-13"
+   },
+   "cards": [],
+   "signals": []
+  },
+  {
+   "code": "SA",
+   "name": "義甲",
+   "model": {
+    "n_matches": 820,
+    "n_teams": 24,
+    "home_advantage": 0.12,
+    "rho": -0.026,
+    "as_of": "2026-10-13"
+   },
+   "cards": [],
+   "signals": []
+  },
+  {
+   "code": "FL1",
+   "name": "法甲",
+   "model": {
+    "n_matches": 678,
+    "n_teams": 25,
+    "home_advantage": 0.245,
+    "rho": -0.045,
+    "as_of": "2026-10-13"
+   },
+   "cards": [],
+   "signals": []
+  },
+  {
+   "code": "CL",
+   "name": "歐冠",
+   "model": {
+    "n_matches": 3879,
+    "n_teams": 146,
+    "home_advantage": 0.242,
+    "rho": -0.065,
+    "as_of": "2026-10-13"
+   },
+   "cards": [
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575341,
+     "kickoff_utc": "2026-10-13T16:45:00+00:00",
+     "kickoff_local": "10/14 (週三) 00:45",
+     "matchday": 2,
+     "home": "Racing Club de Lens",
+     "away": "Sporting Clube de Portugal",
+     "home_key": "racing lens",
+     "away_key": "sporting clube portugal",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 7,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 1.69,
+      "mu_away": 1.57,
+      "p_home": 0.402,
+      "p_draw": 0.2447,
+      "p_away": 0.3533,
+      "over25": 0.6323,
+      "most_likely": "1-1（11%）",
+      "home_attack_rank": 34,
+      "home_defence_rank": 66,
+      "away_attack_rank": 25,
+      "away_defence_rank": 46,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 9,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 3,
+       "ga": 2,
+       "points": 3
+      },
+      "away": {
+       "position": 6,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 3,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": null,
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "資料不足：Sporting Clube de Portugal 僅 1 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575342,
+     "kickoff_utc": "2026-10-13T16:45:00+00:00",
+     "kickoff_local": "10/14 (週三) 00:45",
+     "matchday": 2,
+     "home": "Sabah FK",
+     "away": "SK Slavia Praha",
+     "home_key": "sabah",
+     "away_key": "slavia praha",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 1.04,
+      "mu_away": 3.51,
+      "p_home": 0.0683,
+      "p_draw": 0.1079,
+      "p_away": 0.8238,
+      "over25": 0.8317,
+      "most_likely": "1-3（8%）",
+      "home_attack_rank": 145,
+      "home_defence_rank": 143,
+      "away_attack_rank": 15,
+      "away_defence_rank": 144,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 34,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 0,
+       "ga": 4,
+       "points": 0
+      },
+      "away": {
+       "position": 22,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 2,
+       "ga": 3,
+       "points": 0
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.2726,
+        "best": 3.7,
+        "book": "matchbook"
+       },
+       "draw": {
+        "fair": 0.2528,
+        "best": 3.85,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.4746,
+        "best": 2.12,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 2.5,
+       "over": {
+        "fair": 0.5819,
+        "best": 1.66,
+        "book": "marathonbet"
+       },
+       "under": {
+        "fair": 0.4181,
+        "best": 2.27,
+        "book": "betsson"
+       }
+      },
+      "spread": {
+       "line": 0.5,
+       "home": {
+        "fair": 0.5318,
+        "best": 1.87,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.4682,
+        "best": 2.12,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.2043,
+      "draw": -0.1449,
+      "away": 0.3492,
+      "over": 0.2498,
+      "under": -0.2498,
+      "spread_home": -0.3556,
+      "spread_away": 0.3556
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "SK Slavia Praha -0.5",
+      "line": 0.5,
+      "model_p": 0.8238,
+      "market_p": 0.4682,
+      "price": 2.12,
+      "book": "matchbook",
+      "edge": 0.3556,
+      "ev": 0.7464,
+      "kelly": 0.1666,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：Sabah FK 僅 1 場（建議 ≥ 6）",
+      "資料不足：SK Slavia Praha 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575343,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "FC Internazionale Milano",
+     "away": "Club Brugge KV",
+     "home_key": "inter",
+     "away_key": "brugge kv",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 83,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 7.59,
+      "mu_away": 1.39,
+      "p_home": 0.9753,
+      "p_draw": 0.0158,
+      "p_away": 0.0089,
+      "over25": 0.9926,
+      "most_likely": "7-1（6%）",
+      "home_attack_rank": 3,
+      "home_defence_rank": 36,
+      "away_attack_rank": 16,
+      "away_defence_rank": 146,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 25,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 2,
+       "points": 0
+      },
+      "away": {
+       "position": 22,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 2,
+       "ga": 3,
+       "points": 0
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.7885,
+        "best": 1.31,
+        "book": "gtbets"
+       },
+       "draw": {
+        "fair": 0.1374,
+        "best": 6.75,
+        "book": "winamax_de"
+       },
+       "away": {
+        "fair": 0.0741,
+        "best": 14.0,
+        "book": "unibet_se"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4714,
+        "best": 2.09,
+        "book": "marathonbet"
+       },
+       "under": {
+        "fair": 0.5286,
+        "best": 1.86,
+        "book": "coolbet"
+       }
+      },
+      "spread": {
+       "line": -1.5,
+       "home": {
+        "fair": 0.5634,
+        "best": 1.71,
+        "book": "marathonbet"
+       },
+       "away": {
+        "fair": 0.4366,
+        "best": 2.17,
+        "book": "marathonbet"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.1868,
+      "draw": -0.1216,
+      "away": -0.0652,
+      "over": 0.5034,
+      "under": -0.5034,
+      "spread_home": 0.3784,
+      "spread_away": -0.3784
+     },
+     "recommendation": {
+      "market": "大小",
+      "selection_key": "over",
+      "selection": "大分 3.5",
+      "line": 3.5,
+      "model_p": 0.9748,
+      "market_p": 0.4714,
+      "price": 2.09,
+      "book": "marathonbet",
+      "edge": 0.5034,
+      "ev": 1.0374,
+      "kelly": 0.2379,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：Club Brugge KV 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575344,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "Galatasaray SK",
+     "away": "FC Barcelona",
+     "home_key": "galatasaray",
+     "away_key": "barcelona",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 87,
+      "n_teams": 146,
+      "lambda_home": 1.06,
+      "mu_away": 3.77,
+      "p_home": 0.059,
+      "p_draw": 0.0947,
+      "p_away": 0.8463,
+      "over25": 0.8598,
+      "most_likely": "1-3（8%）",
+      "home_attack_rank": 86,
+      "home_defence_rank": 123,
+      "away_attack_rank": 1,
+      "away_defence_rank": 23,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 29,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 3,
+       "points": 0
+      },
+      "away": {
+       "position": 3,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 5,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.0974,
+        "best": 10.0,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.1257,
+        "best": 7.5,
+        "book": "unibet_nl"
+       },
+       "away": {
+        "fair": 0.7769,
+        "best": 1.33,
+        "book": "gtbets"
+       }
+      },
+      "totals": {
+       "line": 4.5,
+       "over": {
+        "fair": 0.4282,
+        "best": 2.28,
+        "book": "matchbook"
+       },
+       "under": {
+        "fair": 0.5718,
+        "best": 1.76,
+        "book": "matchbook"
+       }
+      },
+      "spread": {
+       "line": 2.0,
+       "home": {
+        "fair": 0.5374,
+        "best": 1.8,
+        "book": "coolbet"
+       },
+       "away": {
+        "fair": 0.4626,
+        "best": 2.07,
+        "book": "coolbet"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.0384,
+      "draw": -0.031,
+      "away": 0.0694,
+      "over": 0.0997,
+      "under": -0.0997,
+      "spread_home": -0.1718,
+      "spread_away": 0.1718
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "FC Barcelona -2",
+      "line": 2.0,
+      "model_p": 0.6344,
+      "market_p": 0.4626,
+      "price": 2.07,
+      "book": "coolbet",
+      "edge": 0.1718,
+      "ev": 0.3133,
+      "kelly": 0.0732,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：Galatasaray SK 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575345,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "Club Atlético de Madrid",
+     "away": "Manchester United FC",
+     "home_key": "atletico madrid",
+     "away_key": "manchester united",
+     "model": {
+      "fitted": true,
+      "data_ok": true,
+      "n_matches": 3879,
+      "home_matches": 86,
+      "away_matches": 84,
+      "n_teams": 146,
+      "lambda_home": 1.89,
+      "mu_away": 1.23,
+      "p_home": 0.5214,
+      "p_draw": 0.2375,
+      "p_away": 0.241,
+      "over25": 0.6038,
+      "most_likely": "1-1（11%）",
+      "home_attack_rank": 12,
+      "home_defence_rank": 26,
+      "away_attack_rank": 23,
+      "away_defence_rank": 38,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 25,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 2,
+       "points": 0
+      },
+      "away": {
+       "position": 4,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 4,
+       "ga": 0,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.5097,
+        "best": 1.98,
+        "book": "coolbet"
+       },
+       "draw": {
+        "fair": 0.2383,
+        "best": 4.1,
+        "book": "unibet_se"
+       },
+       "away": {
+        "fair": 0.252,
+        "best": 4.0,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4289,
+        "best": 2.21,
+        "book": "marathonbet"
+       },
+       "under": {
+        "fair": 0.5711,
+        "best": 1.69,
+        "book": "marathonbet"
+       }
+      },
+      "spread": {
+       "line": -0.5,
+       "home": {
+        "fair": 0.5,
+        "best": 1.96,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.5,
+        "best": 2.0,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.0117,
+      "draw": -0.0008,
+      "away": -0.011,
+      "over": -0.0486,
+      "under": 0.0486,
+      "spread_home": 0.0214,
+      "spread_away": -0.0214
+     },
+     "recommendation": null,
+     "notes": []
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575346,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "Arsenal FC",
+     "away": "Lille OSC",
+     "home_key": "arsenal",
+     "away_key": "lille",
+     "model": {
+      "fitted": true,
+      "data_ok": true,
+      "n_matches": 3879,
+      "home_matches": 84,
+      "away_matches": 76,
+      "n_teams": 146,
+      "lambda_home": 1.55,
+      "mu_away": 0.53,
+      "p_home": 0.6181,
+      "p_draw": 0.2644,
+      "p_away": 0.1176,
+      "over25": 0.3433,
+      "most_likely": "1-0（19%）",
+      "home_attack_rank": 13,
+      "home_defence_rank": 2,
+      "away_attack_rank": 72,
+      "away_defence_rank": 18,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 15,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 1,
+       "ga": 0,
+       "points": 3
+      },
+      "away": {
+       "position": 22,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 2,
+       "ga": 3,
+       "points": 0
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.8104,
+        "best": 1.28,
+        "book": "gtbets"
+       },
+       "draw": {
+        "fair": 0.1317,
+        "best": 7.0,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.058,
+        "best": 16.5,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.3885,
+        "best": 2.38,
+        "book": "leovegas_se"
+       },
+       "under": {
+        "fair": 0.6115,
+        "best": 1.61,
+        "book": "marathonbet"
+       }
+      },
+      "spread": {
+       "line": -1.75,
+       "home": {
+        "fair": 0.5257,
+        "best": 1.88,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.4743,
+        "best": 2.08,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.1923,
+      "draw": 0.1327,
+      "away": 0.0596,
+      "over": -0.2321,
+      "under": 0.2321,
+      "spread_home": -0.2578,
+      "spread_away": 0.2578
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "Lille OSC +1.75",
+      "line": -1.75,
+      "model_p": 0.7321,
+      "market_p": 0.4743,
+      "price": 2.08,
+      "book": "matchbook",
+      "edge": 0.2578,
+      "ev": 0.5228,
+      "kelly": 0.121,
+      "confidence": "高"
+     },
+     "notes": []
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575347,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "Viking FK",
+     "away": "FC Bayern München",
+     "home_key": "viking",
+     "away_key": "bayern munich",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 75,
+      "n_teams": 146,
+      "lambda_home": 0.99,
+      "mu_away": 3.96,
+      "p_home": 0.0459,
+      "p_draw": 0.081,
+      "p_away": 0.8732,
+      "over25": 0.8706,
+      "most_likely": "0-3（7%）",
+      "home_attack_rank": 92,
+      "home_defence_rank": 129,
+      "away_attack_rank": 2,
+      "away_defence_rank": 21,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 29,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 3,
+       "points": 0
+      },
+      "away": {
+       "position": 2,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 5,
+       "ga": 0,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.0344,
+        "best": 27.0,
+        "book": "nordicbet"
+       },
+       "draw": {
+        "fair": 0.056,
+        "best": 14.5,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.9096,
+        "best": 1.12,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 4.5,
+       "over": {
+        "fair": 0.4886,
+        "best": 1.97,
+        "book": "matchbook"
+       },
+       "under": {
+        "fair": 0.5114,
+        "best": 2.0,
+        "book": "matchbook"
+       }
+      },
+      "spread": {
+       "line": 2.5,
+       "home": {
+        "fair": 0.4299,
+        "best": 2.24,
+        "book": "betanysports"
+       },
+       "away": {
+        "fair": 0.5701,
+        "best": 1.7,
+        "book": "gtbets"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.0115,
+      "draw": 0.025,
+      "away": -0.0364,
+      "over": 0.0605,
+      "under": -0.0605,
+      "spread_home": 0.0037,
+      "spread_away": -0.0037
+     },
+     "recommendation": null,
+     "notes": [
+      "資料不足：Viking FK 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575348,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "RB Leipzig",
+     "away": "PSV",
+     "home_key": "rb leipzig",
+     "away_key": "psv",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 74,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 1.87,
+      "mu_away": 0.95,
+      "p_home": 0.5828,
+      "p_draw": 0.237,
+      "p_away": 0.1802,
+      "over25": 0.5334,
+      "most_likely": "1-1（11%）",
+      "home_attack_rank": 19,
+      "home_defence_rank": 64,
+      "away_attack_rank": 106,
+      "away_defence_rank": 47,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 32,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 4,
+       "points": 0
+      },
+      "away": {
+       "position": 19,
+       "played": 1,
+       "won": 0,
+       "drawn": 1,
+       "lost": 0,
+       "gf": 1,
+       "ga": 1,
+       "points": 1
+      }
+     },
+     "h2h": [],
+     "market": null,
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "資料不足：PSV 僅 1 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575349,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "matchday": 2,
+     "home": "Villarreal CF",
+     "away": "SSC Napoli",
+     "home_key": "villarreal",
+     "away_key": "napoli",
+     "model": {
+      "fitted": true,
+      "data_ok": true,
+      "n_matches": 3879,
+      "home_matches": 87,
+      "away_matches": 83,
+      "n_teams": 146,
+      "lambda_home": 1.33,
+      "mu_away": 1.48,
+      "p_home": 0.3319,
+      "p_draw": 0.2667,
+      "p_away": 0.4014,
+      "over25": 0.5334,
+      "most_likely": "1-1（13%）",
+      "home_attack_rank": 24,
+      "home_defence_rank": 76,
+      "away_attack_rank": 39,
+      "away_defence_rank": 13,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 21,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 2,
+       "ga": 3,
+       "points": 0
+      },
+      "away": {
+       "position": 27,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 0,
+       "ga": 1,
+       "points": 0
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.4516,
+        "best": 2.2,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.257,
+        "best": 3.85,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.2914,
+        "best": 3.4,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 2.5,
+       "over": {
+        "fair": 0.5918,
+        "best": 1.64,
+        "book": "gtbets"
+       },
+       "under": {
+        "fair": 0.4082,
+        "best": 2.31,
+        "book": "marathonbet"
+       }
+      },
+      "spread": {
+       "line": -0.25,
+       "home": {
+        "fair": 0.5172,
+        "best": 1.92,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.4828,
+        "best": 2.06,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.1197,
+      "draw": 0.0097,
+      "away": 0.11,
+      "over": -0.0584,
+      "under": 0.0584,
+      "spread_home": -0.1342,
+      "spread_away": 0.1342
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "SSC Napoli +0.25",
+      "line": -0.25,
+      "model_p": 0.617,
+      "market_p": 0.4828,
+      "price": 2.06,
+      "book": "matchbook",
+      "edge": 0.1342,
+      "ev": 0.271,
+      "kelly": 0.0639,
+      "confidence": "低"
+     },
+     "notes": []
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575350,
+     "kickoff_utc": "2026-10-14T16:45:00+00:00",
+     "kickoff_local": "10/15 (週四) 00:45",
+     "matchday": 2,
+     "home": "LASK Linz",
+     "away": "Liverpool FC",
+     "home_key": "lask linz",
+     "away_key": "liverpool",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 83,
+      "n_teams": 146,
+      "lambda_home": 0.5,
+      "mu_away": 1.15,
+      "p_home": 0.1515,
+      "p_draw": 0.3331,
+      "p_away": 0.5154,
+      "over25": 0.2294,
+      "most_likely": "0-1（21%）",
+      "home_attack_rank": 140,
+      "home_defence_rank": 31,
+      "away_attack_rank": 33,
+      "away_defence_rank": 33,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 27,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 0,
+       "ga": 1,
+       "points": 0
+      },
+      "away": {
+       "position": 13,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 2,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.0886,
+        "best": 10.5,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.1435,
+        "best": 6.75,
+        "book": "winamax_de"
+       },
+       "away": {
+        "fair": 0.7679,
+        "best": 1.31,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.484,
+        "best": 2.01,
+        "book": "pinnacle"
+       },
+       "under": {
+        "fair": 0.516,
+        "best": 1.88,
+        "book": "coolbet"
+       }
+      },
+      "spread": {
+       "line": 1.5,
+       "home": {
+        "fair": 0.4611,
+        "best": 2.09,
+        "book": "coolbet"
+       },
+       "away": {
+        "fair": 0.5389,
+        "best": 1.8,
+        "book": "coolbet"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.0629,
+      "draw": 0.1896,
+      "away": -0.2525,
+      "over": -0.3983,
+      "under": 0.3983,
+      "spread_home": 0.3079,
+      "spread_away": -0.3079
+     },
+     "recommendation": {
+      "market": "大小",
+      "selection_key": "under",
+      "selection": "小分 3.5",
+      "line": 3.5,
+      "model_p": 0.9143,
+      "market_p": 0.516,
+      "price": 1.88,
+      "book": "coolbet",
+      "edge": 0.3983,
+      "ev": 0.7188,
+      "kelly": 0.2042,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：LASK Linz 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575351,
+     "kickoff_utc": "2026-10-14T16:45:00+00:00",
+     "kickoff_local": "10/15 (週四) 00:45",
+     "matchday": 2,
+     "home": "Feyenoord Rotterdam",
+     "away": "Como 1907",
+     "home_key": "feyenoord rotterdam",
+     "away_key": "como",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 83,
+      "n_teams": 146,
+      "lambda_home": 1.06,
+      "mu_away": 2.39,
+      "p_home": 0.1466,
+      "p_draw": 0.1903,
+      "p_away": 0.6631,
+      "over25": 0.6701,
+      "most_likely": "1-2（10%）",
+      "home_attack_rank": 63,
+      "home_defence_rank": 124,
+      "away_attack_rank": 14,
+      "away_defence_rank": 10,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 33,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 5,
+       "points": 0
+      },
+      "away": {
+       "position": 5,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 4,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.2695,
+        "best": 3.75,
+        "book": "unibet_se"
+       },
+       "draw": {
+        "fair": 0.2287,
+        "best": 4.3,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.5018,
+        "best": 2.02,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4592,
+        "best": 2.14,
+        "book": "matchbook"
+       },
+       "under": {
+        "fair": 0.5408,
+        "best": 1.84,
+        "book": "matchbook"
+       }
+      },
+      "spread": {
+       "line": 0.5,
+       "home": {
+        "fair": 0.5056,
+        "best": 1.97,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.4944,
+        "best": 2.02,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.1229,
+      "draw": -0.0384,
+      "away": 0.1613,
+      "over": -0.0064,
+      "under": 0.0064,
+      "spread_home": -0.1687,
+      "spread_away": 0.1687
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "Como 1907 -0.5",
+      "line": 0.5,
+      "model_p": 0.6631,
+      "market_p": 0.4944,
+      "price": 2.02,
+      "book": "matchbook",
+      "edge": 0.1687,
+      "ev": 0.3394,
+      "kelly": 0.0832,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：Feyenoord Rotterdam 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575352,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "AS Roma",
+     "away": "Real Madrid CF",
+     "home_key": "roma",
+     "away_key": "real madrid",
+     "model": {
+      "fitted": true,
+      "data_ok": true,
+      "n_matches": 3879,
+      "home_matches": 83,
+      "away_matches": 87,
+      "n_teams": 146,
+      "lambda_home": 1.47,
+      "mu_away": 1.04,
+      "p_home": 0.4638,
+      "p_draw": 0.2777,
+      "p_away": 0.2585,
+      "over25": 0.4592,
+      "most_likely": "1-1（13%）",
+      "home_attack_rank": 11,
+      "home_defence_rank": 3,
+      "away_attack_rank": 7,
+      "away_defence_rank": 9,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 17,
+       "played": 1,
+       "won": 0,
+       "drawn": 1,
+       "lost": 0,
+       "gf": 1,
+       "ga": 1,
+       "points": 1
+      },
+      "away": {
+       "position": 13,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 2,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.2576,
+        "best": 3.8,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.2328,
+        "best": 4.2,
+        "book": "unibet_se"
+       },
+       "away": {
+        "fair": 0.5096,
+        "best": 1.99,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4711,
+        "best": 2.14,
+        "book": "matchbook"
+       },
+       "under": {
+        "fair": 0.5289,
+        "best": 1.83,
+        "book": "matchbook"
+       }
+      },
+      "spread": {
+       "line": 0.5,
+       "home": {
+        "fair": 0.5,
+        "best": 1.98,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.5,
+        "best": 1.99,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.2062,
+      "draw": 0.0449,
+      "away": -0.2511,
+      "over": -0.2261,
+      "under": 0.2261,
+      "spread_home": 0.2415,
+      "spread_away": -0.2415
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_home",
+      "selection": "AS Roma +0.5",
+      "line": 0.5,
+      "model_p": 0.7415,
+      "market_p": 0.5,
+      "price": 1.98,
+      "book": "matchbook",
+      "edge": 0.2415,
+      "ev": 0.4681,
+      "kelly": 0.1194,
+      "confidence": "高"
+     },
+     "notes": []
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575353,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "Manchester City FC",
+     "away": "Paris Saint-Germain FC",
+     "home_key": "manchester city",
+     "away_key": "psg",
+     "model": {
+      "fitted": true,
+      "data_ok": true,
+      "n_matches": 3879,
+      "home_matches": 84,
+      "away_matches": 75,
+      "n_teams": 146,
+      "lambda_home": 1.82,
+      "mu_away": 1.0,
+      "p_home": 0.5603,
+      "p_draw": 0.2424,
+      "p_away": 0.1973,
+      "over25": 0.5355,
+      "most_likely": "1-1（12%）",
+      "home_attack_rank": 5,
+      "home_defence_rank": 5,
+      "away_attack_rank": 8,
+      "away_defence_rank": 17,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 8,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 2,
+       "ga": 0,
+       "points": 3
+      },
+      "away": {
+       "position": 1,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 6,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.4478,
+        "best": 2.28,
+        "book": "gtbets"
+       },
+       "draw": {
+        "fair": 0.2319,
+        "best": 4.2,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.3203,
+        "best": 3.15,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4547,
+        "best": 2.15,
+        "book": "betanysports"
+       },
+       "under": {
+        "fair": 0.5453,
+        "best": 1.78,
+        "book": "coolbet"
+       }
+      },
+      "spread": {
+       "line": -0.5,
+       "home": {
+        "fair": 0.4356,
+        "best": 2.21,
+        "book": "betanysports"
+       },
+       "away": {
+        "fair": 0.5644,
+        "best": 1.71,
+        "book": "betonlineag"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.1125,
+      "draw": 0.0105,
+      "away": -0.123,
+      "over": -0.142,
+      "under": 0.142,
+      "spread_home": 0.1247,
+      "spread_away": -0.1247
+     },
+     "recommendation": {
+      "market": "大小",
+      "selection_key": "under",
+      "selection": "小分 3.5",
+      "line": 3.5,
+      "model_p": 0.6873,
+      "market_p": 0.5453,
+      "price": 1.78,
+      "book": "coolbet",
+      "edge": 0.142,
+      "ev": 0.2234,
+      "kelly": 0.0716,
+      "confidence": "低"
+     },
+     "notes": []
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575354,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "FK Bodø/Glimt",
+     "away": "Borussia Dortmund",
+     "home_key": "bod glimt",
+     "away_key": "dortmund",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 75,
+      "n_teams": 146,
+      "lambda_home": 0.41,
+      "mu_away": 2.42,
+      "p_home": 0.0428,
+      "p_draw": 0.1418,
+      "p_away": 0.8155,
+      "over25": 0.5384,
+      "most_likely": "0-2（17%）",
+      "home_attack_rank": 143,
+      "home_defence_rank": 125,
+      "away_attack_rank": 17,
+      "away_defence_rank": 19,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 36,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 0,
+       "ga": 5,
+       "points": 0
+      },
+      "away": {
+       "position": 12,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 3,
+       "ga": 2,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.2972,
+        "best": 3.35,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.2279,
+        "best": 4.25,
+        "book": "unibet_se"
+       },
+       "away": {
+        "fair": 0.475,
+        "best": 2.1,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4769,
+        "best": 2.02,
+        "book": "matchbook"
+       },
+       "under": {
+        "fair": 0.5231,
+        "best": 1.95,
+        "book": "matchbook"
+       }
+      },
+      "spread": {
+       "line": 0.5,
+       "home": {
+        "fair": 0.5318,
+        "best": 1.89,
+        "book": "matchbook"
+       },
+       "away": {
+        "fair": 0.4682,
+        "best": 2.1,
+        "book": "matchbook"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.2544,
+      "draw": -0.0861,
+      "away": 0.3405,
+      "over": -0.1614,
+      "under": 0.1614,
+      "spread_home": -0.3473,
+      "spread_away": 0.3473
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "Borussia Dortmund -0.5",
+      "line": 0.5,
+      "model_p": 0.8155,
+      "market_p": 0.4682,
+      "price": 2.1,
+      "book": "matchbook",
+      "edge": 0.3473,
+      "ev": 0.7125,
+      "kelly": 0.1619,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：FK Bodø/Glimt 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575355,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "Aston Villa FC",
+     "away": "Fenerbahçe SK",
+     "home_key": "aston villa",
+     "away_key": "fenerbahce",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 84,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 1.03,
+      "mu_away": 1.29,
+      "p_home": 0.2886,
+      "p_draw": 0.2965,
+      "p_away": 0.4149,
+      "over25": 0.4082,
+      "most_likely": "1-1（14%）",
+      "home_attack_rank": 40,
+      "home_defence_rank": 55,
+      "away_attack_rank": 42,
+      "away_defence_rank": 6,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 9,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 3,
+       "ga": 2,
+       "points": 3
+      },
+      "away": {
+       "position": 19,
+       "played": 1,
+       "won": 0,
+       "drawn": 1,
+       "lost": 0,
+       "gf": 1,
+       "ga": 1,
+       "points": 1
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 20,
+      "h2h": {
+       "home": {
+        "fair": 0.5927,
+        "best": 1.69,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.2266,
+        "best": 4.3,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.1808,
+        "best": 5.6,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 2.5,
+       "over": {
+        "fair": 0.5778,
+        "best": 1.68,
+        "book": "unibet_nl"
+       },
+       "under": {
+        "fair": 0.4222,
+        "best": 2.3,
+        "book": "betsson"
+       }
+      },
+      "spread": {
+       "line": -1.0,
+       "home": {
+        "fair": 0.4575,
+        "best": 2.11,
+        "book": "coolbet"
+       },
+       "away": {
+        "fair": 0.5425,
+        "best": 1.78,
+        "book": "marathonbet"
+       }
+      }
+     },
+     "edges": {
+      "home": -0.3041,
+      "draw": 0.0699,
+      "away": 0.2341,
+      "over": -0.1696,
+      "under": 0.1696,
+      "spread_home": -0.3218,
+      "spread_away": 0.3218
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_away",
+      "selection": "Fenerbahçe SK +1",
+      "line": -1.0,
+      "model_p": 0.8643,
+      "market_p": 0.5425,
+      "price": 1.78,
+      "book": "marathonbet",
+      "edge": 0.3218,
+      "ev": 0.5385,
+      "kelly": 0.1726,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：Fenerbahçe SK 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575356,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "Real Betis Balompié",
+     "away": "FC Porto",
+     "home_key": "real betis",
+     "away_key": "porto",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 87,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 1.99,
+      "mu_away": 0.35,
+      "p_home": 0.7635,
+      "p_draw": 0.1851,
+      "p_away": 0.0513,
+      "over25": 0.4151,
+      "most_likely": "2-0（19%）",
+      "home_attack_rank": 31,
+      "home_defence_rank": 32,
+      "away_attack_rank": 144,
+      "away_defence_rank": 77,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 9,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 3,
+       "ga": 2,
+       "points": 3
+      },
+      "away": {
+       "position": 31,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 0,
+       "ga": 2,
+       "points": 0
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.4703,
+        "best": 2.12,
+        "book": "betfair_ex_eu"
+       },
+       "draw": {
+        "fair": 0.2542,
+        "best": 3.9,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.2755,
+        "best": 3.6,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 2.5,
+       "over": {
+        "fair": 0.5649,
+        "best": 1.74,
+        "book": "marathonbet"
+       },
+       "under": {
+        "fair": 0.4351,
+        "best": 2.19,
+        "book": "betanysports"
+       }
+      },
+      "spread": {
+       "line": -0.5,
+       "home": {
+        "fair": 0.4682,
+        "best": 2.04,
+        "book": "betonlineag"
+       },
+       "away": {
+        "fair": 0.5318,
+        "best": 1.81,
+        "book": "betonlineag"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.2932,
+      "draw": -0.0691,
+      "away": -0.2242,
+      "over": -0.1498,
+      "under": 0.1498,
+      "spread_home": 0.2953,
+      "spread_away": -0.2953
+     },
+     "recommendation": {
+      "market": "讓球",
+      "selection_key": "spread_home",
+      "selection": "Real Betis Balompié -0.5",
+      "line": -0.5,
+      "model_p": 0.7635,
+      "market_p": 0.4682,
+      "price": 2.04,
+      "book": "betonlineag",
+      "edge": 0.2953,
+      "ev": 0.5576,
+      "kelly": 0.134,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：FC Porto 僅 1 場（建議 ≥ 6）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575357,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "FK Shakhtar Donetsk",
+     "away": "PAE AEK",
+     "home_key": "shakhtar donetsk",
+     "away_key": "pae aek",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 1,
+      "n_teams": 146,
+      "lambda_home": 0.55,
+      "mu_away": 0.76,
+      "p_home": 0.2308,
+      "p_draw": 0.4097,
+      "p_away": 0.3595,
+      "over25": 0.1451,
+      "most_likely": "0-0（28%）",
+      "home_attack_rank": 85,
+      "home_defence_rank": 30,
+      "away_attack_rank": 105,
+      "away_defence_rank": 1,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 17,
+       "played": 1,
+       "won": 0,
+       "drawn": 1,
+       "lost": 0,
+       "gf": 1,
+       "ga": 1,
+       "points": 1
+      },
+      "away": {
+       "position": 16,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 1,
+       "ga": 0,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": null,
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "資料不足：FK Shakhtar Donetsk 僅 1 場（建議 ≥ 6）",
+      "資料不足：PAE AEK 僅 1 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
+     ]
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575358,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "matchday": 2,
+     "home": "ŠK Slovan Bratislava",
+     "away": "VfB Stuttgart",
+     "home_key": "slovan bratislava",
+     "away_key": "stuttgart",
+     "model": {
+      "fitted": true,
+      "data_ok": false,
+      "n_matches": 3879,
+      "home_matches": 1,
+      "away_matches": 75,
+      "n_teams": 146,
+      "lambda_home": 1.71,
+      "mu_away": 3.93,
+      "p_home": 0.1182,
+      "p_draw": 0.1177,
+      "p_away": 0.7641,
+      "over25": 0.92,
+      "most_likely": "1-3（6%）",
+      "home_attack_rank": 43,
+      "home_defence_rank": 145,
+      "away_attack_rank": 26,
+      "away_defence_rank": 63,
+      "home_advantage": 0.242
+     },
+     "form": {
+      "home": "",
+      "away": ""
+     },
+     "table": {
+      "home": {
+       "position": 35,
+       "played": 1,
+       "won": 0,
+       "drawn": 0,
+       "lost": 1,
+       "gf": 1,
+       "ga": 6,
+       "points": 0
+      },
+      "away": {
+       "position": 6,
+       "played": 1,
+       "won": 1,
+       "drawn": 0,
+       "lost": 0,
+       "gf": 3,
+       "ga": 1,
+       "points": 3
+      }
+     },
+     "h2h": [],
+     "market": {
+      "books": 21,
+      "h2h": {
+       "home": {
+        "fair": 0.0925,
+        "best": 11.0,
+        "book": "coolbet"
+       },
+       "draw": {
+        "fair": 0.145,
+        "best": 6.6,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.7625,
+        "best": 1.31,
+        "book": "betfair_ex_eu"
+       }
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4972,
+        "best": 1.96,
+        "book": "matchbook"
+       },
+       "under": {
+        "fair": 0.5028,
+        "best": 1.99,
+        "book": "matchbook"
+       }
+      },
+      "spread": {
+       "line": 1.5,
+       "home": {
+        "fair": 0.4547,
+        "best": 2.1,
+        "book": "betonlineag"
+       },
+       "away": {
+        "fair": 0.5453,
+        "best": 1.77,
+        "book": "betonlineag"
+       }
+      }
+     },
+     "edges": {
+      "home": 0.0257,
+      "draw": -0.0273,
+      "away": 0.0016,
+      "over": 0.3166,
+      "under": -0.3166,
+      "spread_home": -0.0645,
+      "spread_away": 0.0645
+     },
+     "recommendation": {
+      "market": "大小",
+      "selection_key": "over",
+      "selection": "大分 3.5",
+      "line": 3.5,
+      "model_p": 0.8138,
+      "market_p": 0.4972,
+      "price": 1.96,
+      "book": "matchbook",
+      "edge": 0.3166,
+      "ev": 0.595,
+      "kelly": 0.1549,
+      "confidence": "低",
+      "caveat": "資料不足，信心下修"
+     },
+     "notes": [
+      "資料不足：ŠK Slovan Bratislava 僅 1 場（建議 ≥ 6）"
+     ]
+    }
+   ],
+   "signals": [
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575342,
+     "kickoff_utc": "2026-10-13T16:45:00+00:00",
+     "kickoff_local": "10/14 (週三) 00:45",
+     "home": "Sabah FK",
+     "away": "SK Slavia Praha",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "SK Slavia Praha -0.5",
+     "line": 0.5,
+     "model_p": 0.8238,
+     "market_p": 0.4682,
+     "price": 2.12,
+     "book": "matchbook",
+     "edge": 0.3556,
+     "ev": 0.7464,
+     "kelly": 0.1666,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575343,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "home": "FC Internazionale Milano",
+     "away": "Club Brugge KV",
+     "market": "大小",
+     "selection_key": "over",
+     "selection": "大分 3.5",
+     "line": 3.5,
+     "model_p": 0.9748,
+     "market_p": 0.4714,
+     "price": 2.09,
+     "book": "marathonbet",
+     "edge": 0.5034,
+     "ev": 1.0374,
+     "kelly": 0.2379,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575344,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "home": "Galatasaray SK",
+     "away": "FC Barcelona",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "FC Barcelona -2",
+     "line": 2.0,
+     "model_p": 0.6344,
+     "market_p": 0.4626,
+     "price": 2.07,
+     "book": "coolbet",
+     "edge": 0.1718,
+     "ev": 0.3133,
+     "kelly": 0.0732,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575346,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "home": "Arsenal FC",
+     "away": "Lille OSC",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "Lille OSC +1.75",
+     "line": -1.75,
+     "model_p": 0.7321,
+     "market_p": 0.4743,
+     "price": 2.08,
+     "book": "matchbook",
+     "edge": 0.2578,
+     "ev": 0.5228,
+     "kelly": 0.121,
+     "confidence": "高"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575349,
+     "kickoff_utc": "2026-10-13T19:00:00+00:00",
+     "kickoff_local": "10/14 (週三) 03:00",
+     "home": "Villarreal CF",
+     "away": "SSC Napoli",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "SSC Napoli +0.25",
+     "line": -0.25,
+     "model_p": 0.617,
+     "market_p": 0.4828,
+     "price": 2.06,
+     "book": "matchbook",
+     "edge": 0.1342,
+     "ev": 0.271,
+     "kelly": 0.0639,
+     "confidence": "低"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575350,
+     "kickoff_utc": "2026-10-14T16:45:00+00:00",
+     "kickoff_local": "10/15 (週四) 00:45",
+     "home": "LASK Linz",
+     "away": "Liverpool FC",
+     "market": "大小",
+     "selection_key": "under",
+     "selection": "小分 3.5",
+     "line": 3.5,
+     "model_p": 0.9143,
+     "market_p": 0.516,
+     "price": 1.88,
+     "book": "coolbet",
+     "edge": 0.3983,
+     "ev": 0.7188,
+     "kelly": 0.2042,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575351,
+     "kickoff_utc": "2026-10-14T16:45:00+00:00",
+     "kickoff_local": "10/15 (週四) 00:45",
+     "home": "Feyenoord Rotterdam",
+     "away": "Como 1907",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "Como 1907 -0.5",
+     "line": 0.5,
+     "model_p": 0.6631,
+     "market_p": 0.4944,
+     "price": 2.02,
+     "book": "matchbook",
+     "edge": 0.1687,
+     "ev": 0.3394,
+     "kelly": 0.0832,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575352,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "home": "AS Roma",
+     "away": "Real Madrid CF",
+     "market": "讓球",
+     "selection_key": "spread_home",
+     "selection": "AS Roma +0.5",
+     "line": 0.5,
+     "model_p": 0.7415,
+     "market_p": 0.5,
+     "price": 1.98,
+     "book": "matchbook",
+     "edge": 0.2415,
+     "ev": 0.4681,
+     "kelly": 0.1194,
+     "confidence": "高"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575353,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "home": "Manchester City FC",
+     "away": "Paris Saint-Germain FC",
+     "market": "大小",
+     "selection_key": "under",
+     "selection": "小分 3.5",
+     "line": 3.5,
+     "model_p": 0.6873,
+     "market_p": 0.5453,
+     "price": 1.78,
+     "book": "coolbet",
+     "edge": 0.142,
+     "ev": 0.2234,
+     "kelly": 0.0716,
+     "confidence": "低"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575354,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "home": "FK Bodø/Glimt",
+     "away": "Borussia Dortmund",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "Borussia Dortmund -0.5",
+     "line": 0.5,
+     "model_p": 0.8155,
+     "market_p": 0.4682,
+     "price": 2.1,
+     "book": "matchbook",
+     "edge": 0.3473,
+     "ev": 0.7125,
+     "kelly": 0.1619,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575355,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "home": "Aston Villa FC",
+     "away": "Fenerbahçe SK",
+     "market": "讓球",
+     "selection_key": "spread_away",
+     "selection": "Fenerbahçe SK +1",
+     "line": -1.0,
+     "model_p": 0.8643,
+     "market_p": 0.5425,
+     "price": 1.78,
+     "book": "marathonbet",
+     "edge": 0.3218,
+     "ev": 0.5385,
+     "kelly": 0.1726,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575356,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "home": "Real Betis Balompié",
+     "away": "FC Porto",
+     "market": "讓球",
+     "selection_key": "spread_home",
+     "selection": "Real Betis Balompié -0.5",
+     "line": -0.5,
+     "model_p": 0.7635,
+     "market_p": 0.4682,
+     "price": 2.04,
+     "book": "betonlineag",
+     "edge": 0.2953,
+     "ev": 0.5576,
+     "kelly": 0.134,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    },
+    {
+     "sport": "football",
+     "competition": "CL",
+     "competition_name": "歐冠",
+     "match_id": 575358,
+     "kickoff_utc": "2026-10-14T19:00:00+00:00",
+     "kickoff_local": "10/15 (週四) 03:00",
+     "home": "ŠK Slovan Bratislava",
+     "away": "VfB Stuttgart",
+     "market": "大小",
+     "selection_key": "over",
+     "selection": "大分 3.5",
+     "line": 3.5,
+     "model_p": 0.8138,
+     "market_p": 0.4972,
+     "price": 1.96,
+     "book": "matchbook",
+     "edge": 0.3166,
+     "ev": 0.595,
+     "kelly": 0.1549,
+     "confidence": "低",
+     "caveat": "資料不足，信心下修"
+    }
+   ]
+  }
+ ]
+}
