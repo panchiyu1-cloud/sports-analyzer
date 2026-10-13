@@ -2,7 +2,7 @@ name: Evening football odds
 
 # 12:25 UTC = 20:25 台北: a second, cheaper international snapshot (h2h only,
 # 1 credit per competition with fixtures) a few hours before European
-# kick-offs. It gives the 運彩 bets taken in the morning their closing-line
+# kick-offs and before the next MLB first pitches. It gives the 運彩 bets taken in the morning their closing-line
 # value, and the 20:00 phone upload a fresh fair price to compare against.
 
 on:
@@ -33,6 +33,10 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Football — fresh h2h consensus (fills CLV for morning 運彩 bets)
         run: python -m sports_analyzer.pipeline football --days 1 --markets h2h
+      # Tomorrow-morning (Taipei) MLB games: lines are posted by now, and this
+      # is what the 20:00 baseball upload is compared against. ~3 credits.
+      - name: MLB — refresh odds for the next Taipei morning
+        run: python -m sports_analyzer.pipeline mlb
       - name: Compare the latest 運彩 upload against it
         run: python -m sports_analyzer.pipeline tw
       - name: Commit

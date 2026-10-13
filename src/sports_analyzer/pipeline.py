@@ -295,8 +295,11 @@ def run_mlb(
     credits = None
     if games and settings and settings.odds_api_key:
         odds = OddsClient(settings.odds_api_key, regions=settings.odds_regions)
-        start = datetime.combine(today_local, datetime.min.time(), tzinfo=LOCAL_TZ)
-        events = odds.odds(MLB_ODDS_KEY, commence_from=start, commence_to=start + timedelta(days=1))
+        # The MLB "date" is a US date; its games start the next Taipei morning, so the
+        # window has to follow the actual first pitches, not the Taipei calendar day.
+        first = min(g.game_date for g in games) - timedelta(hours=1)
+        last = max(g.game_date for g in games) + timedelta(hours=1)
+        events = odds.odds(MLB_ODDS_KEY, commence_from=first, commence_to=last)
         credits = odds.credits_remaining()
     cards = build_mlb_cards(games, events, cfg)
     snapshot = {
@@ -306,8 +309,40 @@ def run_mlb(
         "games": cards,
         "odds_key": MLB_ODDS_KEY,
     }
+    # A second run on the same date (the evening refresh) must not wipe what the
+    # morning found: games that have since started lose their odds, and the 運彩
+    # comparison lives on the card.
+    _merge_previous_mlb(snapshot, _latest_snapshot("mlb"))
+    clv_updated = tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb")
+    log.info(
+        "mlb: %d cards with odds, %d 運彩 CLV filled",
+        sum(1 for c in cards if c["market"]),
+        clv_updated,
+    )
     _write_snapshot(today_local, "mlb", snapshot)
     return snapshot
+
+
+def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | None) -> None:
+    """Carry market blocks and 運彩 comparisons from an earlier same-date MLB snapshot."""
+    if not previous or previous.get("date") != snapshot.get("date"):
+        return
+    old_cards = {str(c.get("game_pk")): c for c in previous.get("games", [])}
+    for card in snapshot["games"]:
+        old = old_cards.get(str(card.get("game_pk")))
+        if not old:
+            continue
+        if card.get("market") is None and old.get("market"):
+            # Per-block "stale" flags: update_clv() must not use a carried-over
+            # price as the closing price (CLV would then just equal EV).
+            card["market"] = {
+                k: ({**v, "stale": True} if isinstance(v, dict) else v)
+                for k, v in old["market"].items()
+            }
+            card["t10"] = old.get("t10")
+            card["notes"] = ["賠率為稍早快照（比賽可能已開打）"]
+        if old.get("tw") and not card.get("tw"):
+            card["tw"] = old["tw"]
 
 
 # ------------------------------------------------------------------ 運彩

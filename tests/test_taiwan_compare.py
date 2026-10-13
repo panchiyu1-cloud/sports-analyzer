@@ -136,6 +136,36 @@ class MergePreviousMarketsTests(unittest.TestCase):
         )
         self.assertIsNone(card["market"]["totals"])
 
+    def test_mlb_evening_run_keeps_started_games_market_and_tw(self):
+        from sports_analyzer.pipeline import _merge_previous_mlb
+
+        h2h = {"home": {"fair": 0.55, "fair_odds": 1.82, "best": 1.9, "book": "y"}}
+        morning = {
+            "date": "2026-10-17",
+            "games": [
+                {
+                    "game_pk": 1,
+                    "market": {"books": 3, "h2h": h2h, "totals": None, "spread": None},
+                    "t10": {"g": 0.07},
+                    "tw": {"game_no": "103", "values": []},
+                }
+            ],
+        }
+        started = {"game_pk": 1, "market": None, "t10": None, "tw": None, "notes": ["x"]}
+        fresh = {"game_pk": 2, "market": {"books": 3, "h2h": h2h}, "t10": None, "tw": None}
+        evening = {"date": "2026-10-17", "games": [started, fresh]}
+        _merge_previous_mlb(evening, morning)
+        self.assertTrue(started["market"]["h2h"]["stale"])
+        self.assertEqual(started["t10"], {"g": 0.07})
+        self.assertEqual(started["tw"]["game_no"], "103")
+        # The carried-over price is never a closing price.
+        self.assertIsNone(tw_ledger._fair_prob_for(started["market"], "home", ""))
+        self.assertEqual(tw_ledger._fair_prob_for(fresh["market"], "home", ""), 0.55)
+        # A different date is left alone.
+        other = {"game_pk": 1, "market": None, "tw": None}
+        _merge_previous_mlb({"date": "2026-10-18", "games": [other]}, morning)
+        self.assertIsNone(other["market"])
+
 
 class TwLedgerTests(unittest.TestCase):
     def setUp(self):
