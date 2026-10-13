@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
 from ..http import Session
@@ -33,7 +33,11 @@ class MlbGame:
 
     @property
     def is_final(self) -> bool:
-        return self.status.startswith("Final") and self.home_score is not None and self.away_score is not None
+        return (
+            self.status.startswith("Final")
+            and self.home_score is not None
+            and self.away_score is not None
+        )
 
 
 def parse_schedule(payload: dict[str, Any]) -> list[MlbGame]:
@@ -47,7 +51,7 @@ def parse_schedule(payload: dict[str, Any]) -> list[MlbGame]:
                         game_pk=int(raw["gamePk"]),
                         game_date=datetime.fromisoformat(
                             str(raw["gameDate"]).replace("Z", "+00:00")
-                        ).astimezone(timezone.utc),
+                        ).astimezone(UTC),
                         status=str((raw.get("status") or {}).get("detailedState") or ""),
                         home=str(teams["home"]["team"]["name"]),
                         away=str(teams["away"]["team"]["name"]),

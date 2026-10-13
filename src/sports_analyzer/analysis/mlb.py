@@ -17,7 +17,9 @@ from ..teams import best_match
 from .football import market_view
 
 
-def match_event(game: MlbGame, events: list[OddsEvent], tolerance_hours: float = 6) -> OddsEvent | None:
+def match_event(
+    game: MlbGame, events: list[OddsEvent], tolerance_hours: float = 6
+) -> OddsEvent | None:
     window = timedelta(hours=tolerance_hours)
     candidates = [e for e in events if abs(e.commence_time - game.game_date) <= window]
     from ..teams import canonical
@@ -57,7 +59,9 @@ def g_value_block(view: dict[str, Any], cfg: ModelConfig) -> dict[str, Any] | No
     }
 
 
-def build_cards(games: list[MlbGame], events: list[OddsEvent], cfg: ModelConfig) -> list[dict[str, Any]]:
+def build_cards(
+    games: list[MlbGame], events: list[OddsEvent], cfg: ModelConfig
+) -> list[dict[str, Any]]:
     cards: list[dict[str, Any]] = []
     for g in sorted(games, key=lambda x: x.game_date):
         from ..teams import canonical

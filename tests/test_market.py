@@ -1,8 +1,7 @@
 import unittest
 
-from tests import conftest  # noqa: F401  (adds src/ to sys.path for unittest)
-
 from sports_analyzer.models import market
+from tests import conftest  # noqa: F401  (adds src/ to sys.path for unittest)
 
 
 class DevigTests(unittest.TestCase):

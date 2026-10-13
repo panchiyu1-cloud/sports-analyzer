@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from ..http import Session
@@ -72,9 +72,7 @@ def parse_events(payload: list[dict[str, Any]]) -> list[OddsEvent]:
         try:
             home = str(raw["home_team"])
             away = str(raw["away_team"])
-            books = tuple(
-                _parse_book(book, home, away) for book in raw.get("bookmakers", [])
-            )
+            books = tuple(_parse_book(book, home, away) for book in raw.get("bookmakers", []))
             events.append(
                 OddsEvent(
                     id=str(raw["id"]),
@@ -145,7 +143,7 @@ def _side(name: str, home: str, away: str) -> str | None:
 
 
 def _parse_iso(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
 
 
 # ---------------------------------------------------------------------- fetching
@@ -194,4 +192,4 @@ class OddsClient:
 
 def _iso_z(value: datetime) -> str:
     # The API wants second precision and a literal Z.
-    return value.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return value.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")

@@ -73,27 +73,34 @@ def stage1_league(args: tuple[str, list[str], float, int, int]) -> tuple[str, li
                 rec: dict[str, Any] = {
                     "league": code,
                     "date": m.day.isoformat(),
-                    "outcome": 0 if m.home_goals > m.away_goals else (1 if m.home_goals == m.away_goals else 2),
+                    "outcome": 0
+                    if m.home_goals > m.away_goals
+                    else (1 if m.home_goals == m.away_goals else 2),
                     "total": m.home_goals + m.away_goals,
                     "model": [pred.p_home, pred.p_draw, pred.p_away],
                     "market": market.devig(list(m.h2h), "power"),
                     "prices": list(m.h2h),
                     "max_prices": list(m.h2h_max) if m.h2h_max else list(m.h2h),
                     "close": market.devig(list(m.h2h_close), "power") if m.h2h_close else None,
-                    "data_ok": min(model.matches_per_team[m.home], model.matches_per_team[m.away]) >= MODEL.min_team_matches,
+                    "data_ok": min(model.matches_per_team[m.home], model.matches_per_team[m.away])
+                    >= MODEL.min_team_matches,
                 }
                 if m.over25:
                     rec["model_over"] = pred.over_prob(2.5)
                     rec["market_over"] = market.devig(list(m.over25), "power")[0]
                     rec["over_prices"] = list(m.over25)
-                    rec["close_over"] = market.devig(list(m.over25_close), "power")[0] if m.over25_close else None
+                    rec["close_over"] = (
+                        market.devig(list(m.over25_close), "power")[0] if m.over25_close else None
+                    )
                 out.append(rec)
         cursor = week_end
     return code, out
 
 
 # ----------------------------------------------------------------- stage 2
-def stage2_blend(recs: list[dict[str, Any]], min_samples: int, ridge: float, step_days: int) -> list[dict[str, Any]]:
+def stage2_blend(
+    recs: list[dict[str, Any]], min_samples: int, ridge: float, step_days: int
+) -> list[dict[str, Any]]:
     """Pooled walk-forward blend. Returns the records that received a blend prediction."""
     for r in recs:
         r["d"] = date.fromisoformat(r["date"])
@@ -106,14 +113,35 @@ def stage2_blend(recs: list[dict[str, Any]], min_samples: int, ridge: float, ste
         train = [r for r in recs if r["d"] < cursor]
         test = [r for r in recs if cursor <= r["d"] < week_end]
         if test and len(train) >= min_samples:
-            w = blend.fit_blend([r["model"] for r in train], [r["market"] for r in train], [r["outcome"] for r in train], ridge=ridge)
+            w = blend.fit_blend(
+                [r["model"] for r in train],
+                [r["market"] for r in train],
+                [r["outcome"] for r in train],
+                ridge=ridge,
+            )
             flat = [[1 / 3] * 3] * len(train)
-            w0 = blend.fit_blend(flat, [r["market"] for r in train], [r["outcome"] for r in train], ridge=ridge)
+            w0 = blend.fit_blend(
+                flat, [r["market"] for r in train], [r["outcome"] for r in train], ridge=ridge
+            )
             tr_ou = [r for r in train if "model_over" in r]
             w_ou = None
             if len(tr_ou) >= min_samples:
-                w_ou = blend.fit_binary_blend([r["model_over"] for r in tr_ou], [r["market_over"] for r in tr_ou], [1 if r["total"] > 2.5 else 0 for r in tr_ou], ridge=ridge)
-            weights_log.append({"week": cursor.isoformat(), "n_train": len(train), "a_model": round(w.a_model, 3), "b_market": round(w.b_market, 3), "c_draw": round(w.intercepts[1], 3), "c_away": round(w.intercepts[2], 3)})
+                w_ou = blend.fit_binary_blend(
+                    [r["model_over"] for r in tr_ou],
+                    [r["market_over"] for r in tr_ou],
+                    [1 if r["total"] > 2.5 else 0 for r in tr_ou],
+                    ridge=ridge,
+                )
+            weights_log.append(
+                {
+                    "week": cursor.isoformat(),
+                    "n_train": len(train),
+                    "a_model": round(w.a_model, 3),
+                    "b_market": round(w.b_market, 3),
+                    "c_draw": round(w.intercepts[1], 3),
+                    "c_away": round(w.intercepts[2], 3),
+                }
+            )
             for r in test:
                 r["blend"] = list(w.apply(r["model"], r["market"]))
                 r["mkt_only"] = list(w0.apply([1 / 3] * 3, r["market"]))
@@ -131,19 +159,31 @@ def stage2_blend(recs: list[dict[str, Any]], min_samples: int, ridge: float, ste
 def bet_block(bets: list[float], clvs: list[float], sel: dict[str, int]) -> dict[str, Any]:
     n = len(bets)
     if n == 0:
-        return {"n": 0, "units": 0.0, "roi": None, "roi_se": None, "clv": None, "clv_se": None, "sel": {}}
+        return {
+            "n": 0,
+            "units": 0.0,
+            "roi": None,
+            "roi_se": None,
+            "clv": None,
+            "clv_se": None,
+            "sel": {},
+        }
     return {
         "n": n,
         "units": round(float(sum(bets)), 2),
         "roi": round(float(sum(bets) / n), 4),
         "roi_se": round(float(np.std(bets, ddof=1) / math.sqrt(n)), 4) if n > 1 else None,
         "clv": round(float(np.mean(clvs)), 4) if clvs else None,
-        "clv_se": round(float(np.std(clvs, ddof=1) / math.sqrt(len(clvs))), 4) if len(clvs) > 1 else None,
+        "clv_se": round(float(np.std(clvs, ddof=1) / math.sqrt(len(clvs))), 4)
+        if len(clvs) > 1
+        else None,
         "sel": dict(sel),
     }
 
 
-def strategy(tested: list[dict[str, Any]], prob_key: str, thr: float, min_p: float, price_key: str) -> dict[str, Any]:
+def strategy(
+    tested: list[dict[str, Any]], prob_key: str, thr: float, min_p: float, price_key: str
+) -> dict[str, Any]:
     bets, clvs, sel = [], [], defaultdict(int)
     for r in tested:
         p = r[prob_key]
@@ -177,7 +217,9 @@ def ou_strategy(tested: list[dict[str, Any]], prob_key: str, thr: float) -> dict
     return bet_block(bets, clvs, sel)
 
 
-def summarise(tested: list[dict[str, Any]], weights_log: list[dict[str, Any]], cfg: ModelConfig) -> dict[str, Any]:
+def summarise(
+    tested: list[dict[str, Any]], weights_log: list[dict[str, Any]], cfg: ModelConfig
+) -> dict[str, Any]:
     y = [r["outcome"] for r in tested]
     with_close = [r for r in tested if r.get("close")]
     yc = [r["outcome"] for r in with_close]
@@ -188,7 +230,9 @@ def summarise(tested: list[dict[str, Any]], weights_log: list[dict[str, Any]], c
         "n": len(tested),
         "model": round(blend.log_loss_3([r["model"] for r in tested], y), 4),
         "market": round(blend.log_loss_3([r["market"] for r in tested], y), 4),
-        "closing": round(blend.log_loss_3([r["close"] for r in with_close], yc), 4) if with_close else None,
+        "closing": round(blend.log_loss_3([r["close"] for r in with_close], yc), 4)
+        if with_close
+        else None,
         "blend": round(blend.log_loss_3([r["blend"] for r in tested], y), 4),
         "market_only": round(blend.log_loss_3([r["mkt_only"] for r in tested], y), 4),
     }
@@ -199,11 +243,22 @@ def summarise(tested: list[dict[str, Any]], weights_log: list[dict[str, Any]], c
         "blend": round(blend.log_loss_2([r["blend_over"] for r in ou], yo), 4) if ou else None,
     }
     strategies = {
-        "raw_model": {f"{t:.2f}": strategy(tested, "model", t, cfg.min_model_prob, "prices") for t in (0.04, 0.10)},
-        "blend_pinnacle": {f"{t:.2f}": strategy(tested, "blend", t, 0.2, "prices") for t in THRESHOLDS},
-        "blend_best": {f"{t:.2f}": strategy(tested, "blend", t, 0.2, "max_prices") for t in THRESHOLDS},
-        "market_only": {f"{t:.2f}": strategy(tested, "mkt_only", t, 0.2, "prices") for t in THRESHOLDS},
-        "ou_blend": {f"{t:.2f}": ou_strategy(tested, "blend_over", t) for t in (0.0, 0.02, 0.03, 0.05)},
+        "raw_model": {
+            f"{t:.2f}": strategy(tested, "model", t, cfg.min_model_prob, "prices")
+            for t in (0.04, 0.10)
+        },
+        "blend_pinnacle": {
+            f"{t:.2f}": strategy(tested, "blend", t, 0.2, "prices") for t in THRESHOLDS
+        },
+        "blend_best": {
+            f"{t:.2f}": strategy(tested, "blend", t, 0.2, "max_prices") for t in THRESHOLDS
+        },
+        "market_only": {
+            f"{t:.2f}": strategy(tested, "mkt_only", t, 0.2, "prices") for t in THRESHOLDS
+        },
+        "ou_blend": {
+            f"{t:.2f}": ou_strategy(tested, "blend_over", t) for t in (0.0, 0.02, 0.03, 0.05)
+        },
     }
     fav_bets, fav_clv = [], []
     for r in tested:
@@ -248,7 +303,11 @@ def summarise(tested: list[dict[str, Any]], weights_log: list[dict[str, Any]], c
 
     return {
         "generated": date.today().isoformat(),
-        "config": {"xi": cfg.dc_xi, "min_model_prob": cfg.min_model_prob, "devig": cfg.devig_method},
+        "config": {
+            "xi": cfg.dc_xi,
+            "min_model_prob": cfg.min_model_prob,
+            "devig": cfg.devig_method,
+        },
         "passed": passed,
         "verdict": verdict,
         "logloss": logloss,
@@ -329,7 +388,10 @@ def main(argv: list[str] | None = None) -> int:
     by_league: dict[str, list[str]] = defaultdict(list)
     for p in args.csv:
         by_league[p.name.split("_")[0].upper()].append(str(p))
-    jobs = [(code, paths, cfg.dc_xi, args.min_train, args.step_days) for code, paths in sorted(by_league.items())]
+    jobs = [
+        (code, paths, cfg.dc_xi, args.min_train, args.step_days)
+        for code, paths in sorted(by_league.items())
+    ]
 
     records: list[dict[str, Any]] = []
     with ProcessPoolExecutor(max_workers=args.workers) as ex:
@@ -347,8 +409,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  blend edge>={t}: n={b['n']} ROI={b['roi']} CLV={b['clv']}")
 
     DATA_DIR.mkdir(exist_ok=True)
-    (DATA_DIR / "backtest_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
-    html = Environment(autoescape=select_autoescape(["html"])).from_string(TEMPLATE).render(s=summary)
+    (DATA_DIR / "backtest_summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    html = (
+        Environment(autoescape=select_autoescape(["html"])).from_string(TEMPLATE).render(s=summary)
+    )
     DOCS_DIR.mkdir(exist_ok=True)
     (DOCS_DIR / "backtest.html").write_text(html, encoding="utf-8")
     print("wrote docs/backtest.html")

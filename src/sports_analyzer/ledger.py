@@ -8,16 +8,36 @@ from __future__ import annotations
 
 import csv
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from .fetch.football import Match
 
 COLUMNS = [
-    "id", "created_at", "sport", "competition", "match_id", "kickoff_utc", "home", "away",
-    "market", "selection", "selection_key", "line", "model_p", "market_p", "price", "book",
-    "edge", "confidence", "kelly", "status", "result", "profit", "settled_at",
+    "id",
+    "created_at",
+    "sport",
+    "competition",
+    "match_id",
+    "kickoff_utc",
+    "home",
+    "away",
+    "market",
+    "selection",
+    "selection_key",
+    "line",
+    "model_p",
+    "market_p",
+    "price",
+    "book",
+    "edge",
+    "confidence",
+    "kelly",
+    "status",
+    "result",
+    "profit",
+    "settled_at",
 ]
 PENDING, WIN, LOSS, PUSH, VOID = "pending", "win", "loss", "push", "void"
 
@@ -47,13 +67,15 @@ def append_signals(path: Path, signals: list[dict[str, Any]], now: datetime | No
     """Add new signals; an existing id (same match/market/selection) is left untouched."""
     rows = read(path)
     existing = {r["id"] for r in rows}
-    stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    stamp = (now or datetime.now(UTC)).isoformat(timespec="seconds")
     added = 0
     for s in signals:
         sid = signal_id(s)
         if sid in existing:
             continue
-        rows.append({**s, "id": sid, "created_at": stamp, "status": PENDING, "line": _fmt(s.get("line"))})
+        rows.append(
+            {**s, "id": sid, "created_at": stamp, "status": PENDING, "line": _fmt(s.get("line"))}
+        )
         existing.add(sid)
         added += 1
     write(path, rows)
@@ -64,7 +86,7 @@ def settle_football(path: Path, results: list[Match], now: datetime | None = Non
     """Settle pending football rows whose match has a final score."""
     rows = read(path)
     by_id = {m.id: m for m in results if m.is_finished}
-    stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    stamp = (now or datetime.now(UTC)).isoformat(timespec="seconds")
     settled = 0
     for row in rows:
         if row["status"] != PENDING or row["sport"] != "football":
@@ -75,7 +97,9 @@ def settle_football(path: Path, results: list[Match], now: datetime | None = Non
             continue
         if m is None:
             continue
-        outcome = grade(row["selection_key"], _float(row["line"]), m.home_goals or 0, m.away_goals or 0)
+        outcome = grade(
+            row["selection_key"], _float(row["line"]), m.home_goals or 0, m.away_goals or 0
+        )
         price = _float(row["price"]) or 1.0
         row["status"] = outcome
         row["result"] = f"{m.home_goals}-{m.away_goals}"

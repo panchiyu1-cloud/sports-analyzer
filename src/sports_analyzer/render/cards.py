@@ -47,7 +47,11 @@ def render_index(
     tw_values: list[dict[str, Any]] = []
     tw_reports: list[dict[str, Any]] = []
     for sport_name, snap, cards in (
-        ("足球", football, [c for comp in (football or {}).get("competitions", []) for c in comp.get("cards", [])]),
+        (
+            "足球",
+            football,
+            [c for comp in (football or {}).get("competitions", []) for c in comp.get("cards", [])],
+        ),
         ("MLB", mlb, (mlb or {}).get("games", [])),
     ):
         if snap and snap.get("tw_report"):
@@ -57,16 +61,20 @@ def render_index(
             if not tw:
                 continue
             for v in tw.get("values", []):
-                tw_values.append({
-                    "sport": sport_name,
-                    "competition_name": c.get("competition_name", "MLB"),
-                    "kickoff_local": c.get("kickoff_local") or c.get("local"),
-                    "kickoff_utc": c.get("kickoff_utc", ""),
-                    "home": c["home"], "away": c["away"],
-                    "home_zh": tw.get("home_zh"), "away_zh": tw.get("away_zh"),
-                    "captured_at": tw.get("captured_at"),
-                    **v,
-                })
+                tw_values.append(
+                    {
+                        "sport": sport_name,
+                        "competition_name": c.get("competition_name", "MLB"),
+                        "kickoff_local": c.get("kickoff_local") or c.get("local"),
+                        "kickoff_utc": c.get("kickoff_utc", ""),
+                        "home": c["home"],
+                        "away": c["away"],
+                        "home_zh": tw.get("home_zh"),
+                        "away_zh": tw.get("away_zh"),
+                        "captured_at": tw.get("captured_at"),
+                        **v,
+                    }
+                )
     tw_values.sort(key=lambda v: (-v["ev"], v["kickoff_utc"]))
 
     html = template.render(

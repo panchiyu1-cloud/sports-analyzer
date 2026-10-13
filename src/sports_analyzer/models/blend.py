@@ -16,8 +16,8 @@ the matches being predicted (the backtest enforces this).
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 import numpy as np
 from scipy.optimize import minimize
@@ -34,7 +34,9 @@ class BlendWeights:
     intercepts: tuple[float, float, float]
     n_samples: int
 
-    def apply(self, model_p: Sequence[float], market_p: Sequence[float]) -> tuple[float, float, float]:
+    def apply(
+        self, model_p: Sequence[float], market_p: Sequence[float]
+    ) -> tuple[float, float, float]:
         m = np.clip(np.asarray(model_p, dtype=float), EPS, 1 - EPS)
         k = np.clip(np.asarray(market_p, dtype=float), EPS, 1 - EPS)
         score = self.a_model * np.log(m) + self.b_market * np.log(k) + np.asarray(self.intercepts)
@@ -89,8 +91,12 @@ def fit_blend(
         penalty = ridge * (a**2 + (b - 1.0) ** 2 + c_draw**2 + c_away**2)
         return float(-logp[rows, y].sum() + penalty)
 
-    res = minimize(nll, x0=np.array([0.0, 1.0, 0.0, 0.0]), method="L-BFGS-B",
-                   bounds=[(-2, 3), (-2, 3), (-2, 2), (-2, 2)])
+    res = minimize(
+        nll,
+        x0=np.array([0.0, 1.0, 0.0, 0.0]),
+        method="L-BFGS-B",
+        bounds=[(-2, 3), (-2, 3), (-2, 2), (-2, 2)],
+    )
     a, b, c_draw, c_away = res.x
     return BlendWeights(float(a), float(b), (0.0, float(c_draw), float(c_away)), n)
 
@@ -116,8 +122,9 @@ def fit_binary_blend(
         loss = np.logaddexp(0, -z) * y + np.logaddexp(0, z) * (1 - y)
         return float(loss.sum() + ridge * (a**2 + (b - 1.0) ** 2 + c**2))
 
-    res = minimize(nll, x0=np.array([0.0, 1.0, 0.0]), method="L-BFGS-B",
-                   bounds=[(-2, 3), (-2, 3), (-2, 2)])
+    res = minimize(
+        nll, x0=np.array([0.0, 1.0, 0.0]), method="L-BFGS-B", bounds=[(-2, 3), (-2, 3), (-2, 2)]
+    )
     a, b, c = res.x
     return BinaryBlendWeights(float(a), float(b), float(c), len(y))
 

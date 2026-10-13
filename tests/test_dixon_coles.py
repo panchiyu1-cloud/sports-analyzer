@@ -5,9 +5,8 @@ from datetime import date, timedelta
 
 import numpy as np
 
-from tests import conftest  # noqa: F401
-
 from sports_analyzer.models import dixon_coles as dc
+from tests import conftest  # noqa: F401
 
 
 def synthetic_season(seed: int = 7, n_teams: int = 10, rounds: int = 4):

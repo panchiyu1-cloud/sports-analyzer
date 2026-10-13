@@ -2,10 +2,8 @@ import json
 import random
 import tempfile
 import unittest
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-
-from tests import conftest  # noqa: F401
 
 from sports_analyzer import ledger
 from sports_analyzer.analysis import football as analysis
@@ -13,12 +11,30 @@ from sports_analyzer.config import COMPETITION_BY_CODE, ModelConfig
 from sports_analyzer.fetch import football, odds
 from sports_analyzer.models import dixon_coles as dc
 from sports_analyzer.render.cards import render_index
+from tests import conftest  # noqa: F401
 
 FIXTURES = Path(__file__).parent / "fixtures"
 PL_TEAMS = [
-    "arsenal", "chelsea", "wolves", "brighton", "liverpool", "manchester city", "manchester united",
-    "tottenham", "newcastle", "aston villa", "everton", "fulham", "brentford", "crystal palace",
-    "west ham", "nottingham forest", "bournemouth", "leeds", "burnley", "sunderland",
+    "arsenal",
+    "chelsea",
+    "wolves",
+    "brighton",
+    "liverpool",
+    "manchester city",
+    "manchester united",
+    "tottenham",
+    "newcastle",
+    "aston villa",
+    "everton",
+    "fulham",
+    "brentford",
+    "crystal palace",
+    "west ham",
+    "nottingham forest",
+    "bournemouth",
+    "leeds",
+    "burnley",
+    "sunderland",
 ]
 
 
@@ -43,6 +59,7 @@ def synthetic_pl_results(seed: int = 3) -> list[dc.MatchResult]:
 
 def _pois(rng, lam):
     import math
+
     limit, k, p = math.exp(-lam), 0, 1.0
     while True:
         p *= rng.random()
@@ -68,8 +85,14 @@ class BuildCardsTests(unittest.TestCase):
 
     def build(self, cfg=None):
         return analysis.build_cards(
-            COMPETITION_BY_CODE["PL"], self.fixtures, self.model, self.standings,
-            self.results, [], self.events, cfg or self.cfg,
+            COMPETITION_BY_CODE["PL"],
+            self.fixtures,
+            self.model,
+            self.standings,
+            self.results,
+            [],
+            self.events,
+            cfg or self.cfg,
         )
 
     def test_match_odds_by_canonical_key(self):
@@ -84,7 +107,9 @@ class BuildCardsTests(unittest.TestCase):
         ars = next(c for c in cards if c["home_key"] == "arsenal")
         self.assertTrue(ars["model"]["fitted"])
         self.assertTrue(ars["model"]["data_ok"])
-        self.assertAlmostEqual(ars["model"]["p_home"] + ars["model"]["p_draw"] + ars["model"]["p_away"], 1.0, places=3)
+        self.assertAlmostEqual(
+            ars["model"]["p_home"] + ars["model"]["p_draw"] + ars["model"]["p_away"], 1.0, places=3
+        )
         self.assertEqual(ars["market"]["books"], 3)
         self.assertEqual(ars["market"]["totals"]["line"], 2.5)
         self.assertEqual(ars["market"]["spread"]["line"], -0.75)
@@ -108,29 +133,72 @@ class BuildCardsTests(unittest.TestCase):
         self.assertTrue(all(c["recommendation"] is None for c in cards))
         self.assertEqual(signals, [])
         # With a zero threshold every card with a market gets one.
-        cards, signals = self.build(ModelConfig(edge_threshold=0.0, edge_mid=0.07, edge_high=0.10, min_model_prob=0.0))
+        cards, signals = self.build(
+            ModelConfig(edge_threshold=0.0, edge_mid=0.07, edge_high=0.10, min_model_prob=0.0)
+        )
         with_market = [c for c in cards if c["market"]]
         self.assertEqual(len(signals), len(with_market))
         s = signals[0]
-        for key in ("selection", "model_p", "market_p", "price", "book", "edge", "confidence", "kelly", "kickoff_local", "competition_name"):
+        for key in (
+            "selection",
+            "model_p",
+            "market_p",
+            "price",
+            "book",
+            "edge",
+            "confidence",
+            "kelly",
+            "kickoff_local",
+            "competition_name",
+        ):
             self.assertIn(key, s)
 
     def test_missing_odds_adds_note(self):
         cards, _ = analysis.build_cards(
-            COMPETITION_BY_CODE["PL"], self.fixtures, self.model, self.standings, self.results, [], [], self.cfg
+            COMPETITION_BY_CODE["PL"],
+            self.fixtures,
+            self.model,
+            self.standings,
+            self.results,
+            [],
+            [],
+            self.cfg,
         )
         self.assertTrue(all(c["market"] is None for c in cards))
         self.assertTrue(any("賠率" in n for n in cards[0]["notes"]))
 
     def test_insufficient_data_team_gets_no_signal(self):
         # Regression for the first live run: a club with one fitted match produced a 97% "edge".
-        thin = synthetic_pl_results() + [dc.MatchResult(date(2026, 10, 1), "club brugge", "arsenal", 0, 3)]
+        thin = synthetic_pl_results() + [
+            dc.MatchResult(date(2026, 10, 1), "club brugge", "arsenal", 0, 3)
+        ]
         model = dc.fit(thin, as_of=date(2026, 10, 16))
-        fx = football.Match(9, "CL", datetime(2026, 10, 17, 14, tzinfo=timezone.utc), "TIMED", 3, "Arsenal FC", "Club Brugge KV")
-        ev = odds.OddsEvent("x", "soccer_uefa_champs_league", fx.utc_date, "Arsenal", "Club Brugge",
-                            (odds.BookOdds("pinnacle", {"home": 1.5, "draw": 4.5, "away": 6.5}),))
+        fx = football.Match(
+            9,
+            "CL",
+            datetime(2026, 10, 17, 14, tzinfo=UTC),
+            "TIMED",
+            3,
+            "Arsenal FC",
+            "Club Brugge KV",
+        )
+        ev = odds.OddsEvent(
+            "x",
+            "soccer_uefa_champs_league",
+            fx.utc_date,
+            "Arsenal",
+            "Club Brugge",
+            (odds.BookOdds("pinnacle", {"home": 1.5, "draw": 4.5, "away": 6.5}),),
+        )
         cards, signals = analysis.build_cards(
-            COMPETITION_BY_CODE["CL"], [fx], model, [], [], [], [ev], ModelConfig(edge_threshold=0.0, min_model_prob=0.0)
+            COMPETITION_BY_CODE["CL"],
+            [fx],
+            model,
+            [],
+            [],
+            [],
+            [ev],
+            ModelConfig(edge_threshold=0.0, min_model_prob=0.0),
         )
         self.assertTrue(cards[0]["model"]["fitted"])
         self.assertFalse(cards[0]["model"]["data_ok"])
@@ -140,8 +208,18 @@ class BuildCardsTests(unittest.TestCase):
         self.assertTrue(any("資料不足" in n for n in cards[0]["notes"]))
 
     def test_unknown_team_adds_note_without_crash(self):
-        stranger = football.Match(1, "PL", datetime(2026, 10, 17, 14, tzinfo=timezone.utc), "TIMED", 8, "Fictional Town FC", "Arsenal FC")
-        cards, _ = analysis.build_cards(COMPETITION_BY_CODE["PL"], [stranger], self.model, [], [], [], [], self.cfg)
+        stranger = football.Match(
+            1,
+            "PL",
+            datetime(2026, 10, 17, 14, tzinfo=UTC),
+            "TIMED",
+            8,
+            "Fictional Town FC",
+            "Arsenal FC",
+        )
+        cards, _ = analysis.build_cards(
+            COMPETITION_BY_CODE["PL"], [stranger], self.model, [], [], [], [], self.cfg
+        )
         self.assertFalse(cards[0]["model"]["fitted"])
         self.assertIsNone(cards[0]["recommendation"])
 
@@ -150,11 +228,33 @@ class BuildCardsTests(unittest.TestCase):
         snapshot = {
             "generated_at": "2026-10-16T00:15:00+00:00",
             "credits_remaining": 480,
-            "competitions": [{"code": "PL", "name": "英超", "model": {"n_matches": self.model.n_matches, "home_advantage": 0.25}, "cards": cards, "signals": signals}],
+            "competitions": [
+                {
+                    "code": "PL",
+                    "name": "英超",
+                    "model": {"n_matches": self.model.n_matches, "home_advantage": 0.25},
+                    "cards": cards,
+                    "signals": signals,
+                }
+            ],
         }
         text = json.dumps(snapshot, ensure_ascii=False)
         with tempfile.TemporaryDirectory() as tmp:
-            out = render_index(json.loads(text), None, {"pending": 1, "settled": 0, "wins": 0, "losses": 0, "hit_rate": None, "units": 0.0, "roi": None}, datetime.now(timezone.utc), Path(tmp) / "index.html")
+            out = render_index(
+                json.loads(text),
+                None,
+                {
+                    "pending": 1,
+                    "settled": 0,
+                    "wins": 0,
+                    "losses": 0,
+                    "hit_rate": None,
+                    "units": 0.0,
+                    "roi": None,
+                },
+                datetime.now(UTC),
+                Path(tmp) / "index.html",
+            )
             html = out.read_text(encoding="utf-8")
         self.assertIn("Arsenal FC", html)
         self.assertIn("英超", html)
@@ -169,11 +269,25 @@ class LedgerTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.path = Path(self.tmp.name) / "ledger.csv"
         self.signal = {
-            "sport": "football", "competition": "PL", "competition_name": "英超", "match_id": 500001,
-            "kickoff_utc": "2026-10-17T14:00:00+00:00", "kickoff_local": "10/17 (週六) 22:00",
-            "home": "Arsenal FC", "away": "Chelsea FC", "market": "1X2", "selection_key": "home",
-            "selection": "主勝 Arsenal FC", "line": None, "model_p": 0.6, "market_p": 0.52,
-            "price": 1.84, "book": "betfair_ex_eu", "edge": 0.08, "confidence": "中", "kelly": 0.03,
+            "sport": "football",
+            "competition": "PL",
+            "competition_name": "英超",
+            "match_id": 500001,
+            "kickoff_utc": "2026-10-17T14:00:00+00:00",
+            "kickoff_local": "10/17 (週六) 22:00",
+            "home": "Arsenal FC",
+            "away": "Chelsea FC",
+            "market": "1X2",
+            "selection_key": "home",
+            "selection": "主勝 Arsenal FC",
+            "line": None,
+            "model_p": 0.6,
+            "market_p": 0.52,
+            "price": 1.84,
+            "book": "betfair_ex_eu",
+            "edge": 0.08,
+            "confidence": "中",
+            "kelly": 0.03,
         }
 
     def tearDown(self):
@@ -189,7 +303,17 @@ class LedgerTests(unittest.TestCase):
 
     def test_settle_win_and_summary(self):
         ledger.append_signals(self.path, [self.signal])
-        result = football.Match(500001, "PL", datetime(2026, 10, 17, 14, tzinfo=timezone.utc), "FINISHED", 8, "Arsenal FC", "Chelsea FC", 2, 1)
+        result = football.Match(
+            500001,
+            "PL",
+            datetime(2026, 10, 17, 14, tzinfo=UTC),
+            "FINISHED",
+            8,
+            "Arsenal FC",
+            "Chelsea FC",
+            2,
+            1,
+        )
         self.assertEqual(ledger.settle_football(self.path, [result]), 1)
         rows = ledger.read(self.path)
         self.assertEqual(rows[0]["status"], "win")
@@ -209,8 +333,12 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(ledger.grade("spread_home", -0.5, 2, 1), "win")
         self.assertEqual(ledger.grade("spread_home", -1.0, 2, 1), "push")
         self.assertEqual(ledger.grade("spread_away", -1.0, 2, 1), "push")
-        self.assertEqual(ledger.grade("spread_away", 0.5, 1, 1), "loss")  # away gives -0.5, draw loses
-        self.assertEqual(ledger.grade("spread_away", -0.5, 1, 1), "win")  # away gets +0.5, draw wins
+        self.assertEqual(
+            ledger.grade("spread_away", 0.5, 1, 1), "loss"
+        )  # away gives -0.5, draw loses
+        self.assertEqual(
+            ledger.grade("spread_away", -0.5, 1, 1), "win"
+        )  # away gets +0.5, draw wins
         self.assertEqual(ledger.grade("spread_home", -0.75, 2, 1), "win")  # +0.25 net
 
 

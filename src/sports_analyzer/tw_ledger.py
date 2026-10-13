@@ -9,16 +9,35 @@ from __future__ import annotations
 
 import csv
 import hashlib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from .ledger import LOSS, PENDING, PUSH, WIN, grade, profit
 
 COLUMNS = [
-    "id", "captured_at", "sport", "competition", "match_id", "kickoff_utc", "home", "away",
-    "market", "selection", "selection_key", "line", "tw_price", "fair_odds", "fair_prob", "ev",
-    "closing_fair_prob", "clv", "status", "result", "profit", "settled_at",
+    "id",
+    "captured_at",
+    "sport",
+    "competition",
+    "match_id",
+    "kickoff_utc",
+    "home",
+    "away",
+    "market",
+    "selection",
+    "selection_key",
+    "line",
+    "tw_price",
+    "fair_odds",
+    "fair_prob",
+    "ev",
+    "closing_fair_prob",
+    "clv",
+    "status",
+    "result",
+    "profit",
+    "settled_at",
 ]
 
 
@@ -43,7 +62,9 @@ def write(path: Path, rows: list[dict[str, Any]]) -> None:
             w.writerow({c: row.get(c, "") for c in COLUMNS})
 
 
-def append_values(path: Path, cards: list[dict[str, Any]], sport: str, competition_of: Any = None) -> int:
+def append_values(
+    path: Path, cards: list[dict[str, Any]], sport: str, competition_of: Any = None
+) -> int:
     """Record every value bet on the cards; an existing id keeps its first (earliest) price."""
     rows = read(path)
     existing = {r["id"] for r in rows}
@@ -60,9 +81,11 @@ def append_values(path: Path, cards: list[dict[str, Any]], sport: str, competiti
             rows.append(
                 {
                     "id": vid,
-                    "captured_at": tw.get("captured_at") or datetime.now(timezone.utc).isoformat(timespec="minutes"),
+                    "captured_at": tw.get("captured_at")
+                    or datetime.now(UTC).isoformat(timespec="minutes"),
                     "sport": sport,
-                    "competition": card.get("competition") or (competition_of(card) if competition_of else "MLB"),
+                    "competition": card.get("competition")
+                    or (competition_of(card) if competition_of else "MLB"),
                     "match_id": match_id,
                     "kickoff_utc": card["kickoff_utc"],
                     "home": card["home"],
@@ -131,10 +154,12 @@ def _fair_prob_for(mv: dict[str, Any], key: str, line: str) -> float | None:
     return None
 
 
-def settle(path: Path, results: dict[str, tuple[int, int]], sport: str, now: datetime | None = None) -> int:
+def settle(
+    path: Path, results: dict[str, tuple[int, int]], sport: str, now: datetime | None = None
+) -> int:
     """Settle pending rows of `sport` with final scores keyed by match_id/game_pk (as strings)."""
     rows = read(path)
-    stamp = (now or datetime.now(timezone.utc)).isoformat(timespec="seconds")
+    stamp = (now or datetime.now(UTC)).isoformat(timespec="seconds")
     settled = 0
     for row in rows:
         if row["sport"] != sport or row["status"] != PENDING:

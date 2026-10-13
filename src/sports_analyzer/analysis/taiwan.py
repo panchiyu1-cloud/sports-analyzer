@@ -22,7 +22,15 @@ from ..fetch.taiwan import TwGame, TwMarket
 
 log = logging.getLogger(__name__)
 
-SIDE_LABELS = {"home": "主勝", "draw": "和局", "away": "客勝", "over": "大", "under": "小", "spread_home": "主讓", "spread_away": "客受讓"}
+SIDE_LABELS = {
+    "home": "主勝",
+    "draw": "和局",
+    "away": "客勝",
+    "over": "大",
+    "under": "小",
+    "spread_home": "主讓",
+    "spread_away": "客受讓",
+}
 
 
 def match_game(card: dict[str, Any], games: list[TwGame], tolerance: timedelta) -> TwGame | None:
@@ -42,12 +50,16 @@ def match_game(card: dict[str, Any], games: list[TwGame], tolerance: timedelta) 
             log.info("tw: home/away swapped for %s vs %s", card["home"], card["away"])
             return g
     exact = [g for g in near if abs(g.kickoff - kickoff) <= timedelta(minutes=1)]
-    if len(exact) == 1 and (exact[0].home_key == card["home_key"] or exact[0].away_key == card["away_key"]):
+    if len(exact) == 1 and (
+        exact[0].home_key == card["home_key"] or exact[0].away_key == card["away_key"]
+    ):
         return exact[0]
     return None
 
 
-def compare(card: dict[str, Any], game: TwGame, captured_at: datetime | None, cfg: ModelConfig) -> dict[str, Any]:
+def compare(
+    card: dict[str, Any], game: TwGame, captured_at: datetime | None, cfg: ModelConfig
+) -> dict[str, Any]:
     """Build the card's `tw` block: prices, EV per selection, and the value bets."""
     mv = card.get("market") or {}
     block: dict[str, Any] = {
@@ -62,15 +74,38 @@ def compare(card: dict[str, Any], game: TwGame, captured_at: datetime | None, cf
     }
     h2h = game.market("h2h")
     if h2h and mv.get("h2h"):
-        block["h2h"] = _compare_sides(h2h, mv["h2h"], ("home", "draw", "away"), None, cfg, block["values"], "1X2" if "draw" in mv["h2h"] else "不讓分")
-    tot = game.market("totals")
-    if tot and mv.get("totals") and tot.line is not None and abs(tot.line - mv["totals"]["line"]) < 1e-9:
-        block["totals"] = _compare_sides(tot, mv["totals"], ("over", "under"), tot.line, cfg, block["values"], "大小")
-    sp = game.market("spread")
+        block["h2h"] = _compare_sides(
+            h2h,
+            mv["h2h"],
+            ("home", "draw", "away"),
+            None,
+            cfg,
+            block["values"],
+            "1X2" if "draw" in mv["h2h"] else "不讓分",
+        )
+    tot = game.market("totals", line=mv["totals"]["line"]) if mv.get("totals") else None
+    if tot:
+        block["totals"] = _compare_sides(
+            tot, mv["totals"], ("over", "under"), tot.line, cfg, block["values"], "大小"
+        )
+    sp = game.market("spread")  # two-way only; the parser demotes three-way handicaps
     if sp and mv.get("spread"):
         home_sel = next((s for s in sp.selections if s.side == "home"), None)
-        if home_sel and home_sel.line is not None and abs(home_sel.line - mv["spread"]["line"]) < 1e-9:
-            block["spread"] = _compare_sides(sp, mv["spread"], ("home", "away"), home_sel.line, cfg, block["values"], "讓分", key_prefix="spread_")
+        if (
+            home_sel
+            and home_sel.line is not None
+            and abs(home_sel.line - mv["spread"]["line"]) < 1e-9
+        ):
+            block["spread"] = _compare_sides(
+                sp,
+                mv["spread"],
+                ("home", "away"),
+                home_sel.line,
+                cfg,
+                block["values"],
+                "讓分",
+                key_prefix="spread_",
+            )
     return block
 
 
@@ -91,7 +126,12 @@ def _compare_sides(
             continue
         fair_prob = fair[side]["fair"]
         ev = fair_prob * price - 1.0
-        entry = {"price": price, "fair_odds": fair[side]["fair_odds"], "fair_prob": fair_prob, "ev": round(ev, 4)}
+        entry = {
+            "price": price,
+            "fair_odds": fair[side]["fair_odds"],
+            "fair_prob": fair_prob,
+            "ev": round(ev, 4),
+        }
         out[side] = entry
         if ev >= cfg.value_threshold:
             key = f"{key_prefix}{side}"
@@ -99,7 +139,12 @@ def _compare_sides(
                 {
                     "market": market_name,
                     "selection_key": key,
-                    "selection": SIDE_LABELS.get(key, key) + (f" {line:+g}" if key.startswith("spread_") and line is not None else (f" {line}" if line is not None and side in ("over", "under") else "")),
+                    "selection": SIDE_LABELS.get(key, key)
+                    + (
+                        f" {line:+g}"
+                        if key.startswith("spread_") and line is not None
+                        else (f" {line}" if line is not None and side in ("over", "under") else "")
+                    ),
                     "line": line,
                     "tw_price": price,
                     "fair_odds": fair[side]["fair_odds"],
@@ -110,7 +155,13 @@ def _compare_sides(
     return out
 
 
-def annotate(cards: list[dict[str, Any]], games: list[TwGame], captured_at: datetime | None, cfg: ModelConfig, tolerance_minutes: int = 45) -> dict[str, Any]:
+def annotate(
+    cards: list[dict[str, Any]],
+    games: list[TwGame],
+    captured_at: datetime | None,
+    cfg: ModelConfig,
+    tolerance_minutes: int = 45,
+) -> dict[str, Any]:
     """Attach `tw` blocks to cards in place. Returns a small report for the snapshot."""
     tol = timedelta(minutes=tolerance_minutes)
     matched = 0
@@ -128,5 +179,26 @@ def annotate(cards: list[dict[str, Any]], games: list[TwGame], captured_at: date
         used.add(game.id)
         card["tw"] = compare(card, game, captured_at, cfg)
         matched += 1
-    unmatched_games = [f"{g.away_zh} @ {g.home_zh} ({g.kickoff.isoformat(timespec='minutes')})" for g in games if g.id not in used]
-    return {"matched": matched, "unmatched_cards": unmatched_cards, "unmatched_games": unmatched_games[:40], "tw_games": len(games)}
+    unmatched_games = [
+        f"{g.away_zh} @ {g.home_zh} ({g.kickoff.isoformat(timespec='minutes')})"
+        for g in games
+        if g.id not in used
+    ]
+    # How much 運彩 charges on the match-winner market, averaged over matched games:
+    # sum(1/price) - 1. Pinnacle is ~2-3%; a soft book 8-12%; 運彩 is known to be higher.
+    overrounds = []
+    for card in cards:
+        tw = card.get("tw")
+        if tw and tw.get("h2h"):
+            prices = [
+                v["price"] for k, v in tw["h2h"].items() if k != "line" and isinstance(v, dict)
+            ]
+            if len(prices) >= 2:
+                overrounds.append(sum(1 / p for p in prices) - 1)
+    return {
+        "matched": matched,
+        "unmatched_cards": unmatched_cards,
+        "unmatched_games": unmatched_games[:40],
+        "tw_games": len(games),
+        "avg_overround": round(sum(overrounds) / len(overrounds), 4) if overrounds else None,
+    }

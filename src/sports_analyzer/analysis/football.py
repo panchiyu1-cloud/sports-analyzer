@@ -46,7 +46,9 @@ SELECTION_LABELS = {
 
 
 # ------------------------------------------------------------------ odds matching
-def match_odds(fixture: Match, events: list[OddsEvent], tolerance_hours: float = 12) -> OddsEvent | None:
+def match_odds(
+    fixture: Match, events: list[OddsEvent], tolerance_hours: float = 12
+) -> OddsEvent | None:
     """Find the odds event for a fixture: same two teams, kickoff within tolerance."""
     window = timedelta(hours=tolerance_hours)
     candidates = [e for e in events if abs(e.commence_time - fixture.utc_date) <= window]
@@ -60,7 +62,13 @@ def match_odds(fixture: Match, events: list[OddsEvent], tolerance_hours: float =
     a = best_match(fixture.away, away_keys)
     for e in candidates:
         if e.home_key == h and e.away_key == a:
-            log.info("fuzzy-matched odds for %s vs %s -> %s vs %s", fixture.home, fixture.away, e.home, e.away)
+            log.info(
+                "fuzzy-matched odds for %s vs %s -> %s vs %s",
+                fixture.home,
+                fixture.away,
+                e.home,
+                e.away,
+            )
             return e
     return None
 
@@ -76,9 +84,7 @@ def market_view(event: OddsEvent, method: str, totals_prefer: float | None = 2.5
     else:
         outcomes = ("home", "away")
     h2h_quotes = [
-        (b.book, [b.h2h[o] for o in outcomes])
-        for b in event.books
-        if set(outcomes) <= b.h2h.keys()
+        (b.book, [b.h2h[o] for o in outcomes]) for b in event.books if set(outcomes) <= b.h2h.keys()
     ]
     c = market.consensus(outcomes, h2h_quotes, method)
     if c:
@@ -199,7 +205,9 @@ def _base_card(comp: Competition, fx: Match) -> dict[str, Any]:
     }
 
 
-def _predict(model: FittedModel | None, fx: Match, cfg: ModelConfig, notes: list[str]) -> Prediction | None:
+def _predict(
+    model: FittedModel | None, fx: Match, cfg: ModelConfig, notes: list[str]
+) -> Prediction | None:
     if model is None:
         notes.append("本聯賽資料不足，尚未建立模型")
         return None
@@ -215,7 +223,9 @@ def _predict(model: FittedModel | None, fx: Match, cfg: ModelConfig, notes: list
     return pred
 
 
-def _model_block(model: FittedModel | None, pred: Prediction | None, fx: Match, cfg: ModelConfig) -> dict[str, Any]:
+def _model_block(
+    model: FittedModel | None, pred: Prediction | None, fx: Match, cfg: ModelConfig
+) -> dict[str, Any]:
     if model is None or pred is None:
         return {"fitted": False, "data_ok": False}
     hm = model.matches_per_team.get(fx.home_key, 0)
@@ -258,7 +268,9 @@ def _table_block(row: TableRow | None) -> dict[str, Any] | None:
     }
 
 
-def _head_to_head(fx: Match, results: list[Match], history: list[HistoricalMatch], limit: int = 4) -> list[dict[str, Any]]:
+def _head_to_head(
+    fx: Match, results: list[Match], history: list[HistoricalMatch], limit: int = 4
+) -> list[dict[str, Any]]:
     pair = {fx.home_key, fx.away_key}
     rows: list[tuple[datetime, str, str, int, int]] = []
     for r in results:
@@ -267,7 +279,15 @@ def _head_to_head(fx: Match, results: list[Match], history: list[HistoricalMatch
     seen_days = {r[0].date() for r in rows}
     for h in history:
         if {h.home, h.away} == pair and h.day not in seen_days:
-            rows.append((datetime.combine(h.day, datetime.min.time(), tzinfo=fx.utc_date.tzinfo), h.home, h.away, h.home_goals, h.away_goals))
+            rows.append(
+                (
+                    datetime.combine(h.day, datetime.min.time(), tzinfo=fx.utc_date.tzinfo),
+                    h.home,
+                    h.away,
+                    h.home_goals,
+                    h.away_goals,
+                )
+            )
     rows.sort(key=lambda r: r[0], reverse=True)
     return [
         {"date": r[0].strftime("%Y-%m-%d"), "home": r[1], "away": r[2], "score": f"{r[3]}-{r[4]}"}
@@ -296,7 +316,9 @@ def _edges(pred: Prediction, mv: dict[str, Any]) -> dict[str, float]:
     return edges
 
 
-def _recommend(card: dict[str, Any], pred: Prediction | None, cfg: ModelConfig) -> dict[str, Any] | None:
+def _recommend(
+    card: dict[str, Any], pred: Prediction | None, cfg: ModelConfig
+) -> dict[str, Any] | None:
     """Pick the single best edge that clears the thresholds; None if nothing does.
 
     A team the model has seen fewer than `min_team_matches` times (typical for
@@ -333,7 +355,9 @@ def _recommend(card: dict[str, Any], pred: Prediction | None, cfg: ModelConfig) 
     return best
 
 
-def _lookup(key: str, pred: Prediction, mv: dict[str, Any]) -> tuple[float, dict[str, Any] | None, str, float | None]:
+def _lookup(
+    key: str, pred: Prediction, mv: dict[str, Any]
+) -> tuple[float, dict[str, Any] | None, str, float | None]:
     if key in ("home", "draw", "away"):
         p = {"home": pred.p_home, "draw": pred.p_draw, "away": pred.p_away}[key]
         return p, mv["h2h"][key], "1X2", None

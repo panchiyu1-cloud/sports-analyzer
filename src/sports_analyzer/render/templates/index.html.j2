@@ -87,7 +87,7 @@
 <section>
   <h2>運彩價值注 <span class="count">{{ tw_values|length }} 個 · 門檻 EV ≥ {{ (cfg.value_threshold*100)|round(0)|int }}%</span></h2>
   {% if tw_reports %}
-  <p class="sub">{% for r in tw_reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場，對上 {{ r.matched }} 場（{{ r.file }}）{% if r.unknown_teams %} · 未對照隊名 {{ r.unknown_teams|length }} 個{% endif %}{% if not loop.last %}　|　{% endif %}{% endfor %}</p>
+  <p class="sub">{% for r in tw_reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場，對上 {{ r.matched }} 場（{{ r.file }}）{% if r.avg_overround is not none %} · 運彩不讓分平均水錢 {{ '%.1f%%'|format(r.avg_overround*100) }}{% endif %}{% if r.unknown_teams %} · 未對照隊名 {{ r.unknown_teams|length }} 個{% endif %}{% if not loop.last %}　|　{% endif %}{% endfor %}</p>
   {% if tw_summary and (tw_summary.pending or tw_summary.settled) %}
   <div class="kpis">
     <div class="kpi"><b>{{ tw_summary.pending }}</b><span>待結算</span></div>
@@ -109,7 +109,7 @@
     </tr>
     {% endfor %}
   </table></div>
-  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。</p>
+  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。運彩的水錢（上方「平均水錢」）遠高於國際莊家的 2–5%，所以要出現價值注，通常得是運彩開盤後市場大幅移動的場次。</p>
   {% else %}
   <p class="none">{% if tw_reports %}運彩目前沒有賠率高於公允價的注。{% else %}尚未收到運彩賠率上傳（手機捷徑設定好後會自動出現）。{% endif %}</p>
   {% endif %}

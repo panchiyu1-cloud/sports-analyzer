@@ -3,9 +3,8 @@ import unittest
 
 import numpy as np
 
-from tests import conftest  # noqa: F401
-
 from sports_analyzer.models import blend
+from tests import conftest  # noqa: F401
 
 
 def _softmax(v):
@@ -79,8 +78,10 @@ class BlendTests(unittest.TestCase):
         self.assertGreater(w.b_market, w.a_model)  # market is the sharper input here
         p = w.apply(0.6, 0.55)
         self.assertTrue(0 < p < 1)
-        self.assertLess(blend.log_loss_2([w.apply(a, b) for a, b in zip(m, k, strict=True)], y),
-                        blend.log_loss_2(m, y))
+        self.assertLess(
+            blend.log_loss_2([w.apply(a, b) for a, b in zip(m, k, strict=True)], y),
+            blend.log_loss_2(m, y),
+        )
 
     def test_refuses_tiny_samples(self):
         with self.assertRaises(ValueError):

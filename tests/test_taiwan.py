@@ -1,12 +1,11 @@
 import json
 import tempfile
 import unittest
-from datetime import timezone
+from datetime import UTC
 from pathlib import Path
 
-from tests import conftest  # noqa: F401
-
 from sports_analyzer.fetch import taiwan
+from tests import conftest  # noqa: F401
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -15,7 +14,9 @@ class TaiwanFeedTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.report = taiwan.ParseReport()
-        cls.games = taiwan.parse_games(json.loads((FIXTURES / "tw_games.json").read_text(encoding="utf-8")), cls.report)
+        cls.games = taiwan.parse_games(
+            json.loads((FIXTURES / "tw_games.json").read_text(encoding="utf-8")), cls.report
+        )
 
     def test_counts_and_skips(self):
         self.assertEqual(self.report.games, 3)
@@ -27,7 +28,7 @@ class TaiwanFeedTests(unittest.TestCase):
         g = self.games[0]
         self.assertEqual(g.home_key, "los angeles dodgers")
         self.assertEqual(g.away_key, "philadelphia phillies")
-        self.assertEqual(g.kickoff.tzinfo, timezone.utc)
+        self.assertEqual(g.kickoff.tzinfo, UTC)
         self.assertEqual(g.kickoff.hour, 0)  # 08:00 Taipei == 00:00 UTC
         ml = g.market("h2h")
         assert ml is not None
@@ -60,6 +61,22 @@ class TaiwanFeedTests(unittest.TestCase):
         self.assertEqual(ml.price("draw"), 3.6)
         self.assertEqual(ml.price("away"), 4.3)
         self.assertEqual(g.market("totals").line, 2.5)
+        self.assertIsNone(g.market("spread"))  # "讓分 1:0" is a three-way handicap, not comparable
+        self.assertIn("讓分 1:0", self.report.unknown_markets)
+
+    def test_team_totals_are_not_match_totals(self):
+        g = self.games[0]
+        self.assertEqual([m.line for m in g.markets if m.kind == "totals"], [7.5])
+        self.assertIn("洛杉磯道奇 大小 4.5", self.report.unknown_markets)
+        self.assertIsNone(g.market("totals", line=8.5))
+
+    def test_chinese_name_resolution_rules(self):
+        self.assertEqual(taiwan.tw_canonical("PSV恩荷芬"), "psv")
+        self.assertEqual(taiwan.tw_canonical("LASK林茨"), "lask")
+        self.assertEqual(taiwan.tw_canonical("維京足球會"), "viking")
+        self.assertEqual(taiwan.tw_canonical("薩巴赫.馬薩齊爾"), "sabah")
+        self.assertEqual(taiwan.tw_canonical("頓涅茨克礦工"), "shakhtar")
+        self.assertEqual(taiwan.tw_canonical("AEK雅典"), "aek athens")
 
     def test_unknown_team_keeps_raw_name(self):
         self.assertEqual(taiwan.tw_canonical("神秘隊"), "神秘隊")
@@ -72,7 +89,9 @@ class TaiwanFeedTests(unittest.TestCase):
             folder = Path(tmp) / "football"
             folder.mkdir()
             (folder / "2026-10-13-0800.json").write_text("[]", encoding="utf-8")
-            (folder / "2026-10-14-0800.json").write_text((FIXTURES / "tw_games.json").read_text(encoding="utf-8"), encoding="utf-8")
+            (folder / "2026-10-14-0800.json").write_text(
+                (FIXTURES / "tw_games.json").read_text(encoding="utf-8"), encoding="utf-8"
+            )
             games, path, report = taiwan.load_latest(Path(tmp), "football")
             self.assertEqual(path.name, "2026-10-14-0800.json")
             self.assertEqual(len(games), 3)
@@ -101,7 +120,9 @@ class TaiwanFeedTests(unittest.TestCase):
         commas = ",".join(json.dumps(g, ensure_ascii=False) for g in games)
         self.assertEqual(len(taiwan.parse_text(commas)), 4)
         # 5. a single object
-        self.assertEqual(len(taiwan.parse_games(taiwan.parse_text(json.dumps(games[0], ensure_ascii=False)))), 1)
+        self.assertEqual(
+            len(taiwan.parse_games(taiwan.parse_text(json.dumps(games[0], ensure_ascii=False)))), 1
+        )
         # garbage lines are skipped, valid ones kept
         mixed = "not json at all\n" + json.dumps(games[0], ensure_ascii=False) + "\n???\n"
         self.assertEqual(len(taiwan.parse_text(mixed)), 1)

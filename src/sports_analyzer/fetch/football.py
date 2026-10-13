@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from ..http import Session
@@ -45,7 +45,9 @@ class Match:
 
     @property
     def is_finished(self) -> bool:
-        return self.status == FINISHED and self.home_goals is not None and self.away_goals is not None
+        return (
+            self.status == FINISHED and self.home_goals is not None and self.away_goals is not None
+        )
 
 
 @dataclass(frozen=True)
@@ -124,7 +126,7 @@ def parse_standings(payload: dict[str, Any]) -> list[TableRow]:
 
 def _parse_utc(value: str) -> datetime:
     # football-data.org uses "2026-10-17T14:00:00Z"
-    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(timezone.utc)
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
 
 
 # ---------------------------------------------------------------------- fetching

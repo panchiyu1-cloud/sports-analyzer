@@ -60,12 +60,16 @@ def read_csv(path: Path) -> list[HistoricalMatch]:
                         away=canonical(row["AwayTeam"]),
                         home_goals=int(float(h)),
                         away_goals=int(float(a)),
-                        h2h=_triple(row, ("PSH", "PSD", "PSA")) or _triple(row, ("B365H", "B365D", "B365A")),
-                        over25=_pair(row, ("P>2.5", "P<2.5")) or _pair(row, ("B365>2.5", "B365<2.5")),
+                        h2h=_triple(row, ("PSH", "PSD", "PSA"))
+                        or _triple(row, ("B365H", "B365D", "B365A")),
+                        over25=_pair(row, ("P>2.5", "P<2.5"))
+                        or _pair(row, ("B365>2.5", "B365<2.5")),
                         ah_line=_float(row.get("AHh")),
                         ah=_pair(row, ("PAHH", "PAHA")) or _pair(row, ("B365AHH", "B365AHA")),
-                        h2h_close=_triple(row, ("PSCH", "PSCD", "PSCA")) or _triple(row, ("B365CH", "B365CD", "B365CA")),
-                        over25_close=_pair(row, ("PC>2.5", "PC<2.5")) or _pair(row, ("B365C>2.5", "B365C<2.5")),
+                        h2h_close=_triple(row, ("PSCH", "PSCD", "PSCA"))
+                        or _triple(row, ("B365CH", "B365CD", "B365CA")),
+                        over25_close=_pair(row, ("PC>2.5", "PC<2.5"))
+                        or _pair(row, ("B365C>2.5", "B365C<2.5")),
                         h2h_max=_triple(row, ("MaxH", "MaxD", "MaxA")),
                     )
                 )

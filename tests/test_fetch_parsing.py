@@ -1,13 +1,12 @@
 import json
 import unittest
-from datetime import timezone
+from datetime import UTC
 from pathlib import Path
-
-from tests import conftest  # noqa: F401
 
 from sports_analyzer import history, teams
 from sports_analyzer.fetch import football, odds
 from sports_analyzer.http import Session
+from tests import conftest  # noqa: F401
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -29,7 +28,7 @@ class FootballDataParsingTests(unittest.TestCase):
         self.assertEqual(m.home, "Wolverhampton Wanderers FC")
         self.assertEqual(m.home_key, "wolves")
         self.assertEqual(m.away_key, "brighton")
-        self.assertEqual(m.utc_date.tzinfo, timezone.utc)
+        self.assertEqual(m.utc_date.tzinfo, UTC)
         self.assertEqual(m.utc_date.hour, 15)
         self.assertFalse(m.is_finished)
 
@@ -120,7 +119,10 @@ class TeamNameTests(unittest.TestCase):
         self.assertEqual(teams.canonical("Fictional Town FC"), "fictional town")
 
     def test_best_match(self):
-        self.assertEqual(teams.best_match("Manchester Utd", ["manchester united", "manchester city"]), "manchester united")
+        self.assertEqual(
+            teams.best_match("Manchester Utd", ["manchester united", "manchester city"]),
+            "manchester united",
+        )
         self.assertIsNone(teams.best_match("Zebra", ["arsenal", "chelsea"]))
 
 

@@ -1,32 +1,75 @@
 import unittest
-from datetime import datetime, timezone
-
-from tests import conftest  # noqa: F401
+from datetime import UTC, datetime
 
 from sports_analyzer.analysis import mlb as analysis
 from sports_analyzer.config import ModelConfig
 from sports_analyzer.fetch.mlb import MlbGame, parse_schedule
 from sports_analyzer.fetch.odds import BookOdds, OddsEvent, SpreadLine, TotalLine
+from tests import conftest  # noqa: F401
 
 
 def _event(home_ml: float, away_ml: float, home_rl: float, away_rl: float) -> OddsEvent:
     books = (
-        BookOdds("pinnacle", {"home": home_ml, "away": away_ml}, (SpreadLine(-1.5, home_rl, away_rl),), (TotalLine(7.5, 1.95, 1.87),)),
-        BookOdds("betfair_ex_eu", {"home": home_ml + 0.02, "away": away_ml - 0.05}, (SpreadLine(-1.5, home_rl - 0.03, away_rl + 0.02),), (TotalLine(7.5, 1.9, 1.9),)),
+        BookOdds(
+            "pinnacle",
+            {"home": home_ml, "away": away_ml},
+            (SpreadLine(-1.5, home_rl, away_rl),),
+            (TotalLine(7.5, 1.95, 1.87),),
+        ),
+        BookOdds(
+            "betfair_ex_eu",
+            {"home": home_ml + 0.02, "away": away_ml - 0.05},
+            (SpreadLine(-1.5, home_rl - 0.03, away_rl + 0.02),),
+            (TotalLine(7.5, 1.9, 1.9),),
+        ),
     )
-    return OddsEvent("e1", "baseball_mlb", datetime(2026, 10, 14, 0, 8, tzinfo=timezone.utc), "Los Angeles Dodgers", "Philadelphia Phillies", books)
+    return OddsEvent(
+        "e1",
+        "baseball_mlb",
+        datetime(2026, 10, 14, 0, 8, tzinfo=UTC),
+        "Los Angeles Dodgers",
+        "Philadelphia Phillies",
+        books,
+    )
 
 
 class MlbCardTests(unittest.TestCase):
     def setUp(self):
-        self.game = MlbGame(1, datetime(2026, 10, 14, 0, 8, tzinfo=timezone.utc), "Scheduled", "Los Angeles Dodgers", "Philadelphia Phillies", "Yoshinobu Yamamoto", "Zack Wheeler", "Dodger Stadium")
+        self.game = MlbGame(
+            1,
+            datetime(2026, 10, 14, 0, 8, tzinfo=UTC),
+            "Scheduled",
+            "Los Angeles Dodgers",
+            "Philadelphia Phillies",
+            "Yoshinobu Yamamoto",
+            "Zack Wheeler",
+            "Dodger Stadium",
+        )
         self.cfg = ModelConfig()
 
     def test_parse_schedule_fixture_shape(self):
-        payload = {"dates": [{"games": [{"gamePk": 7, "gameDate": "2026-10-14T00:08:00Z", "status": {"detailedState": "Scheduled"},
-                                          "teams": {"home": {"team": {"name": "Los Angeles Dodgers"}, "probablePitcher": {"fullName": "Y. Yamamoto"}},
-                                                    "away": {"team": {"name": "Philadelphia Phillies"}}},
-                                          "venue": {"name": "Dodger Stadium"}}, {"gamePk": "bad"}]}]}
+        payload = {
+            "dates": [
+                {
+                    "games": [
+                        {
+                            "gamePk": 7,
+                            "gameDate": "2026-10-14T00:08:00Z",
+                            "status": {"detailedState": "Scheduled"},
+                            "teams": {
+                                "home": {
+                                    "team": {"name": "Los Angeles Dodgers"},
+                                    "probablePitcher": {"fullName": "Y. Yamamoto"},
+                                },
+                                "away": {"team": {"name": "Philadelphia Phillies"}},
+                            },
+                            "venue": {"name": "Dodger Stadium"},
+                        },
+                        {"gamePk": "bad"},
+                    ]
+                }
+            ]
+        }
         games = parse_schedule(payload)
         self.assertEqual(len(games), 1)
         self.assertEqual(games[0].home_probable, "Y. Yamamoto")

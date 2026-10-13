@@ -1,31 +1,42 @@
 import json
 import tempfile
 import unittest
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-
-from tests import conftest  # noqa: F401
 
 from sports_analyzer import tw_ledger
 from sports_analyzer.analysis import taiwan as compare
 from sports_analyzer.config import LOCAL_TZ, ModelConfig
 from sports_analyzer.fetch import taiwan
+from tests import conftest  # noqa: F401
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
 def football_card(**over):
     card = {
-        "sport": "football", "competition": "PL", "competition_name": "英超", "match_id": 500001,
-        "kickoff_utc": "2026-10-17T14:00:00+00:00", "kickoff_local": "10/17 (週六) 22:00",
-        "home": "Arsenal FC", "away": "Chelsea FC", "home_key": "arsenal", "away_key": "chelsea",
+        "sport": "football",
+        "competition": "PL",
+        "competition_name": "英超",
+        "match_id": 500001,
+        "kickoff_utc": "2026-10-17T14:00:00+00:00",
+        "kickoff_local": "10/17 (週六) 22:00",
+        "home": "Arsenal FC",
+        "away": "Chelsea FC",
+        "home_key": "arsenal",
+        "away_key": "chelsea",
         "market": {
             "books": 3,
-            "h2h": {"home": {"fair": 0.60, "fair_odds": 1.67, "best": 1.80, "book": "x"},
-                    "draw": {"fair": 0.22, "fair_odds": 4.55, "best": 3.9, "book": "x"},
-                    "away": {"fair": 0.18, "fair_odds": 5.56, "best": 4.6, "book": "x"}},
-            "totals": {"line": 2.5, "over": {"fair": 0.52, "fair_odds": 1.92, "best": 2.0, "book": "x"},
-                       "under": {"fair": 0.48, "fair_odds": 2.08, "best": 1.9, "book": "x"}},
+            "h2h": {
+                "home": {"fair": 0.60, "fair_odds": 1.67, "best": 1.80, "book": "x"},
+                "draw": {"fair": 0.22, "fair_odds": 4.55, "best": 3.9, "book": "x"},
+                "away": {"fair": 0.18, "fair_odds": 5.56, "best": 4.6, "book": "x"},
+            },
+            "totals": {
+                "line": 2.5,
+                "over": {"fair": 0.52, "fair_odds": 1.92, "best": 2.0, "book": "x"},
+                "under": {"fair": 0.48, "fair_odds": 2.08, "best": 1.9, "book": "x"},
+            },
             "spread": None,
         },
     }
@@ -36,7 +47,9 @@ def football_card(**over):
 class CompareTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.games = taiwan.parse_games(json.loads((FIXTURES / "tw_games.json").read_text(encoding="utf-8")))
+        cls.games = taiwan.parse_games(
+            json.loads((FIXTURES / "tw_games.json").read_text(encoding="utf-8"))
+        )
         cls.cfg = ModelConfig()
 
     def test_match_by_names_and_time(self):
@@ -53,7 +66,9 @@ class CompareTests(unittest.TestCase):
         # 運彩: home 1.70 (fair 1.67 -> EV +2%), draw 3.60 (fair 4.55 -> negative), away 4.30 (fair 5.56 -> negative)
         # totals: over 1.80 (fair 1.92 -> negative), under 1.90 (fair 2.08 -> negative)
         card = football_card()
-        tw = compare.compare(card, self.games[1], datetime(2026, 10, 17, 8, 0, tzinfo=LOCAL_TZ), self.cfg)
+        tw = compare.compare(
+            card, self.games[1], datetime(2026, 10, 17, 8, 0, tzinfo=LOCAL_TZ), self.cfg
+        )
         self.assertAlmostEqual(tw["h2h"]["home"]["ev"], 0.60 * 1.70 - 1, places=4)
         self.assertLess(tw["h2h"]["draw"]["ev"], 0)
         self.assertEqual(tw["totals"]["line"], 2.5)
@@ -62,13 +77,25 @@ class CompareTests(unittest.TestCase):
         self.assertEqual(tw["captured_at"], "2026-10-17T08:00+08:00")
 
     def test_annotate_report(self):
-        cards = [football_card(), football_card(match_id=2, kickoff_utc="2026-10-20T19:00:00+00:00", home="Everton FC", away="Fulham FC", home_key="everton", away_key="fulham")]
+        cards = [
+            football_card(),
+            football_card(
+                match_id=2,
+                kickoff_utc="2026-10-20T19:00:00+00:00",
+                home="Everton FC",
+                away="Fulham FC",
+                home_key="everton",
+                away_key="fulham",
+            ),
+        ]
         rep = compare.annotate(cards, self.games, None, self.cfg)
         self.assertEqual(rep["matched"], 1)
         self.assertEqual(rep["unmatched_cards"], ["Everton FC vs Fulham FC"])
         self.assertIsNotNone(cards[0]["tw"])
         self.assertIsNone(cards[1]["tw"])
         self.assertEqual(rep["tw_games"], 3)
+        # 1/1.7 + 1/3.6 + 1/4.3 - 1 = 0.0986 (hand-checked)
+        self.assertAlmostEqual(rep["avg_overround"], 0.0986, places=4)
 
     def test_totals_skipped_when_lines_differ(self):
         card = football_card()
@@ -83,7 +110,12 @@ class MergePreviousMarketsTests(unittest.TestCase):
 
         morning = {"date": "2026-10-17", "competitions": [{"cards": [football_card()]}]}
         evening_card = football_card()
-        evening_card["market"] = {"books": 2, "h2h": {"home": {"fair": 0.62, "fair_odds": 1.61, "best": 1.7, "book": "y"}}, "totals": None, "spread": None}
+        evening_card["market"] = {
+            "books": 2,
+            "h2h": {"home": {"fair": 0.62, "fair_odds": 1.61, "best": 1.7, "book": "y"}},
+            "totals": None,
+            "spread": None,
+        }
         evening = {"date": "2026-10-17", "competitions": [{"cards": [evening_card]}]}
         _merge_previous_markets(evening, morning)
         self.assertEqual(evening_card["market"]["h2h"]["home"]["fair"], 0.62)  # fresh h2h kept
@@ -99,7 +131,9 @@ class MergePreviousMarketsTests(unittest.TestCase):
         card = football_card()
         card["market"]["totals"] = None
         snap = {"date": "2026-10-18", "competitions": [{"cards": [card]}]}
-        _merge_previous_markets(snap, {"date": "2026-10-17", "competitions": [{"cards": [football_card()]}]})
+        _merge_previous_markets(
+            snap, {"date": "2026-10-17", "competitions": [{"cards": [football_card()]}]}
+        )
         self.assertIsNone(card["market"]["totals"])
 
 
@@ -108,9 +142,21 @@ class TwLedgerTests(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.path = Path(self.tmp.name) / "tw_ledger.csv"
         self.card = football_card()
-        self.card["tw"] = {"captured_at": "2026-10-17T08:00+08:00", "values": [
-            {"market": "1X2", "selection_key": "home", "selection": "主勝", "line": None, "tw_price": 1.70, "fair_odds": 1.67, "fair_prob": 0.60, "ev": 0.02},
-        ]}
+        self.card["tw"] = {
+            "captured_at": "2026-10-17T08:00+08:00",
+            "values": [
+                {
+                    "market": "1X2",
+                    "selection_key": "home",
+                    "selection": "主勝",
+                    "line": None,
+                    "tw_price": 1.70,
+                    "fair_odds": 1.67,
+                    "fair_prob": 0.60,
+                    "ev": 0.02,
+                },
+            ],
+        }
 
     def tearDown(self):
         self.tmp.cleanup()
