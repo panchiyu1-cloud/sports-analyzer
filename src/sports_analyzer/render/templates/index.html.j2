@@ -85,7 +85,16 @@
 </header>
 
 <section>
-  <h2>訊號 <span class="count">{{ signals|length }} 個 · 門檻 edge ≥ {{ (cfg.edge_threshold*100)|round(0)|int }}%</span></h2>
+  <h2>{{ '訊號' if cfg.signals_validated else '模型分歧' }} <span class="count">{{ signals|length }} 個 · 門檻 edge ≥ {{ (cfg.edge_threshold*100)|round(0)|int }}pp</span></h2>
+  {% if not cfg.signals_validated %}
+  <div class="note" style="margin-bottom:10px">
+    這些是「模型和市場看法差很多」的比賽，<b>不是下注建議</b>。
+    {% if backtest_total and backtest_total.bets_1x2.roi is not none %}
+    最近一次回測（{{ backtest_total.bets_1x2.n }} 注）平注 ROI 為 {{ '%+.1f%%'|format(backtest_total.bets_1x2.roi*100) }}：目前的模型還打不贏市場。
+    {% endif %}
+    帳本照常記錄，累積足夠場數後再評估。{% if backtest %}<a href="backtest.html">看回測報告</a>{% endif %}
+  </div>
+  {% endif %}
   {% if ledger %}
   <div class="kpis">
     <div class="kpi"><b>{{ ledger.pending }}</b><span>待結算</span></div>
@@ -154,11 +163,12 @@
 
       <div class="rec">
         {% if c.recommendation %}
+          <span class="sub">{{ '推薦' if cfg.signals_validated else '模型偏向' }}</span>
           <b>{{ c.recommendation.selection }}</b> @ {{ c.recommendation.price }} <span class="sub">{{ c.recommendation.book }}</span>
-          <span class="chip {{ 'high' if c.recommendation.confidence == '高' else ('mid' if c.recommendation.confidence == '中' else '') }}">信心 {{ c.recommendation.confidence }}</span>
+          <span class="chip {{ 'high' if c.recommendation.confidence == '高' else ('mid' if c.recommendation.confidence == '中' else '') }}">{{ '信心' if cfg.signals_validated else '分歧' }} {{ c.recommendation.confidence }}</span>
           <div class="sub">模型 {{ '%.1f%%'|format(c.recommendation.model_p*100) }} vs 市場 {{ '%.1f%%'|format(c.recommendation.market_p*100) }} · edge {{ '%+.1f'|format(c.recommendation.edge*100) }}pp · 1/4 Kelly {{ '%.1f%%'|format(c.recommendation.kelly*100) }}</div>
         {% else %}
-          <span class="none">無推薦（市場定價與模型接近）</span>
+          <span class="none">模型與市場看法接近</span>
         {% endif %}
       </div>
       {% for n in c.notes %}<div class="note">{{ n }}</div>{% endfor %}

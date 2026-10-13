@@ -22,6 +22,7 @@ from typing import Any
 from . import ledger as ledger_mod
 from .analysis.football import build_cards
 from .config import (
+    DATA_DIR,
     DOCS_DIR,
     FOOTBALL_COMPETITIONS,
     HISTORY_DIR,
@@ -195,6 +196,13 @@ def render_latest() -> Path:
     football = _latest_snapshot("football")
     mlb = _latest_snapshot("mlb")
     summary = ledger_mod.summary(ledger_mod.read(LEDGER_PATH))
+    backtest_path = DATA_DIR / "backtest_summary.json"
+    backtest_total = None
+    if backtest_path.exists():
+        try:
+            backtest_total = json.loads(backtest_path.read_text(encoding="utf-8")).get("total")
+        except (OSError, ValueError):
+            backtest_total = None
     return render_index(
         football,
         mlb,
@@ -202,6 +210,7 @@ def render_latest() -> Path:
         datetime.now(timezone.utc),
         DOCS_DIR / "index.html",
         backtest_exists=(DOCS_DIR / "backtest.html").exists(),
+        backtest_total=backtest_total,
     )
 
 

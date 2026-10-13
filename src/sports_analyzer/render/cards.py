@@ -21,6 +21,7 @@ def render_index(
     out_path: Path,
     cfg: ModelConfig = MODEL,
     backtest_exists: bool = False,
+    backtest_total: dict[str, Any] | None = None,
 ) -> Path:
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATE_DIR)),
@@ -50,6 +51,7 @@ def render_index(
         mlb=mlb,
         cfg=cfg,
         backtest=backtest_exists,
+        backtest_total=backtest_total,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")

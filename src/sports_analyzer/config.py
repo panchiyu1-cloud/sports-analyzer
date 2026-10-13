@@ -59,10 +59,15 @@ class ModelConfig:
     # A team needs at least this many fitted matches before its card is marked "資料充足".
     min_team_matches: int = 6
     # Edge (model prob - market prob) needed before a signal is emitted, in probability.
-    edge_threshold: float = 0.04
+    # Raised from 0.04 after the first backtest (2026-10-13): the raw Dixon-Coles model
+    # lost ~10% ROI to closing lines at every edge level, so signals are observational
+    # until Phase 2 (market-anchored shrinkage) passes a backtest.
+    edge_threshold: float = 0.10
     # Confidence tiers by edge size.
-    edge_mid: float = 0.07
-    edge_high: float = 0.10
+    edge_mid: float = 0.15
+    edge_high: float = 0.20
+    # Flip to True only when a walk-forward backtest shows positive ROI for the signals.
+    signals_validated: bool = False
     # Do not recommend very long shots even with edge; variance is too high to judge.
     min_model_prob: float = 0.25
     # T-10 (baseball) G-value thresholds.
