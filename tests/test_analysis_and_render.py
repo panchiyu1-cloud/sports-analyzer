@@ -141,7 +141,8 @@ class BuildCardsTests(unittest.TestCase):
             html = out.read_text(encoding="utf-8")
         self.assertIn("Arsenal FC", html)
         self.assertIn("英超", html)
-        self.assertIn("訊號", html)
+        self.assertIn("模型分歧", html)  # signals are labelled as disagreement until validated
+        self.assertIn("不是下注建議", html)
         self.assertIn("The Odds API 剩餘點數：480", html)
         self.assertNotIn("{{", html)
 
