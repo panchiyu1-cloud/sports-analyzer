@@ -197,12 +197,25 @@ def implied_from_market(mv: dict[str, Any]) -> ImpliedGoals | None:
     )
 
 
+# Lines scripts/validate_implied.py checked against results; outside them the
+# model's shape is untested (e.g. 讓分 0:3), so those markets are not priced.
+VALIDATED_LINES = {
+    "totals": (1.5, 4.5),
+    "team_totals": (0.5, 2.5),
+    "hcp3": (-2.0, 2.0),
+    "ht_totals": (0.5, 2.5),
+}
+
+
 def derived_probs(
     m: TwMarket, game: TwGame, g: ImpliedGoals, calib: Calibration
 ) -> list[tuple[str, str, float | None, float]] | None:
     """(selection key, label, line, fair probability) for each side of a 運彩 market
     the implied model can price, or None when it cannot."""
     line = m.line
+    bounds = VALIDATED_LINES.get(m.kind)
+    if bounds and (line is None or not bounds[0] <= line <= bounds[1]):
+        return None
     if m.kind in ("totals", "ht_totals") and line is not None:
         pre, tag = ("", "") if m.kind == "totals" else ("ht_", "上半場 ")
         sides = ((f"{pre}over", f"{tag}大 {line:g}"), (f"{pre}under", f"{tag}小 {line:g}"))

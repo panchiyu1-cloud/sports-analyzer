@@ -136,6 +136,13 @@ class DerivedCompareTests(unittest.TestCase):
         # Only 讓分 1:0 客 clears the +4% bar in this fixture (0.40 x 2.70 - 1 = +8%).
         self.assertEqual([v["selection_key"] for v in values], ["hcp3_away"])
 
+    def test_unvalidated_lines_are_not_priced(self):
+        g = fit_implied(0.60, 0.22, 0.18, 0.52)
+        hcp = self.game.market("hcp3")
+        far = taiwan.TwMarket("讓分 0:3", "hcp3", "14", hcp.selections, None, line=3.0)
+        self.assertIsNone(compare.derived_probs(far, self.game, g, IDENTITY))
+        self.assertIsNotNone(compare.derived_probs(hcp, self.game, g, IDENTITY))
+
     def test_team_total_maps_to_the_right_team(self):
         g = fit_implied(0.60, 0.22, 0.18, 0.52)
         team = self.game.market("team_totals")
