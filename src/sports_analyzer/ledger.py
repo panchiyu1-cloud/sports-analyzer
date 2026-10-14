@@ -34,6 +34,10 @@ COLUMNS = [
     "edge",
     "confidence",
     "kelly",
+    # Filled at the post-match review from the last consensus before kickoff:
+    # the selection's closing fair probability and close_p x price - 1.
+    "close_p",
+    "clv",
     "status",
     "result",
     "profit",

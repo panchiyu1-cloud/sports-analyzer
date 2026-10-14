@@ -156,6 +156,20 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 - CSV rows hold facts; `explain_*` derives the wording at render time, so wording changes
   re-explain old matches. Thresholds are constants at the top of `analysis/review.py`.
 - Quarter-line handicaps settle half win / half loss (`ledger.grade`).
+- Every recommendation is reviewed on its match's card ("這場的推薦"): each 模型分歧 ledger
+  row, each 運彩 value bet (tw_ledger) and the MLB T-10 pick (`cards.match_picks` joins
+  them at render time; `review.explain_pick` words them). Result apart from process:
+  value bets by CLV (closing_fair_prob x 運彩 price - 1, `CLV_MIN` 1%), signals by the
+  market move from market_p to close_p (the card's own lean signal reuses the card's
+  move, so the two verdicts never disagree), football also by xG / shots on target.
+- `run_review` also settles both ledgers for the matches it reviews and fills ledger
+  `close_p`/`clv` (`_close_signals`; `review.closing_prob`: the fresh direct block, else
+  the implied model for handicap/totals lines). `tw.yml` runs `review --new-only` after
+  every upload (only matches without a review row: no request when nothing finished),
+  so pressing the phone shortcut is also "review now".
+- `tw_ledger.update_clv` never uses prices bought at or after kickoff (the evening run
+  prices the day from 00:00 UTC, while early kick-offs are being played): the h2h
+  block's `odds_at`, else the run's time, must be before kickoff.
 - Snapshots must keep a 運彩 block once captured: a later upload no longer lists a match
   that has kicked off (`analysis/taiwan.annotate`).
 

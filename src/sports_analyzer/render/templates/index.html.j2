@@ -156,7 +156,7 @@
 
 
 <section id="review">
-  <h2>賽後檢討 <span class="count">最近 {{ reviews.football|length + reviews.mlb|length }} 場 · 累計 {{ reviews.total }} 場</span></h2>
+  <h2>賽後檢討 <span class="count">最近 {{ reviews.football|length + reviews.mlb|length }} 場{% if reviews.picks.n %}（含推薦 {{ reviews.picks.n }} 注）{% endif %} · 累計 {{ reviews.total }} 場</span></h2>
   {% if reviews.football or reviews.mlb %}
   {{ rv.howto() }}
   {% if reviews.summary.matches %}{{ rv.football_summary(reviews.summary) }}{% endif %}
@@ -169,7 +169,7 @@
   <p class="none">還沒有已完賽的比賽。比賽結束後，下一次自動更新（台北 08:15 或 20:25）會把賽前分析和實際結果放在這裡對照。</p>
   {% endif %}
   {% if waiting %}
-  <p class="sub">已開賽、等待賽果：{% for c in waiting %}{{ c.home }} vs {{ c.away }}{% if not loop.last %}、{% endif %}{% endfor %}</p>
+  <p class="sub">已開賽、等待賽果：{% for c in waiting %}{% if c.recommended %}<b>{{ c.home }} vs {{ c.away }}（有推薦）</b>{% else %}{{ c.home }} vs {{ c.away }}{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}。比賽結束約 2 小時後，下一次更新（每次上傳運彩，或台北 08:15／20:25）就會產生賽後檢討。</p>
   {% endif %}
 </section>
 

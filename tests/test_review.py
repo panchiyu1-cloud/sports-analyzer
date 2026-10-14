@@ -506,6 +506,176 @@ class RegressionTests(unittest.TestCase):
         self.assertIsNone(rep["avg_overround"])  # stale blocks never count toward the margin
 
 
+class RecommendationReviewTests(unittest.TestCase):
+    """Every recommendation on the page is reviewed on its match's card."""
+
+    def football(self, hg, ag, comp="CL", **extra):
+        e = entry_for({"h2h": h2h(0.45, 0.28, 0.27)}, {"h2h": h2h(0.45, 0.28, 0.27)}, comp=comp)
+        row = review.football_row(e, finished(hg, ag), None, None, NOW)
+        row.update(extra)
+        return row
+
+    def test_value_bet_lost_and_the_close_went_against_it(self):
+        # LASK - Liverpool, 2026-10-14: 讓分 0:2 客 at 3.15 against a fair 34.2%; the
+        # consensus closed at 25.8% (CLV -18.9%).
+        value = {
+            "selection": "讓分0:2 客（利物浦）",
+            "selection_key": "hcp3_away",
+            "line": "2",
+            "tw_price": "3.15",
+            "fair_prob": "0.3421",
+            "ev": "0.0776",
+            "closing_fair_prob": "0.2576",
+            "clv": "-0.1885",
+            "status": "pending",  # the daily run has not settled it yet
+            "captured_at": "2026-10-14T20:00+08:00",
+        }
+        row = self.football(0, 2)
+        ex = review.explain_football(row, [review.pick_from_value(value)])
+        p = ex["picks"][0]
+        self.assertEqual((p["source_label"], p["result"]), ("運彩價值注", "loss"))
+        self.assertEqual(p["margin"], "（Lille OSC 贏 2 球）")  # a two-goal win is the 讓分 draw
+        self.assertIn("運彩 @ 3.15，當時公允機率 34%（EV +7.8%）", p["lines"])
+        self.assertIn(
+            "開賽前國際盤 34% → 26%（-8.5pp），用收盤價重算 CLV -18.9%：市場後來不認同這個價格。",
+            p["lines"],
+        )
+        self.assertEqual(p["verdict"], "wrong")
+        self.assertEqual(p["conclusion"], "收盤價值（CLV）不利：這注的判斷有問題。")
+
+    def test_value_bet_that_kept_its_value_and_lost_was_unlucky(self):
+        value = {
+            "selection": "大 2.5",
+            "selection_key": "over",
+            "line": "2.5",
+            "tw_price": "2.10",
+            "fair_prob": "0.50",
+            "ev": "0.05",
+            "closing_fair_prob": "0.52",
+            "clv": "0.092",
+            "status": "loss",
+        }
+        p = review.explain_football(self.football(1, 0), [review.pick_from_value(value)])["picks"][
+            0
+        ]
+        self.assertEqual((p["result_text"], p["margin"]), ("未命中 ✗", "（總進球 1）"))
+        self.assertEqual(p["verdict"], "unlucky")
+        self.assertIn("價格經得起收盤檢驗", p["lines"][1])
+
+    def test_signal_with_its_closing_line_and_xg(self):
+        signal = {
+            "sport": "football",
+            "selection": "主 +0.5",
+            "selection_key": "spread_home",
+            "line": "0.5",
+            "model_p": "0.7455",
+            "market_p": "0.50",
+            "price": "2.0",
+            "close_p": "0.55",
+            "clv": "0.10",
+            "status": "pending",
+            "created_at": "2026-10-13T00:50:04+00:00",
+        }
+        row = self.football(1, 1, comp="PL", xg_h=1.2, xg_a=1.0)
+        p = review.explain_football(row, [review.pick_from_signal(signal)])["picks"][0]
+        self.assertEqual((p["source_label"], p["result"]), ("模型分歧", "win"))
+        self.assertEqual(p["lines"][0], "模型 75% vs 市場 50%，分歧 +25pp")
+        self.assertIn("比賽xG支持這一邊。", p["lines"])  # xG 1.2-1.0 + 0.5 = +0.7 for home
+        self.assertEqual(
+            (p["verdict"], p["conclusion"]), ("right", "判斷有賽前市場移動、比賽xG支持，結果也對。")
+        )
+
+    def test_the_lean_signal_is_judged_like_the_card_and_not_repeated(self):
+        spread = {
+            "line": -0.25,
+            "home": {"fair": 0.52, "best": 1.95, "book": "x"},
+            "away": {"fair": 0.48, "best": 2.06, "book": "x"},
+        }
+        e = entry_for(
+            {"h2h": h2h(0.45, 0.28, 0.27), "spread": spread},
+            {"h2h": h2h(0.44, 0.27, 0.29), "spread": spread},
+        )
+        signal = {
+            "sport": "football",
+            "selection_key": "spread_away",
+            "line": "-0.25",
+            "selection": "Lille OSC +0.25",
+            "model_p": "0.59",
+            "market_p": "0.48",
+            "price": "2.06",
+            "close_p": "0.40",  # would read as "against" on its own; the card measured 0pp
+            "status": "half_win",
+        }
+        row = review.football_row(e, finished(1, 1, (0, 1)), None, signal, NOW)
+        ex = review.explain_football(row, [review.pick_from_signal(signal)])
+        self.assertEqual((ex["verdict"], ex["picks"][0]["verdict"]), ("hit", "hit"))
+        self.assertNotIn("模型分歧：", " ".join(ex["bullets"]))  # listed with the picks instead
+        self.assertEqual(ex["picks"][0]["result_text"], "贏一半")
+
+    def test_mlb_t10_pick_and_another_value_bet(self):
+        t = MlbReviewTests()
+        t.setUp()
+        row = review.mlb_row(
+            t.entry({"favourite": "home", "g": 0.072}, t.value_block()), t.game, t.box, NOW
+        )
+        t10_bet = {  # the T-10 pick 客隊 +1.5, kept by the ledger as the home handicap
+            "selection": "客受讓（客隊） +1.5",
+            "selection_key": "spread_away",
+            "line": "-1.5",
+            "tw_price": "1.80",
+            "fair_prob": "0.5814",
+            "ev": "0.0465",
+            "closing_fair_prob": "0.60",
+            "clv": "0.08",
+            "status": "loss",
+        }
+        totals = {
+            "selection": "大 7.5",
+            "selection_key": "over",
+            "line": "7.5",
+            "tw_price": "1.95",
+            "fair_prob": "0.53",
+            "ev": "0.0335",
+            "status": "loss",
+        }
+        picks = [review.pick_from_value(t10_bet), review.pick_from_value(totals)]
+        ex = review.explain_mlb(row, picks)
+        self.assertEqual(
+            [(p["source_label"], p["result"]) for p in ex["picks"]],
+            [("T-10 可下", "loss"), ("運彩價值注", "loss")],
+        )
+        self.assertEqual(ex["picks"][0]["margin"], "（Away Club 輸 3 分）")
+        self.assertEqual(ex["picks"][1]["margin"], "（總分 7）")
+        self.assertIn("開賽前沒有再買到國際價", ex["picks"][1]["lines"][1])
+        # The T-10 decision is reviewed with the picks, not repeated in the bullets.
+        self.assertNotIn("可下 客隊 +1.5", " ".join(ex["bullets"]))
+        self.assertIn("可下 客隊 +1.5", " ".join(review.explain_mlb(row)["bullets"]))
+
+    def test_recommended_matches_lead_the_front_page_and_are_never_dropped(self):
+        from sports_analyzer.render.cards import review_views
+
+        rows = []
+        for i in range(14):  # a busy weekend: 14 reviews in the last three days
+            r = self.football(1, 0)
+            r.update(match_id=str(100 + i), kickoff_utc=f"2026-10-14T{10 + i % 9:02d}:00:00+00:00")
+            rows.append({k: review_store._cell(v) for k, v in r.items()})
+        value = {
+            "sport": "football",
+            "match_id": "100",
+            "selection": "主勝",
+            "selection_key": "home",
+            "line": "",
+            "tw_price": "2.2",
+            "fair_prob": "0.5",
+            "ev": "0.1",
+            "status": "win",
+        }
+        views = review_views(rows, [], NOW, value_rows=[value])
+        self.assertEqual(len(views["football"]), 12)
+        self.assertEqual(views["football"][0]["row"]["match_id"], "100")
+        self.assertEqual(views["picks"], {"n": 1, "settled": 1, "wins": 1})
+
+
 class RenderTests(unittest.TestCase):
     def test_page_moves_finished_matches_into_the_review(self):
         e = entry_for({"h2h": h2h(0.45, 0.28, 0.27)}, {"h2h": h2h(0.45, 0.28, 0.27)})
@@ -549,6 +719,29 @@ class RenderTests(unittest.TestCase):
         self.assertEqual(html.count('<article class="card review">'), 1)
         self.assertEqual(html.count('<div class="name">Arsenal FC</div>'), 1)
         self.assertIn("足球累計", page)
+
+    def test_a_started_match_with_a_recommendation_is_flagged_while_waiting(self):
+        started = card(market={"h2h": h2h(0.45, 0.28, 0.27)})  # kicked off before NOW
+        football = {
+            "competitions": [{"code": "PL", "name": "英超", "cards": [started], "signals": []}]
+        }
+        value = {
+            "sport": "football",
+            "match_id": "7",
+            "selection": "主勝",
+            "selection_key": "home",
+            "line": "",
+            "tw_price": "2.4",
+            "fair_prob": "0.45",
+            "ev": "0.08",
+            "status": "pending",
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            html = render_index(
+                football, None, None, NOW, Path(tmp) / "index.html", value_rows=[value]
+            ).read_text(encoding="utf-8")
+        self.assertIn("<b>Arsenal FC vs Lille OSC（有推薦）</b>", html)
+        self.assertIn("下一次更新（每次上傳運彩，或台北 08:15／20:25）就會產生賽後檢討", html)
 
 
 if __name__ == "__main__":

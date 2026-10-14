@@ -59,6 +59,8 @@ def render_index(
     moves: Mapping[tuple[str, str], Mapping[str, Any]] | None = None,
     tw_moves: Mapping[str, Any] | None = None,
     bighand_matches: int = 0,
+    signal_rows: list[Mapping[str, Any]] | None = None,
+    value_rows: list[Mapping[str, Any]] | None = None,
 ) -> Path:
     """`moves` is moves.track() of the line-move tape; `tw_moves` holds the recorded
     運彩-only moves (oldest first, settled) and their summary; `bighand_matches` is how
@@ -101,11 +103,25 @@ def render_index(
                 if not _started(g, generated_at)
             ],
         }
-    reviews = review_views(football_reviews or [], mlb_reviews or [], generated_at)
+    reviews = review_views(
+        football_reviews or [], mlb_reviews or [], generated_at, True, signal_rows, value_rows
+    )
     reviewed = {r["row"].get("match_id") for r in reviews["football"]} | {
         r["row"].get("game_pk") for r in reviews["mlb"]
     }
-    waiting = [c for c in started if str(c.get("match_id") or c.get("game_pk")) not in reviewed]
+    recommended = match_picks(signal_rows or [], value_rows or [])
+    waiting = [
+        {
+            **c,
+            "recommended": (
+                "mlb" if c.get("game_pk") else "football",
+                str(c.get("match_id") or c.get("game_pk")),
+            )
+            in recommended,
+        }
+        for c in started
+        if str(c.get("match_id") or c.get("game_pk")) not in reviewed
+    ]
 
     # 運彩 value bets across both sports, for the section at the top of the page.
     tw_values: list[dict[str, Any]] = []
@@ -365,9 +381,13 @@ def render_reviews_page(
     mlb_reviews: list[Mapping[str, Any]],
     generated_at: datetime,
     out_path: Path,
+    signal_rows: list[Mapping[str, Any]] | None = None,
+    value_rows: list[Mapping[str, Any]] | None = None,
 ) -> Path:
     """docs/reviews.html: every review, newest first, with the cumulative diagnostics."""
-    views = review_views(football_reviews, mlb_reviews, generated_at, recent_only=False)
+    views = review_views(
+        football_reviews, mlb_reviews, generated_at, False, signal_rows, value_rows
+    )
     html = (
         _env()
         .get_template("reviews.html.j2")
@@ -386,34 +406,74 @@ def review_views(
     mlb_rows: list[Mapping[str, Any]],
     now: datetime,
     recent_only: bool = True,
+    signal_rows: list[Mapping[str, Any]] | None = None,
+    value_rows: list[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Explained review cards (newest first) and the cumulative summaries."""
+    """Explained review cards (newest first) and the cumulative summaries. Every
+    recommendation the page made for a match (模型分歧 ledger rows, 運彩 value bets) is
+    reviewed on that match's card."""
+    picks = match_picks(signal_rows or [], value_rows or [])
     football = [
-        {"row": row, **review.explain_football(row), **_odds_table(row)}
+        {
+            "row": row,
+            **review.explain_football(row, picks.get(("football", str(row.get("match_id"))), [])),
+            **_odds_table(row),
+        }
         for row in sorted(football_rows, key=lambda r: str(r.get("kickoff_utc")), reverse=True)
     ]
     mlb = [
-        {"row": row, **review.explain_mlb(row)}
+        {"row": row, **review.explain_mlb(row, picks.get(("mlb", str(row.get("game_pk"))), []))}
         for row in sorted(mlb_rows, key=lambda r: str(r.get("kickoff_utc")), reverse=True)
     ]
     if recent_only:
         football = _recent(football, now)
         mlb = _recent(mlb, now)
-        # 模型分歧 matches first: they are the ones the owner was told to look at.
-        football.sort(key=lambda v: v["row"].get("lean_source") != "signal")
     return {
         "football": football,
         "mlb": mlb,
         "summary": review.summarize_football(football_rows),
         "mlb_summary": review.summarize_mlb(mlb_rows),
         "total": len(football_rows) + len(mlb_rows),
+        "picks": _picks_summary([p for v in football + mlb for p in v["picks"]]),
+    }
+
+
+def match_picks(
+    signal_rows: list[Mapping[str, Any]], value_rows: list[Mapping[str, Any]]
+) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    """(sport, match id) -> the match's recommendations, oldest first: 運彩 value bets
+    and 模型分歧 signals (football only: MLB has no model signals)."""
+    out: dict[tuple[str, str], list[dict[str, Any]]] = {}
+    for r in value_rows:
+        out.setdefault((str(r.get("sport")), str(r.get("match_id"))), []).append(
+            review.pick_from_value(r)
+        )
+    for r in signal_rows:
+        if r.get("sport") == "football":
+            out.setdefault(("football", str(r.get("match_id"))), []).append(
+                review.pick_from_signal(r)
+            )
+    for v in out.values():
+        v.sort(key=lambda p: (p["source"] != "value", str(p["at"])))
+    return out
+
+
+def _picks_summary(picks: list[Mapping[str, Any]]) -> dict[str, Any]:
+    done = [p for p in picks if p["result"] not in ("", "pending")]
+    return {
+        "n": len(picks),
+        "settled": len(done),
+        "wins": sum(1 for p in done if p["result"] in ("win", "half_win")),
     }
 
 
 def _recent(views: list[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+    """The last few days' reviews, recommended matches first (the ones the owner was
+    told to look at), so a busy weekend never pushes them off the front page."""
     cutoff = (now - timedelta(days=RECENT_REVIEW_DAYS)).isoformat()
-    recent = [v for v in views if str(v["row"].get("kickoff_utc")) >= cutoff]
-    return (recent or views[:6])[:RECENT_REVIEW_LIMIT]
+    recent = [v for v in views if str(v["row"].get("kickoff_utc")) >= cutoff] or views[:6]
+    recent.sort(key=lambda v: (not v["picks"], v["row"].get("lean_source") != "signal"))
+    return recent[:RECENT_REVIEW_LIMIT]
 
 
 def _odds_table(row: Mapping[str, Any]) -> dict[str, Any]:

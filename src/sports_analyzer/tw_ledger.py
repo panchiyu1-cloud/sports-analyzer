@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .analysis.taiwan import derived_prob_for, implied_from_market
+from .analysis.taiwan import derived_prob_for, fair_time, implied_from_market
 from .ledger import PENDING, PUSH, SETTLED, grade, hit_counts, profit
 from .models.implied import IDENTITY, Calibration
 
@@ -118,14 +118,23 @@ def append_values(
 
 
 def update_clv(
-    path: Path, cards: list[dict[str, Any]], sport: str, calib: Calibration = IDENTITY
+    path: Path,
+    cards: list[dict[str, Any]],
+    sport: str,
+    calib: Calibration = IDENTITY,
+    now: datetime | None = None,
 ) -> int:
-    """Fill closing_fair_prob/clv from a later consensus for still-pending rows."""
+    """Fill closing_fair_prob/clv from a later consensus for still-pending rows.
+
+    Prices bought at or after kickoff are in-play prices, never a close (an evening run
+    prices the day's matches from 00:00 UTC, some of which are already being played):
+    such a card is skipped. Its time is the h2h block's own `odds_at`, else `now`."""
     rows = read(path)
+    now = now or datetime.now(UTC)
     fair_by_match: dict[str, dict[str, Any]] = {}
     for card in cards:
         mv = card.get("market")
-        if not mv:
+        if not mv or not _priced_before_kickoff(card, mv, now):
             continue
         fair_by_match[str(card.get("match_id") or card.get("game_pk"))] = mv
     updated = 0
@@ -143,6 +152,15 @@ def update_clv(
         updated += 1
     write(path, rows)
     return updated
+
+
+def _priced_before_kickoff(card: dict[str, Any], mv: dict[str, Any], now: datetime) -> bool:
+    try:
+        kickoff = datetime.fromisoformat(str(card.get("kickoff_utc")).replace("Z", "+00:00"))
+    except ValueError:
+        return True  # no kickoff to compare with: as before
+    bought = fair_time(mv.get("h2h")) or now
+    return bought < kickoff
 
 
 def _fair_prob_for(

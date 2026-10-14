@@ -1,7 +1,7 @@
 import json
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sports_analyzer import tw_ledger
@@ -262,7 +262,10 @@ class TwLedgerTests(unittest.TestCase):
         # Later consensus says home is now 0.65: CLV = 0.65 * 1.70 - 1 = +10.5%
         later = football_card()
         later["market"]["h2h"]["home"]["fair"] = 0.65
-        self.assertEqual(tw_ledger.update_clv(self.path, [later], "football"), 1)
+        before_kickoff = datetime(2026, 10, 17, 12, 0, tzinfo=UTC)
+        self.assertEqual(
+            tw_ledger.update_clv(self.path, [later], "football", now=before_kickoff), 1
+        )
         rows = tw_ledger.read(self.path)
         self.assertAlmostEqual(float(rows[0]["clv"]), 0.105, places=3)
         self.assertEqual(tw_ledger.settle(self.path, {"500001": (2, 1)}, "football"), 1)
@@ -275,6 +278,21 @@ class TwLedgerTests(unittest.TestCase):
         self.assertEqual(s["n_clv"], 1)
         # Other sport's rows are untouched by football settlement.
         self.assertEqual(tw_ledger.settle(self.path, {"500001": (0, 0)}, "mlb"), 0)
+
+    def test_in_play_prices_are_never_a_closing_price(self):
+        # An evening run prices the day's matches from 00:00 UTC: one kicked off at 14:00
+        # is being played when the 14:25 prices are bought.
+        tw_ledger.append_values(self.path, [self.card], "football")
+        live = football_card()
+        live["market"]["h2h"]["home"]["fair"] = 0.90
+        live["market"]["h2h"]["odds_at"] = "2026-10-17T14:25+00:00"
+        self.assertEqual(tw_ledger.update_clv(self.path, [live], "football"), 0)
+        unstamped = football_card()  # no odds_at: the run's own time decides
+        after = datetime(2026, 10, 17, 14, 25, tzinfo=UTC)
+        self.assertEqual(tw_ledger.update_clv(self.path, [unstamped], "football", now=after), 0)
+        self.assertEqual(tw_ledger.read(self.path)[0]["clv"], "")
+        live["market"]["h2h"]["odds_at"] = "2026-10-17T13:40+00:00"  # 20 minutes before
+        self.assertEqual(tw_ledger.update_clv(self.path, [live], "football", now=after), 1)
 
 
 if __name__ == "__main__":

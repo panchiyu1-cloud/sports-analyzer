@@ -448,7 +448,7 @@ def run_tw(
         if refreshed:
             # The fresh consensus is the closing proxy for 運彩 bets recorded earlier;
             # filled before this run records new ones, so no bet is its own close.
-            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "football", calib)
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "football", calib, now=now)
         rep = annotate_tw(cards, games, captured, cfg, calib=calib)
         rep.update(
             {
@@ -487,7 +487,7 @@ def run_tw(
             card["t10"] = g_value_block(card["market"], cfg)
             card["notes"] = [n for n in card.get("notes", []) if "賠率" not in n]
         if refreshed:
-            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb")
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb", now=now)
         mlb_cfg = replace(cfg, value_threshold=cfg.mlb_value_threshold)
         rep = annotate_tw(cards, games, captured, mlb_cfg)
         for card in cards:
@@ -604,12 +604,19 @@ def _backfill_odds_at(snapshot: dict[str, Any]) -> None:
 
 # --------------------------------------------------------------------- review
 def run_review(
-    settings: Settings | None, now: datetime | None = None, days: int = 14
+    settings: Settings | None,
+    now: datetime | None = None,
+    days: int = 14,
+    new_only: bool = False,
 ) -> dict[str, Any]:
     """Post-match review: finished matches from the last `days` days of snapshots.
 
     Football rows are rebuilt every run (football-data.co.uk statistics arrive a few
-    days after the match); MLB rows are written once, when the game is final.
+    days after the match); MLB rows are written once, when the game is final. With
+    `new_only` (the run after a phone upload) only matches without a review row are
+    looked up, so an upload costs no football-data.org request unless one has finished.
+    The finished matches also settle both ledgers here and each 模型分歧 gets its
+    closing line, so every recommendation on the page is reviewed with its match.
     Costs no Odds API credits: football-data.org results + the free MLB Stats API.
     """
     now = now or datetime.now(UTC)
@@ -622,6 +629,9 @@ def run_review(
         "match_id",
     )
     due = {k: e for k, e in pre.items() if _kicked_off(e["card"], now, hours=2)}
+    if new_only:
+        have = {r["match_id"] for r in review_store.read(FOOTBALL_REVIEWS_PATH)}
+        due = {k: e for k, e in due.items() if k not in have}
     rows: list[dict[str, Any]] = []
     if due and settings and settings.football_data_token:
         fd = FootballDataClient(settings.football_data_token)
@@ -648,7 +658,24 @@ def run_review(
         added, updated = review_store.upsert(
             FOOTBALL_REVIEWS_PATH, rows, review_store.FOOTBALL_COLUMNS, "match_id"
         )
-        report["football"] = {"due": len(due), "added": added, "updated": updated}
+        finished = [results[k] for k in due if k in results and results[k].is_finished]
+        settled = ledger_mod.settle_football(LEDGER_PATH, finished)
+        settled += tw_ledger.settle(
+            TW_LEDGER_PATH,
+            {
+                str(m.id): (m.home_goals or 0, m.away_goals or 0, m.home_ht, m.away_ht)
+                for m in finished
+            },
+            "football",
+        )
+        closed = _close_signals({str(m.id): due[str(m.id)] for m in finished})
+        report["football"] = {
+            "due": len(due),
+            "added": added,
+            "updated": updated,
+            "settled": settled,
+            "signals_closed": closed,
+        }
     log.info("review football: %s", report.get("football", {"due": len(due)}))
 
     msnaps = _recent_snapshots("mlb", now.date(), days)
@@ -672,9 +699,39 @@ def run_review(
                 continue
             mrows.append(review.mlb_row(e, g, client.box(g.game_pk), now))
         added, _ = review_store.upsert(MLB_REVIEWS_PATH, mrows, review_store.MLB_COLUMNS, "game_pk")
-        report["mlb"] = {"due": len(mdue), "added": added}
+        settled = tw_ledger.settle(
+            TW_LEDGER_PATH,
+            {k: (g.home_score or 0, g.away_score or 0) for k, g in finals.items() if g.is_final},
+            "mlb",
+        )
+        report["mlb"] = {"due": len(mdue), "added": added, "settled": settled}
     log.info("review mlb: %s", report.get("mlb", {"due": len(mdue)}))
     return report
+
+
+def _close_signals(entries: dict[str, dict[str, Any]]) -> int:
+    """Give each 模型分歧 of these finished matches its closing line: the selection's fair
+    probability in the last consensus before kickoff and close_p x price - 1 (CLV)."""
+    if not entries:
+        return 0
+    calib = _implied_calibration()
+    rows = ledger_mod.read(LEDGER_PATH)
+    filled = 0
+    for r in rows:
+        entry = entries.get(str(r["match_id"]))
+        if r["sport"] != "football" or entry is None or r.get("close_p"):
+            continue
+        line = float(r["line"]) if r.get("line") else None
+        p = review.closing_prob(entry.get("close"), r["selection_key"], line, calib)
+        if p is None:
+            continue
+        r["close_p"] = f"{p:.4f}"
+        price = float(r["price"]) if r.get("price") else None
+        r["clv"] = f"{p * price - 1:.4f}" if price else ""
+        filled += 1
+    if filled:
+        ledger_mod.write(LEDGER_PATH, rows)
+    return filled
 
 
 def _implied_calibration() -> Calibration:
@@ -733,12 +790,15 @@ def render_latest() -> Path:
             backtest_total = None
     football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
     mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
-    render_reviews_page(football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html")
+    signal_rows = ledger_mod.read(LEDGER_PATH)
+    value_rows = tw_ledger.read(TW_LEDGER_PATH)
+    render_reviews_page(
+        football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html", signal_rows, value_rows
+    )
     # The whole tape: the 大戶 record draws every recorded match's prices from it.
     tape = moves_mod.read(MOVES_DIR, months=None)
     scores = {("football", str(r["match_id"])): r for r in football_reviews}
     scores.update({("mlb", str(r["game_pk"])): r for r in mlb_reviews})
-    value_rows = tw_ledger.read(TW_LEDGER_PATH)
     history = moves_mod.event_history(
         _record_bighand(tape, now, football, mlb), tape, _final_scores(scores), value_rows, now
     )
@@ -766,6 +826,8 @@ def render_latest() -> Path:
             "summary": bighand_summary.get("tw_only") or moves_mod.divergence_summary([]),
         },
         bighand_matches=len(history),
+        signal_rows=signal_rows,
+        value_rows=value_rows,
     )
 
 
@@ -901,6 +963,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--offline", action="store_true", help="skip the network and just re-render"
     )
+    parser.add_argument(
+        "--new-only",
+        action="store_true",
+        help="review: only matches without a review yet (the quick run after an upload)",
+    )
     parser.add_argument("-v", "--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -938,7 +1005,7 @@ def main(argv: list[str] | None = None) -> int:
         settings = Settings.from_env(offline=True)
         if not settings.football_data_token:
             raise SystemExit("Missing required environment variable: FOOTBALL_DATA_TOKEN")
-        run_review(settings)
+        run_review(settings, new_only=args.new_only)
         out = render_latest()
         log.info("rendered %s", out)
         return 0

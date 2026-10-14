@@ -399,3 +399,150 @@ class BigHandRecordSmokeTests(unittest.TestCase):
         index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
         self.assertIn('href="bighand.html">大戶紀錄（1 場）', index)
         self.assertIn("洛杉磯道奇 不讓分", index)  # the 運彩大戶 table uses 運彩's names
+
+
+class FakeResults:
+    """football-data.org with one finished CL match (id 7): 2-1, 1-0 at half-time."""
+
+    calls: list[str] = []
+
+    def __init__(self, token: str, session=None) -> None:
+        pass
+
+    def results(self, code, season=None):
+        FakeResults.calls.append(code)
+        return [
+            football.Match(
+                7,
+                "CL",
+                datetime(2026, 10, 14, 19, 0, tzinfo=UTC),
+                "FINISHED",
+                3,
+                "AS Roma",
+                "Real Madrid CF",
+                2,
+                1,
+                1,
+                0,
+            )
+        ]
+
+
+class ReviewSmokeTests(unittest.TestCase):
+    """The review settles both ledgers and closes each 模型分歧 for every finished match."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        (root / "history").mkdir()
+        self.paths = {
+            "SNAPSHOT_DIR": root / "snapshots",
+            "HISTORY_DIR": root / "history",
+            "LEDGER_PATH": root / "ledger.csv",
+            "TW_LEDGER_PATH": root / "tw_ledger.csv",
+            "FOOTBALL_REVIEWS_PATH": root / "reviews" / "football.csv",
+            "MLB_REVIEWS_PATH": root / "reviews" / "mlb.csv",
+            "IMPLIED_CALIBRATION_PATH": root / "implied_calibration.json",
+        }
+        self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
+        self.patches.append(mock.patch.object(pipeline, "FootballDataClient", FakeResults))
+        for p in self.patches:
+            p.start()
+        FakeResults.calls = []
+
+        def block(home, draw, away):
+            return {
+                "home": {"fair": home, "fair_odds": round(1 / home, 2)},
+                "draw": {"fair": draw, "fair_odds": round(1 / draw, 2)},
+                "away": {"fair": away, "fair_odds": round(1 / away, 2)},
+                "odds_at": "2026-10-14T12:25+00:00",
+            }
+
+        card = {
+            "sport": "football",
+            "competition": "CL",
+            "competition_name": "歐冠",
+            "match_id": 7,
+            "kickoff_utc": "2026-10-14T19:00:00+00:00",
+            "kickoff_local": "10/15 (週四) 03:00",
+            "home": "AS Roma",
+            "away": "Real Madrid CF",
+            "model": {},
+            "market": {
+                "h2h": block(0.30, 0.25, 0.45),
+                "totals": {"line": 2.5, "over": {"fair": 0.55}, "under": {"fair": 0.45}},
+            },
+            "notes": [],
+        }
+        folder = self.paths["SNAPSHOT_DIR"] / "2026-10-14"
+        folder.mkdir(parents=True)
+        (folder / "football.json").write_text(
+            json.dumps(
+                {
+                    "generated_at": "2026-10-14T12:30:00+00:00",
+                    "date": "2026-10-14",
+                    "competitions": [{"code": "CL", "name": "歐冠", "cards": [card]}],
+                }
+            ),
+            encoding="utf-8",
+        )
+        pipeline.ledger_mod.write(
+            self.paths["LEDGER_PATH"],
+            [
+                {
+                    "id": "s1",
+                    "created_at": "2026-10-14T00:50:25+00:00",
+                    "sport": "football",
+                    "match_id": "7",
+                    "market": "大小",
+                    "selection": "大分 2.5",
+                    "selection_key": "over",
+                    "line": "2.5",
+                    "model_p": "0.66",
+                    "market_p": "0.50",
+                    "price": "2.0",
+                    "status": "pending",
+                }
+            ],
+        )
+        pipeline.tw_ledger.write(
+            self.paths["TW_LEDGER_PATH"],
+            [
+                {
+                    "id": "v1",
+                    "captured_at": "2026-10-14T20:00+08:00",
+                    "sport": "football",
+                    "match_id": "7",
+                    "selection": "主勝",
+                    "selection_key": "home",
+                    "line": "",
+                    "tw_price": "3.6",
+                    "fair_prob": "0.30",
+                    "ev": "0.08",
+                    "status": "pending",
+                }
+            ],
+        )
+        self.settings = Settings("token", None)
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        self.tmp.cleanup()
+
+    def test_review_settles_and_closes_every_recommendation(self):
+        now = datetime(2026, 10, 14, 22, 30, tzinfo=UTC)  # 06:30 Taipei, the morning after
+        rep = pipeline.run_review(self.settings, now=now)["football"]
+        self.assertEqual((rep["added"], rep["settled"], rep["signals_closed"]), (1, 2, 1))
+        signal = pipeline.ledger_mod.read(self.paths["LEDGER_PATH"])[0]
+        # Over 2.5 after 2-1; closed at 55% against a price of 2.0: CLV +10%.
+        self.assertEqual((signal["status"], signal["result"]), ("win", "2-1"))
+        self.assertEqual((signal["close_p"], signal["clv"]), ("0.5500", "0.1000"))
+        value = pipeline.tw_ledger.read(self.paths["TW_LEDGER_PATH"])[0]
+        self.assertEqual((value["status"], value["profit"]), ("win", "2.600"))
+        self.assertEqual(FakeResults.calls, ["CL"])
+
+        # After a phone upload only matches without a review are looked up: none left.
+        rep = pipeline.run_review(self.settings, now=now, new_only=True)
+        self.assertEqual(FakeResults.calls, ["CL"])
+        self.assertEqual(rep, {})

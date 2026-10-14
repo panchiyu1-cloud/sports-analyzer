@@ -29,7 +29,9 @@ from ..config import LOCAL_TZ
 from ..fetch.football import Match
 from ..fetch.mlb import BoxScore, MlbGame, PitcherLine
 from ..history import MatchStats
-from ..ledger import HALF_LOSS, HALF_WIN, LOSS, PUSH, WIN, grade, profit
+from ..ledger import HALF_LOSS, HALF_WIN, LOSS, PENDING, PUSH, WIN, grade, profit
+from ..models.implied import IDENTITY, Calibration
+from .taiwan import derived_prob_for, implied_from_market
 
 # A model view at least this far above the market (1X2) counts as a lean.
 LEAN_MIN_GAP = 0.05
@@ -43,6 +45,9 @@ XG_EDGE = 0.5
 LINE_EDGE = 0.4
 # Shots-on-target difference, used only when xG is missing.
 SOT_EDGE = 3
+# A pick still worth this much at the closing price (or this much less) is a real verdict
+# on the price taken; inside it the close says nothing either way.
+CLV_MIN = 0.01
 # Goals away from the model's expectation worth a sentence.
 GOAL_MISS = 1.5
 # Goals minus xG beyond this is mostly finishing variance ("luck").
@@ -76,7 +81,11 @@ VERDICTS: dict[str, tuple[str, str]] = {
     "t10_pass": ("沒有價值，不下", "neutral"),
     "t10_stale": ("價格相隔太久，未判斷", "neutral"),
     "no_t10": ("沒有運彩比價", "neutral"),
+    # a recommendation whose match result is not in yet
+    "pending": ("待結算", "neutral"),
 }
+# Where a recommendation came from (the page's sections).
+PICK_SOURCES = {"value": "運彩價值注", "signal": "模型分歧", "t10": "T-10 可下"}
 
 
 # =========================================================================== shared
@@ -143,6 +152,211 @@ def side_prob(
         return None
     side = key if name == "totals" else key.split("_", 1)[1]
     return _num((block.get(side) or {}).get("fair"))
+
+
+def closing_prob(
+    mv: Mapping[str, Any] | None, key: str, line: float | None, calib: Calibration = IDENTITY
+) -> float | None:
+    """Fair probability of a selection in the last consensus before kickoff (fresh blocks
+    only). Football handicap and totals lines the consensus did not quote come from the
+    market-implied goal model, which needs a fresh 1X2 and a fresh totals line."""
+    p = side_prob(mv, key, line, fresh_only=True)
+    if p is not None or not mv or line is None:
+        return p
+    if key not in ("spread_home", "spread_away", "over", "under"):
+        return None
+    h2h, tot = mv.get("h2h") or {}, mv.get("totals") or {}
+    if h2h.get("stale") or tot.get("stale"):
+        return None
+    goals = implied_from_market(dict(mv))
+    if goals is None:
+        return None
+    if key.startswith("spread_"):
+        p_home = goals.asian_home(line)
+        return p_home if key == "spread_home" else 1 - p_home
+    return derived_prob_for(goals, key, line, calib)
+
+
+# ================================================================== recommendations
+def pick_from_signal(r: Mapping[str, str]) -> dict[str, Any]:
+    """A 模型分歧 ledger row as a recommendation to review."""
+    return {
+        "source": "signal",
+        "label": r.get("selection", ""),
+        "key": r.get("selection_key", ""),
+        "line": _num(r.get("line")),
+        "price": _num(r.get("price")),
+        "p_then": _num(r.get("market_p")),
+        "model_p": _num(r.get("model_p")),
+        "ev": None,
+        "p_close": _num(r.get("close_p")),
+        "clv": _num(r.get("clv")),
+        "status": r.get("status", ""),
+        "at": r.get("created_at", ""),
+    }
+
+
+def pick_from_value(r: Mapping[str, str]) -> dict[str, Any]:
+    """A 運彩 value bet (tw_ledger row) as a recommendation to review."""
+    return {
+        "source": "value",
+        "label": r.get("selection", ""),
+        "key": r.get("selection_key", ""),
+        "line": _num(r.get("line")),
+        "price": _num(r.get("tw_price")),
+        "p_then": _num(r.get("fair_prob")),
+        "model_p": None,
+        "ev": _num(r.get("ev")),
+        "p_close": _num(r.get("closing_fair_prob")),
+        "clv": _num(r.get("clv")),
+        "status": r.get("status", ""),
+        "at": r.get("captured_at", ""),
+    }
+
+
+def explain_pick(
+    pick: Mapping[str, Any],
+    row: Mapping[str, Any],
+    sport: str,
+    move_sign: int | None = None,
+) -> dict[str, Any]:
+    """One recommendation, settled and judged like the match's lean: outcome apart from
+    process. A 運彩 value bet is judged by its closing-line value (the bet still worth
+    something at the closing fair price), a 模型分歧 by the market moving toward it
+    before kickoff (`move_sign` when the caller already measured it), both plus the run
+    of play (xG / shots on target, football only)."""
+    football = sport == "football"
+    home, away = str(row.get("home") or "主隊"), str(row.get("away") or "客隊")
+    hg, ag = (
+        (_i(row, "ft_h"), _i(row, "ft_a")) if football else (_i(row, "final_h"), _i(row, "final_a"))
+    )
+    key, line = str(pick.get("key") or ""), pick.get("line")
+    status = str(pick.get("status") or "")
+    if status in ("", PENDING) and hg is not None and ag is not None:
+        # The ledgers are settled by the daily runs; the review already has the score.
+        hh, ha = _i(row, "ht_h"), _i(row, "ht_a")
+        ht = (hh, ha) if hh is not None and ha is not None else None
+        status = grade(key, line, hg, ag, ht) or PENDING
+    price, p_then, p_close = pick.get("price"), pick.get("p_then"), pick.get("p_close")
+    clv = pick.get("clv")
+    if clv is None and p_close is not None and price:
+        clv = p_close * price - 1
+
+    lines: list[str] = []
+    if pick.get("source") == "value":
+        ev = pick.get("ev")
+        lines.append(
+            (f"運彩 @ {price:.2f}，" if price else "")
+            + f"當時公允機率 {_pct(p_then)}"
+            + (f"（EV {ev * 100:+.1f}%）" if ev is not None else "")
+        )
+        evidence_sign = 0 if clv is None or abs(clv) < CLV_MIN else (1 if clv > 0 else -1)
+        evidence_word = "收盤價值（CLV）"
+    else:
+        mp = pick.get("model_p")
+        gap = f"，分歧 {_pp(mp - p_then)}" if mp is not None and p_then is not None else ""
+        lines.append(f"模型 {_pct(mp)} vs 市場 {_pct(p_then)}{gap}")
+        if move_sign is None:
+            move = p_close - p_then if p_close is not None and p_then is not None else None
+            move_sign = 0 if move is None or abs(move) < MOVE_MIN else (1 if move > 0 else -1)
+        evidence_sign = move_sign
+        evidence_word = "賽前市場移動"
+    if p_close is None:
+        lines.append("開賽前沒有再買到國際價，算不出收盤價值（CLV）。")
+    else:
+        move_pp = (p_close - p_then) * 100 if p_then is not None else None
+        text = f"開賽前國際盤 {_pct(p_then)} → {_pct(p_close)}" + (
+            f"（{move_pp:+.1f}pp）" if move_pp is not None else ""
+        )
+        if clv is not None:
+            text += f"，用收盤價重算 CLV {clv * 100:+.1f}%"
+            text += (
+                "：價格經得起收盤檢驗。"
+                if clv >= CLV_MIN
+                else "：市場後來不認同這個價格。"
+                if clv <= -CLV_MIN
+                else "：和收盤價差不多。"
+            )
+        lines.append(text)
+    stats_sign, basis = _stats_sign(key, line, row) if football and key else (0, "")
+    if stats_sign:
+        lines.append(f"比賽{basis}{'支持' if stats_sign > 0 else '不支持'}這一邊。")
+
+    score = evidence_sign + stats_sign
+    support = "、".join(
+        w
+        for w, sign in ((evidence_word, evidence_sign), (f"比賽{basis or '數據'}", stats_sign))
+        if sign > 0
+    )
+    against = "、".join(
+        w
+        for w, sign in ((evidence_word, evidence_sign), (f"比賽{basis or '數據'}", stats_sign))
+        if sign < 0
+    )
+    if status in (WIN, HALF_WIN):
+        verdict = "right" if score > 0 else ("lucky" if score < 0 else "hit")
+    elif status in (LOSS, HALF_LOSS):
+        verdict = "unlucky" if score > 0 else ("wrong" if score < 0 else "miss")
+    elif status == PUSH:
+        verdict = "push"
+    else:
+        verdict = "pending"
+    conclusion = {
+        "right": f"判斷有{support}支持，結果也對。",
+        "hit": "命中，但沒有額外證據證明是判斷正確。",
+        "lucky": f"命中，但{against}不利，這次偏運氣。",
+        "unlucky": f"判斷有{support}支持，輸在比賽的隨機性，不需要因此改策略。",
+        "miss": "沒命中，也沒有證據顯示判斷合理。",
+        "wrong": f"{against}不利：這注的判斷有問題。",
+        "push": "走盤，退回本金。",
+        "pending": "比賽結果還沒進來。",
+    }[verdict]
+    return {
+        "source": pick.get("source"),
+        "source_label": PICK_SOURCES.get("t10" if pick.get("t10") else str(pick.get("source")), ""),
+        "label": pick.get("label", ""),
+        "result": status,
+        "result_text": RESULT_TEXT.get(status, "待結算"),
+        "margin": _pick_margin_text(key, line, home, away, hg, ag, row, football),
+        "verdict": verdict,
+        "verdict_label": VERDICTS[verdict][0],
+        "tone": VERDICTS[verdict][1],
+        "lines": lines,
+        "conclusion": conclusion,
+        "clv": clv,
+    }
+
+
+def _pick_margin_text(
+    key: str,
+    line: float | None,
+    home: str,
+    away: str,
+    hg: int | None,
+    ag: int | None,
+    row: Mapping[str, Any],
+    football: bool,
+) -> str:
+    """Plain words for how the score settled a selection."""
+    if hg is None or ag is None:
+        return ""
+    unit = "球" if football else "分"
+    if key in ("spread_home", "spread_away", "hcp3_home", "hcp3_away"):
+        team, margin = (home, hg - ag) if key.endswith("home") else (away, ag - hg)
+        if margin > 0:
+            return f"（{team} 贏 {margin} {unit}）"
+        if margin < 0:
+            return f"（{team} 輸 {-margin} {unit}）"
+        return "（打平）"
+    if key in ("over", "under", "odd", "even"):
+        return f"（總{'進球' if football else '分'} {hg + ag}）"
+    if key.startswith("team_"):
+        side = key.split("_")[1]
+        return f"（{home if side == 'home' else away} 進 {hg if side == 'home' else ag} {unit}）"
+    if key.startswith("ht_"):
+        hh, ha = _i(row, "ht_h"), _i(row, "ht_a")
+        return f"（半場 {hh}–{ha}）" if hh is not None and ha is not None else ""
+    return ""
 
 
 # ========================================================================= football
@@ -346,8 +560,11 @@ def _stats_sign(key: str, line: float | None, row: Mapping[str, Any]) -> tuple[i
     return 0, ""
 
 
-def explain_football(row: Mapping[str, Any]) -> dict[str, Any]:
-    """Everything the page shows for one finished match, in reading order."""
+def explain_football(
+    row: Mapping[str, Any], picks: Iterable[Mapping[str, Any]] = ()
+) -> dict[str, Any]:
+    """Everything the page shows for one finished match, in reading order. `picks` are
+    the match's recommendations (pick_from_signal / pick_from_value), each reviewed."""
     a = assess_football(row)
     home, away = str(row.get("home") or "主隊"), str(row.get("away") or "客隊")
     hg, ag = _i(row, "ft_h"), _i(row, "ft_a")
@@ -355,10 +572,23 @@ def explain_football(row: Mapping[str, Any]) -> dict[str, Any]:
     side = {"H": "h", "D": "d", "A": "a"}.get(outcome, "")
     model_ok = str(row.get("model_ok")) == "1"
     bullets: list[str] = []
-
-    # 1. The lean / signal and how it settled.
     key = str(row.get("lean_key") or "")
-    if key:
+    lean_line = _f(row, "lean_line")
+    picks = list(picks)
+    reviewed = []
+    for pick in picks:
+        # The signal the verdict above is about is judged on the same market move.
+        is_lean = (
+            row.get("lean_source") == "signal"
+            and pick.get("source") == "signal"
+            and pick.get("key") == key
+            and _same_line(pick.get("line"), lean_line)
+        )
+        reviewed.append(explain_pick(pick, row, "football", a["move_sign"] if is_lean else None))
+    listed = any(p.get("source") == "signal" for p in picks)
+
+    # 1. The lean / signal and how it settled (signals are listed with the picks instead).
+    if key and not (listed and row.get("lean_source") == "signal"):
         mp, op = _f(row, "lean_model_p"), _f(row, "lean_open_p")
         gap = f"，分歧 {_pp(mp - op)}" if mp is not None and op is not None else ""
         what = "模型分歧" if row.get("lean_source") == "signal" else "模型偏向"
@@ -468,7 +698,13 @@ def explain_football(row: Mapping[str, Any]) -> dict[str, Any]:
         "bullets": bullets,
         "conclusion": _football_conclusion(row, a),
         "assess": a,
+        "picks": reviewed,
     }
+
+
+def _same_line(a: Any, b: Any) -> bool:
+    x, y = _num(a), _num(b)
+    return (x is None and y is None) or (x is not None and y is not None and abs(x - y) < 1e-9)
 
 
 def _play_bullets(
@@ -903,8 +1139,12 @@ def assess_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def explain_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
+def explain_mlb(row: Mapping[str, Any], picks: Iterable[Mapping[str, Any]] = ()) -> dict[str, Any]:
+    """The page's words for one final MLB game; `picks` are its 運彩 value bets
+    (pick_from_value), the T-10 pick among them labelled as such."""
     a = assess_mlb(row)
+    picks = [{**p, "t10": _is_t10_pick(p, row)} for p in picks]
+    reviewed = [explain_pick(p, row, "mlb") for p in picks]
     home, away = str(row.get("home") or "主隊"), str(row.get("away") or "客隊")
     fh, fa = _i(row, "final_h"), _i(row, "final_a")
     name = {"home": home, "away": away}
@@ -932,7 +1172,8 @@ def explain_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
                 f"賽前市場：{home} 勝率 {_pct(o)} → {_pct(c)}（{(c - o) * 100:+.1f}pp）。"
             )
     fav = a["fav"]
-    bullets.extend(_t10_bullets(row, a))
+    if not any(p["t10"] for p in picks):  # else the T-10 pick is reviewed with the picks
+        bullets.extend(_t10_bullets(row, a))
     g, g_tw = _f(row, "t10_g"), _f(row, "g_tw")
     if g is not None:
         text = f"G 值：國際 {g * 100:+.1f}pp"
@@ -968,7 +1209,20 @@ def explain_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
         "bullets": bullets,
         "conclusion": conclusion,
         "assess": a,
+        "picks": reviewed,
     }
+
+
+def _is_t10_pick(pick: Mapping[str, Any], row: Mapping[str, Any]) -> bool:
+    """True for the 運彩 value bet that is the T-10 可下 pick itself (the ledger keeps
+    run lines as the home handicap, the T-10 pick as the backed team's own)."""
+    if row.get("t10_status") != "value":
+        return False
+    side, own = str(row.get("t10_pick_side") or ""), _f(row, "t10_pick_line")
+    if own is None:
+        return pick.get("key") == side
+    home_line = own if side == "home" else -own
+    return pick.get("key") == f"spread_{side}" and _same_line(pick.get("line"), home_line)
 
 
 def _t10_bullets(row: Mapping[str, Any], a: Mapping[str, Any]) -> list[str]:

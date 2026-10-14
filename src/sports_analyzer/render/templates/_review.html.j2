@@ -1,5 +1,20 @@
 {# Post-match review blocks, shared by index.html and reviews.html. #}
 
+{% macro picks_block(picks) %}
+{% if picks %}
+<div class="picks">
+  <div class="picks-head">這場的推薦（{{ picks|length }}）</div>
+  {% for p in picks %}
+  <div class="pick {{ p.source }}">
+    <div class="pick-top"><span class="chip">{{ p.source_label }}</span> <b>{{ p.label }}</b> → <b class="{{ 'pos' if p.result in ('win', 'half_win') else ('neg' if p.result in ('loss', 'half_loss') else '') }}">{{ p.result_text }}</b>{{ p.margin }}</div>
+    {% for l in p.lines %}<div class="sub">{{ l }}</div>{% endfor %}
+    <div class="verdict-row"><span class="chip {{ p.tone }}">{{ p.verdict_label }}</span><span class="sub">{{ p.conclusion }}</span></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endmacro %}
+
 {% macro football_card(r) %}
 {% set row = r.row %}
 <article class="card review">
@@ -23,6 +38,7 @@
     {% endfor %}
   </table>
   {% endif %}
+  {{ picks_block(r.picks) }}
   <ul class="why">
     {% for b in r.bullets %}<li>{{ b }}</li>{% endfor %}
   </ul>
@@ -48,6 +64,7 @@
     <tr><td>主</td>{% for x in ih %}<td>{{ x }}</td>{% endfor %}<td><b>{{ row.final_h }}</b></td><td>{{ row.hits_h }}</td><td>{{ row.errors_h }}</td></tr>
   </table></div>
   {% endif %}
+  {{ picks_block(r.picks) }}
   <ul class="why">
     {% for b in r.bullets %}<li>{{ b }}</li>{% endfor %}
   </ul>

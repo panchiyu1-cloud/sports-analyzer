@@ -4,6 +4,8 @@ name: 運彩 compare
 # with the latest snapshots and re-renders. Games starting within the next 3 hours
 # first get freshly bought international prices (T-10 價值版: decide just before
 # first pitch), within the odds credit budget; that is what the API key is for.
+# Matches that finished since the last review are reviewed too (results only, no
+# odds credits), so an upload is also the owner's "review now" button.
 
 on:
   push:
@@ -23,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}  # results for the review
       NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}  # optional: phone notifications of new value bets
       PYTHONPATH: src
     steps:
@@ -37,6 +40,9 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Compare 運彩 with fair odds (pre-game refresh first) and render
         run: python -m sports_analyzer.pipeline tw
+      - name: Review matches that finished since the last review
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline review --new-only
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/moves data/odds_budget.json data/tw docs/index.html docs/reviews.html docs/bighand.html
+          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/ledger.csv data/reviews data/moves data/odds_budget.json data/tw docs/index.html docs/reviews.html docs/bighand.html
