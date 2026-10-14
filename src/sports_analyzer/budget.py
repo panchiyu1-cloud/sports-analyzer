@@ -52,8 +52,16 @@ def save(path: Path, state: BudgetState) -> None:
 
 
 def allowance_today(state: BudgetState, today: date) -> float | None:
-    """Credits this run may still spend today; None when the counter has never been seen."""
+    """Credits this run may still spend today; None = no limit known.
+
+    Past the assumed end of the period the quota must have reset (the real period
+    is never longer), but only a purchase reveals the new counters. So the run is
+    let through (None) and `record` then sees `used` drop. Without this, a budget
+    that ended near the reserve would buy nothing ever again.
+    """
     if state.remaining is None:
+        return None
+    if today >= date.fromisoformat(state.period_start) + timedelta(days=PERIOD_DAYS):
         return None
     spent_today = 0
     if (

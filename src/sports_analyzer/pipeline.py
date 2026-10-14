@@ -20,6 +20,8 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+import requests
+
 from . import budget as budget_mod
 from . import ledger as ledger_mod
 from . import review_store, tw_ledger
@@ -114,14 +116,20 @@ def run_football(
     markets = budget_mod.plan_markets(
         markets, calls, budget_mod.allowance_today(budget, today), essential=("h2h",)
     )
-    odds_events: dict[str, list[OddsEvent]] = {}
+    odds_events: dict[str, list[OddsEvent]] = {comp.code: [] for comp in FOOTBALL_COMPETITIONS}
     for comp in FOOTBALL_COMPETITIONS:
         if not fixtures[comp.code] or not markets:
-            odds_events[comp.code] = []
             continue
-        odds_events[comp.code] = odds.odds(
-            comp.odds_key, commence_from=window_start, commence_to=window_end, markets=markets
-        )
+        try:
+            odds_events[comp.code] = odds.odds(
+                comp.odds_key, commence_from=window_start, commence_to=window_end, markets=markets
+            )
+        except requests.RequestException as exc:
+            # e.g. the quota ran out (HTTP 401): keep the last prices rather than fail the run.
+            log.warning("football odds unavailable (%s); keeping earlier prices", exc)
+            odds_events = {code: [] for code in odds_events}
+            markets = ()
+            break
 
     # 4. Cards + signals.
     budget = budget_mod.record(budget, odds.credits_used(), odds.credits_remaining(), today)
@@ -160,11 +168,10 @@ def run_football(
         )
         all_signals.extend(signals)
 
-    # 4b. A cheap evening run (h2h only) keeps the morning's totals/spreads so the page
-    #     does not lose them; those blocks are marked stale and never used for CLV.
-    if set(markets) != set(FOOTBALL_MARKETS):
-        # No odds bought at all (budget): keep the last prices of any date, marked stale.
-        _merge_previous_markets(snapshot, _latest_snapshot("football"), any_date=not markets)
+    # 4b. A second run on the same date keeps what the first one had and this one lacks
+    #     (totals when only h2h was bought, a 運彩 block), marked stale and never used
+    #     for CLV. With no odds bought at all (budget), the last prices of any date.
+    _merge_previous_markets(snapshot, _latest_snapshot("football"), any_date=not markets)
     if markets != wanted:
         log.warning("football odds: wanted %s, bought %s (budget)", wanted, markets or "none")
 
@@ -337,7 +344,10 @@ def run_mlb(
         # window has to follow the actual first pitches, not the Taipei calendar day.
         first = min(g.game_date for g in games) - timedelta(hours=1)
         last = max(g.game_date for g in games) + timedelta(hours=1)
-        events = odds.odds(MLB_ODDS_KEY, commence_from=first, commence_to=last, markets=markets)
+        try:
+            events = odds.odds(MLB_ODDS_KEY, commence_from=first, commence_to=last, markets=markets)
+        except requests.RequestException as exc:
+            log.warning("MLB odds unavailable (%s); keeping earlier prices", exc)
         credits = odds.credits_remaining()
         budget_mod.save(
             ODDS_BUDGET_PATH,

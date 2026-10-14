@@ -35,6 +35,17 @@ class ImpliedModelTests(unittest.TestCase):
         self.assertAlmostEqual(self.g.handicap3(1)[0], 0.60 + 0.22, places=5)
         self.assertAlmostEqual(sum(self.g.handicap3(-2)), 1.0, places=9)
 
+    def test_team_total_quarter_line_is_two_half_stakes(self):
+        # Regression (review 2026-10-14): over 1.25 was priced as over 1.5.
+        marginal = self.g.matrix.sum(axis=1)
+        p0, p1 = marginal[0], marginal[1]
+        win = 1 - p0 - p1  # 2+ goals wins both halves (1.0 and 1.5)
+        lose = p0 + p1 / 2  # exactly one: push on 1.0, loss on 1.5
+        self.assertAlmostEqual(self.g.team_over("home", 1.25), win / (win + lose), places=9)
+        self.assertNotAlmostEqual(
+            self.g.team_over("home", 1.25), self.g.team_over("home", 1.5), places=3
+        )
+
     def test_quarter_and_whole_lines(self):
         # Whole line 2: P(over | no push); quarter 2.25 = half on 2.0 and half on 2.5.
         m = self.g.matrix
@@ -150,15 +161,29 @@ class DerivedCompareTests(unittest.TestCase):
         self.assertEqual(priced[0][0], "team_home_over")  # 兵工廠 is the home side
         self.assertAlmostEqual(priced[0][3], g.team_over("home", 1.5), places=9)
 
-    def test_clv_for_a_derived_bet_needs_a_fresh_1x2(self):
+    def test_clv_for_a_derived_bet_needs_fresh_1x2_and_totals(self):
         g = fit_implied(0.60, 0.22, 0.18, 0.52)
         p = tw_ledger._fair_prob_for(self.mv, "btts_yes", "", IDENTITY)
         self.assertAlmostEqual(p, g.both_score(), places=9)
         stale = {**self.mv, "h2h": {**self.mv["h2h"], "stale": True}}
         self.assertIsNone(tw_ledger._fair_prob_for(stale, "btts_yes", "", IDENTITY))
+        # Regression (review 2026-10-14): with the morning's totals the "closing" price of a
+        # totals-type bet echoed its own EV after an h2h-only evening refresh.
         stale_totals = {**self.mv, "totals": {**self.mv["totals"], "stale": True}}
         self.assertIsNone(tw_ledger._fair_prob_for(stale_totals, "over", "2.5", IDENTITY))
-        self.assertIsNotNone(tw_ledger._fair_prob_for(stale_totals, "over", "3.5", IDENTITY))
+        self.assertIsNone(tw_ledger._fair_prob_for(stale_totals, "over", "3.5", IDENTITY))
+        self.assertIsNone(tw_ledger._fair_prob_for(stale_totals, "ht_over", "1.5", IDENTITY))
+
+    def test_no_totals_no_derived_prices(self):
+        # Regression (review 2026-10-14): from the 1X2 alone the goal level is a guess
+        # (4.7pp off on P(over 2.5) on average), which invented value on totals markets.
+        values: list = []
+        no_totals = {"h2h": self.mv["h2h"]}
+        self.assertIsNone(compare.implied_from_market(no_totals))
+        self.assertEqual(
+            compare.derived_compare(no_totals, self.game, ModelConfig(), IDENTITY, values), []
+        )
+        self.assertEqual(values, [])
 
 
 class DerivedSettlementTests(unittest.TestCase):

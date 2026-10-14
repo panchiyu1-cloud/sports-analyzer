@@ -99,6 +99,7 @@ def compare(
             block["values"],
             "1X2" if "draw" in mv["h2h"] else "不讓分",
             tw_side={"home": "away", "away": "home"} if swapped else None,
+            names={"home": game.home_zh, "away": game.away_zh},
         )
     if swapped:
         log.info(
@@ -143,10 +144,15 @@ def _compare_sides(
     market_name: str,
     key_prefix: str = "",
     tw_side: dict[str, str] | None = None,
+    names: dict[str, str] | None = None,
 ) -> dict[str, Any]:
+    """`tw_side` maps our side to 運彩's when it lists the teams the other way round;
+    `names` (運彩's Chinese team names) makes the value label say which team to pick
+    on 運彩, in 運彩's own home/away terms."""
     out: dict[str, Any] = {"line": line}
     for side in sides:
-        price = tw.price((tw_side or {}).get(side, side))
+        their = (tw_side or {}).get(side, side)
+        price = tw.price(their)
         if price is None or side not in fair:
             continue
         fair_prob = fair[side]["fair"]
@@ -160,11 +166,14 @@ def _compare_sides(
         out[side] = entry
         if ev >= cfg.value_threshold:
             key = f"{key_prefix}{side}"
+            label = SIDE_LABELS.get(f"{key_prefix}{their}", key)
+            if names and their in names:
+                label += f"（{names[their]}）"
             values.append(
                 {
                     "market": market_name,
                     "selection_key": key,
-                    "selection": SIDE_LABELS.get(key, key)
+                    "selection": label
                     + (
                         f" {line:+g}"
                         if key.startswith("spread_") and line is not None
@@ -182,18 +191,23 @@ def _compare_sides(
 
 # ------------------------------------------------------------ derived markets
 def implied_from_market(mv: dict[str, Any]) -> ImpliedGoals | None:
-    """The market-implied goal model for a card's consensus (football 1X2 needed)."""
+    """The market-implied goal model for a card's consensus.
+
+    Needs the football 1X2 AND a totals line: from the 1X2 alone the goal level is
+    a guess (off by 4.7pp on P(over 2.5) on average over 3,689 real markets), which
+    would invent value on every totals-type 運彩 market.
+    """
     h2h = mv.get("h2h") or {}
-    if not all(k in h2h for k in ("home", "draw", "away")):
-        return None
     tot = mv.get("totals") or {}
-    p_over = (tot.get("over") or {}).get("fair") if tot else None
+    p_over = (tot.get("over") or {}).get("fair")
+    if not all(k in h2h for k in ("home", "draw", "away")) or p_over is None:
+        return None
     return fit_implied(
         h2h["home"]["fair"],
         h2h["draw"]["fair"],
         h2h["away"]["fair"],
         p_over,
-        float(tot.get("line", 2.5)) if tot else 2.5,
+        float(tot.get("line", 2.5)),
     )
 
 

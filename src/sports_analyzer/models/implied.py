@@ -62,12 +62,22 @@ class ImpliedGoals:
         )
 
     def team_over(self, side: str, line: float) -> float:
-        """P(one team's goals > line | no push), side = "home" or "away"."""
+        """P(one team's goals > line | no push), side = "home" or "away"; quarter lines
+        settle as two half stakes, like every other line."""
+        return _two_way(self._team_split(side, line))
+
+    def _team_split(self, side: str, line: float) -> tuple[float, float, float]:
+        if _is_quarter(line):
+            return _average(
+                self._team_split(side, line - 0.25), self._team_split(side, line + 0.25)
+            )
         marginal = self.matrix.sum(axis=1) if side == "home" else self.matrix.sum(axis=0)
         goals = np.arange(marginal.shape[0])
-        over = float(marginal[goals > line + 1e-9].sum())
-        under = float(marginal[goals < line - 1e-9].sum())
-        return over / (over + under) if over + under > 0 else 0.0
+        return (
+            float(marginal[goals > line + 1e-9].sum()),
+            float(marginal[goals < line - 1e-9].sum()),
+            float(marginal[np.abs(goals - line) <= 1e-9].sum()),
+        )
 
     def both_score(self) -> float:
         return float(self.matrix[1:, 1:].sum())

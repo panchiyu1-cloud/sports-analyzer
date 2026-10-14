@@ -73,7 +73,7 @@ class CompareTests(unittest.TestCase):
         self.assertLess(tw["h2h"]["draw"]["ev"], 0)
         self.assertEqual(tw["totals"]["line"], 2.5)
         self.assertEqual([v["selection_key"] for v in tw["values"]], ["home", "hcp3_away"])
-        self.assertEqual(tw["values"][0]["selection"], "主勝")
+        self.assertEqual(tw["values"][0]["selection"], "主勝（兵工廠）")
         # 讓分 1:0 客 (切爾西 +1) wins on a draw or an away win: the market's own
         # 0.22 + 0.18 = 0.40, so at 運彩 2.70 the EV is 0.40 x 2.70 - 1 = +8%.
         derived = tw["values"][1]
@@ -82,6 +82,32 @@ class CompareTests(unittest.TestCase):
         self.assertAlmostEqual(derived["ev"], 0.08, places=4)
         self.assertEqual(derived["line"], -1.0)
         self.assertEqual(tw["captured_at"], "2026-10-17T08:00+08:00")
+
+    def test_swapped_listing_names_the_team_to_pick_on_tw(self):
+        # Regression (review 2026-10-14): when 運彩 lists our away team as its home, the
+        # value row said 主勝 next to the other team's price.
+        card = football_card(
+            home="Chelsea FC",
+            away="Arsenal FC",
+            home_key="chelsea",
+            away_key="arsenal",
+            market={
+                "h2h": {
+                    "home": {"fair": 0.18, "fair_odds": 5.56},
+                    "draw": {"fair": 0.22, "fair_odds": 4.55},
+                    "away": {"fair": 0.60, "fair_odds": 1.67},
+                },
+                "totals": None,
+                "spread": None,
+            },
+        )
+        tw = compare.compare(card, self.games[1], None, self.cfg)
+        self.assertEqual(
+            [v["selection_key"] for v in tw["values"]], ["away"]
+        )  # Arsenal, for settlement
+        self.assertEqual(tw["values"][0]["selection"], "主勝（兵工廠）")  # what to pick on 運彩
+        self.assertAlmostEqual(tw["values"][0]["tw_price"], 1.70)
+        self.assertEqual(tw["derived"], [])
 
     def test_annotate_report(self):
         cards = [

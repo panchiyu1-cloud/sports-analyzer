@@ -144,8 +144,8 @@ def _fair_prob_for(
     over from an earlier snapshot and would make CLV equal EV, which proves nothing).
 
     Derived selections (team totals, both teams to score, first half, other totals
-    lines...) are re-priced through the market-implied model; the 1X2 must be fresh,
-    the totals level may be the morning's (the evening refresh buys h2h only).
+    lines...) are re-priced through the market-implied model from a fresh 1X2 and a
+    fresh totals line.
     """
     direct = _direct_fair_prob(mv, key, line)
     if direct is not None or key in ("home", "draw", "away", "spread_home", "spread_away"):
@@ -154,7 +154,9 @@ def _fair_prob_for(
     if key in ("over", "under") and line and tot and abs(float(line) - tot["line"]) < 1e-9:
         return None  # the market's own line, but stale: re-deriving it would echo the old price
     h2h = mv.get("h2h")
-    if not h2h or h2h.get("stale"):
+    # Both inputs of the implied model must be fresh: with the morning's totals the
+    # goal level is the morning's, and the "closing" price would echo the bet's EV.
+    if not h2h or h2h.get("stale") or not tot or tot.get("stale"):
         return None
     g = implied_from_market(mv)
     return derived_prob_for(g, key, float(line) if line else None, calib) if g else None

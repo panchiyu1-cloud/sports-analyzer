@@ -44,6 +44,21 @@ class BudgetTests(unittest.TestCase):
         self.assertEqual((st.period_start, st.day_start_used), ("2026-11-01", 0))
         self.assertEqual(budget.record(st, None, None, date(2026, 11, 1)), st)
 
+    def test_never_locks_itself_out_after_the_period(self):
+        # Regression (review 2026-10-14): near the reserve at the end of a period the
+        # allowance was 0 forever, so no purchase ever saw the quota reset.
+        st = budget.BudgetState(
+            "2026-11-01", used=476, remaining=24, day="2026-11-30", day_start_used=476
+        )
+        # (24 - 25 reserve) / 1 day left: nothing to spend on the period's last day...
+        self.assertEqual(budget.allowance_today(st, date(2026, 11, 30)), 0.0)
+        self.assertIsNone(
+            budget.allowance_today(st, date(2026, 12, 1))
+        )  # past the period: let one run buy
+        st = budget.record(st, 6, 494, date(2026, 12, 1))  # ...which sees the counter drop
+        self.assertEqual(st.period_start, "2026-12-01")
+        self.assertGreater(budget.allowance_today(st, date(2026, 12, 1)), 0)
+
     def test_round_trip_and_missing_file(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "b.json"
