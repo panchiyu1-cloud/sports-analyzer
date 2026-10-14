@@ -35,7 +35,7 @@ SPORT_IDS = {"football": "34740.1", "baseball": "34731.1"}
 @dataclass(frozen=True)
 class TwSelection:
     name: str
-    side: str  # "home" | "away" | "draw" | "over" | "under" | "other"
+    side: str  # home | away | draw | over | under | yes | no | odd | even | other
     price: float
     line: float | None = None
 
@@ -43,11 +43,14 @@ class TwSelection:
 @dataclass(frozen=True)
 class TwMarket:
     name: str
-    kind: str  # "h2h" | "spread" | "totals" | "other"
+    # h2h | spread (two-way) | totals | team_totals | btts | odd_even | hcp3 (three-way
+    # handicap, line = goals added to the home score) | ht_h2h | ht_totals | other
+    kind: str
     type_id: str
     selections: tuple[TwSelection, ...]
     updated: datetime | None
     line: float | None = None
+    subject: str | None = None  # the team a team-total is about (Chinese name)
 
     def price(self, side: str) -> float | None:
         for s in self.selections:
@@ -182,10 +185,10 @@ def _parse_market(raw: dict[str, Any], report: ParseReport) -> TwMarket | None:
                 line=sel_line if sel_line is not None else line,
             )
         )
-    # Football "讓分 1:0" is a three-way European handicap (with a draw); it is not the
-    # two-way Asian line the consensus quotes, so it is not comparable.
-    if kind == "spread" and any(s.side == "draw" for s in selections):
-        kind = "other"
+    # Football "讓分 1:0" is a three-way European handicap (with a draw), not the two-way
+    # line the consensus quotes; it is priced from the market-implied goal model instead.
+    if kind == "spread" and (":" in name or any(s.side == "draw" for s in selections)):
+        kind = "hcp3"
     if kind == "other":
         report.unknown_markets[name] = report.unknown_markets.get(name, 0) + 1
     if not selections:
@@ -200,44 +203,69 @@ def _parse_market(raw: dict[str, Any], report: ParseReport) -> TwMarket | None:
         selections=tuple(selections),
         updated=_parse_dt(str(raw["ss"])) if raw.get("ss") else None,
         line=line,
+        subject=_team_total_subject(name) if kind == "team_totals" else None,
     )
 
 
 _TOTALS_RE = re.compile(r"^(\[總分\])?大小( [\d.]+)?$")
+_HT_TOTALS_RE = re.compile(r"^\[上半場\]大小 [\d.]+$")
+_TEAM_TOTALS_RE = re.compile(r"^(?P<team>[^\[\]]+?) 大小 [\d.]+$")
 
 
 def _market_kind(name: str) -> str:
     """Classify a 運彩 market by its Chinese name (observed 2026-10).
 
-    full match:  不讓分 (h2h, 3-way for football) · 讓分 -1.5 (2-way run line) · [總分]大小 2.5
-    not used:    [上半場]…, [第1局]…, [1-5局]…, [角球數]…, 勝分差, 單雙, team totals (坦帕灣光芒 大小 3.5)
+    full match:  不讓分 (3-way for football) · 讓分 -1.5 (2-way run line) · 讓分 1:0
+                 (3-way handicap) · [總分]大小 2.5 · <team> 大小 1.5 · 兩隊是否都進球 · [總分]單雙
+    first half:  [上半場]不讓分 · [上半場]大小 1.5
+    not used:    other first-half/inning markets, corners, correct score, half/full time,
+                 first goal, 勝分差 (margins of 25-60%, or no validated price)
     """
+    if name == "[上半場]不讓分":
+        return "ht_h2h"
+    if _HT_TOTALS_RE.match(name):
+        return "ht_totals"
+    if name == "[總分]單雙":
+        return "odd_even"
+    if name == "兩隊是否都進球":
+        return "btts"
     if any(tag in name for tag in ("角球", "半場", "上半", "下半", "局", "節", "單雙", "勝分差")):
         return "other"
     if name == "不讓分" or name in ("獨贏", "勝負"):
         return "h2h"
     if name.startswith("讓分"):
         return "spread"
-    if _TOTALS_RE.match(name) or name == "總進球數":
+    if _TOTALS_RE.match(name):
         return "totals"
+    if _TEAM_TOTALS_RE.match(name):
+        return "team_totals"
     return "other"
+
+
+def _team_total_subject(name: str) -> str | None:
+    m = _TEAM_TOTALS_RE.match(name)
+    return m.group("team").strip() if m else None
 
 
 def _side(kind: str, v: str, name: str) -> str:
     v = v.upper()
-    if kind in ("h2h", "spread"):
+    if kind in ("h2h", "spread", "hcp3", "ht_h2h"):
         if v == "H":
             return "home"
         if v == "A":
             return "away"
         if v in ("D", "X") or "和" in name:
             return "draw"
-    if kind == "totals":
+    if kind in ("totals", "team_totals", "ht_totals"):
         # The feed reuses A/H for over/under, so only the name is trustworthy here.
         if name.startswith("大"):
             return "over"
         if name.startswith("小"):
             return "under"
+    if kind == "btts":
+        return {"是": "yes", "否": "no"}.get(name, "other")
+    if kind == "odd_even":
+        return {"單": "odd", "雙": "even"}.get(name, "other")
     return "other"
 
 
@@ -667,6 +695,9 @@ TW_ALIASES.update(
         "科摩": "como",
         "科莫": "como",
         "薩索洛": "sassuolo",
+        "薩索羅": "sassuolo",
+        "弗羅西諾內": "frosinone",
+        "弗洛西諾內": "frosinone",
         "比薩": "pisa",
         "克雷莫納": "cremonese",
         "恩波利": "empoli",

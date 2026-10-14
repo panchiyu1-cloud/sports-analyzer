@@ -23,6 +23,8 @@ REVIEW_DIR = DATA_DIR / "reviews"
 FOOTBALL_REVIEWS_PATH = REVIEW_DIR / "football.csv"
 MLB_REVIEWS_PATH = REVIEW_DIR / "mlb.csv"
 ODDS_BUDGET_PATH = DATA_DIR / "odds_budget.json"
+# Written by scripts/validate_implied.py; per-market corrections for the implied model.
+IMPLIED_CALIBRATION_PATH = DATA_DIR / "implied_calibration.json"
 DOCS_DIR = ROOT / "docs"
 
 LOCAL_TZ = ZoneInfo("Asia/Taipei")
@@ -76,6 +78,11 @@ class ModelConfig:
     signals_validated: bool = False
     # 運彩 price must beat the fair price by this much EV (fair_prob x price - 1) to count as a value bet.
     value_threshold: float = 0.02
+    # Markets priced through the market-implied goal model carry its error too
+    # (validated: ~0.7pp on Asian handicaps, <=0.5pp mean bias after calibration,
+    # 1-3pp in the worst probability band), so they need a larger margin of safety.
+    derived_value_threshold: float = 0.04
+    ht_value_threshold: float = 0.05
     # Do not recommend very long shots even with edge; variance is too high to judge.
     min_model_prob: float = 0.25
     # 模型分歧 only where the model can know the teams (2026-10-14 review): the pooled

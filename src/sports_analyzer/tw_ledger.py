@@ -13,7 +13,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+from .analysis.taiwan import derived_prob_for, implied_from_market
 from .ledger import PENDING, PUSH, SETTLED, grade, hit_counts, profit
+from .models.implied import IDENTITY, Calibration
 
 COLUMNS = [
     "id",
@@ -107,7 +109,9 @@ def append_values(
     return added
 
 
-def update_clv(path: Path, cards: list[dict[str, Any]], sport: str) -> int:
+def update_clv(
+    path: Path, cards: list[dict[str, Any]], sport: str, calib: Calibration = IDENTITY
+) -> int:
     """Fill closing_fair_prob/clv from a later consensus for still-pending rows."""
     rows = read(path)
     fair_by_match: dict[str, dict[str, Any]] = {}
@@ -123,7 +127,7 @@ def update_clv(path: Path, cards: list[dict[str, Any]], sport: str) -> int:
         mv = fair_by_match.get(str(row["match_id"]))
         if not mv:
             continue
-        prob = _fair_prob_for(mv, row["selection_key"], row["line"])
+        prob = _fair_prob_for(mv, row["selection_key"], row["line"], calib)
         if prob is None:
             continue
         row["closing_fair_prob"] = f"{prob:.4f}"
@@ -133,9 +137,30 @@ def update_clv(path: Path, cards: list[dict[str, Any]], sport: str) -> int:
     return updated
 
 
-def _fair_prob_for(mv: dict[str, Any], key: str, line: str) -> float | None:
+def _fair_prob_for(
+    mv: dict[str, Any], key: str, line: str, calib: Calibration = IDENTITY
+) -> float | None:
     """Fair probability for a selection from a *fresh* consensus block (stale blocks are carried
-    over from an earlier snapshot and would make CLV equal EV, which proves nothing)."""
+    over from an earlier snapshot and would make CLV equal EV, which proves nothing).
+
+    Derived selections (team totals, both teams to score, first half, other totals
+    lines...) are re-priced through the market-implied model; the 1X2 must be fresh,
+    the totals level may be the morning's (the evening refresh buys h2h only).
+    """
+    direct = _direct_fair_prob(mv, key, line)
+    if direct is not None or key in ("home", "draw", "away", "spread_home", "spread_away"):
+        return direct
+    tot = mv.get("totals") or {}
+    if key in ("over", "under") and line and tot and abs(float(line) - tot["line"]) < 1e-9:
+        return None  # the market's own line, but stale: re-deriving it would echo the old price
+    h2h = mv.get("h2h")
+    if not h2h or h2h.get("stale"):
+        return None
+    g = implied_from_market(mv)
+    return derived_prob_for(g, key, float(line) if line else None, calib) if g else None
+
+
+def _direct_fair_prob(mv: dict[str, Any], key: str, line: str) -> float | None:
     if key in ("home", "draw", "away"):
         h = mv.get("h2h")
         if h and not h.get("stale"):
@@ -155,9 +180,16 @@ def _fair_prob_for(mv: dict[str, Any], key: str, line: str) -> float | None:
 
 
 def settle(
-    path: Path, results: dict[str, tuple[int, int]], sport: str, now: datetime | None = None
+    path: Path,
+    results: dict[str, tuple[int, ...] | tuple[int | None, ...]],
+    sport: str,
+    now: datetime | None = None,
 ) -> int:
-    """Settle pending rows of `sport` with final scores keyed by match_id/game_pk (as strings)."""
+    """Settle pending rows of `sport` with final scores keyed by match_id/game_pk (as strings).
+
+    A score is (home, away) or, for football, (home, away, home at half-time, away at
+    half-time); first-half bets wait until the half-time score is known.
+    """
     rows = read(path)
     stamp = (now or datetime.now(UTC)).isoformat(timespec="seconds")
     settled = 0
@@ -167,8 +199,13 @@ def settle(
         score = results.get(str(row["match_id"]))
         if score is None:
             continue
-        hg, ag = score
-        outcome = grade(row["selection_key"], float(row["line"]) if row["line"] else None, hg, ag)
+        hg, ag = int(score[0] or 0), int(score[1] or 0)
+        ht = (int(score[2]), int(score[3])) if len(score) >= 4 and None not in score[2:4] else None
+        outcome = grade(
+            row["selection_key"], float(row["line"]) if row["line"] else None, hg, ag, ht
+        )
+        if not outcome:
+            continue
         row["status"] = outcome
         row["result"] = f"{hg}-{ag}"
         row["profit"] = f"{profit(outcome, float(row['tw_price'])):.3f}"

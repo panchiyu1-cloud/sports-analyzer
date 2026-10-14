@@ -25,6 +25,8 @@ jobs:
       PYTHONPATH: src
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -50,14 +52,12 @@ jobs:
       - name: Run backtest
         run: python scripts/backtest_football.py data/history/*.csv
 
+      # Re-check the market-implied model on the refreshed history and refit its
+      # per-market calibration (used to price 運彩's derived markets).
+      - name: Validate and recalibrate the implied goal model
+        continue-on-error: true
+        run: python scripts/validate_implied.py data/history/*.csv
+
       - name: Commit history + report
         run: |
-          git config user.name "sports-analyzer bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add data/history data/backtest_summary.json docs/backtest.html
-          if git diff --cached --quiet; then
-            echo "nothing changed"
-          else
-            git commit -m "chore(backtest): refresh history and report"
-            git push
-          fi
+          bash scripts/commit_generated.sh "chore(backtest): refresh history and report" data/history data/backtest_summary.json docs/backtest.html data/implied_calibration.json data/implied_validation.json

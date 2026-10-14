@@ -72,8 +72,15 @@ class CompareTests(unittest.TestCase):
         self.assertAlmostEqual(tw["h2h"]["home"]["ev"], 0.60 * 1.70 - 1, places=4)
         self.assertLess(tw["h2h"]["draw"]["ev"], 0)
         self.assertEqual(tw["totals"]["line"], 2.5)
-        self.assertEqual([v["selection_key"] for v in tw["values"]], ["home"])
+        self.assertEqual([v["selection_key"] for v in tw["values"]], ["home", "hcp3_away"])
         self.assertEqual(tw["values"][0]["selection"], "主勝")
+        # 讓分 1:0 客 (切爾西 +1) wins on a draw or an away win: the market's own
+        # 0.22 + 0.18 = 0.40, so at 運彩 2.70 the EV is 0.40 x 2.70 - 1 = +8%.
+        derived = tw["values"][1]
+        self.assertTrue(derived["derived"])
+        self.assertAlmostEqual(derived["fair_prob"], 0.40, places=4)
+        self.assertAlmostEqual(derived["ev"], 0.08, places=4)
+        self.assertEqual(derived["line"], -1.0)
         self.assertEqual(tw["captured_at"], "2026-10-17T08:00+08:00")
 
     def test_annotate_report(self):

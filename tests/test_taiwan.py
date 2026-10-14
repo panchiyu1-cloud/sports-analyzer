@@ -61,13 +61,19 @@ class TaiwanFeedTests(unittest.TestCase):
         self.assertEqual(ml.price("draw"), 3.6)
         self.assertEqual(ml.price("away"), 4.3)
         self.assertEqual(g.market("totals").line, 2.5)
-        self.assertIsNone(g.market("spread"))  # "讓分 1:0" is a three-way handicap, not comparable
-        self.assertIn("讓分 1:0", self.report.unknown_markets)
+        self.assertIsNone(g.market("spread"))  # "讓分 1:0" is a three-way handicap...
+        hcp = g.market("hcp3")  # ...priced from the market-implied model instead
+        assert hcp is not None
+        self.assertEqual(hcp.line, -1)  # one goal taken off the home score
+        self.assertEqual([s.side for s in hcp.selections], ["home", "draw", "away"])
 
     def test_team_totals_are_not_match_totals(self):
         g = self.games[0]
         self.assertEqual([m.line for m in g.markets if m.kind == "totals"], [7.5])
-        self.assertIn("洛杉磯道奇 大小 4.5", self.report.unknown_markets)
+        team = g.market("team_totals")
+        assert team is not None
+        self.assertEqual((team.subject, team.line), ("洛杉磯道奇", 4.5))
+        self.assertEqual([s.side for s in team.selections], ["over", "under"])
         self.assertIsNone(g.market("totals", line=8.5))
 
     def test_chinese_name_resolution_rules(self):

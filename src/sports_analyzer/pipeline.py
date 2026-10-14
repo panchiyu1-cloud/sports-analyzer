@@ -33,6 +33,7 @@ from .config import (
     FOOTBALL_COMPETITIONS,
     FOOTBALL_REVIEWS_PATH,
     HISTORY_DIR,
+    IMPLIED_CALIBRATION_PATH,
     LEDGER_PATH,
     LOCAL_TZ,
     MLB_ODDS_KEY,
@@ -52,6 +53,7 @@ from .fetch.mlb import MlbClient
 from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
+from .models.implied import IDENTITY, Calibration
 from .render.cards import render_index, render_reviews_page
 
 log = logging.getLogger("sports_analyzer")
@@ -172,12 +174,14 @@ def run_football(
     settled = ledger_mod.settle_football(LEDGER_PATH, finished)
     tw_settled = tw_ledger.settle(
         TW_LEDGER_PATH,
-        {str(m.id): (m.home_goals or 0, m.away_goals or 0) for m in finished},
+        {str(m.id): (m.home_goals or 0, m.away_goals or 0, m.home_ht, m.away_ht) for m in finished},
         "football",
     )
     # A later consensus for the same matches is the closing proxy for 運彩 bets taken earlier.
     all_cards = [c for comp in snapshot["competitions"] for c in comp["cards"]]
-    clv_updated = tw_ledger.update_clv(TW_LEDGER_PATH, all_cards, "football")
+    clv_updated = tw_ledger.update_clv(
+        TW_LEDGER_PATH, all_cards, "football", _implied_calibration()
+    )
     log.info(
         "ledger: %d new signals, %d settled | tw ledger: %d settled, %d CLV filled",
         added,
@@ -393,7 +397,7 @@ def run_tw(cfg: ModelConfig = MODEL) -> dict[str, Any]:
     games, path, parse_report = taiwan.load_latest(TW_DIR, "football")
     if football and path:
         cards = [c for comp in football["competitions"] for c in comp["cards"]]
-        rep = annotate_tw(cards, games, taiwan.captured_at(path), cfg)
+        rep = annotate_tw(cards, games, taiwan.captured_at(path), cfg, calib=_implied_calibration())
         rep.update(
             {
                 "file": path.name,
@@ -502,6 +506,14 @@ def run_review(
         report["mlb"] = {"due": len(mdue), "added": added}
     log.info("review mlb: %s", report.get("mlb", {"due": len(mdue)}))
     return report
+
+
+def _implied_calibration() -> Calibration:
+    """Per-market corrections for the market-implied model (identity if never fitted)."""
+    try:
+        return Calibration.from_json(IMPLIED_CALIBRATION_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return IDENTITY
 
 
 def _recent_snapshots(sport: str, today: date, days: int) -> list[dict[str, Any]]:

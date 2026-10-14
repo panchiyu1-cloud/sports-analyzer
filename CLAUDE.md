@@ -73,6 +73,7 @@ python -m sports_analyzer.pipeline football      # daily football run (needs .en
 python -m sports_analyzer.pipeline football --offline   # render from last snapshot
 python -m sports_analyzer.pipeline review         # post-match review (football-data token only)
 python scripts/backtest_football.py data/history/*.csv  # backtest + docs/backtest.html
+python scripts/validate_implied.py                      # validate + recalibrate the implied model
 ```
 
 ## Layout
@@ -83,7 +84,8 @@ src/sports_analyzer/
   http.py          shared requests session: retries, header-based throttling
   teams.py         team-name normalisation + alias table across data sources
   fetch/           football.py (football-data.org), odds.py (The Odds API), mlb.py
-  models/          dixon_coles.py, market.py (de-vig, edge, T-10 G value)
+  models/          dixon_coles.py, market.py (de-vig, edge, T-10 G value),
+                   implied.py (market-implied goal model + per-market calibration)
   analysis/        football.py — fixtures + model + odds -> card dicts + signals
                    review.py — finished match: pre-match card vs result, verdict, wording
   review_store.py  data/reviews/{football,mlb}.csv (one row per finished match)
@@ -145,3 +147,15 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 - Quarter-line handicaps settle half win / half loss (`ledger.grade`).
 - Snapshots must keep a 運彩 block once captured: a later upload no longer lists a match
   that has kicked off (`analysis/taiwan.annotate`).
+
+## Market-implied pricing of 運彩's other markets
+- `models/implied.fit_implied` finds (lambda, mu, rho) whose Dixon-Coles score grid has
+  exactly the market's fair 1X2 and main totals line; it then prices totals at other
+  lines, team totals, both teams to score, odd/even, 讓分 a:b (three-way handicap)
+  and first-half 1X2/totals. It translates the market; it never replaces it.
+- Validated on 3,689 matches (2024-2027, closing Pinnacle/Betfair): Asian handicap MAE
+  0.74pp vs the closing price; out-of-sample mean bias <=0.5pp after the per-market
+  logistic calibration in data/implied_calibration.json (kept only where it beat the
+  raw price out of sample). First-half share of goals 0.44. Rerun weekly by backtest.yml.
+- One-goal 三向讓分 sides that are plain 1X2 outcomes stay exactly at the market price.
+- Derived value bets need EV >= 4% (first half 5%) vs 2% for direct markets.

@@ -37,13 +37,13 @@
     {% for v in tw_values %}
     <tr>
       <td>{{ v.kickoff_local }}</td><td>{{ v.competition_name }}</td>
-      <td>{{ v.away_zh }} @ {{ v.home_zh }}</td><td>{{ v.market }}</td><td><b>{{ v.selection }}</b></td>
+      <td>{{ v.away_zh }} @ {{ v.home_zh }}</td><td>{{ v.market }}{% if v.derived %} <span class="chip">推算</span>{% endif %}</td><td><b>{{ v.selection }}</b></td>
       <td class="model-val">{{ v.tw_price }}</td><td class="market-val">{{ v.fair_odds }}</td>
       <td class="pos">{{ '%+.1f%%'|format(v.ev*100) }}</td><td class="sub">{{ v.captured_at[11:16] if v.captured_at else '' }}</td>
     </tr>
     {% endfor %}
   </table></div>
-  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。運彩的水錢（上方「平均水錢」）遠高於國際莊家的 2–5%，所以要出現價值注，通常得是運彩開盤後市場大幅移動的場次。</p>
+  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。標「推算」的玩法（其他大小盤、球隊大小、兩隊都進球、單雙、讓分 1:0、上半場）沒有國際盤可直接比，公允機率是用國際盤的勝平負和大小反推兩隊預期進球後算出來的；歷史驗證誤差約 1–2%，所以門檻提高到 EV ≥ {{ (cfg.derived_value_threshold*100)|round(0)|int }}%（上半場 {{ (cfg.ht_value_threshold*100)|round(0)|int }}%）。運彩的水錢（上方「平均水錢」）遠高於國際莊家的 2–5%，所以要出現價值注，通常得是運彩開盤後市場大幅移動的場次。</p>
   {% else %}
   <p class="none">{% if tw_reports %}運彩目前沒有賠率高於公允價的注。{% else %}尚未收到運彩賠率上傳（手機捷徑設定好後會自動出現）。{% endif %}</p>
   {% endif %}
@@ -139,6 +139,7 @@
       <div class="facts">
         {% if c.market and c.market.h2h %}<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>{{ c.market.h2h.home.fair_odds }}</b> · 和 <b>{{ c.market.h2h.draw.fair_odds }}</b> · 客 <b>{{ c.market.h2h.away.fair_odds }}</b>{% if c.market.totals %} · 大{{ c.market.totals.line }} <b>{{ c.market.totals.over.fair_odds }}</b> / 小 <b>{{ c.market.totals.under.fair_odds }}</b>{% endif %}</span></div>{% endif %}
         {% if c.tw and c.tw.h2h %}<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">{{ c.tw.captured_at[11:16] if c.tw.captured_at else '' }}</span></span><span>{% for side, lab in (('home','主'),('draw','和'),('away','客')) %}{% if c.tw.h2h[side] %}{{ lab }} <b class="{{ 'pos' if c.tw.h2h[side].ev >= cfg.value_threshold else '' }}">{{ c.tw.h2h[side].price }}</b><span class="sub">({{ '%+.0f%%'|format(c.tw.h2h[side].ev*100) }})</span>{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}{% if c.tw.totals %} · 大{{ c.tw.totals.line }} <b class="{{ 'pos' if c.tw.totals.over and c.tw.totals.over.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.over.price if c.tw.totals.over else '—' }}</b> / 小 <b class="{{ 'pos' if c.tw.totals.under and c.tw.totals.under.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.under.price if c.tw.totals.under else '—' }}</b>{% endif %}</span></div>{% endif %}
+        {% if c.tw and c.tw.derived %}<div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>{% for d in c.tw.derived[:2] %}{{ d.selection }} <b class="{{ 'pos' if d.ev >= cfg.derived_value_threshold else '' }}">{{ d.tw_price }}</b><span class="sub">（公允 {{ d.fair_odds }}，{{ '%+.0f%%'|format(d.ev*100) }}）</span>{% if not loop.last %} · {% endif %}{% endfor %}</span></div>{% endif %}
         <div><span>預期進球</span><span>{{ c.model.lambda_home }} – {{ c.model.mu_away }}</span></div>
         <div><span>最可能比分</span><span>{{ c.model.most_likely }}</span></div>
         <div><span>大 2.5 球</span><span class="model-val">{{ '%.0f%%'|format(c.model.over25*100) }}{% if c.market and c.market.totals and c.market.totals.line == 2.5 %} <span class="market-val">/ {{ '%.0f%%'|format(c.market.totals.over.fair*100) }}</span>{% endif %}</span></div>

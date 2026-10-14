@@ -9,6 +9,11 @@ This is the one approach the backtest supports: the model does not beat the
 market, but a soft book's price above the sharp market's fair price is +EV by
 construction — as long as the fair price is right at kickoff, which is what
 closing-line value (CLV) checks later.
+
+Markets the international books are not asked for (totals at other lines, team
+totals, both teams to score, odd/even, three-way handicaps, first half) are priced
+from the market-implied goal model (`models.implied`), validated against closing
+prices and results, and need a larger EV (`derived_value_threshold`) to count.
 """
 
 from __future__ import annotations
@@ -17,8 +22,9 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from ..config import ModelConfig
+from ..config import LOCAL_TZ, ModelConfig
 from ..fetch.taiwan import TwGame, TwMarket
+from ..models.implied import IDENTITY, Calibration, ImpliedGoals, fit_implied
 
 log = logging.getLogger(__name__)
 
@@ -58,15 +64,25 @@ def match_game(card: dict[str, Any], games: list[TwGame], tolerance: timedelta) 
 
 
 def compare(
-    card: dict[str, Any], game: TwGame, captured_at: datetime | None, cfg: ModelConfig
+    card: dict[str, Any],
+    game: TwGame,
+    captured_at: datetime | None,
+    cfg: ModelConfig,
+    calib: Calibration = IDENTITY,
 ) -> dict[str, Any]:
     """Build the card's `tw` block: prices, EV per selection, and the value bets."""
     mv = card.get("market") or {}
+    # A neutral-venue listing can name the teams the other way round: 運彩's "home"
+    # is then our away team. Only the match-winner market is safe to map back.
+    swapped = game.home_key == card.get("away_key") and game.away_key == card.get("home_key")
     block: dict[str, Any] = {
         "game_no": game.no,
         "home_zh": game.home_zh,
         "away_zh": game.away_zh,
-        "captured_at": captured_at.isoformat(timespec="minutes") if captured_at else None,
+        # Taipei time: the page slices the clock out of this string.
+        "captured_at": captured_at.astimezone(LOCAL_TZ).isoformat(timespec="minutes")
+        if captured_at
+        else None,
         "h2h": None,
         "totals": None,
         "spread": None,
@@ -82,7 +98,14 @@ def compare(
             cfg,
             block["values"],
             "1X2" if "draw" in mv["h2h"] else "不讓分",
+            tw_side={"home": "away", "away": "home"} if swapped else None,
         )
+    if swapped:
+        log.info(
+            "tw: %s vs %s listed the other way round; only 1X2 compared", card["home"], card["away"]
+        )
+        block["derived"] = []
+        return block
     tot = game.market("totals", line=mv["totals"]["line"]) if mv.get("totals") else None
     if tot:
         block["totals"] = _compare_sides(
@@ -106,6 +129,7 @@ def compare(
                 "讓分",
                 key_prefix="spread_",
             )
+    block["derived"] = derived_compare(mv, game, cfg, calib, block["values"])
     return block
 
 
@@ -118,10 +142,11 @@ def _compare_sides(
     values: list[dict[str, Any]],
     market_name: str,
     key_prefix: str = "",
+    tw_side: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     out: dict[str, Any] = {"line": line}
     for side in sides:
-        price = tw.price(side)
+        price = tw.price((tw_side or {}).get(side, side))
         if price is None or side not in fair:
             continue
         fair_prob = fair[side]["fair"]
@@ -155,12 +180,183 @@ def _compare_sides(
     return out
 
 
+# ------------------------------------------------------------ derived markets
+def implied_from_market(mv: dict[str, Any]) -> ImpliedGoals | None:
+    """The market-implied goal model for a card's consensus (football 1X2 needed)."""
+    h2h = mv.get("h2h") or {}
+    if not all(k in h2h for k in ("home", "draw", "away")):
+        return None
+    tot = mv.get("totals") or {}
+    p_over = (tot.get("over") or {}).get("fair") if tot else None
+    return fit_implied(
+        h2h["home"]["fair"],
+        h2h["draw"]["fair"],
+        h2h["away"]["fair"],
+        p_over,
+        float(tot.get("line", 2.5)) if tot else 2.5,
+    )
+
+
+def derived_probs(
+    m: TwMarket, game: TwGame, g: ImpliedGoals, calib: Calibration
+) -> list[tuple[str, str, float | None, float]] | None:
+    """(selection key, label, line, fair probability) for each side of a 運彩 market
+    the implied model can price, or None when it cannot."""
+    line = m.line
+    if m.kind in ("totals", "ht_totals") and line is not None:
+        pre, tag = ("", "") if m.kind == "totals" else ("ht_", "上半場 ")
+        sides = ((f"{pre}over", f"{tag}大 {line:g}"), (f"{pre}under", f"{tag}小 {line:g}"))
+    elif m.kind == "team_totals" and line is not None and m.subject in (game.home_zh, game.away_zh):
+        side = "home" if m.subject == game.home_zh else "away"
+        sides = (
+            (f"team_{side}_over", f"{m.subject} 大 {line:g}"),
+            (f"team_{side}_under", f"{m.subject} 小 {line:g}"),
+        )
+    elif m.kind == "btts":
+        sides = (("btts_yes", "兩隊都進球：是"), ("btts_no", "兩隊都進球：否"))
+    elif m.kind == "odd_even":
+        sides = (("odd", "總進球：單"), ("even", "總進球：雙"))
+    elif m.kind == "hcp3" and line is not None and abs(line - round(line)) < 1e-9:
+        tag = m.name.replace("讓分 ", "讓分")
+        sides = (
+            ("hcp3_home", f"{tag} 主（{game.home_zh}）"),
+            ("hcp3_draw", f"{tag} 和"),
+            ("hcp3_away", f"{tag} 客（{game.away_zh}）"),
+        )
+    elif m.kind == "ht_h2h":
+        sides = (("ht_home", "上半場 主勝"), ("ht_draw", "上半場 和局"), ("ht_away", "上半場 客勝"))
+    else:
+        return None
+    out = []
+    for key, label in sides:
+        prob = derived_prob_for(g, key, line, calib)
+        if prob is not None:
+            out.append((key, label, line, prob))
+    return out
+
+
+def derived_prob_for(
+    g: ImpliedGoals, key: str, line: float | None, calib: Calibration = IDENTITY
+) -> float | None:
+    """Fair probability of one derived selection (the keys the ledger settles)."""
+    if key in ("over", "under") and line is not None:
+        p = calib.apply(f"total_over@{line:g}", g.total_over(line))
+        return p if key == "over" else 1 - p
+    if key in ("ht_over", "ht_under") and line is not None:
+        p = calib.apply(f"ht_over@{line:g}", g.first_half().total_over(line))
+        return p if key == "ht_over" else 1 - p
+    if key.startswith("team_") and line is not None:
+        _, side, direction = key.split("_")
+        p = calib.apply(f"team_over_{side}@{line:g}", g.team_over(side, line))
+        return p if direction == "over" else 1 - p
+    if key in ("btts_yes", "btts_no"):
+        p = calib.apply("btts", g.both_score())
+        return p if key == "btts_yes" else 1 - p
+    if key in ("odd", "even"):
+        p = calib.apply("odd", g.odd_total())
+        return p if key == "odd" else 1 - p
+    if key.startswith("hcp3_") and line is not None and abs(line - round(line)) < 1e-9:
+        h, d, a = _hcp3(g, int(round(line)), calib)
+        return {"hcp3_home": h, "hcp3_draw": d, "hcp3_away": a}.get(key)
+    if key in ("ht_home", "ht_draw", "ht_away"):
+        h, d, a = calib.apply3("ht", g.first_half().p_1x2())
+        return {"ht_home": h, "ht_draw": d, "ht_away": a}[key]
+    return None
+
+
+def _hcp3(g: ImpliedGoals, hcp: int, calib: Calibration) -> tuple[float, float, float]:
+    raw = g.handicap3(hcp)
+    h, d, a = calib.apply3("hcp3", raw, suffix=f"@{hcp:g}")
+    # With a one-goal handicap one side is a plain 1X2 outcome the market prices
+    # itself (1:0 "客" = draw or away win; 0:1 "主" = home win or draw): keep it
+    # exact and let the calibration only re-split the other two.
+    if hcp == -1:
+        rest = 1 - raw[2]
+        return h * rest / (h + d), d * rest / (h + d), raw[2]
+    if hcp == 1:
+        rest = 1 - raw[0]
+        return raw[0], d * rest / (d + a), a * rest / (d + a)
+    return h, d, a
+
+
+_SIDE_OF_KEY = {
+    "over": "over",
+    "under": "under",
+    "btts_yes": "yes",
+    "btts_no": "no",
+    "odd": "odd",
+    "even": "even",
+    "hcp3_home": "home",
+    "hcp3_draw": "draw",
+    "hcp3_away": "away",
+    "ht_home": "home",
+    "ht_draw": "draw",
+    "ht_away": "away",
+    "ht_over": "over",
+    "ht_under": "under",
+    "team_home_over": "over",
+    "team_home_under": "under",
+    "team_away_over": "over",
+    "team_away_under": "under",
+}
+
+
+def derived_compare(
+    mv: dict[str, Any],
+    game: TwGame,
+    cfg: ModelConfig,
+    calib: Calibration,
+    values: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """EV of every 運彩 selection the implied model prices; value bets go to `values`.
+
+    The totals line the market itself quotes is compared directly above, so it is
+    skipped here.
+    """
+    g = implied_from_market(mv)
+    if g is None:
+        return []
+    main_line = (mv.get("totals") or {}).get("line")
+    out: list[dict[str, Any]] = []
+    for m in game.markets:
+        if m.kind == "totals" and main_line is not None and m.line == main_line:
+            continue
+        priced = derived_probs(m, game, g, calib)
+        if not priced:
+            continue
+        for key, label, line, prob in priced:
+            price = m.price(_SIDE_OF_KEY[key])
+            if price is None or not 0 < prob < 1:
+                continue
+            ev = prob * price - 1.0
+            entry = {
+                "market": m.name,
+                "selection_key": key,
+                "selection": label,
+                "line": line,
+                "tw_price": price,
+                "fair_odds": round(1 / prob, 2),
+                "fair_prob": round(prob, 4),
+                "ev": round(ev, 4),
+                "derived": True,
+            }
+            out.append(entry)
+            threshold = (
+                cfg.ht_value_threshold if key.startswith("ht_") else cfg.derived_value_threshold
+            )
+            if ev >= threshold:
+                values.append(entry)
+    out.sort(key=lambda e: -e["ev"])
+    return out
+
+
 def annotate(
     cards: list[dict[str, Any]],
     games: list[TwGame],
     captured_at: datetime | None,
     cfg: ModelConfig,
     tolerance_minutes: int = 45,
+    calib: Calibration = IDENTITY,
 ) -> dict[str, Any]:
     """Attach `tw` blocks to cards in place. Returns a small report for the snapshot."""
     tol = timedelta(minutes=tolerance_minutes)
@@ -181,7 +377,7 @@ def annotate(
                 unmatched_cards.append(f"{card['home']} vs {card['away']}")
             continue
         used.add(game.id)
-        card["tw"] = compare(card, game, captured_at, cfg)
+        card["tw"] = compare(card, game, captured_at, cfg, calib)
         fresh.append(card["tw"])
         matched += 1
     unmatched_games = [

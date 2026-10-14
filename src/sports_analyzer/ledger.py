@@ -112,8 +112,36 @@ def settle_football(path: Path, results: list[Match], now: datetime | None = Non
     return settled
 
 
-def grade(selection_key: str, line: float | None, hg: int, ag: int) -> str:
-    """Win/loss/push (or half win/half loss on a quarter line) for one selection."""
+def grade(
+    selection_key: str,
+    line: float | None,
+    hg: int,
+    ag: int,
+    ht: tuple[int, int] | None = None,
+) -> str:
+    """Win/loss/push (or half win/half loss on a quarter line) for one selection.
+
+    `ht` is the half-time score, needed only by first-half selections; without it
+    those return "" (cannot be settled yet).
+    """
+    if selection_key.startswith("ht_"):
+        if ht is None:
+            return ""
+        return grade(selection_key[3:], line, ht[0], ht[1])
+    if selection_key in ("btts_yes", "btts_no"):
+        both = hg > 0 and ag > 0
+        return WIN if both == (selection_key == "btts_yes") else LOSS
+    if selection_key in ("odd", "even"):
+        return WIN if ((hg + ag) % 2 == 1) == (selection_key == "odd") else LOSS
+    if selection_key.startswith("team_") and line is not None:
+        # team_home_over / team_away_under ...: that team's goals against the line.
+        _, side, direction = selection_key.split("_")
+        goals = hg if side == "home" else ag
+        return grade(direction, line, goals, 0)
+    if selection_key.startswith("hcp3_") and line is not None:
+        margin = hg - ag + line
+        outcome = "home" if margin > 0 else "away" if margin < 0 else "draw"
+        return WIN if selection_key == f"hcp3_{outcome}" else LOSS
     if selection_key == "home":
         return WIN if hg > ag else LOSS
     if selection_key == "away":
