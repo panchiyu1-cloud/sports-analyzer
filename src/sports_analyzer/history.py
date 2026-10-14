@@ -12,7 +12,7 @@ from __future__ import annotations
 import csv
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from .models.dixon_coles import MatchResult
@@ -78,6 +78,94 @@ def read_csv(path: Path) -> list[HistoricalMatch]:
     return matches
 
 
+@dataclass(frozen=True)
+class MatchStats:
+    """What happened on the pitch, from the same CSVs (HxG/AxG appear from 2026/27 on).
+
+    The post-match review uses these to separate "the model misread the match" from
+    "the model read it right and the finishing went the other way".
+    """
+
+    day: date
+    home: str  # canonical key
+    away: str
+    home_goals: int
+    away_goals: int
+    ht_home: int | None = None
+    ht_away: int | None = None
+    xg_home: float | None = None
+    xg_away: float | None = None
+    shots_home: int | None = None
+    shots_away: int | None = None
+    sot_home: int | None = None
+    sot_away: int | None = None
+    corners_home: int | None = None
+    corners_away: int | None = None
+    yellow_home: int | None = None
+    yellow_away: int | None = None
+    red_home: int | None = None
+    red_away: int | None = None
+
+
+def read_stats(path: Path) -> list[MatchStats]:
+    """Match statistics from one football-data.co.uk CSV; missing columns stay None."""
+    out: list[MatchStats] = []
+    with path.open(newline="", encoding="utf-8-sig") as fh:
+        for row in csv.DictReader(fh):
+            try:
+                h, a = row["FTHG"], row["FTAG"]
+                if h == "" or a == "":
+                    continue
+                out.append(
+                    MatchStats(
+                        day=_parse_date(row["Date"]),
+                        home=canonical(row["HomeTeam"]),
+                        away=canonical(row["AwayTeam"]),
+                        home_goals=int(float(h)),
+                        away_goals=int(float(a)),
+                        ht_home=_int(row.get("HTHG")),
+                        ht_away=_int(row.get("HTAG")),
+                        xg_home=_float(row.get("HxG")),
+                        xg_away=_float(row.get("AxG")),
+                        shots_home=_int(row.get("HS")),
+                        shots_away=_int(row.get("AS")),
+                        sot_home=_int(row.get("HST")),
+                        sot_away=_int(row.get("AST")),
+                        corners_home=_int(row.get("HC")),
+                        corners_away=_int(row.get("AC")),
+                        yellow_home=_int(row.get("HY")),
+                        yellow_away=_int(row.get("AY")),
+                        red_home=_int(row.get("HR")),
+                        red_away=_int(row.get("AR")),
+                    )
+                )
+            except (KeyError, ValueError) as exc:
+                log.debug("skipping stats row in %s: %s", path.name, exc)
+    return out
+
+
+def load_stats(history_dir: Path, fdcouk_codes: list[str]) -> list[MatchStats]:
+    out: list[MatchStats] = []
+    for code in fdcouk_codes:
+        for path in sorted(history_dir.glob(f"{code}_*.csv")):
+            out.extend(read_stats(path))
+    return out
+
+
+def find_stats(
+    stats: list[MatchStats], home_key: str, away_key: str, day: date, slack_days: int = 1
+) -> MatchStats | None:
+    """The stats row for one fixture: same teams, date within a day (CSV dates are local)."""
+    for st in stats:
+        if (
+            st.home == home_key
+            and st.away == away_key
+            and abs(st.day - day) <= timedelta(days=slack_days)
+        ):
+            return st
+    return None
+
+
 def load_history(history_dir: Path, fdcouk_code: str) -> list[HistoricalMatch]:
     """All CSVs for one league code, e.g. E0_2425.csv and E0_2526.csv, oldest first."""
     matches: list[HistoricalMatch] = []
@@ -104,6 +192,11 @@ def _float(value: str | None) -> float | None:
         return float(value)
     except ValueError:
         return None
+
+
+def _int(value: str | None) -> int | None:
+    f = _float(value)
+    return int(f) if f is not None else None
 
 
 def _pair(row: dict[str, str], cols: tuple[str, str]) -> tuple[float, float] | None:

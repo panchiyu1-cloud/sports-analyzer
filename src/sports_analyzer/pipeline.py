@@ -2,6 +2,7 @@
 
     python -m sports_analyzer.pipeline football [--days 2] [--date YYYY-MM-DD]
     python -m sports_analyzer.pipeline mlb
+    python -m sports_analyzer.pipeline review           # post-match review of finished games
     python -m sports_analyzer.pipeline render            # re-render from the latest snapshots
     python -m sports_analyzer.pipeline football --offline  # same as render, kept for habit
 
@@ -20,7 +21,8 @@ from pathlib import Path
 from typing import Any
 
 from . import ledger as ledger_mod
-from . import tw_ledger
+from . import review_store, tw_ledger
+from .analysis import review
 from .analysis.football import build_cards
 from .analysis.mlb import build_cards as build_mlb_cards
 from .analysis.taiwan import annotate as annotate_tw
@@ -28,10 +30,12 @@ from .config import (
     DATA_DIR,
     DOCS_DIR,
     FOOTBALL_COMPETITIONS,
+    FOOTBALL_REVIEWS_PATH,
     HISTORY_DIR,
     LEDGER_PATH,
     LOCAL_TZ,
     MLB_ODDS_KEY,
+    MLB_REVIEWS_PATH,
     MODEL,
     SNAPSHOT_DIR,
     TW_DIR,
@@ -44,9 +48,9 @@ from .fetch import taiwan
 from .fetch.football import FootballDataClient, Match
 from .fetch.mlb import MlbClient
 from .fetch.odds import DEFAULT_MARKETS, OddsClient, OddsEvent
-from .history import load_history
+from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
-from .render.cards import render_index
+from .render.cards import render_index, render_reviews_page
 
 log = logging.getLogger("sports_analyzer")
 
@@ -349,6 +353,8 @@ def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | Non
 def run_tw(cfg: ModelConfig = MODEL) -> dict[str, Any]:
     """Compare the newest 運彩 upload with the newest snapshots; record value bets."""
     reports: dict[str, Any] = {}
+    for src, dst in taiwan.normalize_uploads(TW_DIR):
+        log.info("tw: renamed upload %s -> %s", src.relative_to(TW_DIR), dst.relative_to(TW_DIR))
     football = _latest_snapshot("football")
     games, path, parse_report = taiwan.load_latest(TW_DIR, "football")
     if football and path:
@@ -389,6 +395,105 @@ def run_tw(cfg: ModelConfig = MODEL) -> dict[str, Any]:
     return reports
 
 
+# --------------------------------------------------------------------- review
+def run_review(
+    settings: Settings | None, now: datetime | None = None, days: int = 14
+) -> dict[str, Any]:
+    """Post-match review: finished matches from the last `days` days of snapshots.
+
+    Football rows are rebuilt every run (football-data.co.uk statistics arrive a few
+    days after the match); MLB rows are written once, when the game is final.
+    Costs no Odds API credits: football-data.org results + the free MLB Stats API.
+    """
+    now = now or datetime.now(UTC)
+    report: dict[str, Any] = {}
+
+    snaps = _recent_snapshots("football", now.date(), days)
+    pre = review.collect_prematch(
+        snaps,
+        lambda s: [c for comp in s.get("competitions", []) for c in comp.get("cards", [])],
+        "match_id",
+    )
+    due = {k: e for k, e in pre.items() if _kicked_off(e["card"], now, hours=2)}
+    rows: list[dict[str, Any]] = []
+    if due and settings and settings.football_data_token:
+        fd = FootballDataClient(settings.football_data_token)
+        results: dict[str, Match] = {}
+        for code in sorted({str(e["card"].get("competition")) for e in due.values()}):
+            for m in fd.results(code):
+                results[str(m.id)] = m
+        stats = load_stats(
+            HISTORY_DIR, [c.fdcouk_code for c in FOOTBALL_COMPETITIONS if c.fdcouk_code]
+        )
+        signals: dict[str, dict[str, str]] = {}
+        for r in sorted(ledger_mod.read(LEDGER_PATH), key=lambda r: r["created_at"]):
+            if r["sport"] == "football":
+                signals.setdefault(r["match_id"], r)
+        for k, e in due.items():
+            m = results.get(k)
+            if m is None or not m.is_finished:
+                continue
+            card = e["card"]
+            st = find_stats(
+                stats, card.get("home_key", ""), card.get("away_key", ""), m.utc_date.date()
+            )
+            rows.append(review.football_row(e, m, st, signals.get(k), now))
+        added, updated = review_store.upsert(
+            FOOTBALL_REVIEWS_PATH, rows, review_store.FOOTBALL_COLUMNS, "match_id"
+        )
+        report["football"] = {"due": len(due), "added": added, "updated": updated}
+    log.info("review football: %s", report.get("football", {"due": len(due)}))
+
+    msnaps = _recent_snapshots("mlb", now.date(), days)
+    mpre = review.collect_prematch(msnaps, lambda s: s.get("games", []), "game_pk")
+    done = {r["game_pk"] for r in review_store.read(MLB_REVIEWS_PATH)}
+    mdue = {k: e for k, e in mpre.items() if k not in done and _kicked_off(e["card"], now, hours=4)}
+    mrows: list[dict[str, Any]] = []
+    if mdue:
+        client = MlbClient()
+        finals = {}
+        # The schedule is keyed by the US date; every first pitch is 16:00-05:00 UTC, so
+        # six hours back always lands on it.
+        for day in sorted(
+            {_dt_utc(e["card"]["kickoff_utc"]) - timedelta(hours=6) for e in mdue.values()}
+        ):
+            for g in client.schedule(day.date()):
+                finals[str(g.game_pk)] = g
+        for k, e in mdue.items():
+            g = finals.get(k)
+            if g is None or not g.is_final:
+                continue
+            mrows.append(review.mlb_row(e, g, client.box(g.game_pk), now))
+        added, _ = review_store.upsert(MLB_REVIEWS_PATH, mrows, review_store.MLB_COLUMNS, "game_pk")
+        report["mlb"] = {"due": len(mdue), "added": added}
+    log.info("review mlb: %s", report.get("mlb", {"due": len(mdue)}))
+    return report
+
+
+def _recent_snapshots(sport: str, today: date, days: int) -> list[dict[str, Any]]:
+    out = []
+    for path in sorted(SNAPSHOT_DIR.glob(f"*/{sport}.json")):
+        try:
+            day = date.fromisoformat(path.parent.name)
+        except ValueError:
+            continue
+        if today - timedelta(days=days) <= day <= today + timedelta(days=1):
+            out.append(json.loads(path.read_text(encoding="utf-8")))
+    return out
+
+
+def _dt_utc(value: str) -> datetime:
+    return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+
+
+def _kicked_off(card: dict[str, Any], now: datetime, hours: float) -> bool:
+    """True once a match has surely finished (kickoff + `hours`)."""
+    try:
+        return _dt_utc(card["kickoff_utc"]) + timedelta(hours=hours) <= now
+    except (KeyError, ValueError):
+        return False
+
+
 # -------------------------------------------------------------------- render
 def render_latest() -> Path:
     football = _latest_snapshot("football")
@@ -410,15 +515,21 @@ def render_latest() -> Path:
             }
         except (OSError, ValueError, AttributeError):
             backtest_total = None
+    now = datetime.now(UTC)
+    football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
+    mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
+    render_reviews_page(football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html")
     return render_index(
         football,
         mlb,
         summary,
-        datetime.now(UTC),
+        now,
         DOCS_DIR / "index.html",
         backtest_exists=(DOCS_DIR / "backtest.html").exists(),
         backtest_total=backtest_total,
         tw_summary=tw_ledger.summary(tw_ledger.read(TW_LEDGER_PATH)),
+        football_reviews=football_reviews,
+        mlb_reviews=mlb_reviews,
     )
 
 
@@ -441,7 +552,7 @@ def _latest_snapshot(sport: str) -> dict[str, Any] | None:
 # ----------------------------------------------------------------------- CLI
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sports_analyzer.pipeline")
-    parser.add_argument("task", choices=["football", "mlb", "tw", "render"])
+    parser.add_argument("task", choices=["football", "mlb", "tw", "review", "render"])
     parser.add_argument(
         "--days", type=int, default=None, help="fixture window in days (default from env or 2)"
     )
@@ -474,6 +585,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.task == "tw":
         # Needs no network: the phone already uploaded the feed.
         run_tw()
+        out = render_latest()
+        log.info("rendered %s", out)
+        return 0
+
+    if args.task == "review":
+        # Needs only the football-data.org token (results); the MLB Stats API has no key.
+        settings = Settings.from_env(offline=True)
+        if not settings.football_data_token:
+            raise SystemExit("Missing required environment variable: FOOTBALL_DATA_TOKEN")
+        run_review(settings)
         out = render_latest()
         log.info("rendered %s", out)
         return 0

@@ -2,15 +2,29 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from collections.abc import Mapping
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ..analysis import review
 from ..config import LOCAL_TZ, MODEL, ModelConfig
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
+# The front page shows the reviews of the last few days; reviews.html has all of them.
+RECENT_REVIEW_DAYS = 3
+RECENT_REVIEW_LIMIT = 12
+
+
+def _env() -> Environment:
+    return Environment(
+        loader=FileSystemLoader(str(TEMPLATE_DIR)),
+        autoescape=select_autoescape(["html", "j2"]),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
 
 
 def render_index(
@@ -23,25 +37,33 @@ def render_index(
     backtest_exists: bool = False,
     backtest_total: dict[str, Any] | None = None,
     tw_summary: dict[str, Any] | None = None,
+    football_reviews: list[Mapping[str, Any]] | None = None,
+    mlb_reviews: list[Mapping[str, Any]] | None = None,
 ) -> Path:
-    env = Environment(
-        loader=FileSystemLoader(str(TEMPLATE_DIR)),
-        autoescape=select_autoescape(["html", "j2"]),
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-    template = env.get_template("index.html.j2")
+    template = _env().get_template("index.html.j2")
 
+    # Matches that have kicked off leave the "upcoming" part of the page; once a result
+    # is in they reappear under 賽後檢討 with the pre-match numbers next to the score.
     competitions: list[dict[str, Any]] = []
     signals: list[dict[str, Any]] = []
+    started: list[dict[str, Any]] = []
     credits = None
     if football:
         credits = football.get("credits_remaining")
         for comp in football.get("competitions", []):
-            competitions.append(comp)
-            for s in comp.get("signals", []):
-                signals.append(s)
+            upcoming = [c for c in comp.get("cards", []) if not _started(c, generated_at)]
+            started.extend(c for c in comp.get("cards", []) if _started(c, generated_at))
+            competitions.append({**comp, "cards": upcoming})
+            signals.extend(s for s in comp.get("signals", []) if not _started(s, generated_at))
     signals.sort(key=lambda s: s.get("kickoff_utc", ""))
+    if mlb:
+        started.extend(g for g in mlb.get("games", []) if _started(g, generated_at))
+        mlb = {**mlb, "games": [g for g in mlb.get("games", []) if not _started(g, generated_at)]}
+    reviews = review_views(football_reviews or [], mlb_reviews or [], generated_at)
+    reviewed = {r["row"].get("match_id") for r in reviews["football"]} | {
+        r["row"].get("game_pk") for r in reviews["mlb"]
+    }
+    waiting = [c for c in started if str(c.get("match_id") or c.get("game_pk")) not in reviewed]
 
     # 運彩 value bets across both sports, for the section at the top of the page.
     tw_values: list[dict[str, Any]] = []
@@ -90,7 +112,104 @@ def render_index(
         cfg=cfg,
         backtest=backtest_exists,
         backtest_total=backtest_total,
+        reviews=reviews,
+        waiting=waiting,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")
     return out_path
+
+
+def render_reviews_page(
+    football_reviews: list[Mapping[str, Any]],
+    mlb_reviews: list[Mapping[str, Any]],
+    generated_at: datetime,
+    out_path: Path,
+) -> Path:
+    """docs/reviews.html: every review, newest first, with the cumulative diagnostics."""
+    views = review_views(football_reviews, mlb_reviews, generated_at, recent_only=False)
+    html = (
+        _env()
+        .get_template("reviews.html.j2")
+        .render(
+            generated_local=generated_at.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M"),
+            reviews=views,
+        )
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(html, encoding="utf-8")
+    return out_path
+
+
+def review_views(
+    football_rows: list[Mapping[str, Any]],
+    mlb_rows: list[Mapping[str, Any]],
+    now: datetime,
+    recent_only: bool = True,
+) -> dict[str, Any]:
+    """Explained review cards (newest first) and the cumulative summaries."""
+    football = [
+        {"row": row, **review.explain_football(row), **_odds_table(row)}
+        for row in sorted(football_rows, key=lambda r: str(r.get("kickoff_utc")), reverse=True)
+    ]
+    mlb = [
+        {"row": row, **review.explain_mlb(row)}
+        for row in sorted(mlb_rows, key=lambda r: str(r.get("kickoff_utc")), reverse=True)
+    ]
+    if recent_only:
+        football = _recent(football, now)
+        mlb = _recent(mlb, now)
+        # 模型分歧 matches first: they are the ones the owner was told to look at.
+        football.sort(key=lambda v: v["row"].get("lean_source") != "signal")
+    return {
+        "football": football,
+        "mlb": mlb,
+        "summary": review.summarize_football(football_rows),
+        "mlb_summary": review.summarize_mlb(mlb_rows),
+        "total": len(football_rows) + len(mlb_rows),
+    }
+
+
+def _recent(views: list[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
+    cutoff = (now - timedelta(days=RECENT_REVIEW_DAYS)).isoformat()
+    recent = [v for v in views if str(v["row"].get("kickoff_utc")) >= cutoff]
+    return (recent or views[:6])[:RECENT_REVIEW_LIMIT]
+
+
+def _odds_table(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Model / market / 運彩 per 1X2 outcome, with the actual result marked."""
+
+    def pct(key: str) -> str:
+        v = row.get(key)
+        return f"{float(v) * 100:.0f}%" if v not in (None, "") else "—"
+
+    moved = any(
+        row.get(f"open_{s}") not in (None, "")
+        and row.get(f"close_{s}") not in (None, "")
+        and abs(float(row[f"open_{s}"]) - float(row[f"close_{s}"])) >= 0.01
+        for s in "hda"
+    )
+    table = []
+    for s, label, code in (("h", "主勝", "H"), ("d", "和局", "D"), ("a", "客勝", "A")):
+        market = pct(f"open_{s}")
+        if moved and row.get(f"close_{s}") not in (None, ""):
+            market += f" → {pct(f'close_{s}')}"
+        tw = row.get(f"tw_{s}")
+        table.append(
+            {
+                "label": label,
+                "model": pct(f"model_{s}") if str(row.get("model_ok")) == "1" else "—",
+                "market": market,
+                "tw": tw if tw not in (None, "") else "—",
+                "hit": row.get("outcome") == code,
+            }
+        )
+    has_any = any(t["model"] != "—" or t["market"] != "—" for t in table)
+    return {"table": table if has_any else [], "moved": moved}
+
+
+def _started(item: Mapping[str, Any], now: datetime) -> bool:
+    try:
+        return datetime.fromisoformat(str(item.get("kickoff_utc"))) <= now
+    except ValueError:
+        return False

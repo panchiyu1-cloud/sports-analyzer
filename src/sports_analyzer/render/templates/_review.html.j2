@@ -1,0 +1,75 @@
+{# Post-match review blocks, shared by index.html and reviews.html. #}
+
+{% macro football_card(r) %}
+{% set row = r.row %}
+<article class="card review">
+  <div class="top"><span>{{ row.kickoff_local }}</span><span>{{ row.competition_name }}</span></div>
+  <div class="teams">
+    <div><div class="name">{{ row.home }}</div></div>
+    <div class="score">{{ row.ft_h }} – {{ row.ft_a }}{% if row.ht_h != '' and row.ht_h is not none %}<div class="sub">半場 {{ row.ht_h }}–{{ row.ht_a }}</div>{% endif %}</div>
+    <div class="away"><div class="name">{{ row.away }}</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip {{ r.tone }}">{{ r.label }}</span>{% if row.lean_source == 'signal' %}<span class="sub">模型分歧場次</span>{% endif %}</div>
+  {% if r.table %}
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場{% if r.moved %}（開→收）{% endif %}</th><th>運彩</th></tr>
+    {% for t in r.table %}
+    <tr class="{{ 'hit' if t.hit else '' }}">
+      <td>{{ t.label }}</td>
+      <td class="model-val">{{ t.model }}</td>
+      <td class="market-val">{{ t.market }}</td>
+      <td>{{ t.tw }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+  <ul class="why">
+    {% for b in r.bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+  <p class="conclusion"><b>結論</b>{{ r.conclusion }}</p>
+</article>
+{% endmacro %}
+
+{% macro mlb_card(r) %}
+{% set row = r.row %}
+<article class="card review">
+  <div class="top"><span>{{ row.local }}</span><span>MLB</span></div>
+  <div class="teams">
+    <div><div class="name">{{ row.away }}</div></div>
+    <div class="score">{{ row.final_a }} – {{ row.final_h }}<div class="sub">客 – 主</div></div>
+    <div class="away"><div class="name">{{ row.home }}</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip {{ r.tone }}">{{ r.label }}</span></div>
+  {% if row.innings_a %}
+  <div class="scroll"><table class="mini">
+    {% set ia = row.innings_a.split(' ') %}{% set ih = row.innings_h.split(' ') %}
+    <tr><th></th>{% for x in ia %}<th>{{ loop.index }}</th>{% endfor %}<th>R</th><th>H</th><th>E</th></tr>
+    <tr><td>客</td>{% for x in ia %}<td>{{ x }}</td>{% endfor %}<td><b>{{ row.final_a }}</b></td><td>{{ row.hits_a }}</td><td>{{ row.errors_a }}</td></tr>
+    <tr><td>主</td>{% for x in ih %}<td>{{ x }}</td>{% endfor %}<td><b>{{ row.final_h }}</b></td><td>{{ row.hits_h }}</td><td>{{ row.errors_h }}</td></tr>
+  </table></div>
+  {% endif %}
+  <ul class="why">
+    {% for b in r.bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+  <p class="conclusion"><b>結論</b>{{ r.conclusion }}</p>
+</article>
+{% endmacro %}
+
+{% macro football_summary(s) %}
+<div class="kpis">
+  <div class="kpi"><b>{{ s.matches }}</b><span>已檢討場次</span></div>
+  <div class="kpi"><b>{{ s.model_ll if s.model_ll is not none else '—' }} / {{ s.market_ll if s.market_ll is not none else '—' }}</b><span>log-loss 模型／市場（越低越準，{{ s.n }} 場）</span></div>
+  <div class="kpi"><b>{{ s.model_closer }} : {{ s.market_closer }}</b><span>單場較準 模型:市場</span></div>
+  <div class="kpi"><b>{{ '%g'|format(s.leans.hits) }} / {{ '%g'|format(s.leans.decided) }}</b><span>模型偏向命中（市場預期 {{ '%g'|format(s.leans.expected) }}）</span></div>
+  {% if s.leans.signals %}<div class="kpi"><b class="{{ 'pos' if s.leans.units > 0 else ('neg' if s.leans.units < 0 else '') }}">{{ '%+.2f'|format(s.leans.units) }}</b><span>分歧帳面損益（{{ s.leans.signals }} 注）</span></div>{% endif %}
+</div>
+{% for t in s.takeaways %}<div class="note" style="margin:6px 0">{{ t }}</div>{% endfor %}
+{% endmacro %}
+
+{% macro howto() %}
+<p class="howto">
+  每場分兩個問題看：<b>結果</b>——實際結果模型給了幾 %、市場給了幾 %，誰比較準；
+  <b>判斷</b>——就算輸了，模型的方向有沒有證據支持（開賽前市場有沒有往模型的方向移動、比賽的 xG／射正是不是模型看好的一方佔優）。
+  「判斷合理，結果不走運」不需要改策略；「判斷錯誤」累積多了才是該調整的地方。單場結果大部分是運氣，看下方累計數字才準。
+</p>
+{% endmacro %}

@@ -41,6 +41,10 @@ jobs:
         run: python -m sports_analyzer.pipeline mlb
       - name: Compare the latest 運彩 upload against it
         run: python -m sports_analyzer.pipeline tw
+      # The morning's MLB game is final by now; afternoon football too on weekends.
+      - name: Post-match review of finished games
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline review
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare" data/snapshots data/ledger.csv data/tw_ledger.csv docs/index.html
+          bash scripts/commit_generated.sh "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare" data/snapshots data/ledger.csv data/tw_ledger.csv data/tw data/reviews docs/index.html docs/reviews.html

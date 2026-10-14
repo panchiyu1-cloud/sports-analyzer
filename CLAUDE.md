@@ -53,8 +53,10 @@ formula is not obvious.
 
 ### Git workflow
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
-- Generated files that ARE committed: `docs/index.html`, `data/snapshots/**`,
-  `data/ledger.csv`, `data/history/*.csv`. Raw dumps under `data/raw/` are not.
+- Generated files that ARE committed: `docs/index.html`, `docs/reviews.html`,
+  `data/snapshots/**`, `data/ledger.csv`, `data/tw_ledger.csv`, `data/reviews/*.csv`,
+  `data/history/*.csv`. Raw dumps under `data/raw/` are not.
+- Workflows commit through `scripts/commit_generated.sh` (handles two runs racing).
 
 ## Commands
 
@@ -64,6 +66,7 @@ pytest --cov=src                                 # same, with coverage
 ruff check . && ruff format .                    # lint + format
 python -m sports_analyzer.pipeline football      # daily football run (needs .env)
 python -m sports_analyzer.pipeline football --offline   # render from last snapshot
+python -m sports_analyzer.pipeline review         # post-match review (football-data token only)
 python scripts/backtest_football.py data/history/*.csv  # backtest + docs/backtest.html
 ```
 
@@ -77,6 +80,8 @@ src/sports_analyzer/
   fetch/           football.py (football-data.org), odds.py (The Odds API), mlb.py
   models/          dixon_coles.py, market.py (de-vig, edge, T-10 G value)
   analysis/        football.py — fixtures + model + odds -> card dicts + signals
+                   review.py — finished match: pre-match card vs result, verdict, wording
+  review_store.py  data/reviews/{football,mlb}.csv (one row per finished match)
   ledger.py        append / settle signals in data/ledger.csv
   render/          cards.py + templates/index.html.j2 -> docs/index.html
   pipeline.py      CLI entry point
@@ -115,3 +120,20 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   add them to `TW_ALIASES`, do not fuzzy-match Chinese.
 - Workflows: `tw.yml` on push to data/tw/**; `evening.yml` 12:25 UTC h2h-only
   refresh (1 credit per competition) for CLV; `daily.yml` runs the tw step too.
+
+## 賽後檢討 (post-match review)
+- `pipeline review` (daily + evening + manual `review.yml`) joins the last pre-kickoff
+  card from the snapshots of the last 14 days with the result (football-data.org /
+  MLB Stats API box score) and football-data.co.uk statistics (HxG/AxG, shots, cards;
+  domestic leagues only, 2-3 days late; `scripts/refresh_history.sh` refreshes them daily).
+- Keep outcome and process apart: per-match log-loss says who was closer; the verdict
+  ("判斷正確 / 不走運 / 判斷錯誤 ...") uses only evidence independent of the score:
+  pre-kickoff market move on the lean's side and the xG / shots-on-target picture.
+- The lean is the 模型分歧 ledger row if any, else the 1X2 side where the FIRST card's
+  model sat >= 5pp above the opening market (the last card would hide leans the market
+  later moved toward).
+- CSV rows hold facts; `explain_*` derives the wording at render time, so wording changes
+  re-explain old matches. Thresholds are constants at the top of `analysis/review.py`.
+- Quarter-line handicaps settle half win / half loss (`ledger.grade`).
+- Snapshots must keep a 運彩 block once captured: a later upload no longer lists a match
+  that has kicked off (`analysis/taiwan.annotate`).

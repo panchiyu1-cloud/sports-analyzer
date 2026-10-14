@@ -35,6 +35,10 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
 
+      - name: Refresh this season's football-data.co.uk CSVs (results, xG, shots)
+        continue-on-error: true
+        run: bash scripts/refresh_history.sh
+
       - name: Football — fetch, model, cards, ledger
         run: python -m sports_analyzer.pipeline football --days "${{ github.event.inputs.days || '2' }}"
 
@@ -46,9 +50,13 @@ jobs:
         continue-on-error: true
         run: python -m sports_analyzer.pipeline tw
 
+      - name: Post-match review of finished games
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline review
+
       - name: Render page
         run: python -m sports_analyzer.pipeline render
 
       - name: Commit snapshot, ledgers and page
         run: |
-          bash scripts/commit_generated.sh "chore(daily): $(date -u +%Y-%m-%d) snapshot + page" data/snapshots data/ledger.csv data/tw_ledger.csv docs/index.html
+          bash scripts/commit_generated.sh "chore(daily): $(date -u +%Y-%m-%d) snapshot + page" data/snapshots data/ledger.csv data/tw_ledger.csv data/tw data/reviews data/history docs/index.html docs/reviews.html

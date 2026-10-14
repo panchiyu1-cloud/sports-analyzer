@@ -34,4 +34,4 @@ jobs:
         run: python -m sports_analyzer.pipeline tw
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv docs/index.html
+          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/tw docs/index.html docs/reviews.html

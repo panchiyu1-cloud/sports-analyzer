@@ -12,7 +12,18 @@ set -euo pipefail
 
 msg="$1"
 shift
-paths=("$@")
+# Only paths that exist: a step that wrote nothing (e.g. no finished games to review
+# yet) must not make `git add` fail on a missing pathspec.
+paths=()
+for p in "$@"; do
+  if [ -e "$p" ]; then
+    paths+=("$p")
+  fi
+done
+if [ "${#paths[@]}" -eq 0 ]; then
+  echo "nothing to commit (none of the paths exist)"
+  exit 0
+fi
 
 git config user.name "sports-analyzer bot"
 git config user.email "actions@users.noreply.github.com"

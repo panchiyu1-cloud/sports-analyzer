@@ -19,6 +19,9 @@ HISTORY_DIR = DATA_DIR / "history"
 LEDGER_PATH = DATA_DIR / "ledger.csv"
 TW_LEDGER_PATH = DATA_DIR / "tw_ledger.csv"
 TW_DIR = DATA_DIR / "tw"
+REVIEW_DIR = DATA_DIR / "reviews"
+FOOTBALL_REVIEWS_PATH = REVIEW_DIR / "football.csv"
+MLB_REVIEWS_PATH = REVIEW_DIR / "mlb.csv"
 DOCS_DIR = ROOT / "docs"
 
 LOCAL_TZ = ZoneInfo("Asia/Taipei")
