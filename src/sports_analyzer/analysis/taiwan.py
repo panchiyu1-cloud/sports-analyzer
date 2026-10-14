@@ -167,29 +167,33 @@ def annotate(
     matched = 0
     unmatched_cards: list[str] = []
     used: set[str] = set()
+    fresh: list[dict[str, Any]] = []
     for card in cards:
+        # A later upload no longer lists a match once it has kicked off. Keep the block
+        # from the earlier upload (it carries its own captured_at) instead of erasing it:
+        # the post-match review needs the last 運彩 price before kickoff.
+        card.setdefault("tw", None)
         if not card.get("market"):
-            card["tw"] = None
             continue
         game = match_game(card, games, tol)
         if game is None:
-            card["tw"] = None
-            unmatched_cards.append(f"{card['home']} vs {card['away']}")
+            if not _started(card, captured_at):
+                unmatched_cards.append(f"{card['home']} vs {card['away']}")
             continue
         used.add(game.id)
         card["tw"] = compare(card, game, captured_at, cfg)
+        fresh.append(card["tw"])
         matched += 1
     unmatched_games = [
         f"{g.away_zh} @ {g.home_zh} ({g.kickoff.isoformat(timespec='minutes')})"
         for g in games
         if g.id not in used
     ]
-    # How much 運彩 charges on the match-winner market, averaged over matched games:
+    # How much 運彩 charges on the match-winner market, averaged over this upload's games:
     # sum(1/price) - 1. Pinnacle is ~2-3%; a soft book 8-12%; 運彩 is known to be higher.
     overrounds = []
-    for card in cards:
-        tw = card.get("tw")
-        if tw and tw.get("h2h"):
+    for tw in fresh:
+        if tw.get("h2h"):
             prices = [
                 v["price"] for k, v in tw["h2h"].items() if k != "line" and isinstance(v, dict)
             ]
@@ -202,3 +206,12 @@ def annotate(
         "tw_games": len(games),
         "avg_overround": round(sum(overrounds) / len(overrounds), 4) if overrounds else None,
     }
+
+
+def _started(card: dict[str, Any], captured_at: datetime | None) -> bool:
+    if captured_at is None:
+        return False
+    try:
+        return datetime.fromisoformat(card["kickoff_utc"]) <= captured_at
+    except (KeyError, TypeError, ValueError):
+        return False

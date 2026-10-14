@@ -291,7 +291,6 @@ ALIASES: dict[str, str] = {
     "schalke": "schalke",
     "darmstadt": "darmstadt",
     "frosinone": "frosinone",
-    "cremonese": "cremonese",
     # ---- Champions League clubs outside the top five leagues (API name / odds name / CSV name)
     "sporting clube portugal": "sporting cp",
     "sporting lisbon": "sporting cp",

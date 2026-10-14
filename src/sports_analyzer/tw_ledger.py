@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .ledger import LOSS, PENDING, PUSH, WIN, grade, profit
+from .ledger import PENDING, PUSH, SETTLED, grade, hit_counts, profit
 
 COLUMNS = [
     "id",
@@ -179,19 +179,19 @@ def settle(
 
 
 def summary(rows: list[dict[str, str]]) -> dict[str, Any]:
-    settled = [r for r in rows if r["status"] in (WIN, LOSS, PUSH)]
-    decided = [r for r in settled if r["status"] in (WIN, LOSS)]
-    wins = sum(1 for r in decided if r["status"] == WIN)
+    settled = [r for r in rows if r["status"] in SETTLED]
+    wins, decided = hit_counts(settled)
     units = sum(float(r["profit"] or 0) for r in settled)
+    staked = sum(1 for r in settled if r["status"] != PUSH)
     clvs = [float(r["clv"]) for r in rows if r.get("clv")]
     return {
         "pending": sum(1 for r in rows if r["status"] == PENDING),
         "settled": len(settled),
         "wins": wins,
-        "losses": len(decided) - wins,
-        "hit_rate": round(wins / len(decided), 3) if decided else None,
+        "losses": decided - wins,
+        "hit_rate": round(wins / decided, 3) if decided else None,
         "units": round(units, 2),
-        "roi": round(units / len(decided), 3) if decided else None,
+        "roi": round(units / staked, 3) if staked else None,
         "avg_ev": round(sum(float(r["ev"]) for r in rows) / len(rows), 4) if rows else None,
         "avg_clv": round(sum(clvs) / len(clvs), 4) if clvs else None,
         "n_clv": len(clvs),

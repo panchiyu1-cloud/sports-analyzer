@@ -40,6 +40,8 @@ COLUMNS = [
     "settled_at",
 ]
 PENDING, WIN, LOSS, PUSH, VOID = "pending", "win", "loss", "push", "void"
+HALF_WIN, HALF_LOSS = "half_win", "half_loss"
+SETTLED = (WIN, LOSS, PUSH, HALF_WIN, HALF_LOSS)
 
 
 def signal_id(signal: dict[str, Any]) -> str:
@@ -111,52 +113,86 @@ def settle_football(path: Path, results: list[Match], now: datetime | None = Non
 
 
 def grade(selection_key: str, line: float | None, hg: int, ag: int) -> str:
-    """Win/loss/push for one selection given the final score."""
+    """Win/loss/push (or half win/half loss on a quarter line) for one selection."""
     if selection_key == "home":
         return WIN if hg > ag else LOSS
     if selection_key == "away":
         return WIN if ag > hg else LOSS
     if selection_key == "draw":
         return WIN if hg == ag else LOSS
-    if selection_key in ("over", "under") and line is not None:
+    if line is None:
+        return VOID
+    if _is_quarter(line) and selection_key in ("over", "under", "spread_home", "spread_away"):
+        # A quarter line is two half stakes on the neighbouring lines: -0.25 = 0 and -0.5.
+        return _combine(
+            grade(selection_key, line - 0.25, hg, ag), grade(selection_key, line + 0.25, hg, ag)
+        )
+    if selection_key in ("over", "under"):
         total = hg + ag
         if total == line:
             return PUSH
         return WIN if (total > line) == (selection_key == "over") else LOSS
-    if selection_key in ("spread_home", "spread_away") and line is not None:
+    if selection_key in ("spread_home", "spread_away"):
         margin = hg - ag + line  # home view
         if selection_key == "spread_away":
             margin = -margin
-        # Quarter lines settle half/half; report the net sign as win/loss/push for simplicity.
         if abs(margin) < 1e-9:
             return PUSH
         return WIN if margin > 0 else LOSS
     return VOID
 
 
+def _is_quarter(line: float) -> bool:
+    return abs(line * 2 - round(line * 2)) > 1e-9
+
+
+def _combine(a: str, b: str) -> str:
+    """Settle the two half stakes of a quarter line as one outcome."""
+    if a == b:
+        return a
+    pair = {a, b}
+    if pair == {WIN, PUSH}:
+        return HALF_WIN
+    if pair == {LOSS, PUSH}:
+        return HALF_LOSS
+    return VOID  # win + loss cannot happen on neighbouring half lines
+
+
 def profit(outcome: str, price: float, stake: float = 1.0) -> float:
     if outcome == WIN:
         return stake * (price - 1.0)
+    if outcome == HALF_WIN:
+        return stake * (price - 1.0) / 2
     if outcome == LOSS:
         return -stake
+    if outcome == HALF_LOSS:
+        return -stake / 2
     return 0.0
 
 
 def summary(rows: list[dict[str, str]]) -> dict[str, Any]:
     """Headline numbers for the page: settled count, hit rate, units, ROI."""
-    settled = [r for r in rows if r["status"] in (WIN, LOSS, PUSH)]
-    wins = sum(1 for r in settled if r["status"] == WIN)
-    decided = [r for r in settled if r["status"] in (WIN, LOSS)]
+    settled = [r for r in rows if r["status"] in SETTLED]
+    wins, decided = hit_counts(settled)
     units = sum(_float(r["profit"]) or 0.0 for r in settled)
+    staked = sum(1 for r in settled if r["status"] != PUSH)
     return {
         "pending": sum(1 for r in rows if r["status"] == PENDING),
         "settled": len(settled),
         "wins": wins,
-        "losses": len(decided) - wins,
-        "hit_rate": round(wins / len(decided), 3) if decided else None,
+        "losses": decided - wins,
+        "hit_rate": round(wins / decided, 3) if decided else None,
         "units": round(units, 2),
-        "roi": round(units / len(decided), 3) if decided else None,
+        "roi": round(units / staked, 3) if staked else None,
     }
+
+
+def hit_counts(rows: list[dict[str, str]]) -> tuple[float, float]:
+    """(wins, decided) where a half win/loss counts as half a decided bet."""
+    weight = {WIN: (1.0, 1.0), LOSS: (0.0, 1.0), HALF_WIN: (0.5, 0.5), HALF_LOSS: (0.0, 0.5)}
+    wins = sum(weight[r["status"]][0] for r in rows if r["status"] in weight)
+    decided = sum(weight[r["status"]][1] for r in rows if r["status"] in weight)
+    return wins, decided
 
 
 def _float(value: Any) -> float | None:

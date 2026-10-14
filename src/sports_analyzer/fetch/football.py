@@ -34,6 +34,10 @@ class Match:
     away: str
     home_goals: int | None = None
     away_goals: int | None = None
+    # Half-time score and how the match ended (REGULAR / EXTRA_TIME / PENALTY_SHOOTOUT).
+    home_ht: int | None = None
+    away_ht: int | None = None
+    duration: str = "REGULAR"
 
     @property
     def home_key(self) -> str:
@@ -77,7 +81,11 @@ def parse_matches(payload: dict[str, Any]) -> list[Match]:
     matches: list[Match] = []
     for raw in payload.get("matches", []):
         try:
-            full_time = (raw.get("score") or {}).get("fullTime") or {}
+            score = raw.get("score") or {}
+            # Markets settle on 90 minutes. For a cup tie that went to extra time the API
+            # adds `regularTime`; `fullTime` then includes extra time (and penalties).
+            full_time = score.get("regularTime") or score.get("fullTime") or {}
+            half_time = score.get("halfTime") or {}
             matches.append(
                 Match(
                     id=int(raw["id"]),
@@ -89,6 +97,9 @@ def parse_matches(payload: dict[str, Any]) -> list[Match]:
                     away=str(raw["awayTeam"]["name"]),
                     home_goals=full_time.get("home"),
                     away_goals=full_time.get("away"),
+                    home_ht=half_time.get("home"),
+                    away_ht=half_time.get("away"),
+                    duration=str(score.get("duration") or "REGULAR"),
                 )
             )
         except (KeyError, TypeError, ValueError) as exc:

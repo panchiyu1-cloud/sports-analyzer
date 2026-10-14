@@ -17,7 +17,7 @@ def synthetic_season(seed: int = 7, n_teams: int = 10, rounds: int = 4):
     mean_att = sum(attack.values()) / n_teams
     attack = {t: v - mean_att for t, v in attack.items()}
     defence = {t: rng.uniform(-0.4, 0.4) for t in teams}
-    home_adv, rho = 0.3, -0.08
+    home_adv = 0.3  # simulated without the low-score (rho) correction
     results = []
     day = date(2026, 1, 1)
     for _ in range(rounds):

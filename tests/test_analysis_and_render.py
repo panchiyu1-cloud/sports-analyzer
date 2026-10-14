@@ -339,7 +339,30 @@ class LedgerTests(unittest.TestCase):
         self.assertEqual(
             ledger.grade("spread_away", -0.5, 1, 1), "win"
         )  # away gets +0.5, draw wins
-        self.assertEqual(ledger.grade("spread_home", -0.75, 2, 1), "win")  # +0.25 net
+        # Quarter lines are two half stakes (regression: they used to settle as a full win/loss).
+        # -0.75 won by one = half on -0.5 (win) + half on -1.0 (push).
+        self.assertEqual(ledger.grade("spread_home", -0.75, 2, 1), "half_win")
+        self.assertEqual(ledger.grade("spread_home", -0.75, 3, 1), "win")
+        # Napoli +0.25 away at Villarreal: a draw is half on +0 (push) + half on +0.5 (win).
+        self.assertEqual(ledger.grade("spread_away", -0.25, 1, 1), "half_win")
+        self.assertEqual(ledger.grade("spread_home", -0.25, 1, 1), "half_loss")
+        self.assertEqual(ledger.grade("spread_away", -0.25, 2, 1), "loss")
+        self.assertEqual(ledger.grade("over", 2.25, 1, 1), "half_loss")  # 2.0 push, 2.5 loss
+        self.assertEqual(ledger.grade("over", 2.75, 2, 1), "half_win")  # 2.5 win, 3.0 push
+        self.assertAlmostEqual(ledger.profit("half_win", 2.06), 0.53)
+        self.assertAlmostEqual(ledger.profit("half_loss", 2.06), -0.5)
+
+    def test_summary_counts_half_results_as_half_bets(self):
+        rows = [
+            {"status": "half_win", "profit": "0.53"},
+            {"status": "loss", "profit": "-1"},
+            {"status": "push", "profit": "0"},
+        ]
+        s = ledger.summary(rows)
+        self.assertEqual(s["settled"], 3)
+        self.assertAlmostEqual(s["hit_rate"], round(0.5 / 1.5, 3))
+        self.assertAlmostEqual(s["units"], -0.47)
+        self.assertAlmostEqual(s["roi"], round(-0.47 / 2, 3))
 
 
 if __name__ == "__main__":

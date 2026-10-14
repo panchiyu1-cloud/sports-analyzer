@@ -101,6 +101,37 @@ class TaiwanFeedTests(unittest.TestCase):
             self.assertEqual(games, [])
             self.assertIsNone(path)
 
+    def test_normalize_uploads_renames_to_arrival_time(self):
+        import os
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "football" / "2026" / "10").mkdir(parents=True)
+            odd = root / "football" / "2026" / "10" / "21"  # what the phone produced once
+            odd.write_text("[]", encoding="utf-8")
+            wrong_day = root / "football" / "20261021-0800.json"
+            wrong_day.write_text("[1]", encoding="utf-8")
+            done = root / "football" / "2026-10-13-2000.json"
+            done.write_text("[2]", encoding="utf-8")
+            # 2026-10-14 00:00 UTC = 08:00 Taipei; 2026-10-13 16:48 UTC = 00:48 Taipei
+            os.utime(wrong_day, (1791936000, 1791936000))
+            os.utime(odd, (1791910080, 1791910080))
+            moves = taiwan.normalize_uploads(root)
+            names = sorted(p.name for p in (root / "football").iterdir())
+            self.assertEqual(len(moves), 2)
+            self.assertEqual(
+                names, ["2026-10-13-2000.json", "2026-10-14-0048.json", "2026-10-14-0800.json"]
+            )
+            self.assertFalse((root / "football" / "2026").exists())  # empty folders removed
+            # The phone can reuse its name now; a second copy of the same upload is dropped.
+            again = root / "football" / "20261021-0800.json"
+            again.write_text("[1]", encoding="utf-8")
+            os.utime(again, (1791936000, 1791936000))
+            taiwan.normalize_uploads(root)
+            self.assertEqual(len(list((root / "football").iterdir())), 3)
+            stamp = taiwan.captured_at(root / "football" / "2026-10-14-0800.json")
+            self.assertEqual((stamp.day, stamp.hour, stamp.minute), (14, 0, 0))  # UTC
+
     def test_non_list_payload(self):
         self.assertEqual(taiwan.parse_games({"oops": 1}), [])
         self.assertEqual(taiwan.parse_games("nope"), [])

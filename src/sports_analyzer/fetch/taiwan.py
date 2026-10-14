@@ -305,13 +305,30 @@ def list_uploads(tw_dir: Path, sport: str) -> list[Path]:
     )
 
 
+# What `normalize_uploads` names files: Taipei time of the upload, e.g. 2026-10-14-0800.json.
+CANONICAL_UPLOAD = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{4}(-\d+)?\.json$")
+
+
 def captured_at(path: Path) -> datetime | None:
-    """When the phone uploaded this file: the git commit time, else the stamp in its name, else mtime."""
+    """When the phone uploaded this file.
+
+    A file already renamed by `normalize_uploads` carries that time in its name (git
+    would report the later rename commit instead). Otherwise: the git commit time,
+    then a stamp in the name, then the file's mtime.
+    """
+    if CANONICAL_UPLOAD.match(path.name):
+        stamp = stamp_from_name(path)
+        if stamp:
+            return stamp.astimezone(UTC)
+    return _arrival_time(path)
+
+
+def _arrival_time(path: Path) -> datetime | None:
     import subprocess
 
     try:
         out = subprocess.run(
-            ["git", "log", "-1", "--format=%cI", "--", str(path)],
+            ["git", "log", "-1", "--format=%cI", "--", path.name],
             cwd=path.parent,
             capture_output=True,
             text=True,
@@ -329,6 +346,44 @@ def captured_at(path: Path) -> datetime | None:
         return datetime.fromtimestamp(path.stat().st_mtime, tz=UTC)
     except OSError:
         return None
+
+
+def normalize_uploads(tw_dir: Path) -> list[tuple[Path, Path]]:
+    """Rename phone uploads to the Taipei time they arrived: data/tw/<sport>/YYYY-MM-DD-HHMM.json.
+
+    The phone builds the name from its own date format, which has produced odd names
+    (a wrong day, folders instead of a file). Renaming right after each upload keeps
+    the folder readable and, more importantly, frees the phone's name: GitHub refuses
+    to overwrite an existing path, so a repeated name would silently block an upload.
+    """
+    from ..config import LOCAL_TZ
+
+    moves: list[tuple[Path, Path]] = []
+    for sport_dir in (tw_dir / "football", tw_dir / "baseball"):
+        if not sport_dir.exists():
+            continue
+        files = [p for p in sport_dir.rglob("*") if p.is_file() and p.name != ".gitkeep"]
+        for path in sorted(files):
+            if path.parent == sport_dir and CANONICAL_UPLOAD.match(path.name):
+                continue
+            when = _arrival_time(path)
+            if when is None:
+                continue
+            base = when.astimezone(LOCAL_TZ).strftime("%Y-%m-%d-%H%M")
+            target, n = sport_dir / f"{base}.json", 1
+            if target.exists() and target.read_bytes() == path.read_bytes():
+                path.unlink()  # the same upload already renamed by an earlier run
+                moves.append((path, target))
+                continue
+            while target.exists():
+                target, n = sport_dir / f"{base}-{n}.json", n + 1
+            path.rename(target)
+            moves.append((path, target))
+        # Folders the odd names created (e.g. 2026/10/) are empty now.
+        for folder in sorted((d for d in sport_dir.rglob("*") if d.is_dir()), reverse=True):
+            if not any(folder.iterdir()):
+                folder.rmdir()
+    return moves
 
 
 def load_latest(tw_dir: Path, sport: str) -> tuple[list[TwGame], Path | None, ParseReport]:
@@ -678,7 +733,6 @@ TW_ALIASES.update(
         # ---- spellings seen in the real feed (2026-10)
         "薩巴赫馬薩齊爾": "sabah",
         "比亞雷亞爾": "villarreal",
-        "維京": "viking",
         "恩荷芬": "psv",
         "飛燕諾": "feyenoord",
         "博德格林特": "bodo glimt",
