@@ -97,14 +97,36 @@
 <div class="wrap">
 <header>
   <h1>比賽分析</h1>
-  <span class="meta">更新：2026-10-14 17:22（台北時間）</span>
+  <span class="meta">更新：2026-10-14 20:00（台北時間）</span>
 <span class="meta">賠率點數剩 473（每日預算約 16）</span><a class="meta" href="backtest.html">回測報告</a>  <a class="meta" href="t10_backtest.html">T-10 回測</a>
 <a class="meta" href="reviews.html">全部賽後檢討</a></header>
 
 <section>
-  <h2>運彩價值注 <span class="count">0 個 · 門檻 EV ≥ 2%</span></h2>
-  <p class="sub">足球：運彩 102 場，對上 13 場（2026-10-14-0800.json） · 運彩不讓分平均水錢 20.1%　|　MLB：運彩 3 場，對上 1 場（2026-10-14-0800.json） · 運彩不讓分平均水錢 15.1%</p>
-  <p class="none">運彩目前沒有賠率高於公允價的注。</p>
+  <h2>運彩價值注 <span class="count">2 個 · 門檻 EV ≥ 2%</span></h2>
+  <p class="sub">足球：運彩 109 場，對上 13 場（2026-10-14-2000.json） · 運彩不讓分平均水錢 20.2%　|　MLB：運彩 2 場，對上 1 場（2026-10-14-2000.json） · 運彩不讓分平均水錢 14.7%</p>
+  <div class="kpis">
+    <div class="kpi"><b>2</b><span>待結算</span></div>
+    <div class="kpi"><b>0</b><span>已結算</span></div>
+    <div class="kpi"><b>—</b><span>命中率</span></div>
+    <div class="kpi"><b class="">—</b><span>單位損益</span></div>
+    <div class="kpi"><b class="">—</b><span>平均 CLV（0 注）</span></div>
+  </div>
+  <div class="scroll"><table>
+    <tr><th>開賽</th><th>聯賽</th><th>比賽（運彩名）</th><th>市場</th><th>選項</th><th>運彩賠率</th><th>公允賠率</th><th>EV</th><th>擷取</th></tr>
+    <tr>
+      <td>10/15 (週四) 00:45</td><td>歐冠</td>
+      <td>利物浦 @ LASK林茨</td><td>讓分 0:2 <span class="chip">推算</span></td><td><b>讓分0:2 客（利物浦）</b></td>
+      <td class="model-val">3.15</td><td class="market-val">2.92</td>
+      <td class="pos">+7.8%</td><td class="sub">20:00</td>
+    </tr>
+    <tr>
+      <td>10/15 (週四) 00:45</td><td>歐冠</td>
+      <td>利物浦 @ LASK林茨</td><td>利物浦 大小 2.5 <span class="chip">推算</span></td><td><b>利物浦 大 2.5</b></td>
+      <td class="model-val">2.05</td><td class="market-val">1.95</td>
+      <td class="pos">+4.9%</td><td class="sub">20:00</td>
+    </tr>
+  </table></div>
+  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。標「推算」的玩法（其他大小盤、球隊大小、兩隊都進球、單雙、讓分 1:0、上半場）沒有國際盤可直接比，公允機率是用國際盤的勝平負和大小反推兩隊預期進球後算出來的；歷史驗證誤差約 1–2%，所以門檻提高到 EV ≥ 4%（上半場 5%）。運彩的水錢（上方「平均水錢」）遠高於國際莊家的 2–5%，所以要出現價值注，通常得是運彩開盤後市場大幅移動的場次。</p>
 </section>
 
 <section>
@@ -471,7 +493,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.15</b> · 和 <b>3.72</b> · 客 <b>3.75</b> · 大2.5 <b>2.0</b> / 小 <b>2.0</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">1.9</b><span class="sub">(-12%)</span> · 和 <b class="">2.95</b><span class="sub">(-21%)</span> · 客 <b class="">2.95</b><span class="sub">(-21%)</span> · 大2.5 <b class="">1.73</b> / 小 <b class="">1.7</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（萊萬特） <b class="">1.17</b><span class="sub">（公允 1.26，-7%）</span> · 讓分1:0 和 <b class="">3.55</b><span class="sub">（公允 3.83，-7%）</span></span></div>        <div><span>預期進球</span><span>2.16 – 1.44</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.15</b> · 和 <b>3.72</b> · 客 <b>3.75</b> · 大2.5 <b>2.0</b> / 小 <b>2.0</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">1.9</b><span class="sub">(-12%)</span> · 和 <b class="">2.95</b><span class="sub">(-21%)</span> · 客 <b class="">2.95</b><span class="sub">(-21%)</span> · 大2.5 <b class="">1.73</b> / 小 <b class="">1.7</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（萊萬特） <b class="">1.17</b><span class="sub">（公允 1.26，-7%）</span> · 讓分1:0 和 <b class="">3.55</b><span class="sub">（公允 3.83，-7%）</span></span></div>        <div><span>預期進球</span><span>2.16 – 1.44</span></div>
         <div><span>最可能比分</span><span>2-1（9%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">70% <span class="market-val">/ 50%</span></span></div>
         <div><span>攻／守排名</span><span>9/18 vs 8/23 <span class="sub">(共26)</span></span></div>
@@ -513,7 +535,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.01</b> · 和 <b>4.4</b> · 客 <b>3.64</b> · 大3.5 <b>2.04</b> / 小 <b>1.96</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">1.75</b><span class="sub">(-13%)</span> · 和 <b class="">3.45</b><span class="sub">(-22%)</span> · 客 <b class="">2.9</b><span class="sub">(-20%)</span> · 大3.5 <b class="">1.72</b> / 小 <b class="">1.72</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（科隆） <b class="">1.26</b><span class="sub">（公允 1.35，-6%）</span> · 讓分1:0 和 <b class="">3.95</b><span class="sub">（公允 4.3，-8%）</span></span></div>        <div><span>預期進球</span><span>2.38 – 1.54</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.01</b> · 和 <b>4.4</b> · 客 <b>3.64</b> · 大3.5 <b>2.04</b> / 小 <b>1.96</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">1.75</b><span class="sub">(-13%)</span> · 和 <b class="">3.5</b><span class="sub">(-21%)</span> · 客 <b class="">2.9</b><span class="sub">(-20%)</span> · 大3.5 <b class="">1.7</b> / 小 <b class="">1.73</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（科隆） <b class="">1.27</b><span class="sub">（公允 1.35，-6%）</span> · 讓分1:0 和 <b class="">3.95</b><span class="sub">（公允 4.3，-8%）</span></span></div>        <div><span>預期進球</span><span>2.38 – 1.54</span></div>
         <div><span>最可能比分</span><span>2-1（9%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">75%</span></div>
         <div><span>攻／守排名</span><span>10/23 vs 14/18 <span class="sub">(共23)</span></span></div>
@@ -552,7 +574,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.61</b> · 和 <b>3.8</b> · 客 <b>2.82</b> · 大2.5 <b>1.55</b> / 小 <b>2.83</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">2.2</b><span class="sub">(-16%)</span> · 和 <b class="">3.2</b><span class="sub">(-16%)</span> · 客 <b class="">2.3</b><span class="sub">(-18%)</span> · 大2.5 <b class="">1.36</b> / 小 <b class="">2.28</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>小 4.5 <b class="">1.22</b><span class="sub">（公允 1.32，-8%）</span> · 讓分0:1 主（弗羅西諾內） <b class="">1.4</b><span class="sub">（公允 1.55，-10%）</span></span></div>        <div><span>預期進球</span><span>1.62 – 1.2</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.61</b> · 和 <b>3.8</b> · 客 <b>2.82</b> · 大2.5 <b>1.55</b> / 小 <b>2.83</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">2.2</b><span class="sub">(-16%)</span> · 和 <b class="">3.2</b><span class="sub">(-16%)</span> · 客 <b class="">2.3</b><span class="sub">(-18%)</span> · 大2.5 <b class="">1.36</b> / 小 <b class="">2.28</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>小 4.5 <b class="">1.22</b><span class="sub">（公允 1.32，-8%）</span> · 讓分0:1 主（弗羅西諾內） <b class="">1.4</b><span class="sub">（公允 1.55，-10%）</span></span></div>        <div><span>預期進球</span><span>1.62 – 1.2</span></div>
         <div><span>最可能比分</span><span>1-1（12%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">54% <span class="market-val">/ 65%</span></span></div>
         <div><span>攻／守排名</span><span>9/10 vs 8/15 <span class="sub">(共24)</span></span></div>
@@ -594,7 +616,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.18</b> · 和 <b>3.71</b> · 客 <b>2.4</b> · 大2.5 <b>1.82</b> / 小 <b>2.22</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">2.6</b><span class="sub">(-18%)</span> · 和 <b class="">3.05</b><span class="sub">(-18%)</span> · 客 <b class="">2.05</b><span class="sub">(-15%)</span> · 大2.5 <b class="">1.56</b> / 小 <b class="">1.88</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>大 1.5 <b class="">1.16</b><span class="sub">（公允 1.26，-8%）</span> · 上半場 小 1.5 <b class="">1.42</b><span class="sub">（公允 1.55，-9%）</span></span></div>        <div><span>預期進球</span><span>2.19 – 1.7</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.18</b> · 和 <b>3.71</b> · 客 <b>2.4</b> · 大2.5 <b>1.82</b> / 小 <b>2.22</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">2.6</b><span class="sub">(-18%)</span> · 和 <b class="">3.05</b><span class="sub">(-18%)</span> · 客 <b class="">2.05</b><span class="sub">(-15%)</span> · 大2.5 <b class="">1.56</b> / 小 <b class="">1.88</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>大 1.5 <b class="">1.16</b><span class="sub">（公允 1.26，-8%）</span> · 上半場 小 1.5 <b class="">1.42</b><span class="sub">（公允 1.55，-9%）</span></span></div>        <div><span>預期進球</span><span>2.19 – 1.7</span></div>
         <div><span>最可能比分</span><span>2-1（8%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">74% <span class="market-val">/ 55%</span></span></div>
         <div><span>攻／守排名</span><span>6/19 vs 9/14 <span class="sub">(共23)</span></span></div>
@@ -636,7 +658,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>10.64</b> · 和 <b>6.63</b> · 客 <b>1.32</b> · 大3.5 <b>2.05</b> / 小 <b>1.95</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">6.25</b><span class="sub">(-41%)</span> · 和 <b class="">4.55</b><span class="sub">(-31%)</span> · 客 <b class="">1.21</b><span class="sub">(-9%)</span> · 大3.5 <b class="">1.75</b> / 小 <b class="">1.68</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>小 4.5 <b class="">1.28</b><span class="sub">（公允 1.42，-10%）</span> · 上半場 客勝 <b class="">1.55</b><span class="sub">（公允 1.73，-10%）</span></span></div>        <div><span>預期進球</span><span>0.3 – 1.37</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>10.64</b> · 和 <b>6.63</b> · 客 <b>1.32</b> · 大3.5 <b>2.05</b> / 小 <b>1.95</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">5.5</b><span class="sub">(-48%)</span> · 和 <b class="">4.0</b><span class="sub">(-40%)</span> · 客 <b class="">1.3</b><span class="sub">(-2%)</span> · 大3.5 <b class="">2.07</b> / 小 <b class="">1.45</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分0:2 客（利物浦） <b class="pos">3.15</b><span class="sub">（公允 2.92，+8%）</span> · 利物浦 大 2.5 <b class="pos">2.05</b><span class="sub">（公允 1.95，+5%）</span></span></div>        <div><span>預期進球</span><span>0.3 – 1.37</span></div>
         <div><span>最可能比分</span><span>0-1（25%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">24%</span></div>
         <div><span>攻／守排名</span><span>133/26 vs 20/16 <span class="sub">(共136)</span></span></div>
@@ -670,7 +692,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.78</b> · 和 <b>4.46</b> · 客 <b>1.95</b> · 大3.5 <b>2.19</b> / 小 <b>1.84</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">3.0</b><span class="sub">(-21%)</span> · 和 <b class="">3.45</b><span class="sub">(-23%)</span> · 客 <b class="">1.75</b><span class="sub">(-10%)</span> · 大3.5 <b class="">1.82</b> / 小 <b class="">1.62</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>小 4.5 <b class="">1.25</b><span class="sub">（公允 1.37，-9%）</span> · 讓分1:0 客（科莫） <b class="">1.24</b><span class="sub">（公允 1.36，-9%）</span></span></div>        <div><span>預期進球</span><span>1.61 – 1.81</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.78</b> · 和 <b>4.46</b> · 客 <b>1.95</b> · 大3.5 <b>2.19</b> / 小 <b>1.84</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">2.65</b><span class="sub">(-30%)</span> · 和 <b class="">3.25</b><span class="sub">(-27%)</span> · 客 <b class="">1.95</b><span class="sub">(-0%)</span> · 大3.5 <b class="">2.0</b> / 小 <b class="">1.48</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>科莫 大 1.5 <b class="">1.62</b><span class="sub">（公允 1.65，-2%）</span> · 大 2.5 <b class="">1.42</b><span class="sub">（公允 1.48，-4%）</span></span></div>        <div><span>預期進球</span><span>1.61 – 1.81</span></div>
         <div><span>最可能比分</span><span>1-1（10%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">66%</span></div>
         <div><span>攻／守排名</span><span>28/89 vs 40/24 <span class="sub">(共136)</span></span></div>
@@ -704,7 +726,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.8</b> · 和 <b>4.22</b> · 客 <b>2.0</b> · 大3.5 <b>2.18</b> / 小 <b>1.84</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">2.9</b><span class="sub">(-24%)</span> · 和 <b class="">3.35</b><span class="sub">(-21%)</span> · 客 <b class="">1.8</b><span class="sub">(-10%)</span> · 大3.5 <b class="">1.85</b> / 小 <b class="">1.6</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分1:0 客（皇家馬德里） <b class="">1.25</b><span class="sub">（公允 1.36，-8%）</span> · 小 4.5 <b class="">1.23</b><span class="sub">（公允 1.37，-10%）</span></span></div>        <div><span>預期進球</span><span>1.12 – 1.29</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.8</b> · 和 <b>4.22</b> · 客 <b>2.0</b> · 大3.5 <b>2.18</b> / 小 <b>1.84</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">2.95</b><span class="sub">(-22%)</span> · 和 <b class="">3.35</b><span class="sub">(-21%)</span> · 客 <b class="">1.75</b><span class="sub">(-12%)</span> · 大3.5 <b class="">1.85</b> / 小 <b class="">1.6</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分1:0 客（皇家馬德里） <b class="">1.24</b><span class="sub">（公允 1.36，-9%）</span> · 小 4.5 <b class="">1.23</b><span class="sub">（公允 1.37，-10%）</span></span></div>        <div><span>預期進球</span><span>1.12 – 1.29</span></div>
         <div><span>最可能比分</span><span>1-1（14%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">43%</span></div>
         <div><span>攻／守排名</span><span>37/13 vs 9/11 <span class="sub">(共136)</span></span></div>
@@ -741,7 +763,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.23</b> · 和 <b>4.27</b> · 客 <b>3.15</b> · 大3.5 <b>2.21</b> / 小 <b>1.82</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">1.95</b><span class="sub">(-13%)</span> · 和 <b class="">3.3</b><span class="sub">(-23%)</span> · 客 <b class="">2.65</b><span class="sub">(-16%)</span> · 大3.5 <b class="">1.86</b> / 小 <b class="">1.58</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（巴黎聖日耳曼） <b class="">1.2</b><span class="sub">（公允 1.27，-6%）</span> · 大 2.5 <b class="">1.35</b><span class="sub">（公允 1.49，-10%）</span></span></div>        <div><span>預期進球</span><span>2.9 – 0.67</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.23</b> · 和 <b>4.27</b> · 客 <b>3.15</b> · 大3.5 <b>2.21</b> / 小 <b>1.82</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">1.8</b><span class="sub">(-19%)</span> · 和 <b class="">3.4</b><span class="sub">(-20%)</span> · 客 <b class="">2.8</b><span class="sub">(-11%)</span> · 大3.5 <b class="">1.82</b> / 小 <b class="">1.62</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>小 4.5 <b class="">1.25</b><span class="sub">（公允 1.36，-8%）</span> · 讓分1:0 客（巴黎聖日耳曼） <b class="">1.65</b><span class="sub">（公允 1.81，-9%）</span></span></div>        <div><span>預期進球</span><span>2.9 – 0.67</span></div>
         <div><span>最可能比分</span><span>2-0（12%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">69%</span></div>
         <div><span>攻／守排名</span><span>3/4 vs 43/39 <span class="sub">(共136)</span></span></div>
@@ -778,7 +800,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.3</b> · 和 <b>4.3</b> · 客 <b>2.15</b> · 大3.5 <b>1.96</b> / 小 <b>2.05</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">2.6</b><span class="sub">(-21%)</span> · 和 <b class="">3.45</b><span class="sub">(-20%)</span> · 客 <b class="">1.9</b><span class="sub">(-12%)</span> · 大3.5 <b class="">1.7</b> / 小 <b class="">1.73</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>大 2.5 <b class="">1.28</b><span class="sub">（公允 1.39，-8%）</span> · 讓分1:0 客（多特蒙德） <b class="">1.3</b><span class="sub">（公允 1.43，-9%）</span></span></div>        <div><span>預期進球</span><span>0.28 – 2.45</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.3</b> · 和 <b>4.3</b> · 客 <b>2.15</b> · 大3.5 <b>1.96</b> / 小 <b>2.05</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">2.5</b><span class="sub">(-24%)</span> · 和 <b class="">3.4</b><span class="sub">(-21%)</span> · 客 <b class="">1.95</b><span class="sub">(-10%)</span> · 大3.5 <b class="">1.75</b> / 小 <b class="">1.68</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分1:0 客（多特蒙德） <b class="">1.35</b><span class="sub">（公允 1.43，-6%）</span> · 大 2.5 <b class="">1.3</b><span class="sub">（公允 1.39，-7%）</span></span></div>        <div><span>預期進球</span><span>0.28 – 2.45</span></div>
         <div><span>最可能比分</span><span>0-2（20%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">51%</span></div>
         <div><span>攻／守排名</span><span>135/119 vs 31/23 <span class="sub">(共136)</span></span></div>
@@ -812,7 +834,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>1.67</b> · 和 <b>4.52</b> · 客 <b>5.52</b> · 大2.5 <b>1.67</b> / 小 <b>2.49</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">1.5</b><span class="sub">(-10%)</span> · 和 <b class="">3.5</b><span class="sub">(-23%)</span> · 客 <b class="">4.0</b><span class="sub">(-27%)</span> · 大2.5 <b class="">1.45</b> / 小 <b class="">2.07</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分1:0 和 <b class="">3.55</b><span class="sub">（公允 3.71，-4%）</span> · 讓分2:0 客（費內巴切） <b class="">1.4</b><span class="sub">（公允 1.48，-6%）</span></span></div>        <div><span>預期進球</span><span>1.33 – 1.11</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>1.67</b> · 和 <b>4.52</b> · 客 <b>5.52</b> · 大2.5 <b>1.67</b> / 小 <b>2.49</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">1.55</b><span class="sub">(-7%)</span> · 和 <b class="">3.4</b><span class="sub">(-25%)</span> · 客 <b class="">3.9</b><span class="sub">(-29%)</span> · 大2.5 <b class="">1.46</b> / 小 <b class="">2.05</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分1:0 和 <b class="">3.55</b><span class="sub">（公允 3.71，-4%）</span> · 大 1.5 <b class="">1.12</b><span class="sub">（公允 1.22，-8%）</span></span></div>        <div><span>預期進球</span><span>1.33 – 1.11</span></div>
         <div><span>最可能比分</span><span>1-1（14%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">44% <span class="market-val">/ 60%</span></span></div>
         <div><span>攻／守排名</span><span>18/27 vs 42/8 <span class="sub">(共136)</span></span></div>
@@ -846,7 +868,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.11</b> · 和 <b>3.94</b> · 客 <b>3.66</b> · 大2.5 <b>1.79</b> / 小 <b>2.27</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">1.85</b><span class="sub">(-13%)</span> · 和 <b class="">3.15</b><span class="sub">(-20%)</span> · 客 <b class="">2.95</b><span class="sub">(-19%)</span> · 大2.5 <b class="">1.56</b> / 小 <b class="">1.88</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（波圖） <b class="">1.2</b><span class="sub">（公允 1.28，-6%）</span> · 大 1.5 <b class="">1.16</b><span class="sub">（公允 1.26，-8%）</span></span></div>        <div><span>預期進球</span><span>2.06 – 0.24</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.11</b> · 和 <b>3.94</b> · 客 <b>3.66</b> · 大2.5 <b>1.79</b> / 小 <b>2.27</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">1.85</b><span class="sub">(-13%)</span> · 和 <b class="">3.15</b><span class="sub">(-20%)</span> · 客 <b class="">2.95</b><span class="sub">(-19%)</span> · 大2.5 <b class="">1.56</b> / 小 <b class="">1.88</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>讓分2:0 客（波圖） <b class="">1.2</b><span class="sub">（公允 1.28，-6%）</span> · 讓分1:0 和 <b class="">3.65</b><span class="sub">（公允 3.94，-7%）</span></span></div>        <div><span>預期進球</span><span>2.06 – 0.24</span></div>
         <div><span>最可能比分</span><span>2-0（21%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">40% <span class="market-val">/ 56%</span></span></div>
         <div><span>攻／守排名</span><span>21/30 vs 134/50 <span class="sub">(共136)</span></span></div>
@@ -880,7 +902,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.77</b> · 和 <b>3.61</b> · 客 <b>2.77</b> · 大2.5 <b>1.94</b> / 小 <b>2.07</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">2.3</b><span class="sub">(-17%)</span> · 和 <b class="">3.0</b><span class="sub">(-17%)</span> · 客 <b class="">2.3</b><span class="sub">(-17%)</span> · 大2.5 <b class="">1.66</b> / 小 <b class="">1.76</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>大 1.5 <b class="">1.2</b><span class="sub">（公允 1.3，-8%）</span> · 上半場 小 1.5 <b class="">1.36</b><span class="sub">（公允 1.49，-9%）</span></span></div>        <div><span>預期進球</span><span>0.64 – 1.41</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.77</b> · 和 <b>3.61</b> · 客 <b>2.77</b> · 大2.5 <b>1.94</b> / 小 <b>2.07</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">2.35</b><span class="sub">(-15%)</span> · 和 <b class="">2.95</b><span class="sub">(-18%)</span> · 客 <b class="">2.25</b><span class="sub">(-19%)</span> · 大2.5 <b class="">1.7</b> / 小 <b class="">1.73</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>大 1.5 <b class="">1.2</b><span class="sub">（公允 1.3，-8%）</span> · 兩隊都進球：是 <b class="">1.56</b><span class="sub">（公允 1.72，-9%）</span></span></div>        <div><span>預期進球</span><span>0.64 – 1.41</span></div>
         <div><span>最可能比分</span><span>0-1（17%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">34% <span class="market-val">/ 52%</span></span></div>
         <div><span>攻／守排名</span><span>22/115 vs 94/2 <span class="sub">(共136)</span></span></div>
@@ -914,7 +936,7 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>10.8</b> · 和 <b>6.96</b> · 客 <b>1.31</b> · 大3.5 <b>2.0</b> / 小 <b>2.0</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>主 <b class="">6.25</b><span class="sub">(-42%)</span> · 和 <b class="">4.65</b><span class="sub">(-33%)</span> · 客 <b class="">1.21</b><span class="sub">(-8%)</span> · 大3.5 <b class="">1.7</b> / 小 <b class="">1.73</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>小 4.5 <b class="">1.3</b><span class="sub">（公允 1.44，-10%）</span> · 大 2.5 <b class="">1.26</b><span class="sub">（公允 1.41，-11%）</span></span></div>        <div><span>預期進球</span><span>1.74 – 4.91</span></div>
+<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>10.8</b> · 和 <b>6.96</b> · 客 <b>1.31</b> · 大3.5 <b>2.0</b> / 小 <b>2.0</b></span></div><div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>主 <b class="">5.4</b><span class="sub">(-50%)</span> · 和 <b class="">4.45</b><span class="sub">(-36%)</span> · 客 <b class="">1.27</b><span class="sub">(-3%)</span> · 大3.5 <b class="">1.68</b> / 小 <b class="">1.75</b></span></div><div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>布拉提斯拉瓦 小 0.5 <b class="">2.28</b><span class="sub">（公允 2.35，-3%）</span> · 讓分0:1 客（斯圖加特） <b class="">1.75</b><span class="sub">（公允 1.83，-5%）</span></span></div>        <div><span>預期進球</span><span>1.74 – 4.91</span></div>
         <div><span>最可能比分</span><span>1-4（6%）</span></div>
         <div><span>大 2.5 球</span><span class="model-val">96%</span></div>
         <div><span>攻／守排名</span><span>46/136 vs 33/61 <span class="sub">(共136)</span></span></div>
@@ -939,7 +961,7 @@
       </div>
       <div class="facts">
         <div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>客 <b>2.63</b> · 主 <b>1.61</b> · 讓分 -1.5 主 <b>2.38</b> / 客 <b>1.72</b> · 大小 7.5 <b>2.04</b> / <b>1.97</b></span></div>
-<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">08:00</span></span><span>客 <b class="">2.19</b><span class="sub">(-17%)</span> · 主 <b class="">1.44</b><span class="sub">(-11%)</span> · 讓分 主 <b class="">1.9</b> / 客 <b class="">1.6</b> · 大小 <b class="">1.78</b> / <b class="">1.7</b></span></div>        <div><span>市場勝率</span><span class="market-val">客 38% · 主 62%</span></div>
+<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">20:00</span></span><span>客 <b class="">2.31</b><span class="sub">(-12%)</span> · 主 <b class="">1.4</b><span class="sub">(-13%)</span> · 讓分 主 <b class="">1.86</b> / 客 <b class="">1.63</b> · 大小 <b class="">1.81</b> / <b class="">1.67</b></span></div>        <div><span>市場勝率</span><span class="market-val">客 38% · 主 62%</span></div>
         <div><span>最佳賠率</span><span>2.58 / 1.61 <span class="sub">(23 家)</span></span></div>
         <div style="grid-column: 1 / -1"><span>T-10 G 值（主隊熱門）</span><span class="">+4.0pp → 無訊號（門檻 ±6pp）</span></div>
 <div><span>球場</span><span>UNIQLO Field at Dodger Stadium</span></div>      </div>
