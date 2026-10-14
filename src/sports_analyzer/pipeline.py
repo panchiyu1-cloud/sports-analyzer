@@ -25,7 +25,8 @@ import requests
 
 from . import budget as budget_mod
 from . import ledger as ledger_mod
-from . import review_store, tw_ledger
+from . import moves as moves_mod
+from . import notify, review_store, tw_ledger
 from .analysis import pregame, review
 from .analysis.football import build_cards
 from .analysis.mlb import build_cards as build_mlb_cards
@@ -44,6 +45,7 @@ from .config import (
     MLB_ODDS_KEY,
     MLB_REVIEWS_PATH,
     MODEL,
+    MOVES_DIR,
     ODDS_BUDGET_PATH,
     SNAPSHOT_DIR,
     TW_DIR,
@@ -59,7 +61,7 @@ from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
 from .models.implied import IDENTITY, Calibration
-from .render.cards import render_index, render_reviews_page
+from .render.cards import render_index, render_reviews_page, taipei_time
 
 log = logging.getLogger("sports_analyzer")
 
@@ -177,6 +179,15 @@ def run_football(
     _merge_previous_markets(snapshot, _latest_snapshot("football"), any_date=not markets)
     if markets != wanted:
         log.warning("football odds: wanted %s, bought %s (budget)", wanted, markets or "none")
+    taped = moves_mod.record(
+        MOVES_DIR,
+        moves_mod.intl_rows(
+            [c for comp in snapshot["competitions"] for c in comp["cards"]],
+            "football",
+            snapshot["generated_at"],
+        ),
+    )
+    log.info("line-move tape: %d international prices recorded", taped)
 
     # 5. Ledgers: add today's signals, settle anything that has finished (both ledgers).
     finished = [m for rs in results.values() for m in rs if m.is_finished]
@@ -372,6 +383,7 @@ def run_mlb(
         # A carried-over 運彩 block is re-judged against the new prices (and shown as
         # not judged when the two are hours apart: analysis/taiwan.is_fresh).
         card["t10v"] = t10_value_block(card, cfg)
+    moves_mod.record(MOVES_DIR, moves_mod.intl_rows(cards, "mlb", snapshot["generated_at"]))
     clv_updated = tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb")
     log.info(
         "mlb: %d cards with odds, %d 運彩 CLV filled",
@@ -399,7 +411,12 @@ def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | Non
                 for k, v in old["market"].items()
             }
             card["t10"] = old.get("t10")
-            card["notes"] = ["賠率為稍早快照（比賽可能已開打）"]
+            bought = (old["market"].get("h2h") or {}).get("odds_at")
+            card["notes"] = [
+                f"國際價沿用 {taipei_time(bought)} 的報價（這次沒有更新：預算不足或比賽已開打）"
+                if bought
+                else "國際價為稍早快照（這次沒有更新：預算不足或比賽已開打）"
+            ]
         if old.get("tw") and not card.get("tw"):
             card["tw"] = old["tw"]
 
@@ -416,6 +433,7 @@ def run_tw(
     """
     now = now or datetime.now(UTC)
     reports: dict[str, Any] = {}
+    new_values: list[dict[str, Any]] = []
     for src, dst in taiwan.normalize_uploads(TW_DIR):
         log.info("tw: renamed upload %s -> %s", src.relative_to(TW_DIR), dst.relative_to(TW_DIR))
     calib = _implied_calibration()
@@ -441,7 +459,10 @@ def run_tw(
             }
         )
         football["tw_report"] = rep
-        rep["values_added"] = tw_ledger.append_values(TW_LEDGER_PATH, cards, "football")
+        _tape(cards, "football")
+        rep["values_added"] = tw_ledger.append_values(
+            TW_LEDGER_PATH, cards, "football", added_rows=new_values
+        )
         _write_snapshot(date.fromisoformat(football["date"]), "football", football)
         reports["football"] = rep
         log.info("tw football: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
@@ -480,12 +501,25 @@ def run_tw(
             }
         )
         latest["tw_report"] = rep
-        rep["values_added"] = tw_ledger.append_values(TW_LEDGER_PATH, cards, "mlb")
+        _tape(cards, "mlb")
+        rep["values_added"] = tw_ledger.append_values(
+            TW_LEDGER_PATH, cards, "mlb", added_rows=new_values
+        )
         for snap in mlb_snaps:
             _write_snapshot(date.fromisoformat(snap["date"]), "mlb", snap)
         reports["mlb"] = rep
         log.info("tw mlb: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
+    if new_values and settings and settings.ntfy_topic:
+        tracked = moves_mod.track(moves_mod.read(MOVES_DIR), cfg)
+        notify.notify_value_bets(settings.ntfy_topic, new_values, tracked)
     return reports
+
+
+def _tape(cards: list[dict[str, Any]], sport: str) -> None:
+    """Both price sets on the cards go on the line-move tape (duplicates are dropped)."""
+    n_intl = moves_mod.record(MOVES_DIR, moves_mod.intl_rows(cards, sport))
+    n_tw = moves_mod.record(MOVES_DIR, moves_mod.tw_rows(cards, sport))
+    log.info("line-move tape %s: %d international, %d 運彩 prices recorded", sport, n_intl, n_tw)
 
 
 def _pregame_refresh(
@@ -700,6 +734,10 @@ def render_latest() -> Path:
     football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
     mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
     render_reviews_page(football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html")
+    tape = moves_mod.read(MOVES_DIR)
+    scores = {("football", str(r["match_id"])): r for r in football_reviews}
+    scores.update({("mlb", str(r["game_pk"])): r for r in mlb_reviews})
+    events = moves_mod.settle(moves_mod.tw_divergences(tape, MODEL), _final_scores(scores))
     return render_index(
         football,
         mlb,
@@ -712,7 +750,27 @@ def render_latest() -> Path:
         football_reviews=football_reviews,
         mlb_reviews=mlb_reviews,
         odds_budget=_budget_view(now.date()),
+        moves=moves_mod.track(tape, MODEL),
+        tw_moves={"events": events, "summary": moves_mod.divergence_summary(events)},
     )
+
+
+def _final_scores(
+    rows: dict[tuple[str, str], dict[str, str]],
+) -> dict[tuple[str, str], tuple[int, int]]:
+    """Final scores from the post-match review rows (football full time, MLB final)."""
+    out = {}
+    for key, r in rows.items():
+        h, a = (
+            (r.get("ft_h"), r.get("ft_a"))
+            if key[0] == "football"
+            else (r.get("final_h"), r.get("final_a"))
+        )
+        try:
+            out[key] = (int(float(h)), int(float(a)))
+        except (TypeError, ValueError):
+            continue
+    return out
 
 
 def _mlb_for_page(now: datetime) -> dict[str, Any] | None:
@@ -818,9 +876,7 @@ def main(argv: list[str] | None = None) -> int:
 
     settings = Settings.from_env()
     if args.days is not None:
-        settings = Settings(
-            settings.football_data_token, settings.odds_api_key, settings.odds_regions, args.days
-        )
+        settings = replace(settings, fixture_window_days=args.days)
     markets = (
         tuple(m.strip() for m in args.markets.split(",")) if args.markets else FOOTBALL_MARKETS
     )

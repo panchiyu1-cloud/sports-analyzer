@@ -65,9 +65,15 @@ def write(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 def append_values(
-    path: Path, cards: list[dict[str, Any]], sport: str, competition_of: Any = None
+    path: Path,
+    cards: list[dict[str, Any]],
+    sport: str,
+    competition_of: Any = None,
+    added_rows: list[dict[str, Any]] | None = None,
 ) -> int:
-    """Record every value bet on the cards; an existing id keeps its first (earliest) price."""
+    """Record every value bet on the cards; an existing id keeps its first (earliest) price.
+
+    `added_rows`, when given, receives the rows this call added (for notifications)."""
     rows = read(path)
     existing = {r["id"] for r in rows}
     added = 0
@@ -103,6 +109,8 @@ def append_values(
                     "status": PENDING,
                 }
             )
+            if added_rows is not None:
+                added_rows.append(rows[-1])
             existing.add(vid)
             added += 1
     write(path, rows)

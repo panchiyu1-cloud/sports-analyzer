@@ -78,6 +78,7 @@ class FootballPipelineSmokeTests(unittest.TestCase):
             "TW_LEDGER_PATH": root / "tw_ledger.csv",
             "ODDS_BUDGET_PATH": root / "odds_budget.json",
             "IMPLIED_CALIBRATION_PATH": root / "implied_calibration.json",
+            "MOVES_DIR": root / "moves",
         }
         self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
         self.patches += [
@@ -97,6 +98,8 @@ class FootballPipelineSmokeTests(unittest.TestCase):
     def test_buys_h2h_and_totals_and_records_the_budget(self):
         snap = pipeline.run_football(self.settings, date(2026, 10, 16))
         self.assertEqual(FakeOdds.calls, [("soccer_epl", ("h2h", "totals"))])
+        taped = pipeline.moves_mod.read(self.paths["MOVES_DIR"])
+        self.assertTrue(taped and all(r["source"] == "intl" for r in taped))
         self.assertEqual(snap["odds_markets"], ["h2h", "totals"])
         self.assertEqual(snap["credits_remaining"], 398)
         state = budget.load(self.paths["ODDS_BUDGET_PATH"], date(2026, 10, 16))
@@ -184,9 +187,20 @@ class PregameRefreshSmokeTests(unittest.TestCase):
             "TW_LEDGER_PATH": root / "tw_ledger.csv",
             "ODDS_BUDGET_PATH": root / "odds_budget.json",
             "IMPLIED_CALIBRATION_PATH": root / "implied_calibration.json",
+            "MOVES_DIR": root / "moves",
         }
         self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
         self.patches.append(mock.patch.object(pipeline, "OddsClient", FakeMlbOdds))
+        self.sent: list[tuple[str, str, str]] = []
+        self.patches.append(
+            mock.patch.object(
+                pipeline.notify,
+                "send",
+                lambda topic, title, body, session=None: (
+                    self.sent.append((topic, title, body)) or True
+                ),
+            )
+        )
         for p in self.patches:
             p.start()
         FakeMlbOdds.calls = []
@@ -222,7 +236,7 @@ class PregameRefreshSmokeTests(unittest.TestCase):
         upload.write_text(
             (FIXTURES / "tw_games.json").read_text(encoding="utf-8"), encoding="utf-8"
         )
-        self.settings = Settings("token", "key")
+        self.settings = Settings("token", "key", ntfy_topic="test-topic")
 
     def tearDown(self):
         for p in self.patches:
@@ -263,6 +277,14 @@ class PregameRefreshSmokeTests(unittest.TestCase):
         rows = pipeline.tw_ledger.read(self.paths["TW_LEDGER_PATH"])
         self.assertEqual([(r["sport"], r["selection_key"]) for r in rows], [("mlb", "spread_home")])
         self.assertEqual(rows[0]["clv"], "")
+        # The new value bet went to the phone, once.
+        self.assertEqual(len(self.sent), 1)
+        self.assertEqual(self.sent[0][0], "test-topic")
+        self.assertIn("運彩價值注", self.sent[0][1])
+        # Both price sets are on the tape: the evening consensus, the fresh one, 運彩.
+        taped = pipeline.moves_mod.read(self.paths["MOVES_DIR"])
+        self.assertEqual({r["source"] for r in taped}, {"intl", "tw"})
+        self.assertIn("2026-10-13T23:21+00:00", {r["observed_at"] for r in taped})
         state = budget.load(self.paths["ODDS_BUDGET_PATH"], now.date())
         self.assertEqual((state.used, state.remaining), (103, 397))
 
@@ -275,6 +297,7 @@ class PregameRefreshSmokeTests(unittest.TestCase):
         rows = pipeline.tw_ledger.read(self.paths["TW_LEDGER_PATH"])
         self.assertEqual(len(rows), 1)
         self.assertNotEqual(rows[0]["clv"], "")
+        self.assertEqual(len(self.sent), 1)  # the same bet is not announced twice
 
         # Five minutes after that the prices are fresh: nothing is bought.
         pipeline.run_tw(settings=self.settings, now=datetime(2026, 10, 13, 23, 51, tzinfo=UTC))

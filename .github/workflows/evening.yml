@@ -23,6 +23,7 @@ jobs:
     env:
       FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}  # optional: phone notifications of new value bets
       PYTHONPATH: src
     steps:
       - uses: actions/checkout@v4
@@ -50,4 +51,4 @@ jobs:
         run: python -m sports_analyzer.pipeline review
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare" data/snapshots data/ledger.csv data/tw_ledger.csv data/odds_budget.json data/tw data/reviews docs/index.html docs/reviews.html
+          bash scripts/commit_generated.sh "chore(evening): $(date -u +%Y-%m-%d) h2h snapshot + 運彩 compare" data/snapshots data/ledger.csv data/tw_ledger.csv data/moves data/odds_budget.json data/tw data/reviews docs/index.html docs/reviews.html

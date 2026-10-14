@@ -43,8 +43,8 @@ def upload_is_recent(captured_at: datetime | None, now: datetime) -> bool:
 def due_cards(
     cards: Iterable[dict[str, Any]], now: datetime, cfg: ModelConfig
 ) -> list[dict[str, Any]]:
-    """Cards starting within the window whose match-winner price is missing, carried
-    over, or older than the minimum age."""
+    """Cards starting within the window whose match-winner price is missing, has no
+    purchase time, or is older than the minimum age."""
     window_end = now + timedelta(hours=cfg.pregame_window_hours)
     min_age = timedelta(minutes=cfg.pregame_min_age_minutes)
     out = []
@@ -54,7 +54,8 @@ def due_cards(
             continue
         h2h = (card.get("market") or {}).get("h2h")
         bought = fair_time(h2h)
-        if h2h and not h2h.get("stale") and bought is not None and now - bought < min_age:
+        # A carried-over block keeps its purchase time, so its age is known either way.
+        if h2h and bought is not None and now - bought < min_age:
             continue
         out.append(card)
     return out

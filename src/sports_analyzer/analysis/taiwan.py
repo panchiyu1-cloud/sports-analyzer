@@ -82,14 +82,18 @@ def is_fresh(
 ) -> bool:
     """Can a 運彩 price captured at `captured_at` be judged against this consensus block?
 
-    Not when the block was carried over from an earlier snapshot ("stale"), nor when it
-    was bought more than `max_price_gap_minutes` away from the 運彩 capture. Without a
-    time on either side (snapshots made before the stamps existed) it is judged as before.
+    Only when the block was bought within `max_price_gap_minutes` of the 運彩 capture.
+    A block carried over from an earlier run ("stale") keeps its own purchase time, so
+    the time decides (an evening run that could not afford MLB odds carries prices from
+    an hour ago, which are fine). A carried block without a time is never fresh; a fresh
+    one without a time (snapshots made before the stamps existed) is judged as before.
     """
-    if not block or block.get("stale"):
+    if not block:
         return False
     bought = fair_time(block)
-    if bought is None or captured_at is None:
+    if bought is None:
+        return not block.get("stale")
+    if captured_at is None:
         return True
     return abs((captured_at - bought).total_seconds()) <= cfg.max_price_gap_minutes * 60
 

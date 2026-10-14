@@ -7,6 +7,16 @@
 <meta name="description" content="每日自動更新：模型勝率 vs 市場賠率">
 {% include "_style.html.j2" %}
 {% import "_review.html.j2" as rv %}
+{% macro move_lines(mv) %}
+{% set h2h = mv.sides|selectattr('market', 'equalto', 'h2h')|list %}
+{% if h2h %}
+<div style="grid-column: 1 / -1"><span>國際走勢 <span class="sub">{{ mv.first_at|tpe }} 起</span>{% if mv.big %} <span class="chip warn">大單</span>{% endif %}</span><span>{% for e in h2h %}{{ {'home': '主', 'draw': '和', 'away': '客'}[e.side] }} {{ '%.0f'|format(e.first*100) }}→{{ '%.0f'|format(e.last*100) }}%<span class="sub {{ 'pos' if e.big and e.move > 0 else '' }}">({{ '%+.1f'|format(e.move*100) }})</span>{% if not loop.last %} · {% endif %}{% endfor %}</span></div>
+{% set tws = h2h|selectattr('tw_move', 'ne', none)|list %}
+{% if tws %}
+<div style="grid-column: 1 / -1"><span>運彩走勢 <span class="sub">{{ tws[0].tw_first_at|tpe }} 起</span></span><span>{% for e in tws %}{{ {'home': '主', 'draw': '和', 'away': '客'}[e.side] }} {{ e.tw_first_price }}→{{ e.tw_last_price }}{% if e.follow is not none %}<span class="sub">（跟了 {{ '%.0f'|format(e.follow*100) }}%）</span>{% endif %}{% if not loop.last %} · {% endif %}{% endfor %}</span></div>
+{% endif %}
+{% endif %}
+{% endmacro %}
 </head>
 <body>
 <div class="wrap">
@@ -50,6 +60,53 @@
   {% endif %}
   {% else %}
   <p class="none">尚未收到運彩賠率上傳（手機捷徑設定好後會自動出現）。</p>
+  {% endif %}
+</section>
+
+<section id="big-moves">
+  <h2>大單追蹤 <span class="count">國際盤移動 ≥ {{ (cfg.big_move_threshold*100)|round|int }}pp · {{ big_moves|length }} 個</span></h2>
+  <p class="howto">大單：國際盤從我們第一次看到這場比賽到現在，某一邊的機率移動超過 {{ (cfg.big_move_threshold*100)|round|int }}pp。2019–2027 年 22 個聯賽的資料裡，這種移動多半是對的（被推升 ≥ 8pp 的一邊，開盤 43%、收盤 53%、實際贏 55%）；能賺的是在價格還沒跟上的地方買到它，所以要看運彩有沒有跟、運彩現在的 EV。</p>
+  {% if big_moves %}
+  <div class="scroll"><table>
+    <tr><th>開賽</th><th>比賽</th><th>大單方向</th><th>國際盤</th><th>運彩賠率</th><th>運彩 EV</th></tr>
+    {% for r in big_moves %}
+    {% set thr = cfg.mlb_value_threshold if r.sport == 'mlb' else cfg.value_threshold %}
+    <tr>
+      <td>{{ r.kickoff_local }}</td><td>{{ r.match }}</td><td><b>{{ r.label }}</b></td>
+      <td>{{ '%.0f'|format(r.first*100) }}% → {{ '%.0f'|format(r.last*100) }}% <span class="pos">({{ '%+.1f'|format(r.move*100) }}pp)</span><div class="sub">{{ r.first_at|tpe }} → {{ r.last_at|tpe }}</div></td>
+      <td>{% if r.tw_first_price %}{{ r.tw_first_price }} → {{ r.tw_last_price }}{% if r.follow is not none %}<div class="sub">跟了 {{ '%.0f'|format(r.follow*100) }}%</div>{% endif %}{% else %}—{% endif %}</td>
+      <td class="{{ 'pos' if r.tw_ev is not none and r.tw_ev >= thr and r.tw_fresh else ('neg' if r.tw_ev is not none and r.tw_ev < 0 else '') }}">{{ '%+.1f%%'|format(r.tw_ev*100) if r.tw_ev is not none else '—' }}{% if r.tw_ev is not none and not r.tw_fresh %}<div class="sub">價格時間差太大</div>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <p class="none">目前沒有國際盤大幅移動的比賽。</p>
+  {% endif %}
+</section>
+
+<section id="tw-moves">
+  {% set s = tw_moves_summary %}
+  <h2>運彩大戶 <span class="count">運彩自己動、國際盤沒動 · {{ s.events or 0 }} 次</span></h2>
+  <p class="howto">兩次運彩上傳之間，運彩把某一邊的價格調低（去水後機率多 {{ (cfg.tw_divergence_threshold*100)|round|int }}pp 以上），而同一段時間國際盤沒有同樣的移動，代表錢是押在運彩上。比賽結束後對照結果：這些邊如果贏得比國際盤當時預期的多，運彩的大戶就有市場沒有的資訊。單場不算數，累積幾十次才看得出來。</p>
+  {% if s.events %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ s.settled }}</b><span>已有結果</span></div>
+    <div class="kpi"><b>{{ s.hits }} / {{ s.expected }}</b><span>實際命中 / 國際盤預期</span></div>
+    <div class="kpi"><b>{{ '%+.1f'|format(s.z) if s.z is not none else '—' }}</b><span>z 值（> 2 才算有訊號）</span></div>
+  </div>
+  <div class="scroll"><table>
+    <tr><th>運彩調價</th><th>比賽</th><th>錢押向</th><th>運彩 vs 國際</th><th>國際預期</th><th>結果</th></tr>
+    {% for e in tw_events %}
+    <tr>
+      <td>{{ e.to_at|tpe }}</td><td>{{ e.match }}</td><td><b>{{ e.label }}</b>{% if e.tw_price %} <span class="sub">@ {{ e.tw_price }}</span>{% endif %}</td>
+      <td>{{ '%+.1f'|format(e.tw_move*100) }} vs {{ '%+.1f'|format(e.intl_move*100) }}pp</td>
+      <td>{{ '%.0f%%'|format(e.expected*100) }}</td>
+      <td class="{{ 'pos' if e.result == 'win' else ('neg' if e.result == 'loss' else '') }}">{{ {'win': '贏', 'loss': '輸', 'push': '走盤'}.get(e.result, '待賽') }}{% if e.score %} <span class="sub">{{ e.score }}</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}
+  <p class="none">還沒有記錄到運彩單獨移動的情況。每次上傳運彩都會自動比對。</p>
   {% endif %}
 </section>
 
@@ -141,6 +198,7 @@
         {% if c.market and c.market.h2h %}<div style="grid-column: 1 / -1"><span>公允賠率（國際{% if c.market.h2h.odds_at %} {{ c.market.h2h.odds_at|tpe }}{% endif %}）</span><span>主 <b>{{ c.market.h2h.home.fair_odds }}</b> · 和 <b>{{ c.market.h2h.draw.fair_odds }}</b> · 客 <b>{{ c.market.h2h.away.fair_odds }}</b>{% if c.market.totals %} · 大{{ c.market.totals.line }} <b>{{ c.market.totals.over.fair_odds }}</b> / 小 <b>{{ c.market.totals.under.fair_odds }}</b>{% endif %}</span></div>{% endif %}
         {% if c.tw and c.tw.h2h %}<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">{{ c.tw.captured_at[11:16] if c.tw.captured_at else '' }}</span></span><span>{% for side, lab in (('home','主'),('draw','和'),('away','客')) %}{% if c.tw.h2h[side] %}{{ lab }} <b class="{{ 'pos' if c.tw.h2h[side].ev >= cfg.value_threshold else '' }}">{{ c.tw.h2h[side].price }}</b><span class="sub">({{ '%+.0f%%'|format(c.tw.h2h[side].ev*100) }})</span>{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}{% if c.tw.totals %} · 大{{ c.tw.totals.line }} <b class="{{ 'pos' if c.tw.totals.over and c.tw.totals.over.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.over.price if c.tw.totals.over else '—' }}</b> / 小 <b class="{{ 'pos' if c.tw.totals.under and c.tw.totals.under.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.under.price if c.tw.totals.under else '—' }}</b>{% endif %}</span></div>{% endif %}
         {% if c.tw and c.tw.derived %}<div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>{% for d in c.tw.derived[:2] %}{{ d.selection }} <b class="{{ 'pos' if d.ev >= cfg.derived_value_threshold else '' }}">{{ d.tw_price }}</b><span class="sub">（公允 {{ d.fair_odds }}，{{ '%+.0f%%'|format(d.ev*100) }}）</span>{% if not loop.last %} · {% endif %}{% endfor %}</span></div>{% endif %}
+        {% if c.moves %}{{ move_lines(c.moves) }}{% endif %}
         {% if c.tw and c.tw.fair_fresh is defined and not c.tw.fair_fresh %}<div class="note" style="grid-column: 1 / -1">國際價（{{ c.tw.fair_at|tpe }}）和運彩價（{{ c.tw.captured_at|tpe }}）相隔超過 {{ (cfg.max_price_gap_minutes / 60)|round|int }} 小時，這次不判斷價值，等下一次更新。</div>{% endif %}
         <div><span>預期進球</span><span>{{ c.model.lambda_home }} – {{ c.model.mu_away }}</span></div>
         <div><span>最可能比分</span><span>{{ c.model.most_likely }}</span></div>
@@ -192,6 +250,7 @@
         {% if g.tw and g.tw.totals and g.tw.totals.over %}<div style="grid-column: 1 / -1"><span>運彩大小 {{ g.tw.totals.line }}</span><span>大 <b class="{{ 'pos' if g.tw.totals.over.ev >= cfg.mlb_value_threshold else '' }}">{{ g.tw.totals.over.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.totals.over.ev*100) }})</span>{% if g.tw.totals.under %} · 小 <b class="{{ 'pos' if g.tw.totals.under.ev >= cfg.mlb_value_threshold else '' }}">{{ g.tw.totals.under.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.totals.under.ev*100) }})</span>{% endif %}</span></div>{% endif %}
         <div><span>市場勝率</span><span class="market-val">客 {{ '%.0f%%'|format(g.market.h2h.away.fair*100) }} · 主 {{ '%.0f%%'|format(g.market.h2h.home.fair*100) }}</span></div>
         <div><span>最佳賠率</span><span>{{ g.market.h2h.away.best }} / {{ g.market.h2h.home.best }} <span class="sub">({{ g.market.books }} 家)</span></span></div>
+        {% if g.moves %}{{ move_lines(g.moves) }}{% endif %}
         {% if g.venue %}<div><span>球場</span><span>{{ g.venue }}</span></div>{% endif %}
       </div>
       {% set t = g.t10v %}

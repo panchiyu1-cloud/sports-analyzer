@@ -23,9 +23,13 @@ REVIEW_DIR = DATA_DIR / "reviews"
 FOOTBALL_REVIEWS_PATH = REVIEW_DIR / "football.csv"
 MLB_REVIEWS_PATH = REVIEW_DIR / "mlb.csv"
 ODDS_BUDGET_PATH = DATA_DIR / "odds_budget.json"
+# Line-move tape (moves.py): every international and 運彩 price seen, per month.
+MOVES_DIR = DATA_DIR / "moves"
 # Written by scripts/validate_implied.py; per-market corrections for the implied model.
 IMPLIED_CALIBRATION_PATH = DATA_DIR / "implied_calibration.json"
 DOCS_DIR = ROOT / "docs"
+# Where GitHub Pages serves docs/ (notifications open it).
+PAGE_URL = "https://panchiyu1-cloud.github.io/sports-analyzer/"
 
 LOCAL_TZ = ZoneInfo("Asia/Taipei")
 
@@ -88,6 +92,14 @@ class ModelConfig:
     # bought international prices (if the last ones are older than the minimum age).
     pregame_window_hours: float = 3.0
     pregame_min_age_minutes: int = 20
+    # 大單: a side's international probability moved this much since we first saw the
+    # match. 2019-2027, 22 leagues: such moves were right (steamed sides won 55% after
+    # opening at 43%), and backing them at a price that had not moved returned +7%;
+    # moves of 5-8pp did not beat 運彩's margin.
+    big_move_threshold: float = 0.08
+    # 運彩-only move: between two uploads 運彩's own (de-vigged) price moved this much
+    # more than the international market's over the same times.
+    tw_divergence_threshold: float = 0.02
     # Markets priced through the market-implied goal model carry its error too
     # (validated: ~0.7pp on Asian handicaps, <=0.5pp mean bias after calibration,
     # 1-3pp in the worst probability band), so they need a larger margin of safety.
@@ -120,6 +132,9 @@ class Settings:
     odds_regions: str = "eu"
     fixture_window_days: int = 2
     offline: bool = False
+    # ntfy.sh topic for phone notifications of new value bets (optional). The topic
+    # name is the only key to the channel, so it is kept as a secret like the tokens.
+    ntfy_topic: str | None = None
 
     @classmethod
     def from_env(cls, offline: bool = False) -> Settings:
@@ -130,6 +145,7 @@ class Settings:
             odds_regions=os.environ.get("ODDS_REGIONS", "eu"),
             fixture_window_days=int(os.environ.get("FIXTURE_WINDOW_DAYS", "2")),
             offline=offline,
+            ntfy_topic=os.environ.get("NTFY_TOPIC") or None,
         )
         if not offline:
             settings.require()

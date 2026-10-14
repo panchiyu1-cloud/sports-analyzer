@@ -53,8 +53,13 @@ def render_index(
     football_reviews: list[Mapping[str, Any]] | None = None,
     mlb_reviews: list[Mapping[str, Any]] | None = None,
     odds_budget: Mapping[str, Any] | None = None,
+    moves: Mapping[tuple[str, str], Mapping[str, Any]] | None = None,
+    tw_moves: Mapping[str, Any] | None = None,
 ) -> Path:
+    """`moves` is moves.track() of the line-move tape; `tw_moves` holds the settled
+    運彩-only moves and their summary (moves.tw_divergences / divergence_summary)."""
     template = _env().get_template("index.html.j2")
+    moves = moves or {}
 
     # Matches that have kicked off leave the "upcoming" part of the page; once a result
     # is in they reappear under 賽後檢討 with the pre-match numbers next to the score.
@@ -65,7 +70,11 @@ def render_index(
     if football:
         credits = football.get("credits_remaining")
         for comp in football.get("competitions", []):
-            upcoming = [c for c in comp.get("cards", []) if not _started(c, generated_at)]
+            upcoming = [
+                {**c, "moves": moves.get(("football", str(c.get("match_id"))))}
+                for c in comp.get("cards", [])
+                if not _started(c, generated_at)
+            ]
             started.extend(c for c in comp.get("cards", []) if _started(c, generated_at))
             competitions.append({**comp, "cards": upcoming})
             signals.extend(s for s in comp.get("signals", []) if not _started(s, generated_at))
@@ -79,7 +88,14 @@ def render_index(
     signals.sort(key=lambda s: s.get("kickoff_utc", ""))
     if mlb:
         started.extend(g for g in mlb.get("games", []) if _started(g, generated_at))
-        mlb = {**mlb, "games": [g for g in mlb.get("games", []) if not _started(g, generated_at)]}
+        mlb = {
+            **mlb,
+            "games": [
+                {**g, "moves": moves.get(("mlb", str(g.get("game_pk"))))}
+                for g in mlb.get("games", [])
+                if not _started(g, generated_at)
+            ],
+        }
     reviews = review_views(football_reviews or [], mlb_reviews or [], generated_at)
     reviewed = {r["row"].get("match_id") for r in reviews["football"]} | {
         r["row"].get("game_pk") for r in reviews["mlb"]
@@ -119,6 +135,10 @@ def render_index(
                     }
                 )
     tw_values.sort(key=lambda v: (-v["ev"], v["kickoff_utc"]))
+    big_moves = big_move_rows(
+        [("football", c) for comp in competitions for c in comp["cards"]]
+        + [("mlb", g) for g in (mlb or {}).get("games", [])]
+    )
 
     html = template.render(
         tw_values=tw_values,
@@ -136,10 +156,68 @@ def render_index(
         reviews=reviews,
         waiting=waiting,
         odds_budget=odds_budget,
+        big_moves=big_moves,
+        tw_events=[
+            {
+                **e,
+                "label": side_label(
+                    e["sport"], e["market"], e["side"], e["line"], e["home"], e["away"]
+                ),
+                "match": f"{e['home']} vs {e['away']}"
+                if e["sport"] == "football"
+                else f"{e['away']} @ {e['home']}",
+            }
+            for e in reversed((tw_moves or {}).get("events", []))
+        ][:10],
+        tw_moves_summary=(tw_moves or {}).get("summary") or {},
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")
     return out_path
+
+
+def side_label(sport: str, market: str, side: str, line: str, home: str, away: str) -> str:
+    """'主勝 Arsenal FC', '大 2.5', 'Los Angeles Dodgers -1.5' ..."""
+    if market == "h2h":
+        if sport == "mlb":
+            return f"{home if side == 'home' else away} 不讓分"
+        return {"home": f"主勝 {home}", "draw": "和局", "away": f"客勝 {away}"}.get(side, side)
+    if market == "totals":
+        return f"{'大' if side == 'over' else '小'} {line}"
+    own = float(line) if side == "home" else -float(line)
+    return f"{home if side == 'home' else away} {own:+g}"
+
+
+def big_move_rows(cards: list[tuple[str, Mapping[str, Any]]]) -> list[dict[str, Any]]:
+    """One row per side whose international price moved by the 大單 threshold, with what
+    運彩 did over the same time and the EV of its current price for that side."""
+    rows = []
+    for sport, card in cards:
+        mv = card.get("moves") or {}
+        for e in mv.get("sides", []):
+            if not e.get("big") or e["move"] <= 0:
+                continue  # one row per move: the side the money went to
+            tw_block = (card.get("tw") or {}).get(e["market"]) or {}
+            tw_side = tw_block.get(e["side"]) if isinstance(tw_block, dict) else None
+            same_line = e["market"] == "h2h" or str(tw_block.get("line", "")) in (e["line"], "")
+            rows.append(
+                {
+                    **e,
+                    "sport": sport,
+                    "kickoff_utc": card.get("kickoff_utc", ""),
+                    "kickoff_local": card.get("kickoff_local") or card.get("local"),
+                    "match": f"{card['home']} vs {card['away']}"
+                    if sport == "football"
+                    else f"{card['away']} @ {card['home']}",
+                    "label": side_label(
+                        sport, e["market"], e["side"], e["line"], card["home"], card["away"]
+                    ),
+                    "tw_ev": tw_side.get("ev") if tw_side and same_line else None,
+                    "tw_fresh": (card.get("tw") or {}).get("fair_fresh", True),
+                }
+            )
+    rows.sort(key=lambda r: r["kickoff_utc"])
+    return rows
 
 
 def render_reviews_page(

@@ -211,3 +211,27 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   also use the unstarted games of the snapshot before it, and write both back.
 - MLB review rows record the last pre-game t10v; only a value bet is graded (its own
   team + handicap, units at 運彩's price); "不下" is never judged on the score.
+
+## 大手追蹤 (2026-10-14) — the line-move tape
+- Study (scratch, 22 leagues 2019-2027 from the `odds-history` branch built by the manual
+  "Football odds history" workflow; MLB from `t10-data`): early->close moves carry real
+  information (closing log-loss better in every tier; 2.4x stronger in the smaller
+  countries' top flights), sides steamed >= 8pp opened at 43%, closed at 53%, won 55%. At
+  the close almost nothing is left (pre-registered signals did not hold on the 2024/25+
+  hold-out; MLB nothing). Only a price that has not moved yet pays: moves >= 8pp backed
+  at a stale 運彩-like price returned about +7%, 5-8pp did not beat 運彩's margin.
+- `moves.py` + data/moves/YYYY-MM.csv (generated, committed): every international fair
+  price (run_football, run_mlb, pre-game refresh; stale blocks skipped) and every 運彩
+  price with its own de-vigged probability (run_tw), deduplicated on time + key.
+  `scripts/backfill_moves.py` rebuilds it from the snapshot history.
+- `moves.track`: first-seen vs latest international probability per side (大單 at
+  `big_move_threshold`, 8pp) and 運彩's first/last price with `follow` = 運彩's move over
+  the international move across 運彩's own span (prices within the freshness window).
+- `moves.tw_divergences`: between two 運彩 uploads, 運彩 moved a side >= 2pp more than the
+  market did (international prices needed near both uploads): 運彩's own big bettors.
+  Settled at render time from the review CSVs; the page compares hits with the
+  international probability at the time (z > 2 before believing anything).
+- Freshness (`analysis/taiwan.is_fresh`) goes by a block's own `odds_at`, also for
+  carried-over "stale" blocks; only an unstamped carried block is never fresh.
+- `notify.py`: new 運彩 value bets go to the phone through ntfy.sh when the NTFY_TOPIC
+  secret is set (JSON API; the topic is a secret: never log it). One message per bet id.

@@ -96,11 +96,24 @@ class CompareTests(unittest.TestCase):
         tw = compare.compare(card, self.games[1], soon, self.cfg)
         self.assertEqual([v["selection_key"] for v in tw["values"]], ["home", "hcp3_away"])
         self.assertTrue(tw["fair_fresh"])
-        # A block carried over from an earlier snapshot is never fresh.
-        card["market"]["h2h"]["stale"] = True
-        self.assertFalse(compare.is_fresh(card["market"]["h2h"], soon, self.cfg))
-        tw = compare.compare(card, self.games[1], soon, self.cfg)
-        self.assertEqual(tw["values"], [])  # the derived 讓分 needs a fresh 1X2 too
+
+    def test_carried_block_is_judged_by_its_own_time(self):
+        # Regression (2026-10-14): the 21:05 evening run could not afford MLB odds and
+        # carried the 20:53 prices over, flagged "stale"; the 20:00 運彩 price was then
+        # shown as "不判斷" although the two were 53 minutes apart.
+        card = football_card()
+        for key in ("h2h", "totals"):
+            card["market"][key].update({"odds_at": "2026-10-16T12:53+00:00", "stale": True})
+        upload = datetime(2026, 10, 16, 20, 0, tzinfo=LOCAL_TZ)
+        self.assertTrue(compare.is_fresh(card["market"]["h2h"], upload, self.cfg))
+        tw = compare.compare(card, self.games[1], upload, self.cfg)
+        self.assertEqual([v["selection_key"] for v in tw["values"]], ["home", "hcp3_away"])
+        # Carried over with no purchase time at all: its age is unknown, never judged.
+        for key in ("h2h", "totals"):
+            del card["market"][key]["odds_at"]
+        self.assertFalse(compare.is_fresh(card["market"]["h2h"], upload, self.cfg))
+        tw = compare.compare(card, self.games[1], upload, self.cfg)
+        self.assertEqual(tw["values"], [])  # the derived 讓分 needs a judged 1X2 too
 
     def test_swapped_listing_names_the_team_to_pick_on_tw(self):
         # Regression (review 2026-10-14): when 運彩 lists our away team as its home, the
