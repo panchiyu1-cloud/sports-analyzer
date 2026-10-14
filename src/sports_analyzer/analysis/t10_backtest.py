@@ -15,11 +15,19 @@ if not, betting them only pays the bookmaker's margin.
 from __future__ import annotations
 
 import math
+import statistics
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
 from ..models.market import devig, g_value
+
+# About 3% of the dataset's "closing" lines are in-play prices scraped after first
+# pitch: closes that sit >10pp from the opening consensus moved toward the eventual
+# winner 70% of the time. Honest closes of different books sit within 2pp of each
+# other 87% of the time, so a book >4pp from the others is not a pre-game price.
+CLOSE_TOL = 0.04
+MAX_MOVE = 0.10
 
 
 def american_to_decimal(odds: Any) -> float | None:
@@ -31,6 +39,27 @@ def american_to_decimal(odds: Any) -> float | None:
     if math.isnan(a) or -100 < a < 100:
         return None
     return 1 + a / 100 if a > 0 else 1 + 100 / abs(a)
+
+
+def trusted_books(
+    probs: Mapping[str, float],
+    anchor: float | None = None,
+    tol: float = CLOSE_TOL,
+    max_move: float = MAX_MOVE,
+    min_books: int = 3,
+) -> set[str]:
+    """Books whose price can be trusted as pre-game: within `tol` of the median of all
+    books and, when an `anchor` (the opening consensus) is given, within `max_move`
+    of it. Empty when fewer than `min_books` pass: the game cannot be verified."""
+    if len(probs) < min_books:
+        return set()
+    mid = statistics.median(probs.values())
+    keep = {
+        book
+        for book, p in probs.items()
+        if abs(p - mid) <= tol and (anchor is None or abs(p - anchor) <= max_move)
+    }
+    return keep if len(keep) >= min_books else set()
 
 
 @dataclass(frozen=True)

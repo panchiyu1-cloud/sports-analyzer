@@ -1,6 +1,12 @@
 import unittest
 
-from sports_analyzer.analysis.t10_backtest import american_to_decimal, game_g, outcome, summarise
+from sports_analyzer.analysis.t10_backtest import (
+    american_to_decimal,
+    game_g,
+    outcome,
+    summarise,
+    trusted_books,
+)
 from tests import conftest  # noqa: F401
 
 
@@ -39,6 +45,19 @@ class T10BacktestTests(unittest.TestCase):
         self.assertEqual((by_one.fav_win, by_one.fav_cover, by_one.dog_cover), (True, False, True))
         by_two = outcome(4, 6, "away")
         self.assertEqual((by_two.fav_win, by_two.fav_cover, by_two.dog_cover), (True, True, False))
+
+    def test_trusted_books_drops_in_play_closes(self):
+        # Regression: ~3% of the dataset's closing lines are in-play prices that lean
+        # toward the eventual winner. Five books agree near 0.60 (median 0.605); one
+        # closed at 0.80 -> dropped.
+        probs = {"a": 0.60, "b": 0.61, "c": 0.59, "d": 0.605, "e": 0.80}
+        self.assertEqual(trusted_books(probs, anchor=0.58), {"a", "b", "c", "d"})
+        # Every book sits 20pp from the opening consensus: the whole close is in-play.
+        self.assertEqual(trusted_books({"a": 0.80, "b": 0.81, "c": 0.79}, anchor=0.60), set())
+        # Two books cannot vouch for each other; three with one outlier leave two.
+        self.assertEqual(trusted_books({"a": 0.60, "b": 0.61}), set())
+        self.assertEqual(trusted_books({"a": 0.60, "b": 0.60, "c": 0.641}), set())
+        self.assertEqual(trusted_books({"a": 0.60, "b": 0.60, "c": 0.639}), {"a", "b", "c"})
 
     def test_summarise_hand_checked(self):
         s = summarise(

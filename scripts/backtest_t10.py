@@ -23,6 +23,7 @@ import csv
 import gzip
 import json
 import math
+import statistics
 import sys
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -34,7 +35,14 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape  # noqa: E402
 
-from sports_analyzer.analysis.t10_backtest import game_g, outcome, summarise  # noqa: E402
+from sports_analyzer.analysis.t10_backtest import (  # noqa: E402
+    american_to_decimal,
+    game_g,
+    outcome,
+    summarise,
+    trusted_books,
+)
+from sports_analyzer.models.market import devig  # noqa: E402
 
 BOOK_ORDER = ("draftkings", "fanduel", "caesars", "bet365", "betmgm", "bet_rivers_ny")
 GAME_TYPES = {"R": "例行賽", "F": "季後賽", "D": "季後賽", "L": "季後賽", "W": "季後賽"}
@@ -47,9 +55,18 @@ TW_MARGIN = 0.15
 MIN_N = 100
 
 
-def load(path: Path) -> list[dict[str, Any]]:
+def _home_prob(home: str, away: str) -> float | None:
+    h, a = american_to_decimal(home), american_to_decimal(away)
+    if h is None or a is None or h <= 1 or a <= 1:
+        return None
+    return devig([h, a], "power")[0]
+
+
+def load(path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """One record per game: the preferred book's G at close and open, the outcome,
-    and the best closing price across books for each signal's bet."""
+    and the best closing price across books for each signal's bet. Only books whose
+    close passes `trusted_books` are used (the rest are in-play prices); games that
+    cannot be verified are dropped and counted."""
     by_game: dict[tuple, list[dict[str, str]]] = defaultdict(list)
     with gzip.open(path, "rt", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
@@ -60,9 +77,21 @@ def load(path: Path) -> list[dict[str, Any]]:
             by_game[(row["date"], row["start_utc"], row["away"], row["home"])].append(row)
 
     games = []
+    quality = {"games_seen": len(by_game), "unverified": 0, "books_dropped": 0, "book_rows": 0}
+    rank = {b: i for i, b in enumerate(BOOK_ORDER)}
     for key, rows in by_game.items():
-        rank = {b: i for i, b in enumerate(BOOK_ORDER)}
-        rows.sort(key=lambda r: rank.get(r["book"], 99))
+        close_p = {r["book"]: _home_prob(r["ml_close_home"], r["ml_close_away"]) for r in rows}
+        close_p = {b: p for b, p in close_p.items() if p is not None}
+        open_p = {r["book"]: _home_prob(r["ml_open_home"], r["ml_open_away"]) for r in rows}
+        open_p = {b: p for b, p in open_p.items() if p is not None}
+        anchor = statistics.median(open_p.values()) if len(open_p) >= 2 else None
+        ok = trusted_books(close_p, anchor)
+        quality["book_rows"] += len(close_p)
+        if not ok:
+            quality["unverified"] += 1
+            continue
+        quality["books_dropped"] += len(close_p) - len(ok)
+        rows = sorted((r for r in rows if r["book"] in ok), key=lambda r: rank.get(r["book"], 99))
         priced = []
         for r in rows:
             close = game_g(
@@ -76,7 +105,17 @@ def load(path: Path) -> list[dict[str, Any]]:
                 priced.append((r, close))
         if not priced:
             continue
+        # A book's run line can be in-play on its own: same check on the cover probability.
+        fav0 = priced[0][1].favourite
+        rl_ok = trusted_books(
+            {r["book"]: g.c for r, g in priced if g.favourite == fav0}, tol=0.05, min_books=1
+        )
+        priced = [(r, g) for r, g in priced if r["book"] in rl_ok]
+        if not priced:
+            quality["unverified"] += 1
+            continue
         r, close = priced[0]
+        open_ok = trusted_books(open_p, min_books=2)
         opn = game_g(
             r["ml_open_home"],
             r["ml_open_away"],
@@ -84,6 +123,8 @@ def load(path: Path) -> list[dict[str, Any]]:
             r["rl_open_home"],
             r["rl_open_away"],
         )
+        if r["book"] not in open_ok:
+            opn = None
         mult = game_g(
             r["ml_close_home"],
             r["ml_close_away"],
@@ -111,7 +152,7 @@ def load(path: Path) -> list[dict[str, Any]]:
                 "per_book": {rr["book"]: gg for rr, gg in priced},
             }
         )
-    return games
+    return games, quality
 
 
 def fav_bets(
@@ -354,8 +395,9 @@ def _count(items: Any) -> dict[str, int]:
 
 
 def main(path: Path) -> dict[str, Any]:
-    games = load(path)
+    games, quality = load(path)
     summary = analyse(games)
+    summary["quality"] = quality
     (ROOT / "data" / "t10_backtest_summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
     )
@@ -368,7 +410,7 @@ def main(path: Path) -> dict[str, Any]:
     html = env.get_template("t10_backtest.html.j2").render(s=summary)
     (ROOT / "docs" / "t10_backtest.html").write_text(html, encoding="utf-8")
     m = summary["main"]
-    print(f"{summary['games']} games {summary['first']}..{summary['last']}")
+    print(f"{summary['games']} games {summary['first']}..{summary['last']}; data quality {quality}")
     print("FAV ML  (G>=+6pp):", m["fav"])
     print("DOG +1.5 (G<=-6pp):", m["dog"])
     print(summary["verdict"])

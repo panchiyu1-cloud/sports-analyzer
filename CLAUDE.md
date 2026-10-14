@@ -161,13 +161,24 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 - Derived value bets need EV >= 4% (first half 5%) vs 2% for direct markets.
 
 ## T-10 backtest (2026-10-14) — read before changing the baseball signal
-- scripts/backtest_t10.py on 10,968 MLB games 2021-04 .. 2025-08 (SportsBookReview closing
+- scripts/backtest_t10.py on 10,522 MLB games 2021-04 .. 2025-08 (SportsBookReview closing
   odds of six US books via ArnavSaraogi/mlb-odds-scraper; flattened CSV on the `t10-data`
   branch, built by the manual "T-10 backtest data" workflow; raw data never on main).
-- G >= +6pp favourite ML: win rate 1.6pp BELOW the closing market (z -2.1), ROI -5.2% at
-  the book's close (same as betting every favourite). G <= -6pp underdog +1.5: +0.8pp vs
-  market (z +1.0; +2.0 with multiplicative de-vig), ROI -1.8% (best price of six books
-  +0.4%), negative in 4 of 5 seasons, CLV negative when bet at the open. At 運彩's ~15%
-  margin both lose 12-15%. No threshold from 2 to 10pp and no G decile beats the market.
+- The dataset's "closing" lines include in-play prices (~3% of book rows; closes >10pp
+  from the opening consensus moved toward the eventual winner 70% of the time).
+  `analysis/t10_backtest.trusted_books` keeps a book only within 4pp of the cross-book
+  median close and 10pp of the opening median; unverifiable games (444) are dropped.
+  Any new study on this data must use it, or "best price" and hit rates leak the result.
+- G >= +6pp favourite ML: win rate 1.8pp BELOW the closing market (z -2.3), ROI -5.5% at
+  the book's close (every favourite: -5.2%), -3.9% at the best of six books. G <= -6pp
+  underdog +1.5: +0.65pp vs market (z +0.8; +2.0 with multiplicative de-vig), ROI -2.1%
+  (best price -0.6%), negative in 4 of 5 seasons, CLV negative when bet at the open. At
+  運彩's ~15% margin both lose 12-15%. No threshold from 2 to 10pp and no G decile beats
+  the market.
+- Walk-forward logistic tests (out-of-sample log-loss, consensus prices): the run line adds
+  nothing to the moneyline for the winner, the moneyline and total add nothing to the run
+  line for the cover, and the open->close move adds nothing to the close. Price-only
+  overlays have nothing left to find; an edge needs a price 運彩 sets worse than the
+  international fair price (EV), not a pattern in one book's prices.
 - Verdict: not passed (data/t10_backtest_summary.json["passed"] is false). The prompt's
   Switch zones / price guard / overlays were not tested (rules not written down).

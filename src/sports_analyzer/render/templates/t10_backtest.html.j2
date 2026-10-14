@@ -149,7 +149,9 @@
 <footer>
   資料：SportsBookReview 歷史賠率（DraftKings、FanDuel、Caesars、bet365、BetMGM、BetRivers 的開盤與收盤不讓分、讓分、大小），由
   <a href="https://github.com/ArnavSaraogi/mlb-odds-scraper">ArnavSaraogi/mlb-odds-scraper</a> 整理；只用例行賽與季後賽、讓分為 ±1.5 且由不讓分強隊讓分的比賽。
-  每場用一家莊家（DraftKings 優先）。表格裡少於 {{ s.min_n }} 場的組別只列場數，不算比率（樣本太少）。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
+  每場用一家莊家（DraftKings 優先）。表格裡少於 {{ s.min_n }} 場的組別只列場數，不算比率（樣本太少）。
+  原始資料約 3% 的「收盤」報價其實是開賽後的即時賠率（會偷看到比賽進行中的狀況），已剔除：只用和其他莊家收盤價相差 4pp 以內、且離開盤共識不超過 10pp 的報價
+  {%- if s.quality %}（剔除 {{ '{:,}'.format(s.quality.books_dropped) }} 筆報價；另有 {{ '{:,}'.format(s.quality.unverified) }} 場無法確認，不計）{% endif %}。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
 </footer>
 </div>
 </body>
