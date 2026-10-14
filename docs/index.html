@@ -67,20 +67,38 @@
   tr:last-child td { border-bottom: 0; }
   .scroll { overflow-x: auto; }
   .kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 120px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 120px; flex: 1 1 140px; }
   .kpi b { display: block; font-size: 1.2rem; }
   .kpi span { color: var(--muted); font-size: .78rem; }
   .pos { color: var(--good); } .neg { color: var(--bad); }
   footer { margin-top: 40px; color: var(--muted); font-size: .78rem; border-top: 1px solid var(--line); padding-top: 14px; }
   a { color: var(--accent); }
-</style>
-</head>
+
+  /* post-match review */
+  .score { text-align: center; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .score .sub { font-size: .72rem; font-weight: 400; }
+  .chip.good { background: var(--good); color: #fff; }
+  .chip.bad { background: var(--bad); color: #fff; }
+  .chip.warn { background: var(--market); color: #fff; }
+  .verdict-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .verdict-row .chip { margin-left: 0; font-size: .8rem; padding: 2px 10px; }
+  table.mini { border: 0; border-radius: 0; background: transparent; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { padding: 3px 6px; border-bottom: 1px dashed var(--line); }
+  table.mini tr.hit td { font-weight: 700; }
+  table.mini tr.hit td:first-child::after { content: " ✓"; color: var(--good); }
+  ul.why { margin: 0; padding-left: 1.1em; font-size: .84rem; display: flex; flex-direction: column; gap: 4px; }
+  .conclusion { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; font-size: .86rem; }
+  .conclusion b { color: var(--accent); margin-right: 4px; }
+  .howto { font-size: .82rem; color: var(--muted); margin: 6px 0 12px; }
+  details.more { margin-top: 10px; }
+  details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
+</style></head>
 <body>
 <div class="wrap">
 <header>
   <h1>比賽分析</h1>
-  <span class="meta">更新：2026-10-14 08:01（台北時間）</span>
-<span class="meta">The Odds API 剩餘點數：491</span><a class="meta" href="backtest.html">回測報告</a></header>
+  <span class="meta">更新：2026-10-14 08:13（台北時間）</span>
+<span class="meta">The Odds API 剩餘點數：491</span><a class="meta" href="backtest.html">回測報告</a><a class="meta" href="reviews.html">全部賽後檢討</a></header>
 
 <section>
   <h2>運彩價值注 <span class="count">0 個 · 門檻 EV ≥ 2%</span></h2>
@@ -89,7 +107,7 @@
 </section>
 
 <section>
-  <h2>模型分歧 <span class="count">4 個 · 門檻 edge ≥ 10pp</span></h2>
+  <h2>模型分歧 <span class="count">2 個 · 門檻 edge ≥ 10pp</span></h2>
   <div class="note" style="margin-bottom:10px">
     這些是「模型和市場看法差很多」的比賽，<b>不是下注建議</b>。
     最近回測（2026-10-13）：模型對收盤線的 CLV 為 -3.4%，代表模型沒有打敗市場的資訊。
@@ -103,24 +121,6 @@
   </div>
   <div class="scroll"><table>
     <tr><th>開賽</th><th>聯賽</th><th>比賽</th><th>市場</th><th>選項</th><th>模型</th><th>市場</th><th>Edge</th><th>最佳賠率</th><th>信心</th></tr>
-    <tr>
-      <td>10/14 (週三) 03:00</td><td>歐冠</td>
-      <td>Arsenal FC vs Lille OSC</td><td>讓球</td><td>Lille OSC +1.5</td>
-      <td class="model-val">64.5%</td>
-      <td class="market-val">41.2%</td>
-      <td class="pos">+23.3pp</td>
-      <td>2.38 <span class="sub">onexbet</span></td>
-      <td>高</td>
-    </tr>
-    <tr>
-      <td>10/14 (週三) 03:00</td><td>歐冠</td>
-      <td>Villarreal CF vs SSC Napoli</td><td>讓球</td><td>SSC Napoli +0.25</td>
-      <td class="model-val">58.7%</td>
-      <td class="market-val">48.5%</td>
-      <td class="pos">+10.2pp</td>
-      <td>2.04 <span class="sub">matchbook</span></td>
-      <td>低</td>
-    </tr>
     <tr>
       <td>10/15 (週四) 03:00</td><td>歐冠</td>
       <td>AS Roma vs Real Madrid CF</td><td>讓球</td><td>AS Roma +0.5</td>
@@ -140,6 +140,323 @@
       <td>中</td>
     </tr>
   </table></div>
+</section>
+
+
+<section id="review">
+  <h2>賽後檢討 <span class="count">最近 9 場 · 累計 9 場</span></h2>
+  <p class="howto">
+  每場分兩個問題看：<b>結果</b>——實際結果模型給了幾 %、市場給了幾 %，誰比較準；
+  <b>判斷</b>——就算輸了，模型的方向有沒有證據支持（開賽前市場有沒有往模型的方向移動、比賽的 xG／射正是不是模型看好的一方佔優）。
+  「判斷合理，結果不走運」不需要改策略；「判斷錯誤」累積多了才是該調整的地方。單場結果大部分是運氣，看下方累計數字才準。
+</p>
+
+<div class="kpis">
+  <div class="kpi"><b>9</b><span>已檢討場次</span></div>
+  <div class="kpi"><b>0.753 / 0.561</b><span>log-loss 模型／市場（越低越準，3 場）</span></div>
+  <div class="kpi"><b>0 : 3</b><span>單場較準 模型:市場</span></div>
+  <div class="kpi"><b>0 / 2</b><span>模型偏向命中（市場預期 0.9）</span></div>
+<div class="kpi"><b class="neg">-2.00</b><span>分歧帳面損益（2 注）</span></div></div>
+<div class="note" style="margin:6px 0">樣本還少（3 場有模型和市場可比）。先累積：30 場以上再看趨勢，100 場以上才算可靠。</div>  <div class="grid" style="margin-top:12px">
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Arsenal FC</div></div>
+    <div class="score">3 – 0<div class="sub">半場 0–0</div></div>
+    <div class="away"><div class="name">Lille OSC</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip bad">未命中（原因待確認）</span><span class="sub">模型分歧場次</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">63%</td>
+      <td class="market-val">81%</td>
+      <td>1.12</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">25%</td>
+      <td class="market-val">13%</td>
+      <td>4.95</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">11%</td>
+      <td class="market-val">6%</td>
+      <td>9.5</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>模型分歧：Lille OSC +1.5（模型 64% vs 市場 41%，分歧 +23pp）→ 未命中 ✗（Lille OSC 輸 3 球）（帳面 -1.00 單位 @ 2.38）</li><li>實際主勝：市場賽前給 81%（符合預期），模型給 63% → 這場市場比模型準</li><li>賽前只抓到一次盤口，看不出市場後來往哪邊移動。</li><li>模型預期進球 1.6 : 0.5，實際 3 : 0 —— Arsenal FC 的表現比模型預期好很多（淨勝差多 1.9 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，勝負在下半場才決定。</li><li>運彩賠率 主 1.12 · 和 4.95 · 客 9.5（10/14 01:17 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
+  <p class="conclusion"><b>結論</b>沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Villarreal CF</div></div>
+    <div class="score">3 – 1<div class="sub">半場 2–1</div></div>
+    <div class="away"><div class="name">SSC Napoli</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip bad">未命中（原因待確認）</span><span class="sub">模型分歧場次</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">36%</td>
+      <td class="market-val">45%</td>
+      <td>1.9</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">27%</td>
+      <td class="market-val">26%</td>
+      <td>3.1</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">37%</td>
+      <td class="market-val">29%</td>
+      <td>2.85</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>模型分歧：SSC Napoli +0.25（模型 59% vs 市場 48%，分歧 +10pp）→ 未命中 ✗（SSC Napoli 輸 2 球）（帳面 -1.00 單位 @ 2.06）</li><li>實際主勝：市場賽前給 45%（正常範圍），模型給 36% → 這場市場比模型準</li><li>賽前只抓到一次盤口，看不出市場後來往哪邊移動。</li><li>模型預期進球 1.4 : 1.4，實際 3 : 1 —— Villarreal CF 的表現比模型預期好很多（淨勝差多 2.0 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.9 · 和 3.1 · 客 2.85（10/14 01:17 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
+  <p class="conclusion"><b>結論</b>沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">FC Internazionale Milano</div></div>
+    <div class="score">3 – 4<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">Club Brugge KV</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">79%</td>
+      <td>1.15</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">14%</td>
+      <td>5.15</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">7%</td>
+      <td>7.5</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際客勝：市場賽前給 7%（大冷門）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，勝負在下半場才決定。</li><li>運彩賠率 主 1.15 · 和 5.15 · 客 7.5（10/14 01:17 擷取）</li><li>資料不足：Club Brugge KV 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果大冷門。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Galatasaray SK</div></div>
+    <div class="score">1 – 4<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">FC Barcelona</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">10%</td>
+      <td>6</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">13%</td>
+      <td>5.05</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">77%</td>
+      <td>1.2</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際客勝：市場賽前給 77%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，勝負在下半場才決定。</li><li>運彩賠率 主 6 · 和 5.05 · 客 1.2（10/14 01:17 擷取）</li><li>資料不足：Galatasaray SK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Club Atlético de Madrid</div></div>
+    <div class="score">2 – 0<div class="sub">半場 1–0</div></div>
+    <div class="away"><div class="name">Manchester United FC</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型與市場一致</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">46%</td>
+      <td class="market-val">51%</td>
+      <td>1.7</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">24%</td>
+      <td class="market-val">24%</td>
+      <td>3.2</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">30%</td>
+      <td class="market-val">25%</td>
+      <td>3.3</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際主勝：市場賽前給 51%（符合預期），模型給 46% → 這場市場比模型準</li><li>模型預期進球 1.8 : 1.4，實際 2 : 0 —— Club Atlético de Madrid 的表現比模型預期好很多（淨勝差多 1.6 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.7 · 和 3.2 · 客 3.3（10/14 01:17 擷取）</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型和市場看法一致，結果符合預期。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Viking FK</div></div>
+    <div class="score">3 – 3<div class="sub">半場 2–0</div></div>
+    <div class="away"><div class="name">FC Bayern München</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">3%</td>
+      <td>10</td>
+    </tr>
+    <tr class="hit">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">6%</td>
+      <td>6.5</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">91%</td>
+      <td>1.06</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際和局：市場賽前給 6%（大冷門）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 2–0 由 Viking FK 領先，下半場被扳平。</li><li>運彩賠率 主 10 · 和 6.5 · 客 1.06（10/14 01:17 擷取）</li><li>資料不足：Viking FK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果大冷門。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">RB Leipzig</div></div>
+    <div class="score">1 – 0<div class="sub">半場 0–0</div></div>
+    <div class="away"><div class="name">PSV</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">56%</td>
+      <td>1.4</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">21%</td>
+      <td>4.15</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">24%</td>
+      <td>4</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際主勝：市場賽前給 56%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，勝負在下半場才決定。</li><li>運彩賠率 主 1.4 · 和 4.15 · 客 4（10/14 01:17 擷取）</li><li>資料不足：PSV 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 00:45</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Racing Club de Lens</div></div>
+    <div class="score">0 – 2<div class="sub">半場 0–1</div></div>
+    <div class="away"><div class="name">Sporting Clube de Portugal</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">38%</td>
+      <td>—</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">25%</td>
+      <td>—</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">37%</td>
+      <td>—</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際客勝：市場賽前給 37%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>資料不足：Sporting Clube de Portugal 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 00:45</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Sabah FK</div></div>
+    <div class="score">2 – 0<div class="sub">半場 0–0</div></div>
+    <div class="away"><div class="name">SK Slavia Praha</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">27%</td>
+      <td>—</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">25%</td>
+      <td>—</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">48%</td>
+      <td>—</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際主勝：市場賽前給 27%（偏冷）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，勝負在下半場才決定。</li><li>資料不足：Sabah FK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果偏冷。</p>
+</article>
+  </div>
+  <p class="sub"><a href="reviews.html">看全部賽後檢討與分聯賽統計</a> · 原始資料：data/reviews/football.csv、mlb.csv（可用試算表打開）</p>
 </section>
 
 <section>
@@ -163,320 +480,8 @@
   <p class="none">視窗內沒有比賽。</p>
 </section>
 <section>
-  <h2>歐冠 <span class="count">18 場 · 模型樣本 3819 場 · 主場優勢 0.241</span></h2>
+  <h2>歐冠 <span class="count">9 場 · 模型樣本 3819 場 · 主場優勢 0.241</span></h2>
   <div class="grid">
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 00:45 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Racing Club de Lens</div><div class="sub">第 9 名 · 3 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">Sporting Clube de Portugal</div><div class="sub">第 6 名 · 3 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 37.7%"></i><i class="m" style="width: 45.2%; opacity:.85"></i></div>
-        <span class="model-val">45%</span>
-        <span class="market-val">38%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 25.4%"></i><i class="m" style="width: 23.9%; opacity:.85"></i></div>
-        <span class="model-val">24%</span>
-        <span class="market-val">25%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 36.9%"></i><i class="m" style="width: 31.0%; opacity:.85"></i></div>
-        <span class="model-val">31%</span>
-        <span class="market-val">37%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.65</b> · 和 <b>3.94</b> · 客 <b>2.71</b> · 大2.5 <b>1.66</b> / 小 <b>2.52</b></span></div>        <div><span>預期進球</span><span>1.82 – 1.48</span></div>
-        <div><span>最可能比分</span><span>1-1（11%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">64% <span class="market-val">/ 60%</span></span></div>
-        <div><span>攻／守排名</span><span>24/49 vs 21/43 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 +0</span><span class="market-val">51% / 49%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div><div class="note">資料不足：Sporting Clube de Portugal 僅 1 場（建議 ≥ 6）</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 00:45 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Sabah FK</div><div class="sub">第 34 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">SK Slavia Praha</div><div class="sub">第 22 名 · 0 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 27.2%"></i><i class="m" style="width: 4.1%; opacity:.85"></i></div>
-        <span class="model-val">4%</span>
-        <span class="market-val">27%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 25.2%"></i><i class="m" style="width: 8.8%; opacity:.85"></i></div>
-        <span class="model-val">9%</span>
-        <span class="market-val">25%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 47.6%"></i><i class="m" style="width: 87.2%; opacity:.85"></i></div>
-        <span class="model-val">87%</span>
-        <span class="market-val">48%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>3.68</b> · 和 <b>3.96</b> · 客 <b>2.1</b> · 大2.5 <b>1.72</b> / 小 <b>2.39</b></span></div>        <div><span>預期進球</span><span>0.75 – 3.53</span></div>
-        <div><span>最可能比分</span><span>0-3（10%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">80% <span class="market-val">/ 58%</span></span></div>
-        <div><span>攻／守排名</span><span>136/129 vs 7/134 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 +0.5</span><span class="market-val">53% / 47%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div><div class="note">資料不足：Sabah FK 僅 1 場（建議 ≥ 6）</div><div class="note">資料不足：SK Slavia Praha 僅 1 場（建議 ≥ 6）</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">FC Internazionale Milano</div><div class="sub">第 25 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">Club Brugge KV</div><div class="sub">第 22 名 · 0 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 78.8%"></i><i class="m" style="width: 96.5%; opacity:.85"></i></div>
-        <span class="model-val">96%</span>
-        <span class="market-val">79%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 13.8%"></i><i class="m" style="width: 2.2%; opacity:.85"></i></div>
-        <span class="model-val">2%</span>
-        <span class="market-val">14%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 7.4%"></i><i class="m" style="width: 1.3%; opacity:.85"></i></div>
-        <span class="model-val">1%</span>
-        <span class="market-val">7%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>1.27</b> · 和 <b>7.27</b> · 客 <b>13.44</b> · 大3.5 <b>2.13</b> / 小 <b>1.88</b></span></div>        <div><span>預期進球</span><span>6.98 – 1.41</span></div>
-        <div><span>最可能比分</span><span>6-1（6%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">99%</span></div>
-        <div><span>攻／守排名</span><span>3/35 vs 16/135 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 -1.5</span><span class="market-val">56% / 44%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div><div class="note">資料不足：Club Brugge KV 僅 1 場（建議 ≥ 6）</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Galatasaray SK</div><div class="sub">第 29 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">FC Barcelona</div><div class="sub">第 3 名 · 3 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 9.8%"></i><i class="m" style="width: 4.8%; opacity:.85"></i></div>
-        <span class="model-val">5%</span>
-        <span class="market-val">10%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 12.8%"></i><i class="m" style="width: 8.6%; opacity:.85"></i></div>
-        <span class="model-val">9%</span>
-        <span class="market-val">13%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 77.5%"></i><i class="m" style="width: 86.6%; opacity:.85"></i></div>
-        <span class="model-val">87%</span>
-        <span class="market-val">77%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>10.24</b> · 和 <b>7.84</b> · 客 <b>1.29</b> · 大4.5 <b>2.31</b> / 小 <b>1.76</b></span></div>        <div><span>預期進球</span><span>0.95 – 3.8</span></div>
-        <div><span>最可能比分</span><span>0-3（8%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">85%</span></div>
-        <div><span>攻／守排名</span><span>78/112 vs 1/10 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 +1.5</span><span class="market-val">42% / 58%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div><div class="note">資料不足：Galatasaray SK 僅 1 場（建議 ≥ 6）</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Club Atlético de Madrid</div><div class="sub">第 25 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">Manchester United FC</div><div class="sub">第 4 名 · 3 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 50.8%"></i><i class="m" style="width: 46.2%; opacity:.85"></i></div>
-        <span class="model-val">46%</span>
-        <span class="market-val">51%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 23.8%"></i><i class="m" style="width: 24.3%; opacity:.85"></i></div>
-        <span class="model-val">24%</span>
-        <span class="market-val">24%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 25.3%"></i><i class="m" style="width: 29.5%; opacity:.85"></i></div>
-        <span class="model-val">30%</span>
-        <span class="market-val">25%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>1.97</b> · 和 <b>4.19</b> · 客 <b>3.95</b> · 大3.5 <b>2.32</b> / 小 <b>1.76</b></span></div>        <div><span>預期進球</span><span>1.78 – 1.39</span></div>
-        <div><span>最可能比分</span><span>1-1（11%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">61%</span></div>
-        <div><span>攻／守排名</span><span>13/33 vs 15/32 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 -0.5</span><span class="market-val">50% / 50%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Arsenal FC</div><div class="sub">第 15 名 · 3 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">Lille OSC</div><div class="sub">第 22 名 · 0 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 81.0%"></i><i class="m" style="width: 63.3%; opacity:.85"></i></div>
-        <span class="model-val">63%</span>
-        <span class="market-val">81%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 13.2%"></i><i class="m" style="width: 25.5%; opacity:.85"></i></div>
-        <span class="model-val">25%</span>
-        <span class="market-val">13%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 5.8%"></i><i class="m" style="width: 11.2%; opacity:.85"></i></div>
-        <span class="model-val">11%</span>
-        <span class="market-val">6%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>1.23</b> · 和 <b>7.58</b> · 客 <b>17.24</b> · 大3.5 <b>2.57</b> / 小 <b>1.64</b></span></div>        <div><span>預期進球</span><span>1.6 – 0.52</span></div>
-        <div><span>最可能比分</span><span>1-0（19%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">35%</span></div>
-        <div><span>攻／守排名</span><span>14/2 vs 68/18 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 -1.5</span><span class="market-val">59% / 41%</span></div>      </div>
-
-      <div class="rec">
-          <span class="sub">模型偏向</span>
-          <b>Lille OSC +1.5</b> @ 2.38 <span class="sub">onexbet</span>
-          <span class="chip high">分歧 高</span>
-          <div class="sub">模型 64.5% vs 市場 41.2% · edge +23.3pp · 1/4 Kelly 9.7%</div>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Viking FK</div><div class="sub">第 29 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">FC Bayern München</div><div class="sub">第 2 名 · 3 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 3.4%"></i><i class="m" style="width: 4.1%; opacity:.85"></i></div>
-        <span class="model-val">4%</span>
-        <span class="market-val">3%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 5.7%"></i><i class="m" style="width: 7.4%; opacity:.85"></i></div>
-        <span class="model-val">7%</span>
-        <span class="market-val">6%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 91.0%"></i><i class="m" style="width: 88.5%; opacity:.85"></i></div>
-        <span class="model-val">89%</span>
-        <span class="market-val">91%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>29.52</b> · 和 <b>17.66</b> · 客 <b>1.1</b> · 大4.5 <b>2.05</b> / 小 <b>1.96</b></span></div>        <div><span>預期進球</span><span>0.97 – 4.1</span></div>
-        <div><span>最可能比分</span><span>0-4（7%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">88%</span></div>
-        <div><span>攻／守排名</span><span>93/123 vs 2/22 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 +2.5</span><span class="market-val">43% / 57%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div><div class="note">資料不足：Viking FK 僅 1 場（建議 ≥ 6）</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">RB Leipzig</div><div class="sub">第 32 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">PSV</div><div class="sub">第 19 名 · 1 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 55.7%"></i><i class="m" style="width: 56.8%; opacity:.85"></i></div>
-        <span class="model-val">57%</span>
-        <span class="market-val">56%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 20.6%"></i><i class="m" style="width: 23.8%; opacity:.85"></i></div>
-        <span class="model-val">24%</span>
-        <span class="market-val">21%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 23.6%"></i><i class="m" style="width: 19.3%; opacity:.85"></i></div>
-        <span class="model-val">19%</span>
-        <span class="market-val">24%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>1.79</b> · 和 <b>4.84</b> · 客 <b>4.23</b> · 大3.5 <b>1.91</b> / 小 <b>2.1</b></span></div>        <div><span>預期進球</span><span>1.85 – 0.99</span></div>
-        <div><span>最可能比分</span><span>1-1（11%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">54%</span></div>
-        <div><span>攻／守排名</span><span>19/68 vs 96/42 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 -0.75</span><span class="market-val">50% / 50%</span></div>      </div>
-
-      <div class="rec">
-          <span class="none">模型與市場看法接近</span>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div><div class="note">資料不足：PSV 僅 1 場（建議 ≥ 6）</div>    </article>
-    <article class="card">
-      <div class="top"><span>10/14 (週三) 03:00 · 第 2 輪</span><span>歐冠</span></div>
-      <div class="teams">
-        <div><div class="name">Villarreal CF</div><div class="sub">第 21 名 · 0 分</div></div>
-        <div class="vs">vs</div>
-        <div class="away"><div class="name">SSC Napoli</div><div class="sub">第 27 名 · 0 分</div></div>
-      </div>
-
-      <div class="bars">
-        <span class="lab">主勝</span>
-        <div class="bar"><i class="k" style="width: 45.1%"></i><i class="m" style="width: 35.7%; opacity:.85"></i></div>
-        <span class="model-val">36%</span>
-        <span class="market-val">45%</span>
-        <span class="lab">和局</span>
-        <div class="bar"><i class="k" style="width: 25.7%"></i><i class="m" style="width: 27.1%; opacity:.85"></i></div>
-        <span class="model-val">27%</span>
-        <span class="market-val">26%</span>
-        <span class="lab">客勝</span>
-        <div class="bar"><i class="k" style="width: 29.2%"></i><i class="m" style="width: 37.2%; opacity:.85"></i></div>
-        <span class="model-val">37%</span>
-        <span class="market-val">29%</span>
-      </div>
-      <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
-      <div class="facts">
-<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>2.22</b> · 和 <b>3.88</b> · 客 <b>3.42</b> · 大2.5 <b>1.69</b> / 小 <b>2.45</b></span></div>        <div><span>預期進球</span><span>1.35 – 1.38</span></div>
-        <div><span>最可能比分</span><span>1-1（13%）</span></div>
-        <div><span>大 2.5 球</span><span class="model-val">51% <span class="market-val">/ 59%</span></span></div>
-        <div><span>攻／守排名</span><span>20/59 vs 41/11 <span class="sub">(共136)</span></span></div>
-<div><span>讓球 -0.25</span><span class="market-val">52% / 48%</span></div>      </div>
-
-      <div class="rec">
-          <span class="sub">模型偏向</span>
-          <b>SSC Napoli +0.25</b> @ 2.04 <span class="sub">matchbook</span>
-          <span class="chip ">分歧 低</span>
-          <div class="sub">模型 58.7% vs 市場 48.5% · edge +10.2pp · 1/4 Kelly 4.7%</div>
-      </div>
-<div class="note">跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋</div>    </article>
     <article class="card">
       <div class="top"><span>10/15 (週四) 00:45 · 第 2 輪</span><span>歐冠</span></div>
       <div class="teams">

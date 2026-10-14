@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>賽後檢討</title>
+<meta name="description" content="每場已完賽比賽的賽前分析 vs 實際結果，以及模型的累計偏差">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e4e2db;
+    --model: #2f6f5e; --market: #b0693a; --accent: #2f6f5e; --good: #2f6f5e; --bad: #a63d2f;
+    --chip: #ecebe5; --warn-bg: #fbf3e2; --warn-ink: #6b4b12;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
+      --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
+      --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
+    --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
+    --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+         line-height: 1.5; font-size: 15px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-bottom: 20px; }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: .02em; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  h2 { font-size: 1.1rem; margin: 28px 0 10px; display: flex; align-items: center; gap: 10px; }
+  h2 .count { color: var(--muted); font-weight: 400; font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card .top { display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; }
+  .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+  .teams .name { font-weight: 600; font-size: 1.02rem; line-height: 1.25; }
+  .teams .away { text-align: right; }
+  .teams .vs { color: var(--muted); font-size: .8rem; }
+  .sub { color: var(--muted); font-size: .8rem; }
+  .bars { display: grid; grid-template-columns: 2.6em 1fr 3.2em 3.2em; gap: 4px 8px; align-items: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .bars .lab { color: var(--muted); }
+  .bar { position: relative; height: 10px; background: var(--chip); border-radius: 5px; overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
+  .bar .m { background: var(--model); }
+  .bar .k { background: var(--market); opacity: .55; }
+  .legend { display: flex; gap: 14px; font-size: .75rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .model-val { color: var(--model); font-weight: 600; }
+  .market-val { color: var(--market); }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: .82rem; }
+  .facts div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding: 2px 0; }
+  .facts span:first-child { color: var(--muted); }
+  .rec { border-top: 1px solid var(--line); padding-top: 10px; font-size: .9rem; }
+  .rec b { color: var(--accent); }
+  .chip { display: inline-block; background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: .75rem; margin-left: 6px; }
+  .chip.high { background: var(--good); color: #fff; }
+  .chip.mid { background: var(--market); color: #fff; }
+  .note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 6px 10px; font-size: .78rem; }
+  .none { color: var(--muted); font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: .78rem; }
+  tr:last-child td { border-bottom: 0; }
+  .scroll { overflow-x: auto; }
+  .kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 120px; flex: 1 1 140px; }
+  .kpi b { display: block; font-size: 1.2rem; }
+  .kpi span { color: var(--muted); font-size: .78rem; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .78rem; border-top: 1px solid var(--line); padding-top: 14px; }
+  a { color: var(--accent); }
+
+  /* post-match review */
+  .score { text-align: center; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .score .sub { font-size: .72rem; font-weight: 400; }
+  .chip.good { background: var(--good); color: #fff; }
+  .chip.bad { background: var(--bad); color: #fff; }
+  .chip.warn { background: var(--market); color: #fff; }
+  .verdict-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .verdict-row .chip { margin-left: 0; font-size: .8rem; padding: 2px 10px; }
+  table.mini { border: 0; border-radius: 0; background: transparent; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { padding: 3px 6px; border-bottom: 1px dashed var(--line); }
+  table.mini tr.hit td { font-weight: 700; }
+  table.mini tr.hit td:first-child::after { content: " ✓"; color: var(--good); }
+  ul.why { margin: 0; padding-left: 1.1em; font-size: .84rem; display: flex; flex-direction: column; gap: 4px; }
+  .conclusion { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; font-size: .86rem; }
+  .conclusion b { color: var(--accent); margin-right: 4px; }
+  .howto { font-size: .82rem; color: var(--muted); margin: 6px 0 12px; }
+  details.more { margin-top: 10px; }
+  details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
+</style></head>
+<body>
+<div class="wrap">
+<header>
+  <h1>賽後檢討</h1>
+  <span class="meta">更新：2026-10-14 08:13（台北時間）</span>
+  <a class="meta" href="index.html">回到每日分析</a>
+</header>
+
+<p class="howto">
+  每場分兩個問題看：<b>結果</b>——實際結果模型給了幾 %、市場給了幾 %，誰比較準；
+  <b>判斷</b>——就算輸了，模型的方向有沒有證據支持（開賽前市場有沒有往模型的方向移動、比賽的 xG／射正是不是模型看好的一方佔優）。
+  「判斷合理，結果不走運」不需要改策略；「判斷錯誤」累積多了才是該調整的地方。單場結果大部分是運氣，看下方累計數字才準。
+</p>
+
+
+<section>
+  <h2>足球累計 <span class="count">9 場</span></h2>
+  <div class="kpis">
+  <div class="kpi"><b>9</b><span>已檢討場次</span></div>
+  <div class="kpi"><b>0.753 / 0.561</b><span>log-loss 模型／市場（越低越準，3 場）</span></div>
+  <div class="kpi"><b>0 : 3</b><span>單場較準 模型:市場</span></div>
+  <div class="kpi"><b>0 / 2</b><span>模型偏向命中（市場預期 0.9）</span></div>
+<div class="kpi"><b class="neg">-2.00</b><span>分歧帳面損益（2 注）</span></div></div>
+<div class="note" style="margin:6px 0">樣本還少（3 場有模型和市場可比）。先累積：30 場以上再看趨勢，100 場以上才算可靠。</div>
+  <div class="scroll" style="margin-top:10px"><table>
+    <tr><th>聯賽</th><th>場次</th><th>模型 log-loss</th><th>市場 log-loss</th><th>單場較準 模型:市場</th><th>模型偏向命中</th><th>市場預期</th></tr>
+    <tr>
+      <td>歐冠</td><td>9</td>
+      <td class="model-val">0.753</td>
+      <td class="market-val">0.561</td>
+      <td>0 : 3</td>
+      <td>0 / 2</td>
+      <td>0.9</td>
+    </tr>
+  </table></div>
+  <p class="sub">模型預期進球減實際進球（正 = 高估）：主隊 -1.09、客隊 +0.76（3 場）</p>
+</section>
+
+
+<section>
+  <h2>每場檢討 <span class="count">新到舊</span></h2>
+  <div class="grid">
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">FC Internazionale Milano</div></div>
+    <div class="score">3 – 4<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">Club Brugge KV</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">79%</td>
+      <td>1.15</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">14%</td>
+      <td>5.15</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">7%</td>
+      <td>7.5</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際客勝：市場賽前給 7%（大冷門）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，勝負在下半場才決定。</li><li>運彩賠率 主 1.15 · 和 5.15 · 客 7.5（10/14 01:17 擷取）</li><li>資料不足：Club Brugge KV 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果大冷門。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Galatasaray SK</div></div>
+    <div class="score">1 – 4<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">FC Barcelona</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">10%</td>
+      <td>6</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">13%</td>
+      <td>5.05</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">77%</td>
+      <td>1.2</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際客勝：市場賽前給 77%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，勝負在下半場才決定。</li><li>運彩賠率 主 6 · 和 5.05 · 客 1.2（10/14 01:17 擷取）</li><li>資料不足：Galatasaray SK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Club Atlético de Madrid</div></div>
+    <div class="score">2 – 0<div class="sub">半場 1–0</div></div>
+    <div class="away"><div class="name">Manchester United FC</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型與市場一致</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">46%</td>
+      <td class="market-val">51%</td>
+      <td>1.7</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">24%</td>
+      <td class="market-val">24%</td>
+      <td>3.2</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">30%</td>
+      <td class="market-val">25%</td>
+      <td>3.3</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際主勝：市場賽前給 51%（符合預期），模型給 46% → 這場市場比模型準</li><li>模型預期進球 1.8 : 1.4，實際 2 : 0 —— Club Atlético de Madrid 的表現比模型預期好很多（淨勝差多 1.6 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.7 · 和 3.2 · 客 3.3（10/14 01:17 擷取）</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型和市場看法一致，結果符合預期。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Arsenal FC</div></div>
+    <div class="score">3 – 0<div class="sub">半場 0–0</div></div>
+    <div class="away"><div class="name">Lille OSC</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip bad">未命中（原因待確認）</span><span class="sub">模型分歧場次</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">63%</td>
+      <td class="market-val">81%</td>
+      <td>1.12</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">25%</td>
+      <td class="market-val">13%</td>
+      <td>4.95</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">11%</td>
+      <td class="market-val">6%</td>
+      <td>9.5</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>模型分歧：Lille OSC +1.5（模型 64% vs 市場 41%，分歧 +23pp）→ 未命中 ✗（Lille OSC 輸 3 球）（帳面 -1.00 單位 @ 2.38）</li><li>實際主勝：市場賽前給 81%（符合預期），模型給 63% → 這場市場比模型準</li><li>賽前只抓到一次盤口，看不出市場後來往哪邊移動。</li><li>模型預期進球 1.6 : 0.5，實際 3 : 0 —— Arsenal FC 的表現比模型預期好很多（淨勝差多 1.9 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，勝負在下半場才決定。</li><li>運彩賠率 主 1.12 · 和 4.95 · 客 9.5（10/14 01:17 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
+  <p class="conclusion"><b>結論</b>沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Viking FK</div></div>
+    <div class="score">3 – 3<div class="sub">半場 2–0</div></div>
+    <div class="away"><div class="name">FC Bayern München</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">3%</td>
+      <td>10</td>
+    </tr>
+    <tr class="hit">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">6%</td>
+      <td>6.5</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">91%</td>
+      <td>1.06</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際和局：市場賽前給 6%（大冷門）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 2–0 由 Viking FK 領先，下半場被扳平。</li><li>運彩賠率 主 10 · 和 6.5 · 客 1.06（10/14 01:17 擷取）</li><li>資料不足：Viking FK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果大冷門。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">RB Leipzig</div></div>
+    <div class="score">1 – 0<div class="sub">半場 0–0</div></div>
+    <div class="away"><div class="name">PSV</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">56%</td>
+      <td>1.4</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">21%</td>
+      <td>4.15</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">24%</td>
+      <td>4</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際主勝：市場賽前給 56%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，勝負在下半場才決定。</li><li>運彩賠率 主 1.4 · 和 4.15 · 客 4（10/14 01:17 擷取）</li><li>資料不足：PSV 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Villarreal CF</div></div>
+    <div class="score">3 – 1<div class="sub">半場 2–1</div></div>
+    <div class="away"><div class="name">SSC Napoli</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip bad">未命中（原因待確認）</span><span class="sub">模型分歧場次</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">36%</td>
+      <td class="market-val">45%</td>
+      <td>1.9</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">27%</td>
+      <td class="market-val">26%</td>
+      <td>3.1</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">37%</td>
+      <td class="market-val">29%</td>
+      <td>2.85</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>模型分歧：SSC Napoli +0.25（模型 59% vs 市場 48%，分歧 +10pp）→ 未命中 ✗（SSC Napoli 輸 2 球）（帳面 -1.00 單位 @ 2.06）</li><li>實際主勝：市場賽前給 45%（正常範圍），模型給 36% → 這場市場比模型準</li><li>賽前只抓到一次盤口，看不出市場後來往哪邊移動。</li><li>模型預期進球 1.4 : 1.4，實際 3 : 1 —— Villarreal CF 的表現比模型預期好很多（淨勝差多 2.0 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.9 · 和 3.1 · 客 2.85（10/14 01:17 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
+  <p class="conclusion"><b>結論</b>沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 00:45</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Racing Club de Lens</div></div>
+    <div class="score">0 – 2<div class="sub">半場 0–1</div></div>
+    <div class="away"><div class="name">Sporting Clube de Portugal</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">38%</td>
+      <td>—</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">25%</td>
+      <td>—</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">37%</td>
+      <td>—</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際客勝：市場賽前給 37%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>資料不足：Sporting Clube de Portugal 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
+</article>
+<article class="card review">
+  <div class="top"><span>10/14 (週三) 00:45</span><span>歐冠</span></div>
+  <div class="teams">
+    <div><div class="name">Sabah FK</div></div>
+    <div class="score">2 – 0<div class="sub">半場 0–0</div></div>
+    <div class="away"><div class="name">SK Slavia Praha</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型資料不足</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="hit">
+      <td>主勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">27%</td>
+      <td>—</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">—</td>
+      <td class="market-val">25%</td>
+      <td>—</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">—</td>
+      <td class="market-val">48%</td>
+      <td>—</td>
+    </tr>
+  </table>
+  <ul class="why">
+<li>實際主勝：市場賽前給 27%（偏冷）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，勝負在下半場才決定。</li><li>資料不足：Sabah FK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果偏冷。</p>
+</article>
+  </div>
+</section>
+
+<footer>
+  log-loss = −ln(給實際結果的機率)，越低代表賽前越看好真正發生的結果；市場是多家國際莊家去水後的中位數。比賽數據（xG、射門、紅牌）來自 football-data.co.uk，五大聯賽通常 2–3 天後補上，歐冠沒有免費來源。
+</footer>
+</div>
+</body>
+</html>
