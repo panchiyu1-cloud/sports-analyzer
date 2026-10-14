@@ -10,7 +10,10 @@ from typing import Any
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from ..analysis import review
+from ..analysis.mlb import G_SHAPES
 from ..config import LOCAL_TZ, MODEL, ModelConfig
+from ..models.market import t10_signal
+from ..moves import FOLLOW_MIN, MARKET_SIDES
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 # The front page shows the reviews of the last few days; reviews.html has all of them.
@@ -55,9 +58,11 @@ def render_index(
     odds_budget: Mapping[str, Any] | None = None,
     moves: Mapping[tuple[str, str], Mapping[str, Any]] | None = None,
     tw_moves: Mapping[str, Any] | None = None,
+    bighand_matches: int = 0,
 ) -> Path:
-    """`moves` is moves.track() of the line-move tape; `tw_moves` holds the settled
-    運彩-only moves and their summary (moves.tw_divergences / divergence_summary)."""
+    """`moves` is moves.track() of the line-move tape; `tw_moves` holds the recorded
+    運彩-only moves (oldest first, settled) and their summary; `bighand_matches` is how
+    many matches the 大戶紀錄 page (docs/bighand.html) lists."""
     template = _env().get_template("index.html.j2")
     moves = moves or {}
 
@@ -160,16 +165,13 @@ def render_index(
         tw_events=[
             {
                 **e,
-                "label": side_label(
-                    e["sport"], e["market"], e["side"], e["line"], e["home"], e["away"]
-                ),
-                "match": f"{e['home']} vs {e['away']}"
-                if e["sport"] == "football"
-                else f"{e['away']} @ {e['home']}",
+                "label": side_label(e["sport"], e["market"], e["side"], e["line"], *_names(e)),
+                "match": match_title(e["sport"], *_names(e)),
             }
             for e in reversed((tw_moves or {}).get("events", []))
         ][:10],
         tw_moves_summary=(tw_moves or {}).get("summary") or {},
+        bighand_matches=bighand_matches,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")
@@ -186,6 +188,144 @@ def side_label(sport: str, market: str, side: str, line: str, home: str, away: s
         return f"{'大' if side == 'over' else '小'} {line}"
     own = float(line) if side == "home" else -float(line)
     return f"{home if side == 'home' else away} {own:+g}"
+
+
+def match_title(sport: str, home: str, away: str) -> str:
+    """Football 'home vs away'; baseball 'away @ home' (the way 運彩 and US books list it)."""
+    return f"{home} vs {away}" if sport == "football" else f"{away} @ {home}"
+
+
+def _names(item: Mapping[str, Any]) -> tuple[str, str]:
+    """運彩's Chinese names when known, else the international ones."""
+    return (
+        str(item.get("home_zh") or item.get("home", "")),
+        str(item.get("away_zh") or item.get("away", "")),
+    )
+
+
+EVENT_TYPES = {"tw_only": "運彩大戶", "intl_big": "國際大單"}
+SIDE_SHORT = {"home": "主", "draw": "和", "away": "客", "over": "大", "under": "小"}
+BET_STATUS = {
+    "pending": "待結算",
+    "win": "贏",
+    "loss": "輸",
+    "push": "走盤",
+    "half_win": "贏一半",
+    "half_loss": "輸一半",
+    "void": "取消",
+}
+RESULT_LABELS = {"win": "贏", "loss": "輸", "push": "走盤"}
+
+
+def render_bighand_page(
+    history: list[Mapping[str, Any]],
+    summary: Mapping[str, Mapping[str, Any]],
+    generated_at: datetime,
+    out_path: Path,
+    cfg: ModelConfig = MODEL,
+) -> Path:
+    """docs/bighand.html: every match where a 大戶 move was caught (moves.event_history),
+    newest kickoff first, whether or not it ever became a bet."""
+    html = (
+        _env()
+        .get_template("bighand.html.j2")
+        .render(
+            generated_local=generated_at.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M"),
+            matches=[bighand_view(m, cfg) for m in history],
+            summary=[
+                {"type": kind, "label": label, **summary[kind]}
+                for kind, label in EVENT_TYPES.items()
+                if kind in summary
+            ],
+            cfg=cfg,
+        )
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(html, encoding="utf-8")
+    return out_path
+
+
+def bighand_view(m: Mapping[str, Any], cfg: ModelConfig = MODEL) -> dict[str, Any]:
+    """One match of the 大戶紀錄 page: words and numbers ready for the template."""
+    sport = m["sport"]
+    home, away = _names(m)
+    events = []
+    for e in m["events"]:
+        after = e.get("after")
+        trend = None
+        if after is not None:
+            trend = "續漲" if after >= FOLLOW_MIN else ("回落" if after <= -FOLLOW_MIN else "持平")
+        events.append(
+            {
+                **e,
+                "type_label": EVENT_TYPES.get(e["type"], e["type"]),
+                "label": side_label(sport, e["market"], e["side"], e["line"], home, away),
+                "trend": trend,
+                "result_label": RESULT_LABELS.get(e.get("result", ""))
+                or ("待結果" if m.get("closed") else "待賽"),
+            }
+        )
+    g_last, g_peak = m.get("g_last"), m.get("g_peak")
+    return {
+        **m,
+        "title": match_title(sport, home, away),
+        "sport_label": "足球" if sport == "football" else "MLB",
+        "kickoff_local": taipei_time(m.get("kickoff_utc")),
+        "events": events,
+        "types": sorted({e["type"] for e in events}),
+        "bets": [
+            {
+                **b,
+                "ev_pct": _float(b.get("ev")),
+                "status_label": BET_STATUS.get(b.get("status", ""), b.get("status", "")),
+            }
+            for b in m.get("value_bets", [])
+        ],
+        "g_shape": G_SHAPES[t10_signal(g_last, cfg.g_threshold)] if g_last is not None else None,
+        "g_zone": g_peak is not None and abs(g_peak) >= cfg.g_threshold,
+        "tables": [_trajectory_table(sport, t, m["events"]) for t in m.get("markets", [])],
+    }
+
+
+def _float(value: Any) -> float | None:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _trajectory_table(
+    sport: str, t: Mapping[str, Any], events: list[Mapping[str, Any]]
+) -> dict[str, Any]:
+    """Time | international % per side | 運彩 price per side (| G for the MLB moneyline),
+    one row per time we saw the market; the times a move was caught are marked."""
+    market, line = t["market"], t["line"]
+    sides = [s for s in MARKET_SIDES[market] if not (sport == "mlb" and s == "draw")]
+    if market == "h2h":
+        title = "不讓分" if sport == "mlb" else "勝平負"
+    elif market == "totals":
+        title = f"大小 {line}"
+    else:
+        title = f"讓分（主 {float(line):+g}）" if line else "讓分"
+    caught = {e["to_at"] for e in events if e["market"] == market and e["line"] == line}
+    with_g = any(p.get("g") is not None for p in t["points"])
+    rows = []
+    for p in t["points"]:
+        rows.append(
+            {
+                "at": taipei_time(p["at"]),
+                "intl": [f"{p['intl'][s] * 100:.1f}" if s in p["intl"] else "" for s in sides],
+                "tw": [f"{p['tw'][s]:.2f}" if s in p["tw"] else "" for s in sides],
+                "g": f"{p['g'] * 100:+.1f}" if p.get("g") is not None else "",
+                "caught": p["at"] in caught,
+            }
+        )
+    return {
+        "title": title,
+        "sides": [SIDE_SHORT[s] for s in sides],
+        "rows": rows,
+        "with_g": with_g,
+    }
 
 
 def big_move_rows(cards: list[tuple[str, Mapping[str, Any]]]) -> list[dict[str, Any]]:

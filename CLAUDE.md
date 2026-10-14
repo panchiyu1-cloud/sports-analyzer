@@ -61,8 +61,9 @@ formula is not obvious.
 ### Git workflow
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
 - Generated files that ARE committed: `docs/index.html`, `docs/reviews.html`,
-  `data/snapshots/**`, `data/ledger.csv`, `data/tw_ledger.csv`, `data/reviews/*.csv`,
-  `data/history/*.csv`. Raw dumps under `data/raw/` are not.
+  `docs/bighand.html`, `data/snapshots/**`, `data/ledger.csv`, `data/tw_ledger.csv`,
+  `data/reviews/*.csv`, `data/history/*.csv`, `data/moves/*.csv`. Raw dumps under
+  `data/raw/` are not.
 - Workflows commit through `scripts/commit_generated.sh` (handles two runs racing).
 
 ## Commands
@@ -92,7 +93,8 @@ src/sports_analyzer/
                    review.py — finished match: pre-match card vs result, verdict, wording
   review_store.py  data/reviews/{football,mlb}.csv (one row per finished match)
   ledger.py        append / settle signals in data/ledger.csv
-  render/          cards.py + templates/index.html.j2 -> docs/index.html
+  moves.py         line-move tape data/moves/YYYY-MM.csv + 大戶 record data/moves/events.csv
+  render/          cards.py + templates/*.html.j2 -> docs/index.html, reviews.html, bighand.html
   pipeline.py      CLI entry point
 scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 ```
@@ -229,8 +231,21 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   the international move across 運彩's own span (prices within the freshness window).
 - `moves.tw_divergences`: between two 運彩 uploads, 運彩 moved a side >= 2pp more than the
   market did (international prices needed near both uploads): 運彩's own big bettors.
-  Settled at render time from the review CSVs; the page compares hits with the
-  international probability at the time (z > 2 before believing anything).
+  Uploads with no international price within the window are skipped, not compared (a
+  mid-day manual upload must not hide the 08:00 -> 20:00 comparison). Settled at render
+  time from the review CSVs; the page compares hits with the international probability
+  at the time (z > 2 before believing anything).
+- 大戶紀錄 (owner's request: keep every match where a move was caught, even if it never
+  became 可下): `pipeline._record_bighand` runs in every render (every task ends with
+  one) and appends new `tw_divergences` + `moves.intl_big_moves` (first time a side stood
+  >= 8pp above our first price, before kickoff) to data/moves/events.csv, with the
+  competition and 運彩's Chinese names from the snapshots (lost later). One row per
+  detection (`event_id`: a 運彩 move per match/market/upload whatever side tops later; a
+  大單 per side); never edited or pruned, a header change rewrites the file whole.
+  `moves.event_history` joins it with the whole tape (prices up to kickoff, MLB G from
+  ML + ±1.5 bought together), tw_ledger value bets and results -> docs/bighand.html
+  (`render_bighand_page`). "鎖定區" is shown both ways: 可下 (a tw_ledger row) and
+  MLB G reaching ±6 (the old T-10 trigger).
 - Freshness (`analysis/taiwan.is_fresh`) goes by a block's own `odds_at`, also for
   carried-over "stale" blocks; only an unstamped carried block is never fresh.
 - `notify.py`: new 運彩 value bets go to the phone through ntfy.sh when the NTFY_TOPIC

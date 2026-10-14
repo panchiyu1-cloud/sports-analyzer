@@ -27,6 +27,7 @@
   {% if backtest %}<a class="meta" href="backtest.html">回測報告</a>{% endif %}
   <a class="meta" href="t10_backtest.html">T-10 回測</a>
   {% if reviews.total %}<a class="meta" href="reviews.html">全部賽後檢討</a>{% endif %}
+  <a class="meta" href="bighand.html">大戶紀錄{% if bighand_matches %}（{{ bighand_matches }} 場）{% endif %}</a>
 </header>
 
 <section>
@@ -82,6 +83,7 @@
   {% else %}
   <p class="none">目前沒有國際盤大幅移動的比賽。</p>
   {% endif %}
+  <p class="sub">抓到過的大單都永久留在 <a href="bighand.html">大戶紀錄</a>（含開賽前的價格走勢和結果）。</p>
 </section>
 
 <section id="tw-moves">
@@ -98,16 +100,18 @@
     <tr><th>運彩調價</th><th>比賽</th><th>錢押向</th><th>運彩 vs 國際</th><th>國際預期</th><th>結果</th></tr>
     {% for e in tw_events %}
     <tr>
-      <td>{{ e.to_at|tpe }}</td><td>{{ e.match }}</td><td><b>{{ e.label }}</b>{% if e.tw_price %} <span class="sub">@ {{ e.tw_price }}</span>{% endif %}</td>
+      <td>{{ e.to_at|tpe }}</td><td>{{ e.match }}</td><td><b>{{ e.label }}</b>{% if e.tw_price %} <span class="sub">@ {{ '%.2f'|format(e.tw_price|float) }}</span>{% endif %}</td>
       <td>{{ '%+.1f'|format(e.tw_move*100) }} vs {{ '%+.1f'|format(e.intl_move*100) }}pp</td>
       <td>{{ '%.0f%%'|format(e.expected*100) }}</td>
       <td class="{{ 'pos' if e.result == 'win' else ('neg' if e.result == 'loss' else '') }}">{{ {'win': '贏', 'loss': '輸', 'push': '走盤'}.get(e.result, '待賽') }}{% if e.score %} <span class="sub">{{ e.score }}</span>{% endif %}</td>
     </tr>
     {% endfor %}
   </table></div>
+  {% if s.events > 10 %}<p class="sub">上表是最近 10 次。</p>{% endif %}
   {% else %}
   <p class="none">還沒有記錄到運彩單獨移動的情況。每次上傳運彩都會自動比對。</p>
   {% endif %}
+  <p class="sub">每一場抓到大戶動向的比賽（不管後來有沒有進可下）都記在 <a href="bighand.html">大戶紀錄</a>：當時的價格、之後到開賽前怎麼走、有沒有進可下、結果。</p>
 </section>
 
 <section>

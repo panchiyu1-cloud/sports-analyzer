@@ -312,3 +312,90 @@ class PregameRefreshSmokeTests(unittest.TestCase):
         self.assertEqual(rep["pregame"]["skipped"], "upload not recent")
         # The comparison still runs, but against prices 9 hours from the 運彩 capture.
         self.assertEqual(self._card()["t10v"]["status"], "stale")
+
+
+class BigHandRecordSmokeTests(unittest.TestCase):
+    """Every render records the 大戶 moves on the tape and writes docs/bighand.html."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.paths = {
+            "DATA_DIR": root,
+            "DOCS_DIR": root / "docs",
+            "SNAPSHOT_DIR": root / "snapshots",
+            "MOVES_DIR": root / "moves",
+            "LEDGER_PATH": root / "ledger.csv",
+            "TW_LEDGER_PATH": root / "tw_ledger.csv",
+            "ODDS_BUDGET_PATH": root / "odds_budget.json",
+            "FOOTBALL_REVIEWS_PATH": root / "reviews" / "football.csv",
+            "MLB_REVIEWS_PATH": root / "reviews" / "mlb.csv",
+        }
+        self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
+        for p in self.patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        self.tmp.cleanup()
+
+    @staticmethod
+    def card(home: float, odds_at: str, tw_home: float, tw_away: float, captured: str) -> dict:
+        return {
+            "game_pk": 813024,
+            "kickoff_utc": "2099-10-15T00:00:00+00:00",
+            "local": "10/15 08:00",
+            "home": "Los Angeles Dodgers",
+            "away": "Milwaukee Brewers",
+            "market": {
+                "h2h": {
+                    "home": {"fair": home, "fair_odds": round(1 / home, 2)},
+                    "away": {"fair": round(1 - home, 4), "fair_odds": round(1 / (1 - home), 2)},
+                    "odds_at": odds_at,
+                },
+                "spread": None,
+                "totals": None,
+            },
+            "tw": {
+                "captured_at": captured,
+                "home_zh": "洛杉磯道奇",
+                "away_zh": "密爾瓦基釀酒人",
+                "h2h": {"home": {"price": tw_home}, "away": {"price": tw_away}},
+            },
+        }
+
+    def test_render_records_the_move_with_its_chinese_names_and_lists_it(self):
+        morning = self.card(0.6203, "2026-10-14T00:50+00:00", 1.44, 2.19, "2026-10-14T08:00+08:00")
+        evening = self.card(0.6213, "2026-10-14T12:53+00:00", 1.40, 2.31, "2026-10-14T20:00+08:00")
+        for c in (morning, evening):
+            pipeline.moves_mod.record(
+                self.paths["MOVES_DIR"], pipeline.moves_mod.intl_rows([c], "mlb")
+            )
+            pipeline.moves_mod.record(
+                self.paths["MOVES_DIR"], pipeline.moves_mod.tw_rows([c], "mlb")
+            )
+        folder = self.paths["SNAPSHOT_DIR"] / "2026-10-14"
+        folder.mkdir(parents=True)
+        (folder / "mlb.json").write_text(
+            json.dumps(
+                {
+                    "generated_at": "2026-10-14T12:53:00+00:00",
+                    "date": "2026-10-14",
+                    "games": [evening],
+                }
+            ),
+            encoding="utf-8",
+        )
+        pipeline.render_latest()
+        pipeline.render_latest()  # a second run records nothing new
+        saved = pipeline.moves_mod.read_events(self.paths["MOVES_DIR"] / "events.csv")
+        self.assertEqual(
+            [(e["type"], e["home_zh"], e["competition"]) for e in saved],
+            [("tw_only", "洛杉磯道奇", "MLB")],
+        )
+        page = (self.paths["DOCS_DIR"] / "bighand.html").read_text(encoding="utf-8")
+        self.assertIn("密爾瓦基釀酒人 @ 洛杉磯道奇", page)
+        index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
+        self.assertIn('href="bighand.html">大戶紀錄（1 場）', index)
+        self.assertIn("洛杉磯道奇 不讓分", index)  # the 運彩大戶 table uses 運彩's names

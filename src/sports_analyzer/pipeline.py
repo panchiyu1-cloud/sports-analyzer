@@ -61,7 +61,7 @@ from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
 from .models.implied import IDENTITY, Calibration
-from .render.cards import render_index, render_reviews_page, taipei_time
+from .render.cards import render_bighand_page, render_index, render_reviews_page, taipei_time
 
 log = logging.getLogger("sports_analyzer")
 
@@ -734,10 +734,20 @@ def render_latest() -> Path:
     football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
     mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
     render_reviews_page(football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html")
-    tape = moves_mod.read(MOVES_DIR)
+    # The whole tape: the 大戶 record draws every recorded match's prices from it.
+    tape = moves_mod.read(MOVES_DIR, months=None)
     scores = {("football", str(r["match_id"])): r for r in football_reviews}
     scores.update({("mlb", str(r["game_pk"])): r for r in mlb_reviews})
-    events = moves_mod.settle(moves_mod.tw_divergences(tape, MODEL), _final_scores(scores))
+    value_rows = tw_ledger.read(TW_LEDGER_PATH)
+    history = moves_mod.event_history(
+        _record_bighand(tape, now, football, mlb), tape, _final_scores(scores), value_rows, now
+    )
+    bighand_summary = moves_mod.history_summary(history)
+    render_bighand_page(history, bighand_summary, now, DOCS_DIR / "bighand.html")
+    tw_events = sorted(
+        (e for m in history for e in m["events"] if e["type"] == "tw_only"),
+        key=lambda e: str(e["to_at"]),
+    )
     return render_index(
         football,
         mlb,
@@ -746,13 +756,60 @@ def render_latest() -> Path:
         DOCS_DIR / "index.html",
         backtest_exists=(DOCS_DIR / "backtest.html").exists(),
         backtest_total=backtest_total,
-        tw_summary=tw_ledger.summary(tw_ledger.read(TW_LEDGER_PATH)),
+        tw_summary=tw_ledger.summary(value_rows),
         football_reviews=football_reviews,
         mlb_reviews=mlb_reviews,
         odds_budget=_budget_view(now.date()),
         moves=moves_mod.track(tape, MODEL),
-        tw_moves={"events": events, "summary": moves_mod.divergence_summary(events)},
+        tw_moves={
+            "events": tw_events,
+            "summary": bighand_summary.get("tw_only") or moves_mod.divergence_summary([]),
+        },
+        bighand_matches=len(history),
     )
+
+
+def _record_bighand(
+    tape: list[dict[str, str]], now: datetime, *snapshots: dict[str, Any] | None
+) -> list[dict[str, str]]:
+    """Every 大戶 move the tape shows (運彩-only moves, international 大單) goes into
+    data/moves/events.csv once, with the competition and 運彩's Chinese team names known
+    now, whether or not it ever became a bet; returns the whole record. Done at render
+    time because every task ends with a render, whatever it added to the tape."""
+    detected = moves_mod.tw_divergences(tape, MODEL) + moves_mod.intl_big_moves(tape, MODEL)
+    path = MOVES_DIR / moves_mod.EVENTS_FILE
+    names = _match_names(
+        [s for s in snapshots if s]
+        + _recent_snapshots("football", now.date(), 14)[::-1]
+        + _recent_snapshots("mlb", now.date(), 14)[::-1]
+    )
+    added = moves_mod.record_events(path, detected, names)
+    if added:
+        log.info("大戶紀錄: %d new moves recorded", added)
+    return moves_mod.read_events(path)
+
+
+def _match_names(snapshots: list[dict[str, Any]]) -> dict[tuple[str, str], dict[str, str]]:
+    """(sport, match id) -> competition and 運彩's Chinese team names, from snapshots
+    given newest first (the first value found wins)."""
+    out: dict[tuple[str, str], dict[str, str]] = {}
+    for snap in snapshots:
+        football = [c for comp in snap.get("competitions", []) for c in comp.get("cards", [])]
+        for sport, cards in (("football", football), ("mlb", snap.get("games", []))):
+            for c in cards:
+                mid = str(c.get("match_id") or c.get("game_pk") or "")
+                tw = c.get("tw") or {}
+                have = out.setdefault(
+                    (sport, mid), {"competition": "", "home_zh": "", "away_zh": ""}
+                )
+                found = {
+                    "competition": c.get("competition_name") or ("MLB" if sport == "mlb" else ""),
+                    "home_zh": tw.get("home_zh") or "",
+                    "away_zh": tw.get("away_zh") or "",
+                }
+                for k, v in found.items():
+                    have[k] = have[k] or v
+    return out
 
 
 def _final_scores(

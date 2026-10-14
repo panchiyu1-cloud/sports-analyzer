@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>大戶紀錄</title>
+<meta name="description" content="每一場抓到大戶動向的比賽：當時的價格、之後的走勢、有沒有進可下、比賽結果">
+{% include "_style.html.j2" %}
+<style>
+  h3 { font-size: .95rem; margin: 18px 0 4px; display: flex; align-items: baseline; gap: 8px; }
+  h3 .count { color: var(--muted); font-weight: 400; font-size: .82rem; }
+  .hist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); gap: 14px; }
+  .hist .card[hidden] { display: none; }
+  .title { font-weight: 600; font-size: 1.02rem; line-height: 1.3; }
+  .zone { display: flex; flex-wrap: wrap; gap: 6px; }
+  .zone .chip { margin-left: 0; }
+  .evs, .bets { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: .86rem; }
+  .evs li { border-left: 3px solid var(--line); padding: 1px 0 1px 10px; }
+  .evs li.tw_only { border-color: var(--market); }
+  .evs li.intl_big { border-color: var(--model); }
+  .evs .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+  .evs .head .chip { margin-left: 0; }
+  .chip.intl { background: var(--model); color: #fff; }
+  .bets { gap: 4px; }
+  table.traj td, table.traj th { text-align: right; }
+  table.traj td:first-child, table.traj th:first-child { text-align: left; }
+  table.traj th.grp { text-align: center; }
+  table.traj .gs { border-left: 1px solid var(--line); }
+  table.traj tr.caught td { background: var(--warn-bg); color: var(--warn-ink); }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .filters button { font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>大戶紀錄</h1>
+  <span class="meta">更新：{{ generated_local }}（台北時間）</span>
+  <a class="meta" href="index.html">回到每日分析</a>
+</header>
+
+<p class="howto">這裡永久記下每一場抓到大戶動向的比賽，不管後來有沒有進可下。<b>運彩大戶</b>：兩次運彩上傳之間，運彩把某一邊的價格調低（去水後機率多 {{ (cfg.tw_divergence_threshold*100)|round|int }}pp 以上），同一段時間國際盤沒有一樣的移動。<b>國際大單</b>：國際盤某一邊的機率，從我們第一次看到這場比賽起升了 {{ (cfg.big_move_threshold*100)|round|int }}pp 以上。每一筆記下當時的價格、之後到開賽前國際盤和運彩怎麼走、這一邊有沒有成為可下（EV 過門檻並記進運彩帳本）、MLB 的 T-10 G 值有沒有到 ±{{ (cfg.g_threshold*100)|round|int }}，以及比賽結果。每次運彩上傳（自動化或手動按捷徑）和每天 08:15、20:25 更新國際價之後都會自動檢查。</p>
+
+{% if summary %}
+<section>
+  <h2>累計</h2>
+  {% for s in summary %}
+  <h3>{{ s.label }} <span class="count">{{ s.events }} 次 · {{ s.matches }} 場</span></h3>
+  <div class="kpis">
+    <div class="kpi"><b>{{ s.hits }} / {{ s.expected }}</b><span>這一邊贏的次數 / 國際盤當時預期（{{ s.settled }} 次有結果）</span></div>
+    <div class="kpi"><b>{{ '%+.1f'|format(s.z) if s.z is not none else '—' }}</b><span>z 值（大於 2 才算有訊號）</span></div>
+    <div class="kpi"><b>{{ s.followed }} / {{ s.with_close }}</b><span>開賽前國際盤續往同方向（回落 {{ s.reversed }}）</span></div>
+    <div class="kpi"><b>{{ s.value_bets }}</b><span>這一邊後來進了可下</span></div>
+  </div>
+  {% endfor %}
+  <p class="sub">單場不算數：要累積幾十次，命中數明顯高於國際盤預期（z &gt; 2），才代表跟著大戶有用。「續往同方向」是動向之後國際盤這一邊再升 0.5pp 以上，代表市場後來也認同。</p>
+</section>
+{% endif %}
+
+<section>
+  <h2>每場紀錄 <span class="count">{{ matches|length }} 場 · 新到舊</span></h2>
+  {% if matches %}
+  <div class="filters" role="group" aria-label="篩選">
+    <button type="button" data-f="all" aria-pressed="true">全部</button>
+    <button type="button" data-f="tw_only" aria-pressed="false">運彩大戶</button>
+    <button type="button" data-f="intl_big" aria-pressed="false">國際大單</button>
+    <button type="button" data-f="football" aria-pressed="false">足球</button>
+    <button type="button" data-f="mlb" aria-pressed="false">MLB</button>
+    <button type="button" data-f="value" aria-pressed="false">進了可下</button>
+  </div>
+  <div class="hist">
+  {% for m in matches %}
+  <article class="card" data-tags="{{ m.types|join(' ') }} {{ m.sport }}{% if m.bets %} value{% endif %}">
+    <div class="top"><span>{{ m.competition or m.sport_label }} · {{ m.kickoff_local }} 開賽</span><span>{% if m.score %}<b>{{ m.score }}</b>{% elif m.closed %}待結果{% else %}未開賽{% endif %}</span></div>
+    <div class="title">{{ m.title }}</div>
+    <div class="zone">
+      {% if m.bets %}<span class="chip good">進了可下 {{ m.bets|length }} 注</span>{% else %}<span class="chip">沒進可下</span>{% endif %}
+      {% if m.g_last is not none %}<span class="chip">G {{ '%+.1f'|format(m.g_last*100) }}（{{ m.g_shape }}）</span>{% endif %}
+      {% if m.g_zone %}<span class="chip warn">G 曾到 ±{{ (cfg.g_threshold*100)|round|int }}（{{ '%+.1f'|format(m.g_peak*100) }}）</span>{% endif %}
+    </div>
+    <ul class="evs">
+      {% for e in m.events %}
+      <li class="{{ e.type }}">
+        <div class="head"><span class="chip {{ 'warn' if e.type == 'tw_only' else 'intl' }}">{{ e.type_label }}</span><span class="sub">{{ e.to_at|tpe }}</span><b>{{ e.label }}</b>{% if e.tw_price %}<span>運彩 @ {{ '%.2f'|format(e.tw_price) }}</span>{% endif %}</div>
+        {% if e.type == 'tw_only' %}
+        <div>運彩 {{ '%+.1f'|format(e.tw_move*100) }}pp vs 國際 {{ '%+.1f'|format(e.intl_move*100) }}pp <span class="sub">（{{ e.from_at|tpe }} → {{ e.to_at|tpe }}）</span></div>
+        {% else %}
+        <div>國際 {{ '%.0f'|format((e.expected - e.intl_move)*100) }}% → {{ '%.0f'|format(e.expected*100) }}% <span class="pos">({{ '%+.1f'|format(e.intl_move*100) }}pp)</span> <span class="sub">{{ e.from_at|tpe }} 起</span></div>
+        {% endif %}
+        <div class="sub">當時國際 {{ '%.0f%%'|format(e.expected*100) if e.expected is not none else '—' }}{% if e.ev_at is not none %} · 運彩 EV {{ '%+.1f%%'|format(e.ev_at*100) }}{% endif %}{% if e.close_intl is not none %} · {{ '開賽前' if e.closed else '目前' }}國際 {{ '%.0f%%'|format(e.close_intl*100) }}{% if e.after is not none %}（{{ '%+.1f'|format(e.after*100) }}pp {{ e.trend }}）{% endif %}{% endif %}{% if e.close_tw_price %} · 運彩 {{ '%.2f'|format(e.close_tw_price) }}{% endif %}</div>
+        <div>可下：{{ '是' if e.value_bet else '否' }} · 結果：<span class="{{ 'pos' if e.result == 'win' else ('neg' if e.result == 'loss' else '') }}">{{ e.result_label }}</span></div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if m.bets %}
+    <div>
+      <div class="sub">本場可下紀錄</div>
+      <ul class="bets">
+        {% for b in m.bets %}
+        <li>{{ b.captured_at|tpe }} {{ b.market }}：<b>{{ b.selection }}</b> @ {{ b.tw_price }}{% if b.ev_pct is not none %}（EV {{ '%+.1f%%'|format(b.ev_pct*100) }}）{% endif %} → <span class="{{ 'pos' if b.status in ('win', 'half_win') else ('neg' if b.status in ('loss', 'half_loss') else '') }}">{{ b.status_label }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% if m.tables %}
+    <details class="more">
+      <summary>價格走勢（到開賽前）</summary>
+      {% for t in m.tables %}
+      <div class="sub" style="margin-top:8px">{{ t.title }}</div>
+      <div class="scroll"><table class="mini traj">
+        <tr><th rowspan="2">時間</th><th class="grp gs" colspan="{{ t.sides|length }}">國際 %</th><th class="grp gs" colspan="{{ t.sides|length }}">運彩賠率</th>{% if t.with_g %}<th class="gs" rowspan="2">G</th>{% endif %}</tr>
+        <tr>{% for s in t.sides %}<th{% if loop.first %} class="gs"{% endif %}>{{ s }}</th>{% endfor %}{% for s in t.sides %}<th{% if loop.first %} class="gs"{% endif %}>{{ s }}</th>{% endfor %}</tr>
+        {% for r in t.rows %}
+        <tr{% if r.caught %} class="caught"{% endif %}><td>{{ r.at }}{% if r.caught %} ●{% endif %}</td>{% for v in r.intl %}<td class="market-val{% if loop.first %} gs{% endif %}">{{ v }}</td>{% endfor %}{% for v in r.tw %}<td{% if loop.first %} class="gs"{% endif %}>{{ v }}</td>{% endfor %}{% if t.with_g %}<td class="gs">{{ r.g }}</td>{% endif %}</tr>
+        {% endfor %}
+      </table></div>
+      {% endfor %}
+      <p class="sub">國際 % 是多家國際莊家去水後的中位數；運彩賠率是當時上傳的價格；● 是抓到動向的那一次。{% if m.sport == 'mlb' %}G = 熱門不讓分機率 + 熱門讓 1.5 分過盤機率 − 1（國際價）。{% endif %}</p>
+    </details>
+    {% endif %}
+  </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  <p class="none">還沒有抓到大戶動向。每次運彩上傳和每天兩次國際價更新後都會自動檢查，抓到就會出現在這裡。</p>
+  {% endif %}
+</section>
+
+<footer>
+  原始資料：data/moves/events.csv（每次抓到的動向，一行一筆）和 data/moves/YYYY-MM.csv（每次看到的國際價和運彩價），都可以用試算表打開。
+</footer>
+</div>
+<script>
+  (function () {
+    var buttons = document.querySelectorAll('.filters button');
+    var cards = document.querySelectorAll('.hist .card');
+    function show(f) {
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.f === f)); });
+      cards.forEach(function (c) {
+        c.hidden = !(f === 'all' || (c.dataset.tags || '').split(' ').indexOf(f) !== -1);
+      });
+    }
+    buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.f); }); });
+  })();
+</script>
+</body>
+</html>

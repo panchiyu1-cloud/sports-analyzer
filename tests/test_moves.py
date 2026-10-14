@@ -127,6 +127,211 @@ class TapeTests(unittest.TestCase):
         self.assertAlmostEqual(s["z"], -0.17, places=2)
 
 
+class BigHandRecordTests(unittest.TestCase):
+    """The permanent record of every 大戶 move (data/moves/events.csv, docs/bighand.html)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.dir = Path(self.tmp.name)
+        self.cfg = ModelConfig()
+        self.morning = dodgers(
+            0.6203, "2026-10-14T00:50+00:00", 1.44, 2.19, "2026-10-14T08:00+08:00"
+        )
+        self.evening = dodgers(
+            0.6213, "2026-10-14T12:53+00:00", 1.40, 2.31, "2026-10-14T20:00+08:00"
+        )
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def tape(self, *cards):
+        for card in cards or (self.morning, self.evening):
+            moves.record(self.dir, moves.intl_rows([card], "mlb"))
+            moves.record(self.dir, moves.tw_rows([card], "mlb"))
+        return moves.read(self.dir)
+
+    def test_a_midday_upload_without_a_market_price_does_not_break_the_chain(self):
+        # A manual 14:00 upload: the nearest consensus is 5 hours away, so nothing can be
+        # said about it; the 08:00 -> 20:00 comparison must still be made.
+        noon = dodgers(0.62, "2026-10-14T00:50+00:00", 1.42, 2.25, "2026-10-14T14:00+08:00")
+        self.tape()
+        moves.record(self.dir, moves.tw_rows([noon], "mlb"))
+        events = moves.tw_divergences(moves.read(self.dir), self.cfg)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(
+            (events[0]["from_at"], events[0]["to_at"]),
+            ("2026-10-14T00:00+00:00", "2026-10-14T12:00+00:00"),
+        )
+        self.assertEqual(events[0]["type"], "tw_only")
+        self.assertAlmostEqual(events[0]["divergence"], 0.0225, places=3)
+
+    def test_international_big_move_is_caught_once_per_side_before_kickoff(self):
+        self.morning["market"]["h2h"]["home"]["fair"] = 0.52
+        self.morning["market"]["h2h"]["away"]["fair"] = 0.48
+        later = dodgers(0.66, "2026-10-14T14:00+00:00", 1.38, 2.40, "2026-10-14T22:00+08:00")
+        after_kickoff = dodgers(0.40, "2026-10-15T01:00+00:00", 2.0, 1.8, "2026-10-15T09:00+08:00")
+        rows = self.tape(self.morning, self.evening, later, after_kickoff)
+        events = moves.intl_big_moves(rows, self.cfg)
+        # Home 52% -> 62.13% at 20:53 Taipei (+10.1pp): one event, at the first crossing;
+        # the 22:00 price (66%) is the same move, the in-game 40% is after first pitch.
+        self.assertEqual(len(events), 1)
+        e = events[0]
+        self.assertEqual((e["type"], e["side"], e["market"]), ("intl_big", "home", "h2h"))
+        self.assertEqual(
+            (e["from_at"], e["to_at"]), ("2026-10-14T00:50+00:00", "2026-10-14T12:53+00:00")
+        )
+        self.assertAlmostEqual(e["intl_move"], 0.1013, places=4)
+        self.assertEqual(e["expected"], 0.6213)
+        self.assertEqual(e["tw_price"], 1.4)  # 運彩 at 20:00, 53 minutes from the move
+
+    def test_events_are_recorded_once_with_the_names_known_at_the_time(self):
+        path = self.dir / "events.csv"
+        events = moves.tw_divergences(self.tape(), self.cfg)
+        names = {("mlb", "813024"): {"competition": "MLB", "home_zh": "道奇", "away_zh": "釀酒人"}}
+        self.assertEqual(moves.record_events(path, events, names), 1)
+        self.assertEqual(moves.record_events(path, events, names), 0)
+        # The same upload pair seen later with another side on top is the same detection.
+        self.assertEqual(moves.record_events(path, [{**events[0], "side": "away"}]), 0)
+        saved = moves.read_events(path)
+        self.assertEqual(len(saved), 1)
+        self.assertEqual((saved[0]["home_zh"], saved[0]["competition"]), ("道奇", "MLB"))
+        self.assertEqual((saved[0]["expected"], saved[0]["tw_price"]), ("0.6213", "1.4"))
+
+    def test_a_record_with_older_columns_is_rewritten_not_misaligned(self):
+        path = self.dir / "events.csv"
+        old = ["id", "type", "to_at", "sport", "match_id", "market", "line", "side", "expected"]
+        path.write_text(
+            ",".join(old) + "\nabc,tw_only,2026-10-01T00:00+00:00,mlb,1,h2h,,home,0.5\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(moves.record_events(path, moves.tw_divergences(self.tape(), self.cfg)), 1)
+        saved = moves.read_events(path)
+        self.assertEqual(list(saved[0].keys()), moves.EVENT_COLUMNS)
+        self.assertEqual([(r["id"], r["expected"]) for r in saved][0], ("abc", "0.5"))
+        self.assertEqual(saved[1]["expected"], "0.6213")
+
+    def test_g_from_the_moneyline_and_the_run_line_bought_together(self):
+        def rows(at, home, line, cover_home):
+            base = {"observed_at": at, "source": "intl", "sport": "mlb", "match_id": "1"}
+            return [
+                {**base, "market": "h2h", "side": "home", "line": "", "prob": str(home)},
+                {**base, "market": "h2h", "side": "away", "line": "", "prob": str(1 - home)},
+                {**base, "market": "spread", "side": "home", "line": line, "prob": str(cover_home)},
+                {
+                    **base,
+                    "market": "spread",
+                    "side": "away",
+                    "line": line,
+                    "prob": str(1 - cover_home),
+                },
+            ]
+
+        tape = (
+            rows("2026-10-14T00:50+00:00", 0.6213, "-1.5", 0.42)  # home fav gives 1.5
+            + rows("2026-10-14T12:53+00:00", 0.40, "1.5", 0.55)  # away fav gives 1.5
+            + rows("2026-10-14T13:30+00:00", 0.60, "1.5", 0.70)  # the underdog gives runs
+            + rows("2026-10-15T01:00+00:00", 0.70, "-1.5", 0.50)  # after first pitch
+        )
+        g = moves.g_points(tape, before=moves.parse_time("2026-10-15T00:00+00:00"))
+        # 0.6213 + 0.42 - 1 and 0.60 + (1 - 0.55) - 1
+        self.assertEqual(g, {"2026-10-14T00:50+00:00": 0.0413, "2026-10-14T12:53+00:00": 0.05})
+
+    def history(self, now="2026-10-15T05:00+00:00"):
+        self.evening["market"]["spread"] = {
+            "line": -1.5,
+            "home": {"fair": 0.42},
+            "away": {"fair": 0.58},
+            "odds_at": "2026-10-14T12:53+00:00",
+        }
+        closing = dodgers(0.645, "2026-10-14T23:40+00:00", 1.36, 2.45, "2026-10-15T07:30+08:00")
+        rows = self.tape(self.morning, self.evening, closing)
+        path = self.dir / "events.csv"
+        moves.record_events(path, moves.tw_divergences(rows, self.cfg))
+        bet = {
+            "sport": "mlb",
+            "match_id": "813024",
+            "selection_key": "home",
+            "line": "",
+            "captured_at": "2026-10-15T07:30+08:00",
+            "market": "不讓分",
+            "selection": "主（道奇）",
+            "tw_price": "1.36",
+            "ev": "-0.12",
+            "status": "win",
+        }
+        return moves.event_history(
+            moves.read_events(path),
+            rows,
+            {("mlb", "813024"): (5, 2)},
+            [bet],
+            now=moves.parse_time(now),
+        )
+
+    def test_history_joins_the_prices_up_to_kickoff_the_bets_and_the_result(self):
+        history = self.history()
+        self.assertEqual(len(history), 1)
+        m = history[0]
+        self.assertEqual((m["score"], m["closed"]), ("5-2", True))
+        first = m["events"][0]
+        self.assertEqual(
+            (first["type"], first["side"], first["result"]), ("tw_only", "home", "win")
+        )
+        self.assertTrue(first["value_bet"])
+        # Seen at 62.13% (20:53); the market closed at 64.5% before first pitch: +2.4pp.
+        self.assertAlmostEqual(first["after"], 0.0237, places=4)
+        self.assertEqual(first["close_tw_price"], 1.36)
+        self.assertAlmostEqual(first["ev_at"], 0.6213 * 1.4 - 1, places=4)
+        # The 07:30 upload followed the market (運彩 +2.5pp, market +2.4pp): no new event.
+        self.assertEqual(len(m["events"]), 1)
+        h2h = m["markets"][0]
+        self.assertEqual(h2h["market"], "h2h")
+        self.assertEqual(
+            [p["at"] for p in h2h["points"]][:2],
+            ["2026-10-14T00:00+00:00", "2026-10-14T00:50+00:00"],
+        )
+        self.assertEqual(h2h["points"][0]["tw"], {"home": 1.44, "away": 2.19})
+        self.assertEqual(next(p["g"] for p in h2h["points"] if p.get("g") is not None), 0.0413)
+        self.assertEqual(m["g_last"], 0.0413)
+        s = moves.history_summary(history)["tw_only"]
+        self.assertEqual(
+            (s["matches"], s["followed"], s["reversed"], s["value_bets"]), (1, 1, 0, 1)
+        )
+        self.assertEqual((s["settled"], s["hits"]), (1, 1))
+
+    def test_before_kickoff_the_move_since_is_not_counted_as_followed(self):
+        s = moves.history_summary(self.history(now="2026-10-14T13:00+00:00"))["tw_only"]
+        self.assertEqual((s["with_close"], s["followed"]), (0, 0))
+
+    def test_page(self):
+        from sports_analyzer.render.cards import render_bighand_page
+
+        history = self.history()
+        history[0]["home_zh"], history[0]["away_zh"] = "洛杉磯道奇", "密爾瓦基釀酒人"
+        out = render_bighand_page(
+            history,
+            moves.history_summary(history),
+            moves.parse_time("2026-10-15T05:00+00:00"),
+            self.dir / "bighand.html",
+        )
+        html = out.read_text(encoding="utf-8")
+        self.assertIn("<title>大戶紀錄</title>", html)
+        self.assertIn("密爾瓦基釀酒人 @ 洛杉磯道奇", html)
+        self.assertIn("洛杉磯道奇 不讓分", html)
+        self.assertIn("運彩 @ 1.40", html)
+        self.assertIn("進了可下 1 注", html)
+        self.assertIn("G +4.1（中性）", html)
+        self.assertIn("20:00 ●", html)  # the upload the move was caught at
+        self.assertIn('結果：<span class="pos">贏</span>', html)
+
+    def test_page_without_records(self):
+        from sports_analyzer.render.cards import render_bighand_page
+
+        out = render_bighand_page(
+            [], {}, moves.parse_time("2026-10-15T05:00+00:00"), self.dir / "b.html"
+        )
+        self.assertIn("還沒有抓到大戶動向", out.read_text(encoding="utf-8"))
+
+
 class NotifyTests(unittest.TestCase):
     row = {
         "sport": "mlb",
