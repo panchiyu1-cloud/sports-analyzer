@@ -15,6 +15,7 @@
   <span class="meta">更新：{{ generated_local }}（台北時間）</span>
   {% if odds_budget %}<span class="meta">賠率點數剩 {{ odds_budget.remaining }}（每日預算約 {{ odds_budget.daily }}）</span>{% elif credits_remaining is not none %}<span class="meta">The Odds API 剩餘點數：{{ credits_remaining }}</span>{% endif %}
   {% if backtest %}<a class="meta" href="backtest.html">回測報告</a>{% endif %}
+  <a class="meta" href="t10_backtest.html">T-10 回測</a>
   {% if reviews.total %}<a class="meta" href="reviews.html">全部賽後檢討</a>{% endif %}
 </header>
 

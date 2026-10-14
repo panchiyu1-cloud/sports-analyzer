@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-10 回測</title>
+<meta name="description" content="T-10 G 值規則在 2021–2025 年 MLB 收盤賠率上的回測">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e4e2db;
+    --model: #2f6f5e; --market: #b0693a; --accent: #2f6f5e; --good: #2f6f5e; --bad: #a63d2f;
+    --chip: #ecebe5; --warn-bg: #fbf3e2; --warn-ink: #6b4b12;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
+      --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
+      --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
+    --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
+    --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+         line-height: 1.5; font-size: 15px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-bottom: 20px; }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: .02em; }
+  .meta { color: var(--muted); font-size: .9rem; }
+  h2 { font-size: 1.1rem; margin: 28px 0 10px; display: flex; align-items: center; gap: 10px; }
+  h2 .count { color: var(--muted); font-weight: 400; font-size: .9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .card .top { display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; }
+  .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+  .teams .name { font-weight: 600; font-size: 1.02rem; line-height: 1.25; }
+  .teams .away { text-align: right; }
+  .teams .vs { color: var(--muted); font-size: .8rem; }
+  .sub { color: var(--muted); font-size: .8rem; }
+  .bars { display: grid; grid-template-columns: 2.6em 1fr 3.2em 3.2em; gap: 4px 8px; align-items: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .bars .lab { color: var(--muted); }
+  .bar { position: relative; height: 10px; background: var(--chip); border-radius: 5px; overflow: hidden; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
+  .bar .m { background: var(--model); }
+  .bar .k { background: var(--market); opacity: .55; }
+  .legend { display: flex; gap: 14px; font-size: .75rem; color: var(--muted); }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .model-val { color: var(--model); font-weight: 600; }
+  .market-val { color: var(--market); }
+  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: .82rem; }
+  .facts div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding: 2px 0; }
+  .facts span:first-child { color: var(--muted); }
+  .rec { border-top: 1px solid var(--line); padding-top: 10px; font-size: .9rem; }
+  .rec b { color: var(--accent); }
+  .chip { display: inline-block; background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: .75rem; margin-left: 6px; }
+  .chip.high { background: var(--good); color: #fff; }
+  .chip.mid { background: var(--market); color: #fff; }
+  .note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 6px 10px; font-size: .78rem; }
+  .none { color: var(--muted); font-size: .85rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .85rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-weight: 500; font-size: .78rem; }
+  tr:last-child td { border-bottom: 0; }
+  .scroll { overflow-x: auto; }
+  .kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
+  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 120px; flex: 1 1 140px; }
+  .kpi b { display: block; font-size: 1.2rem; }
+  .kpi span { color: var(--muted); font-size: .78rem; }
+  .pos { color: var(--good); } .neg { color: var(--bad); }
+  footer { margin-top: 40px; color: var(--muted); font-size: .78rem; border-top: 1px solid var(--line); padding-top: 14px; }
+  a { color: var(--accent); }
+
+  /* post-match review */
+  .score { text-align: center; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .score .sub { font-size: .72rem; font-weight: 400; }
+  .chip.good { background: var(--good); color: #fff; }
+  .chip.bad { background: var(--bad); color: #fff; }
+  .chip.warn { background: var(--market); color: #fff; }
+  .verdict-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .verdict-row .chip { margin-left: 0; font-size: .8rem; padding: 2px 10px; }
+  table.mini { border: 0; border-radius: 0; background: transparent; font-size: .82rem; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { padding: 3px 6px; border-bottom: 1px dashed var(--line); }
+  table.mini tr.hit td { font-weight: 700; }
+  table.mini tr.hit td:first-child::after { content: " ✓"; color: var(--good); }
+  ul.why { margin: 0; padding-left: 1.1em; font-size: .84rem; display: flex; flex-direction: column; gap: 4px; }
+  .conclusion { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; font-size: .86rem; }
+  .conclusion b { color: var(--accent); margin-right: 4px; }
+  .howto { font-size: .82rem; color: var(--muted); margin: 6px 0 12px; }
+  details.more { margin-top: 10px; }
+  details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
+</style><style>
+  .chart svg { width: 100%; max-width: 520px; height: auto; display: block; }
+  .chart .grid { stroke: var(--line); stroke-width: 1; }
+  .chart .zero { stroke: var(--muted); stroke-width: 1.5; }
+  .chart .whisker { stroke: var(--model); stroke-width: 2; stroke-linecap: round; }
+  .chart .dot { fill: var(--model); stroke: var(--card); stroke-width: 2; }
+  .chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+  .verdict { padding: 10px 14px; border-radius: 10px; font-size: .95rem; margin: 10px 0 14px; }
+  .verdict.fail { background: var(--warn-bg); color: var(--warn-ink); }
+  .verdict.pass { background: var(--chip); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>T-10 回測</h1>
+  <span class="meta">2021-04-01 ～ 2025-08-16 · 10,968 場 MLB · 更新 2026-10-14</span>
+  <a class="meta" href="index.html">回到每日分析</a>
+</header>
+
+<div class="verdict fail"><b>結論：</b>未通過：G ≥ +6pp 的強隊 ML 和 G ≤ −6pp 的弱隊 +1.5，實際勝率都沒有顯著高於收盤市場自己的機率，在收盤價下注都是負報酬——T-10 的 G 值目前看不出市場沒算到的資訊。</div>
+
+<p class="howto">
+  T-10 規則：用同一家莊家的收盤賠率，去水後得到強隊不讓分勝率 p、強隊讓 1.5 分過盤率 c，G = p + c − 1。
+  G ≥ +6pp 買強隊不讓分（ML），G ≤ −6pp 買弱隊受讓 1.5 分。
+  「市場機率」是收盤賠率去水後的機率：如果 G 真的抓到市場沒算到的東西，實際勝率應該<b>高於</b>市場機率。
+  報酬率用三種價格算：莊家收盤價、六家莊家裡最好的價、以及運彩約 15% 水錢下的價格。
+</p>
+
+
+<section>
+  <h2>±6pp 規則的結果</h2>
+  <div class="grid">
+    <div class="card">
+  <div class="top"><span>G ≥ +6pp → 強隊 ML</span><span>3,785 場</span></div>
+  <div class="facts">
+    <div><span>實際勝率</span><span><b>64.8%</b></span></div>
+    <div><span>市場機率</span><span>66.5%</span></div>
+    <div><span>差距</span><span class="neg">-1.6pp（z -2.1）</span></div>
+    <div><span>收盤價報酬率</span><span class="neg">-5.2%</span></div>
+    <div><span>最佳價報酬率</span><span class="neg">-2.6%</span></div>
+    <div><span>運彩價報酬率</span><span class="neg">-15.2%</span></div>
+  </div>
+  <p class="sub">對照：所有比賽都買同一邊，收盤價報酬率 -5.3%（10,968 場）。報酬率標準誤 ±1.1%。</p>
+</div>
+
+    <div class="card">
+  <div class="top"><span>G ≤ −6pp → 弱隊 +1.5</span><span>3,330 場</span></div>
+  <div class="facts">
+    <div><span>實際勝率</span><span><b>64.0%</b></span></div>
+    <div><span>市場機率</span><span>63.2%</span></div>
+    <div><span>差距</span><span class="pos">+0.8pp（z +1.0）</span></div>
+    <div><span>收盤價報酬率</span><span class="neg">-1.8%</span></div>
+    <div><span>最佳價報酬率</span><span class="pos">+0.4%</span></div>
+    <div><span>運彩價報酬率</span><span class="neg">-11.9%</span></div>
+  </div>
+  <p class="sub">對照：所有比賽都買同一邊，收盤價報酬率 -3.3%（10,968 場）。報酬率標準誤 ±1.3%。</p>
+</div>
+
+  </div>
+  <p class="sub">去水方法換成等比例（multiplicative）：強隊 ML 差距 -0.4pp（z -0.6），弱隊 +1.5 差距 +1.8pp（z +2.0）。z 要大於 2 才算顯著。</p>
+</section>
+
+
+<section>
+  <h2>依 G 值分十組：實際結果比市場多（正）或少（負）幾個百分點</h2>
+  <p class="howto">每個點是一組比賽，直線是 ±2 個標準誤。點都在 0 附近、沒有隨 G 往上或往下走，表示 G 沒有帶來市場以外的資訊。點按住可看數字。</p>
+  <div class="grid">
+    <figure class="chart">
+  <figcaption class="sub" style="margin-bottom:4px">強隊不讓分：實際勝率 − 市場機率（pp）</figcaption>
+  <svg viewBox="0 0 340 190" role="img" aria-label="強隊不讓分：實際勝率 − 市場機率（pp）">
+    <line class="grid" x1="34" x2="332" y1="156.0" y2="156.0"/>
+    <text x="30" y="160.0" text-anchor="end">-6</text>
+    <line class="grid" x1="34" x2="332" y1="119.5" y2="119.5"/>
+    <text x="30" y="123.5" text-anchor="end">-3</text>
+    <line class="grid" x1="34" x2="332" y1="83.0" y2="83.0"/>
+    <text x="30" y="87.0" text-anchor="end">0</text>
+    <line class="grid" x1="34" x2="332" y1="46.5" y2="46.5"/>
+    <text x="30" y="50.5" text-anchor="end">+3</text>
+    <line class="grid" x1="34" x2="332" y1="10.0" y2="10.0"/>
+    <text x="30" y="14.0" text-anchor="end">+6</text>
+    <line class="zero" x1="34" x2="332" y1="83.0" y2="83.0"/>
+    <g><title>G -33.2 ~ -10.9pp，1096 場：比市場 -0.6pp（±3.0）</title>
+      <line class="whisker" x1="48.9" x2="48.9" y1="126.6" y2="53.1"/>
+      <circle class="dot" cx="48.9" cy="89.8" r="4.5"/>
+      <rect x="34.9" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="48.9" y="170" text-anchor="middle">-13</text>
+    <g><title>G -10.9 ~ -8.6pp，1097 場：比市場 +0.1pp（±3.0）</title>
+      <line class="whisker" x1="78.7" x2="78.7" y1="118.9" y2="45.9"/>
+      <circle class="dot" cx="78.7" cy="82.4" r="4.5"/>
+      <rect x="64.7" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="78.7" y="170" text-anchor="middle">-10</text>
+    <g><title>G -8.6 ~ -6.1pp，1097 場：比市場 -0.4pp（±3.0）</title>
+      <line class="whisker" x1="108.5" x2="108.5" y1="124.0" y2="51.0"/>
+      <circle class="dot" cx="108.5" cy="87.5" r="4.5"/>
+      <rect x="94.5" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="108.5" y="170" text-anchor="middle">-7</text>
+    <g><title>G -6.1 ~ -3.0pp，1097 場：比市場 -1.9pp（±3.0）</title>
+      <line class="whisker" x1="138.3" x2="138.3" y1="142.3" y2="69.3"/>
+      <circle class="dot" cx="138.3" cy="105.8" r="4.5"/>
+      <rect x="124.30000000000001" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="138.3" y="170" text-anchor="middle">-5</text>
+    <g><title>G -3.0 ~ +0.0pp，1097 場：比市場 -1.3pp（±3.0）</title>
+      <line class="whisker" x1="168.1" x2="168.1" y1="135.0" y2="62.4"/>
+      <circle class="dot" cx="168.1" cy="98.7" r="4.5"/>
+      <rect x="154.1" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="168.1" y="170" text-anchor="middle">-1</text>
+    <g><title>G +0.0 ~ +3.8pp，1096 場：比市場 -1.1pp（±3.0）</title>
+      <line class="whisker" x1="197.9" x2="197.9" y1="132.8" y2="60.7"/>
+      <circle class="dot" cx="197.9" cy="96.7" r="4.5"/>
+      <rect x="183.9" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="197.9" y="170" text-anchor="middle">+2</text>
+    <g><title>G +3.8 ~ +7.8pp，1097 場：比市場 -1.7pp（±2.9）</title>
+      <line class="whisker" x1="227.7" x2="227.7" y1="139.1" y2="67.5"/>
+      <circle class="dot" cx="227.7" cy="103.3" r="4.5"/>
+      <rect x="213.7" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="227.7" y="170" text-anchor="middle">+6</text>
+    <g><title>G +7.8 ~ +12.9pp，1097 場：比市場 -3.0pp（±2.9）</title>
+      <line class="whisker" x1="257.5" x2="257.5" y1="155.1" y2="84.1"/>
+      <circle class="dot" cx="257.5" cy="119.6" r="4.5"/>
+      <rect x="243.5" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="257.5" y="170" text-anchor="middle">+10</text>
+    <g><title>G +12.9 ~ +20.5pp，1097 場：比市場 +0.1pp（±2.8）</title>
+      <line class="whisker" x1="287.3" x2="287.3" y1="116.1" y2="47.0"/>
+      <circle class="dot" cx="287.3" cy="81.5" r="4.5"/>
+      <rect x="273.3" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="287.3" y="170" text-anchor="middle">+16</text>
+    <g><title>G +20.5 ~ +97.5pp，1097 場：比市場 -1.4pp（±2.7）</title>
+      <line class="whisker" x1="317.1" x2="317.1" y1="132.6" y2="67.4"/>
+      <circle class="dot" cx="317.1" cy="100.0" r="4.5"/>
+      <rect x="303.1" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="317.1" y="170" text-anchor="middle">+29</text>
+    <text x="183.0" y="185" text-anchor="middle">G 值（pp，每組約 1,097 場）</text>
+  </svg>
+</figure>
+
+    <figure class="chart">
+  <figcaption class="sub" style="margin-bottom:4px">弱隊 +1.5：實際過盤率 − 市場機率（pp）</figcaption>
+  <svg viewBox="0 0 340 190" role="img" aria-label="弱隊 +1.5：實際過盤率 − 市場機率（pp）">
+    <line class="grid" x1="34" x2="332" y1="156.0" y2="156.0"/>
+    <text x="30" y="160.0" text-anchor="end">-6</text>
+    <line class="grid" x1="34" x2="332" y1="119.5" y2="119.5"/>
+    <text x="30" y="123.5" text-anchor="end">-3</text>
+    <line class="grid" x1="34" x2="332" y1="83.0" y2="83.0"/>
+    <text x="30" y="87.0" text-anchor="end">0</text>
+    <line class="grid" x1="34" x2="332" y1="46.5" y2="46.5"/>
+    <text x="30" y="50.5" text-anchor="end">+3</text>
+    <line class="grid" x1="34" x2="332" y1="10.0" y2="10.0"/>
+    <text x="30" y="14.0" text-anchor="end">+6</text>
+    <line class="zero" x1="34" x2="332" y1="83.0" y2="83.0"/>
+    <g><title>G -33.2 ~ -10.9pp，1096 場：比市場 +0.9pp（±2.9）</title>
+      <line class="whisker" x1="48.9" x2="48.9" y1="107.2" y2="37.1"/>
+      <circle class="dot" cx="48.9" cy="72.2" r="4.5"/>
+      <rect x="34.9" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="48.9" y="170" text-anchor="middle">-13</text>
+    <g><title>G -10.9 ~ -8.6pp，1097 場：比市場 +0.3pp（±2.9）</title>
+      <line class="whisker" x1="78.7" x2="78.7" y1="114.5" y2="43.5"/>
+      <circle class="dot" cx="78.7" cy="79.0" r="4.5"/>
+      <rect x="64.7" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="78.7" y="170" text-anchor="middle">-10</text>
+    <g><title>G -8.6 ~ -6.1pp，1097 場：比市場 +1.3pp（±2.9）</title>
+      <line class="whisker" x1="108.5" x2="108.5" y1="103.1" y2="31.5"/>
+      <circle class="dot" cx="108.5" cy="67.3" r="4.5"/>
+      <rect x="94.5" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="108.5" y="170" text-anchor="middle">-7</text>
+    <g><title>G -6.1 ~ -3.0pp，1097 場：比市場 -1.6pp（±3.0）</title>
+      <line class="whisker" x1="138.3" x2="138.3" y1="138.6" y2="66.6"/>
+      <circle class="dot" cx="138.3" cy="102.6" r="4.5"/>
+      <rect x="124.30000000000001" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="138.3" y="170" text-anchor="middle">-5</text>
+    <g><title>G -3.0 ~ +0.0pp，1097 場：比市場 -0.5pp（±3.0）</title>
+      <line class="whisker" x1="168.1" x2="168.1" y1="125.2" y2="53.2"/>
+      <circle class="dot" cx="168.1" cy="89.2" r="4.5"/>
+      <rect x="154.1" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="168.1" y="170" text-anchor="middle">-1</text>
+    <g><title>G +0.0 ~ +3.8pp，1096 場：比市場 +1.2pp（±3.0）</title>
+      <line class="whisker" x1="197.9" x2="197.9" y1="104.2" y2="31.7"/>
+      <circle class="dot" cx="197.9" cy="67.9" r="4.5"/>
+      <rect x="183.9" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="197.9" y="170" text-anchor="middle">+2</text>
+    <g><title>G +3.8 ~ +7.8pp，1097 場：比市場 +0.6pp（±3.0）</title>
+      <line class="whisker" x1="227.7" x2="227.7" y1="112.1" y2="39.1"/>
+      <circle class="dot" cx="227.7" cy="75.6" r="4.5"/>
+      <rect x="213.7" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="227.7" y="170" text-anchor="middle">+6</text>
+    <g><title>G +7.8 ~ +12.9pp，1097 場：比市場 +1.2pp（±3.0）</title>
+      <line class="whisker" x1="257.5" x2="257.5" y1="104.8" y2="31.3"/>
+      <circle class="dot" cx="257.5" cy="68.0" r="4.5"/>
+      <rect x="243.5" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="257.5" y="170" text-anchor="middle">+10</text>
+    <g><title>G +12.9 ~ +20.5pp，1097 場：比市場 -0.2pp（±3.0）</title>
+      <line class="whisker" x1="287.3" x2="287.3" y1="121.9" y2="48.4"/>
+      <circle class="dot" cx="287.3" cy="85.2" r="4.5"/>
+      <rect x="273.3" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="287.3" y="170" text-anchor="middle">+16</text>
+    <g><title>G +20.5 ~ +97.5pp，1097 場：比市場 +0.3pp（±3.0）</title>
+      <line class="whisker" x1="317.1" x2="317.1" y1="115.0" y2="42.5"/>
+      <circle class="dot" cx="317.1" cy="78.7" r="4.5"/>
+      <rect x="303.1" y="10" width="28" height="146" fill="transparent"/>
+    </g>
+    <text x="317.1" y="170" text-anchor="middle">+29</text>
+    <text x="183.0" y="185" text-anchor="middle">G 值（pp，每組約 1,097 場）</text>
+  </svg>
+</figure>
+
+  </div>
+  <div class="scroll" style="margin-top:10px"><table>
+    <tr><th>G 範圍（pp）</th><th class="num">場數</th><th class="num">強隊勝率 vs 市場</th><th class="num">弱隊 +1.5 vs 市場</th></tr>
+    <tr><td>-33.2 ～ -10.9</td><td class="num">1096</td>
+      <td class="num">-0.6 ± 3.0</td>
+      <td class="num">+0.9 ± 2.9</td></tr>
+    <tr><td>-10.9 ～ -8.6</td><td class="num">1097</td>
+      <td class="num">+0.1 ± 3.0</td>
+      <td class="num">+0.3 ± 2.9</td></tr>
+    <tr><td>-8.6 ～ -6.1</td><td class="num">1097</td>
+      <td class="num">-0.4 ± 3.0</td>
+      <td class="num">+1.3 ± 2.9</td></tr>
+    <tr><td>-6.1 ～ -3.0</td><td class="num">1097</td>
+      <td class="num">-1.9 ± 3.0</td>
+      <td class="num">-1.6 ± 3.0</td></tr>
+    <tr><td>-3.0 ～ +0.0</td><td class="num">1097</td>
+      <td class="num">-1.3 ± 3.0</td>
+      <td class="num">-0.5 ± 3.0</td></tr>
+    <tr><td>+0.0 ～ +3.8</td><td class="num">1096</td>
+      <td class="num">-1.1 ± 3.0</td>
+      <td class="num">+1.2 ± 3.0</td></tr>
+    <tr><td>+3.8 ～ +7.8</td><td class="num">1097</td>
+      <td class="num">-1.7 ± 2.9</td>
+      <td class="num">+0.6 ± 3.0</td></tr>
+    <tr><td>+7.8 ～ +12.9</td><td class="num">1097</td>
+      <td class="num">-3.0 ± 2.9</td>
+      <td class="num">+1.2 ± 3.0</td></tr>
+    <tr><td>+12.9 ～ +20.5</td><td class="num">1097</td>
+      <td class="num">+0.1 ± 2.8</td>
+      <td class="num">-0.2 ± 3.0</td></tr>
+    <tr><td>+20.5 ～ +97.5</td><td class="num">1097</td>
+      <td class="num">-1.4 ± 2.7</td>
+      <td class="num">+0.3 ± 3.0</td></tr>
+  </table></div>
+</section>
+
+
+<section>
+  <h2>換門檻</h2>
+  <p class="howto">這是事後試很多組，只能看趨勢；任何一組看起來好，都要再用新資料驗證。報酬率用莊家收盤價。</p>
+  <div class="scroll"><table><tr><th>門檻</th><th class="num">強隊 ML 場數</th><th class="num">比市場</th><th class="num">報酬率</th><th class="num">弱隊 +1.5 場數</th><th class="num">比市場</th><th class="num">報酬率</th></tr>
+
+<tr><td>±2pp</td>
+  <td class="num">4902</td><td class="num">-1.9</td><td class="num neg">-5.8%</td>
+  <td class="num">4742</td><td class="num">-0.0</td><td class="num neg">-3.3%</td></tr>
+<tr><td>±4pp</td>
+  <td class="num">4323</td><td class="num">-1.6</td><td class="num neg">-5.2%</td>
+  <td class="num">4031</td><td class="num">+0.7</td><td class="num neg">-2.1%</td></tr>
+<tr><td>±6pp</td>
+  <td class="num">3785</td><td class="num">-1.6</td><td class="num neg">-5.2%</td>
+  <td class="num">3330</td><td class="num">+0.8</td><td class="num neg">-1.8%</td></tr>
+<tr><td>±8pp</td>
+  <td class="num">3240</td><td class="num">-1.4</td><td class="num neg">-4.8%</td>
+  <td class="num">2470</td><td class="num">+0.8</td><td class="num neg">-1.8%</td></tr>
+<tr><td>±10pp</td>
+  <td class="num">2758</td><td class="num">-1.0</td><td class="num neg">-4.1%</td>
+  <td class="num">1541</td><td class="num">+0.5</td><td class="num neg">-2.2%</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>逐年與賽段</h2>
+  <div class="scroll"><table><tr><th></th><th class="num">強隊 ML 場數</th><th class="num">比市場</th><th class="num">報酬率</th><th class="num">弱隊 +1.5 場數</th><th class="num">比市場</th><th class="num">報酬率</th></tr>
+
+<tr><td>2021</td>
+  <td class="num">863</td><td class="num">-1.5</td><td class="num neg">-4.6%</td>
+  <td class="num">611</td><td class="num">+1.1</td><td class="num neg">-0.8%</td></tr>
+<tr><td>2022</td>
+  <td class="num">910</td><td class="num">+0.0</td><td class="num neg">-2.5%</td>
+  <td class="num">611</td><td class="num">+3.0</td><td class="num pos">+1.5%</td></tr>
+<tr><td>2023</td>
+  <td class="num">820</td><td class="num">-3.5</td><td class="num neg">-8.2%</td>
+  <td class="num">673</td><td class="num">+0.9</td><td class="num neg">-1.7%</td></tr>
+<tr><td>2024</td>
+  <td class="num">716</td><td class="num">-0.5</td><td class="num neg">-3.7%</td>
+  <td class="num">833</td><td class="num">+0.0</td><td class="num neg">-3.2%</td></tr>
+<tr><td>2025</td>
+  <td class="num">476</td><td class="num">-3.5</td><td class="num neg">-8.7%</td>
+  <td class="num">602</td><td class="num">-0.6</td><td class="num neg">-4.4%</td></tr>
+<tr><td>例行賽</td>
+  <td class="num">3762</td><td class="num">-1.5</td><td class="num neg">-5.1%</td>
+  <td class="num">3261</td><td class="num">+0.8</td><td class="num neg">-1.8%</td></tr>
+<tr><td>季後賽</td>
+  <td class="num">23</td><td class="num">-17.9</td><td class="num neg">-27.4%</td>
+  <td class="num">69</td><td class="num">+1.5</td><td class="num neg">-0.4%</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>各家莊家（用該家自己的 G 和價格）</h2>
+  <div class="scroll"><table><tr><th>莊家</th><th class="num">強隊 ML 場數</th><th class="num">比市場</th><th class="num">報酬率</th><th class="num">弱隊 +1.5 場數</th><th class="num">比市場</th><th class="num">報酬率</th></tr>
+
+<tr><td>draftkings</td>
+  <td class="num">3479</td><td class="num">-1.8</td><td class="num neg">-5.5%</td>
+  <td class="num">2334</td><td class="num">+0.5</td><td class="num neg">-2.4%</td></tr>
+<tr><td>fanduel</td>
+  <td class="num">3565</td><td class="num">-2.5</td><td class="num neg">-6.6%</td>
+  <td class="num">2377</td><td class="num">-0.1</td><td class="num neg">-3.5%</td></tr>
+<tr><td>caesars</td>
+  <td class="num">3786</td><td class="num">-1.9</td><td class="num neg">-5.1%</td>
+  <td class="num">2827</td><td class="num">+1.2</td><td class="num neg">-0.8%</td></tr>
+<tr><td>bet365</td>
+  <td class="num">3694</td><td class="num">-1.8</td><td class="num neg">-5.2%</td>
+  <td class="num">2768</td><td class="num">+0.3</td><td class="num neg">-1.9%</td></tr>
+<tr><td>betmgm</td>
+  <td class="num">2370</td><td class="num">-1.2</td><td class="num neg">-4.9%</td>
+  <td class="num">2074</td><td class="num">+0.3</td><td class="num neg">-2.6%</td></tr>
+<tr><td>bet_rivers_ny</td>
+  <td class="num">1793</td><td class="num">-3.1</td><td class="num neg">-7.7%</td>
+  <td class="num">3</td><td class="num">+37.1</td><td class="num pos">+53.2%</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>其他下注時機</h2>
+  <p class="howto">CLV（收盤線價值）＝收盤時的市場機率 × 你拿到的賠率 − 1。CLV 為正才代表下注時的價格比後來的市場好，是判斷方法有沒有真實優勢最可靠的指標。</p>
+  <div class="scroll"><table>
+    <tr><th>做法</th><th class="num">強隊 ML 場數</th><th class="num">報酬率</th><th class="num">CLV</th><th class="num">弱隊 +1.5 場數</th><th class="num">報酬率</th><th class="num">CLV</th></tr>
+    <tr><td>開盤時 G 達標就用開盤價下注</td>
+      <td class="num">3383</td><td class="num">-3.8%</td><td class="num">-2.5%</td>
+      <td class="num">2262</td><td class="num">-2.7%</td><td class="num">-4.7%</td></tr>
+    <tr><td>開盤和收盤 G 都達標（穩定）才下注，用收盤價</td>
+      <td class="num">2870</td><td class="num">-4.5%</td><td class="num">-2.7%</td>
+      <td class="num">1439</td><td class="num">-0.8%</td><td class="num">-3.0%</td></tr>
+  </table></div>
+</section>
+
+<footer>
+  資料：SportsBookReview 歷史賠率（DraftKings、FanDuel、Caesars、bet365、BetMGM、BetRivers 的開盤與收盤不讓分、讓分、大小），由
+  <a href="https://github.com/ArnavSaraogi/mlb-odds-scraper">ArnavSaraogi/mlb-odds-scraper</a> 整理；只用例行賽與季後賽、讓分為 ±1.5 且由不讓分強隊讓分的比賽。
+  每場用一家莊家（DraftKings 優先）。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
+</footer>
+</div>
+</body>
+</html>

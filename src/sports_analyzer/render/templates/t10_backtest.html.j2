@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>T-10 回測</title>
+<meta name="description" content="T-10 G 值規則在 2021–2025 年 MLB 收盤賠率上的回測">
+{% include "_style.html.j2" %}
+<style>
+  .chart svg { width: 100%; max-width: 520px; height: auto; display: block; }
+  .chart .grid { stroke: var(--line); stroke-width: 1; }
+  .chart .zero { stroke: var(--muted); stroke-width: 1.5; }
+  .chart .whisker { stroke: var(--model); stroke-width: 2; stroke-linecap: round; }
+  .chart .dot { fill: var(--model); stroke: var(--card); stroke-width: 2; }
+  .chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
+  .verdict { padding: 10px 14px; border-radius: 10px; font-size: .95rem; margin: 10px 0 14px; }
+  .verdict.fail { background: var(--warn-bg); color: var(--warn-ink); }
+  .verdict.pass { background: var(--chip); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>T-10 回測</h1>
+  <span class="meta">{{ s.first }} ～ {{ s.last }} · {{ '{:,}'.format(s.games) }} 場 MLB · 更新 {{ s.generated }}</span>
+  <a class="meta" href="index.html">回到每日分析</a>
+</header>
+
+<div class="verdict {{ 'pass' if s.passed else 'fail' }}"><b>{{ '通過' if s.passed else '結論' }}：</b>{{ s.verdict }}</div>
+
+<p class="howto">
+  T-10 規則：用同一家莊家的收盤賠率，去水後得到強隊不讓分勝率 p、強隊讓 1.5 分過盤率 c，G = p + c − 1。
+  G ≥ +{{ (s.threshold*100)|round|int }}pp 買強隊不讓分（ML），G ≤ −{{ (s.threshold*100)|round|int }}pp 買弱隊受讓 1.5 分。
+  「市場機率」是收盤賠率去水後的機率：如果 G 真的抓到市場沒算到的東西，實際勝率應該<b>高於</b>市場機率。
+  報酬率用三種價格算：莊家收盤價、六家莊家裡最好的價、以及運彩約 {{ (s.tw_margin*100)|round|int }}% 水錢下的價格。
+</p>
+
+{% macro side(title, m, base) %}
+<div class="card">
+  <div class="top"><span>{{ title }}</span><span>{{ '{:,}'.format(m.n) }} 場</span></div>
+  <div class="facts">
+    <div><span>實際勝率</span><span><b>{{ '%.1f%%'|format(m.hit*100) }}</b></span></div>
+    <div><span>市場機率</span><span>{{ '%.1f%%'|format(m.fair*100) }}</span></div>
+    <div><span>差距</span><span class="{{ 'pos' if m.gap_pp > 0 else 'neg' }}">{{ '%+.1f'|format(m.gap_pp) }}pp（z {{ '%+.1f'|format(m.z) }}）</span></div>
+    <div><span>收盤價報酬率</span><span class="{{ 'pos' if m.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(m.roi*100) }}</span></div>
+    <div><span>最佳價報酬率</span><span class="{{ 'pos' if m.roi_best > 0 else 'neg' }}">{{ '%+.1f%%'|format(m.roi_best*100) }}</span></div>
+    <div><span>運彩價報酬率</span><span class="{{ 'pos' if m.roi_tw > 0 else 'neg' }}">{{ '%+.1f%%'|format(m.roi_tw*100) }}</span></div>
+  </div>
+  <p class="sub">對照：所有比賽都買同一邊，收盤價報酬率 {{ '%+.1f%%'|format(base.roi*100) }}（{{ '{:,}'.format(base.n) }} 場）。報酬率標準誤 ±{{ '%.1f'|format(m.roi_se*100) }}%。</p>
+</div>
+{% endmacro %}
+
+<section>
+  <h2>±{{ (s.threshold*100)|round|int }}pp 規則的結果</h2>
+  <div class="grid">
+    {{ side("G ≥ +" ~ ((s.threshold*100)|round|int) ~ "pp → 強隊 ML", s.main.fav, s.baseline.fav) }}
+    {{ side("G ≤ −" ~ ((s.threshold*100)|round|int) ~ "pp → 弱隊 +1.5", s.main.dog, s.baseline.dog) }}
+  </div>
+  <p class="sub">去水方法換成等比例（multiplicative）：強隊 ML 差距 {{ '%+.1f'|format(s.multiplicative.fav.gap_pp) }}pp（z {{ '%+.1f'|format(s.multiplicative.fav.z) }}），弱隊 +1.5 差距 {{ '%+.1f'|format(s.multiplicative.dog.gap_pp) }}pp（z {{ '%+.1f'|format(s.multiplicative.dog.z) }}）。z 要大於 2 才算顯著。</p>
+</section>
+
+{% macro dots(c, title) %}
+<figure class="chart">
+  <figcaption class="sub" style="margin-bottom:4px">{{ title }}</figcaption>
+  <svg viewBox="0 0 {{ c.w }} {{ c.h }}" role="img" aria-label="{{ title }}">
+    {% for t in c.ticks %}
+    <line class="grid" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
+    <text x="{{ c.left - 4 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ '%+d'|format(t.v) if t.v else '0' }}</text>
+    {% endfor %}
+    <line class="zero" x1="{{ c.left }}" x2="{{ c.right }}" y1="{{ c.zero }}" y2="{{ c.zero }}"/>
+    {% for p in c.points %}
+    <g><title>{{ p.tip }}</title>
+      <line class="whisker" x1="{{ p.x }}" x2="{{ p.x }}" y1="{{ p.y_lo }}" y2="{{ p.y_hi }}"/>
+      <circle class="dot" cx="{{ p.x }}" cy="{{ p.y }}" r="4.5"/>
+      <rect x="{{ p.x - 14 }}" y="{{ c.top }}" width="28" height="{{ c.bottom - c.top }}" fill="transparent"/>
+    </g>
+    <text x="{{ p.x }}" y="{{ c.bottom + 14 }}" text-anchor="middle">{{ p.label }}</text>
+    {% endfor %}
+    <text x="{{ (c.left + c.right) / 2 }}" y="{{ c.bottom + 29 }}" text-anchor="middle">G 值（pp，每組約 {{ '{:,}'.format((s.games / 10)|round|int) }} 場）</text>
+  </svg>
+</figure>
+{% endmacro %}
+
+<section>
+  <h2>依 G 值分十組：實際結果比市場多（正）或少（負）幾個百分點</h2>
+  <p class="howto">每個點是一組比賽，直線是 ±2 個標準誤。點都在 0 附近、沒有隨 G 往上或往下走，表示 G 沒有帶來市場以外的資訊。點按住可看數字。</p>
+  <div class="grid">
+    {{ dots(s.chart_fav, "強隊不讓分：實際勝率 − 市場機率（pp）") }}
+    {{ dots(s.chart_dog, "弱隊 +1.5：實際過盤率 − 市場機率（pp）") }}
+  </div>
+  <div class="scroll" style="margin-top:10px"><table>
+    <tr><th>G 範圍（pp）</th><th class="num">場數</th><th class="num">強隊勝率 vs 市場</th><th class="num">弱隊 +1.5 vs 市場</th></tr>
+    {% for d in s.deciles %}
+    <tr><td>{{ '%+.1f'|format(d.g_lo) }} ～ {{ '%+.1f'|format(d.g_hi) }}</td><td class="num">{{ d.n }}</td>
+      <td class="num">{{ '%+.1f'|format(d.fav_gap_pp) }} ± {{ '%.1f'|format(2*d.fav_se_pp) }}</td>
+      <td class="num">{{ '%+.1f'|format(d.dog_gap_pp) }} ± {{ '%.1f'|format(2*d.dog_se_pp) }}</td></tr>
+    {% endfor %}
+  </table></div>
+</section>
+
+{% macro row(label, f, d) %}
+<tr><td>{{ label }}</td>
+  <td class="num">{{ f.n }}</td><td class="num">{{ '%+.1f'|format(f.gap_pp) if f.n else '—' }}</td><td class="num {{ 'pos' if f.roi and f.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(f.roi*100) if f.n else '—' }}</td>
+  <td class="num">{{ d.n }}</td><td class="num">{{ '%+.1f'|format(d.gap_pp) if d.n else '—' }}</td><td class="num {{ 'pos' if d.roi and d.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(d.roi*100) if d.n else '—' }}</td></tr>
+{% endmacro %}
+{% macro head(first) %}
+<tr><th>{{ first }}</th><th class="num">強隊 ML 場數</th><th class="num">比市場</th><th class="num">報酬率</th><th class="num">弱隊 +1.5 場數</th><th class="num">比市場</th><th class="num">報酬率</th></tr>
+{% endmacro %}
+
+<section>
+  <h2>換門檻</h2>
+  <p class="howto">這是事後試很多組，只能看趨勢；任何一組看起來好，都要再用新資料驗證。報酬率用莊家收盤價。</p>
+  <div class="scroll"><table>{{ head("門檻") }}
+    {% for g in s.grid %}{{ row("±" ~ (g.thr_pp|int) ~ "pp", g.fav, g.dog) }}{% endfor %}
+  </table></div>
+</section>
+
+<section>
+  <h2>逐年與賽段</h2>
+  <div class="scroll"><table>{{ head("") }}
+    {% for x in s.seasons_table %}{{ row(x.season, x.fav, x.dog) }}{% endfor %}
+    {% for x in s.stages %}{{ row(x.stage, x.fav, x.dog) }}{% endfor %}
+  </table></div>
+</section>
+
+<section>
+  <h2>各家莊家（用該家自己的 G 和價格）</h2>
+  <div class="scroll"><table>{{ head("莊家") }}
+    {% for x in s.books_table %}{{ row(x.book, x.fav, x.dog) }}{% endfor %}
+  </table></div>
+</section>
+
+<section>
+  <h2>其他下注時機</h2>
+  <p class="howto">CLV（收盤線價值）＝收盤時的市場機率 × 你拿到的賠率 − 1。CLV 為正才代表下注時的價格比後來的市場好，是判斷方法有沒有真實優勢最可靠的指標。</p>
+  <div class="scroll"><table>
+    <tr><th>做法</th><th class="num">強隊 ML 場數</th><th class="num">報酬率</th><th class="num">CLV</th><th class="num">弱隊 +1.5 場數</th><th class="num">報酬率</th><th class="num">CLV</th></tr>
+    {% for v in s.variants %}
+    <tr><td>{{ v.name }}</td>
+      <td class="num">{{ v.fav.n }}</td><td class="num">{{ '%+.1f%%'|format(v.fav.roi*100) }}</td><td class="num">{{ '%+.1f%%'|format(v.fav.clv*100) }}</td>
+      <td class="num">{{ v.dog.n }}</td><td class="num">{{ '%+.1f%%'|format(v.dog.roi*100) }}</td><td class="num">{{ '%+.1f%%'|format(v.dog.clv*100) }}</td></tr>
+    {% endfor %}
+  </table></div>
+</section>
+
+<footer>
+  資料：SportsBookReview 歷史賠率（DraftKings、FanDuel、Caesars、bet365、BetMGM、BetRivers 的開盤與收盤不讓分、讓分、大小），由
+  <a href="https://github.com/ArnavSaraogi/mlb-odds-scraper">ArnavSaraogi/mlb-odds-scraper</a> 整理；只用例行賽與季後賽、讓分為 ±1.5 且由不讓分強隊讓分的比賽。
+  每場用一家莊家（DraftKings 優先）。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
+</footer>
+</div>
+</body>
+</html>

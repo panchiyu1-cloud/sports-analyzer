@@ -159,3 +159,15 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   raw price out of sample). First-half share of goals 0.44. Rerun weekly by backtest.yml.
 - One-goal 三向讓分 sides that are plain 1X2 outcomes stay exactly at the market price.
 - Derived value bets need EV >= 4% (first half 5%) vs 2% for direct markets.
+
+## T-10 backtest (2026-10-14) — read before changing the baseball signal
+- scripts/backtest_t10.py on 10,968 MLB games 2021-04 .. 2025-08 (SportsBookReview closing
+  odds of six US books via ArnavSaraogi/mlb-odds-scraper; flattened CSV on the `t10-data`
+  branch, built by the manual "T-10 backtest data" workflow; raw data never on main).
+- G >= +6pp favourite ML: win rate 1.6pp BELOW the closing market (z -2.1), ROI -5.2% at
+  the book's close (same as betting every favourite). G <= -6pp underdog +1.5: +0.8pp vs
+  market (z +1.0; +2.0 with multiplicative de-vig), ROI -1.8% (best price of six books
+  +0.4%), negative in 4 of 5 seasons, CLV negative when bet at the open. At 運彩's ~15%
+  margin both lose 12-15%. No threshold from 2 to 10pp and no G decile beats the market.
+- Verdict: not passed (data/t10_backtest_summary.json["passed"] is false). The prompt's
+  Switch zones / price guard / overlays were not tested (rules not written down).
