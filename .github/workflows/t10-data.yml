@@ -1,0 +1,45 @@
+name: T-10 backtest data
+
+# One-off (manual): download the public SportsBookReview MLB odds dataset
+# (github.com/ArnavSaraogi/mlb-odds-scraper, release "dataset", ~76 MB), flatten it
+# with scripts/mlb_odds_to_csv.py and put the small CSV on the `t10-data` branch.
+# The raw JSON is never committed; main stays small.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download the dataset release
+        run: |
+          mkdir -p data/raw
+          gh release download dataset --repo ArnavSaraogi/mlb-odds-scraper --dir data/raw
+          ls -la data/raw
+      - name: Flatten to CSV
+        run: |
+          src=$(ls data/raw/*.json | head -1)
+          python scripts/mlb_odds_to_csv.py "$src" /tmp/mlb_odds_2021_2025.csv.gz
+      - name: Publish to the t10-data branch
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan t10-data
+          git rm -rq --cached .
+          mkdir -p t10
+          cp /tmp/mlb_odds_2021_2025.csv.gz t10/
+          git add t10/mlb_odds_2021_2025.csv.gz
+          git commit -qm "data: SportsBookReview MLB odds 2021-2025, flattened (source: ArnavSaraogi/mlb-odds-scraper)"
+          git push -f origin t10-data
