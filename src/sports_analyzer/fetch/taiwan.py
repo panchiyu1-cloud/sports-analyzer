@@ -323,20 +323,37 @@ def captured_at(path: Path) -> datetime | None:
     return _arrival_time(path)
 
 
-def _arrival_time(path: Path) -> datetime | None:
+def _arrival_time(path: Path, strict: bool = False) -> datetime | None:
+    """Commit time of the file (else a stamp in its name, else mtime).
+
+    `strict`: in a shallow clone every file looks as if the oldest fetched commit
+    added it, so that commit's time says nothing about the upload. Strict callers get
+    None instead of a wrong time (the workflows fetch enough history to avoid this).
+    """
     import subprocess
 
-    try:
-        out = subprocess.run(
-            ["git", "log", "-1", "--format=%cI", "--", path.name],
+    def git(*args: str) -> str:
+        return subprocess.run(
+            ["git", *args],
             cwd=path.parent,
             capture_output=True,
             text=True,
             timeout=10,
             check=False,
         ).stdout.strip()
+
+    try:
+        out = git("log", "-1", "--format=%H %cI", "--", path.name)
         if out:
-            return datetime.fromisoformat(out).astimezone(UTC)
+            sha, iso = out.split(" ", 1)
+            if strict:
+                shallow = git("rev-parse", "--git-path", "shallow")
+                shallow_file = (
+                    Path(shallow) if Path(shallow).is_absolute() else path.parent / shallow
+                )
+                if shallow_file.exists() and sha in shallow_file.read_text(encoding="utf-8"):
+                    return None
+            return datetime.fromisoformat(iso).astimezone(UTC)
     except (OSError, ValueError):
         pass
     stamp = stamp_from_name(path)
@@ -366,8 +383,9 @@ def normalize_uploads(tw_dir: Path) -> list[tuple[Path, Path]]:
         for path in sorted(files):
             if path.parent == sport_dir and CANONICAL_UPLOAD.match(path.name):
                 continue
-            when = _arrival_time(path)
+            when = _arrival_time(path, strict=True)
             if when is None:
+                log.info("tw: arrival time of %s unknown (shallow history); not renamed", path)
                 continue
             base = when.astimezone(LOCAL_TZ).strftime("%Y-%m-%d-%H%M")
             target, n = sport_dir / f"{base}.json", 1

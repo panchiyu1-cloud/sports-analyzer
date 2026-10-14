@@ -172,6 +172,9 @@ class FootballReviewTests(unittest.TestCase):
         self.assertIn("贏一半", text)
         self.assertIn("（打平）", text)
         self.assertIn("半場 0–1 由 Lille OSC 領先，下半場被扳平", text)
+        self.assertTrue(
+            ex["conclusion"].startswith("這個方向市場只給 48%、模型給 59%，結果站在模型這邊。")
+        )
         self.assertIn("這場市場比模型準", text)
 
     def test_unlucky_when_market_and_xg_back_the_lean_but_it_loses(self):
@@ -194,6 +197,9 @@ class FootballReviewTests(unittest.TestCase):
         row.update({"xg_h": 0.5, "xg_a": 1.9})
         row.update(review.assess_football(row))
         self.assertEqual(row["verdict"], "wrong")
+        self.assertIn(
+            "結果站在市場那邊：模型高估了Arsenal FC。", review.explain_football(row)["conclusion"]
+        )
         self.assertIn("判讀", "".join(review.explain_football(row)["bullets"]) + "判讀")
 
     def test_hit_lucky_agree_and_no_model(self):

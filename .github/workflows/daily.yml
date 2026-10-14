@@ -29,6 +29,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main  # a queued run starts from the newest commit, not the one that triggered it
+          fetch-depth: 60  # enough history to date the 運彩 uploads (fetch/taiwan.normalize_uploads)
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

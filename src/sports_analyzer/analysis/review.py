@@ -539,7 +539,7 @@ def _half_time_story(row: Mapping[str, Any], home: str, away: str) -> str:
         return f"半場 {hh}–{ha} 由 {home} 領先，下半場{'被逆轉' if ft == 'A' else '被扳平'}。"
     if ht == "A":
         return f"半場 {hh}–{ha} 由 {away} 領先，下半場{'被逆轉' if ft == 'H' else '被扳平'}。"
-    return f"半場 {hh}–{ha} 平手，勝負在下半場才決定。"
+    return f"半場 {hh}–{ha} 平手，下半場 {fh - hh} : {fa - ha}，勝負在下半場決定。"
 
 
 def _football_conclusion(row: Mapping[str, Any], a: Mapping[str, Any]) -> str:
@@ -550,19 +550,47 @@ def _football_conclusion(row: Mapping[str, Any], a: Mapping[str, Any]) -> str:
     cp = (_f(row, f"close_{side}") or _f(row, f"open_{side}")) if side else None
     if cp is not None:
         surprise = _surprise(cp)
-    return {
-        "right": f"判斷有{support}支持，結果也對。",
-        "hit": "命中了，但沒有額外證據證明是判斷正確——單場命中不代表模型有優勢。",
-        "lucky": f"雖然命中，但{against}對模型不利，這次比較像運氣。",
-        "unlucky": f"判斷有{support}支持，輸在比賽中的隨機性（把握度、意外事件）。這類輸球不需要因此改策略。",
-        "miss": "沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。",
-        "wrong": f"{against}都對模型不利：模型漏看了重要資訊，這類分歧要降低信任。",
-        "push": "走盤，不輸不贏。",
-        "agree": f"模型和市場看法一致，結果{surprise}。" if surprise else "模型和市場看法一致。",
-        "no_model": f"模型資料不足，這場只看市場：結果{surprise}。"
-        if surprise
-        else "模型資料不足，這場只看市場。",
-    }[str(a["verdict"])]
+    side_text = _lean_vs_market(row, a)
+    return (
+        side_text
+        + {
+            "right": f"判斷有{support}支持，結果也對。",
+            "hit": "命中了，但沒有額外證據證明是判斷正確——單場命中不代表模型有優勢。",
+            "lucky": f"雖然命中，但{against}對模型不利，這次比較像運氣。",
+            "unlucky": f"判斷有{support}支持，輸在比賽中的隨機性（把握度、意外事件）。這類輸球不需要因此改策略。",
+            "miss": "沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。",
+            "wrong": f"{against}都對模型不利：模型漏看了重要資訊，這類分歧要降低信任。",
+            "push": "走盤，不輸不贏。",
+            "agree": f"模型和市場看法一致，結果{surprise}。"
+            if surprise
+            else "模型和市場看法一致。",
+            "no_model": f"模型資料不足，這場只看市場：結果{surprise}。"
+            if surprise
+            else "模型資料不足，這場只看市場。",
+        }[str(a["verdict"])]
+    )
+
+
+def _lean_vs_market(row: Mapping[str, Any], a: Mapping[str, Any]) -> str:
+    """One sentence on whose side the result fell: the model's lean or the market's view."""
+    mp, op = _f(row, "lean_model_p"), _f(row, "lean_open_p")
+    result = a.get("lean_result")
+    if mp is None or op is None or result not in (WIN, LOSS, HALF_WIN, HALF_LOSS):
+        return ""
+    head = f"這個方向市場只給 {_pct(op)}、模型給 {_pct(mp)}，"
+    if result in (WIN, HALF_WIN):
+        return head + "結果站在模型這邊。"
+    key = str(row.get("lean_key") or "")
+    subject = {
+        "home": str(row.get("home")),
+        "spread_home": str(row.get("home")),
+        "away": str(row.get("away")),
+        "spread_away": str(row.get("away")),
+        "draw": "和局的可能",
+        "over": "這場的進球數",
+        "under": "小分的可能",
+    }.get(key, "這個方向")
+    return head + f"結果站在市場那邊：模型高估了{subject}。"
 
 
 def _evidence_text(a: Mapping[str, Any], positive: bool) -> str:
