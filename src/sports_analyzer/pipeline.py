@@ -826,7 +826,9 @@ def _latest_snapshots(sport: str, n: int) -> list[dict[str, Any]]:
 # ----------------------------------------------------------------------- CLI
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sports_analyzer.pipeline")
-    parser.add_argument("task", choices=["football", "mlb", "tw", "review", "render"])
+    parser.add_argument(
+        "task", choices=["football", "mlb", "tw", "review", "render", "test-notify"]
+    )
     parser.add_argument(
         "--days", type=int, default=None, help="fixture window in days (default from env or 2)"
     )
@@ -856,6 +858,16 @@ def main(argv: list[str] | None = None) -> int:
         out = render_latest()
         log.info("rendered %s", out)
         return 0
+    if args.task == "test-notify":
+        # One test message, so the owner can check the phone side of NTFY_TOPIC.
+        topic = Settings.from_env(offline=True).ntfy_topic
+        if not topic:
+            raise SystemExit("NTFY_TOPIC is not set (GitHub: Settings > Secrets > Actions)")
+        ok = notify.send(
+            topic, "比賽分析：推播測試", "設定成功！有新的運彩價值注時，會像這樣通知你。"
+        )
+        log.info("test notification %s", "sent" if ok else "NOT sent")
+        return 0 if ok else 1
     if args.task == "tw":
         # The phone already uploaded the feed. The Odds API key is optional: with it,
         # games about to start get fresh international prices first (budget allowing).

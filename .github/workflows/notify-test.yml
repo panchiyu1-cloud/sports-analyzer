@@ -1,0 +1,25 @@
+name: Notification test
+
+# Manual: sends one test message to the ntfy topic in the NTFY_TOPIC secret, to check
+# that the phone receives the value-bet notifications.
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Send a test notification
+        run: python -m sports_analyzer.pipeline test-notify
