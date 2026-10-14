@@ -27,6 +27,7 @@ class QuotaState:
     """What the last response told us about the remaining quota."""
 
     remaining: int | None = None
+    used: int | None = None
     reset_seconds: int | None = None
     last_cost: int | None = None
 
@@ -105,6 +106,9 @@ class Session:
             remaining = _int_header(headers, "x-requests-remaining")
         reset = _int_header(headers, "X-RequestCounter-Reset")
         cost = _int_header(headers, "x-requests-last")
+        used = _int_header(headers, "x-requests-used")
+        if used is not None:
+            self.quota.used = used
         if remaining is not None:
             self.quota.remaining = remaining
         if reset is not None:

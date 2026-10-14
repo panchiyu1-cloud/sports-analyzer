@@ -19,6 +19,11 @@ log = logging.getLogger(__name__)
 
 BASE_URL = "https://api.the-odds-api.com/v4"
 DEFAULT_MARKETS = ("h2h", "spreads", "totals")
+# Football: 運彩's football handicaps are three-way (讓分 1:0), so two-way Asian handicap
+# prices cannot be compared with anything we can buy; h2h + totals cover the rest.
+FOOTBALL_MARKETS = ("h2h", "totals")
+# MLB: the -1.5 run line is half of the owner's T-10 G value and a 運彩 market.
+MLB_MARKETS = ("h2h", "spreads", "totals")
 
 
 @dataclass(frozen=True)
@@ -157,6 +162,9 @@ class OddsClient:
 
     def credits_remaining(self) -> int | None:
         return self.session.quota.remaining
+
+    def credits_used(self) -> int | None:
+        return self.session.quota.used
 
     def odds(
         self,

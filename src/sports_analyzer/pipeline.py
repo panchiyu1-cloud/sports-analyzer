@@ -20,6 +20,7 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
+from . import budget as budget_mod
 from . import ledger as ledger_mod
 from . import review_store, tw_ledger
 from .analysis import review
@@ -36,6 +37,7 @@ from .config import (
     LOCAL_TZ,
     MLB_ODDS_KEY,
     MLB_REVIEWS_PATH,
+    ODDS_BUDGET_PATH,
     MODEL,
     SNAPSHOT_DIR,
     TW_DIR,
@@ -47,7 +49,7 @@ from .config import (
 from .fetch import taiwan
 from .fetch.football import FootballDataClient, Match
 from .fetch.mlb import MlbClient
-from .fetch.odds import DEFAULT_MARKETS, OddsClient, OddsEvent
+from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
 from .render.cards import render_index, render_reviews_page
@@ -60,7 +62,7 @@ def run_football(
     settings: Settings,
     today: date,
     cfg: ModelConfig = MODEL,
-    markets: tuple[str, ...] = DEFAULT_MARKETS,
+    markets: tuple[str, ...] = FOOTBALL_MARKETS,
 ) -> dict[str, Any]:
     fd = FootballDataClient(settings.football_data_token or "")
     odds = OddsClient(settings.odds_api_key or "", regions=settings.odds_regions)
@@ -100,12 +102,19 @@ def run_football(
                 _fit_or_none(comp, pooled, today, cfg) if fixtures[comp.code] else None
             )
 
-    # 3. Odds only for competitions with fixtures (each call costs credits).
+    # 3. Odds only for competitions with fixtures (each call costs credits), and only
+    #    as many markets as today's share of the monthly credits allows.
     window_start = datetime.combine(today, datetime.min.time(), tzinfo=UTC)
     window_end = window_start + timedelta(days=settings.fixture_window_days + 1)
+    budget = budget_mod.load(ODDS_BUDGET_PATH, today)
+    calls = sum(1 for comp in FOOTBALL_COMPETITIONS if fixtures[comp.code])
+    wanted = markets
+    markets = budget_mod.plan_markets(
+        markets, calls, budget_mod.allowance_today(budget, today), essential=("h2h",)
+    )
     odds_events: dict[str, list[OddsEvent]] = {}
     for comp in FOOTBALL_COMPETITIONS:
-        if not fixtures[comp.code]:
+        if not fixtures[comp.code] or not markets:
             odds_events[comp.code] = []
             continue
         odds_events[comp.code] = odds.odds(
@@ -113,10 +122,13 @@ def run_football(
         )
 
     # 4. Cards + signals.
+    budget = budget_mod.record(budget, odds.credits_used(), odds.credits_remaining(), today)
+    budget_mod.save(ODDS_BUDGET_PATH, budget)
     snapshot: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "date": today.isoformat(),
-        "credits_remaining": odds.credits_remaining(),
+        "credits_remaining": budget.remaining,
+        "odds_markets": list(markets),
         "competitions": [],
     }
     all_signals: list[dict[str, Any]] = []
@@ -148,8 +160,11 @@ def run_football(
 
     # 4b. A cheap evening run (h2h only) keeps the morning's totals/spreads so the page
     #     does not lose them; those blocks are marked stale and never used for CLV.
-    if set(markets) != set(DEFAULT_MARKETS):
-        _merge_previous_markets(snapshot, _latest_snapshot("football"))
+    if set(markets) != set(FOOTBALL_MARKETS):
+        # No odds bought at all (budget): keep the last prices of any date, marked stale.
+        _merge_previous_markets(snapshot, _latest_snapshot("football"), any_date=not markets)
+    if markets != wanted:
+        log.warning("football odds: wanted %s, bought %s (budget)", wanted, markets or "none")
 
     # 5. Ledgers: add today's signals, settle anything that has finished (both ledgers).
     finished = [m for rs in results.values() for m in rs if m.is_finished]
@@ -217,10 +232,18 @@ def _fit_or_none(
     return model
 
 
-def _merge_previous_markets(snapshot: dict[str, Any], previous: dict[str, Any] | None) -> None:
-    """Carry totals/spread consensus from the previous snapshot into cards that lack them."""
-    if not previous or previous.get("date") != snapshot.get("date"):
+def _merge_previous_markets(
+    snapshot: dict[str, Any], previous: dict[str, Any] | None, any_date: bool = False
+) -> None:
+    """Carry consensus blocks from the previous snapshot into cards that lack them.
+
+    Normally only within the same date (the evening h2h-only refresh keeps the
+    morning's totals). With `any_date` (no odds were bought) every block is carried,
+    h2h included, from whichever snapshot is newest.
+    """
+    if not previous or (previous.get("date") != snapshot.get("date") and not any_date):
         return
+    keys = ("h2h", "totals", "spread") if any_date else ("totals", "spread")
     old_cards = {
         c["match_id"]: c for comp in previous.get("competitions", []) for c in comp.get("cards", [])
     }
@@ -236,7 +259,7 @@ def _merge_previous_markets(snapshot: dict[str, Any], previous: dict[str, Any] |
                     "totals": None,
                     "spread": None,
                 }
-            for key in ("totals", "spread"):
+            for key in keys:
                 if card["market"].get(key) is None and old["market"].get(key):
                     card["market"][key] = {**old["market"][key], "stale": True}
             if old.get("tw") and not card.get("tw"):
@@ -297,14 +320,25 @@ def run_mlb(
     log.info("mlb: %d games today, %d 運彩 rows settled", len(games), tw_settled)
     events: list[OddsEvent] = []
     credits = None
-    if games and settings and settings.odds_api_key:
+    budget = budget_mod.load(ODDS_BUDGET_PATH, today_local)
+    markets = budget_mod.plan_markets(
+        MLB_MARKETS,
+        1 if games else 0,
+        budget_mod.allowance_today(budget, datetime.now(UTC).date()),
+        essential=("h2h", "spreads"),  # the two halves of the T-10 G value
+    )
+    if games and settings and settings.odds_api_key and markets:
         odds = OddsClient(settings.odds_api_key, regions=settings.odds_regions)
         # The MLB "date" is a US date; its games start the next Taipei morning, so the
         # window has to follow the actual first pitches, not the Taipei calendar day.
         first = min(g.game_date for g in games) - timedelta(hours=1)
         last = max(g.game_date for g in games) + timedelta(hours=1)
-        events = odds.odds(MLB_ODDS_KEY, commence_from=first, commence_to=last)
+        events = odds.odds(MLB_ODDS_KEY, commence_from=first, commence_to=last, markets=markets)
         credits = odds.credits_remaining()
+        budget_mod.save(
+            ODDS_BUDGET_PATH,
+            budget_mod.record(budget, odds.credits_used(), credits, datetime.now(UTC).date()),
+        )
     cards = build_mlb_cards(games, events, cfg)
     snapshot = {
         "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -530,7 +564,15 @@ def render_latest() -> Path:
         tw_summary=tw_ledger.summary(tw_ledger.read(TW_LEDGER_PATH)),
         football_reviews=football_reviews,
         mlb_reviews=mlb_reviews,
+        odds_budget=_budget_view(now.date()),
     )
+
+
+def _budget_view(today: date) -> dict[str, Any] | None:
+    state = budget_mod.load(ODDS_BUDGET_PATH, today)
+    if state.remaining is None:
+        return None
+    return {"remaining": state.remaining, "daily": round(budget_mod.daily_share(state, today))}
 
 
 def _write_snapshot(day: date, sport: str, payload: dict[str, Any]) -> Path:
@@ -563,7 +605,7 @@ def main(argv: list[str] | None = None) -> int:
         "--markets",
         type=str,
         default=None,
-        help="comma-separated odds markets, e.g. h2h (default h2h,spreads,totals)",
+        help="comma-separated football odds markets, e.g. h2h (default h2h,totals)",
     )
     parser.add_argument(
         "--offline", action="store_true", help="skip the network and just re-render"
@@ -604,7 +646,9 @@ def main(argv: list[str] | None = None) -> int:
         settings = Settings(
             settings.football_data_token, settings.odds_api_key, settings.odds_regions, args.days
         )
-    markets = tuple(m.strip() for m in args.markets.split(",")) if args.markets else DEFAULT_MARKETS
+    markets = (
+        tuple(m.strip() for m in args.markets.split(",")) if args.markets else FOOTBALL_MARKETS
+    )
     if args.task == "football":
         run_football(settings, today, markets=markets)
     elif args.task == "mlb":

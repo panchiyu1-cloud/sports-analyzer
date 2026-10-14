@@ -13,7 +13,7 @@
 <header>
   <h1>比賽分析</h1>
   <span class="meta">更新：{{ generated_local }}（台北時間）</span>
-  {% if credits_remaining is not none %}<span class="meta">The Odds API 剩餘點數：{{ credits_remaining }}</span>{% endif %}
+  {% if odds_budget %}<span class="meta">賠率點數剩 {{ odds_budget.remaining }}（每日預算約 {{ odds_budget.daily }}）</span>{% elif credits_remaining is not none %}<span class="meta">The Odds API 剩餘點數：{{ credits_remaining }}</span>{% endif %}
   {% if backtest %}<a class="meta" href="backtest.html">回測報告</a>{% endif %}
   {% if reviews.total %}<a class="meta" href="reviews.html">全部賽後檢討</a>{% endif %}
 </header>

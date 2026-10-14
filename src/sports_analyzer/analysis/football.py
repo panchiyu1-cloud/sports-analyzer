@@ -181,11 +181,28 @@ def build_cards(
 
         card["edges"] = _edges(pred, card["market"]) if pred and card["market"] else {}
         card["recommendation"] = _recommend(card, pred, cfg) if card["edges"] else None
+        blocked = _signal_block_reason(comp, card, cfg)
+        if blocked and card["recommendation"]:
+            # Say what was held back, so a big model/market gap is not silently hidden.
+            notes.append(f"模型分歧「{card['recommendation']['selection']}」不列入：{blocked}")
+            card["recommendation"] = None
         card["notes"] = notes
         cards.append(card)
         if card["recommendation"]:
             signals.append({**_signal_header(card), **card["recommendation"]})
     return cards, signals
+
+
+def _signal_block_reason(comp: Competition, card: dict[str, Any], cfg: ModelConfig) -> str | None:
+    """Why this card may not produce a 模型分歧 signal (None = it may)."""
+    if comp.is_cup and not cfg.cup_signals:
+        return "歐冠的跨聯賽模型不知道各聯賽強弱差距，分歧多半是模型誤差"
+    model = card.get("model") or {}
+    for side in ("home", "away"):
+        n = model.get(f"{side}_matches")
+        if n is not None and n < cfg.min_signal_matches:
+            return f"{card[side]} 在頂級聯賽只有 {n} 場資料（需 ≥ {cfg.min_signal_matches} 場）"
+    return None
 
 
 def _base_card(comp: Competition, fx: Match) -> dict[str, Any]:

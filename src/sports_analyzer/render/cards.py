@@ -39,6 +39,7 @@ def render_index(
     tw_summary: dict[str, Any] | None = None,
     football_reviews: list[Mapping[str, Any]] | None = None,
     mlb_reviews: list[Mapping[str, Any]] | None = None,
+    odds_budget: Mapping[str, Any] | None = None,
 ) -> Path:
     template = _env().get_template("index.html.j2")
 
@@ -114,6 +115,7 @@ def render_index(
         backtest_total=backtest_total,
         reviews=reviews,
         waiting=waiting,
+        odds_budget=odds_budget,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")

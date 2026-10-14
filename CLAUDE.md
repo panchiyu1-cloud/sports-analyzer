@@ -35,6 +35,11 @@ formula is not obvious.
 - The Odds API: 500 credits/month, cost = markets × regions per request.
   Only request odds for competitions that have fixtures inside the window.
   Log `x-requests-remaining` after every call.
+- Every odds purchase goes through `budget.plan_markets()` (data/odds_budget.json):
+  an even daily share of the credits left (x1.6 burst, 25 kept in reserve) over an
+  assumed 30-day period; short of it a run buys h2h only, or nothing (prices carried
+  over, marked stale). Football buys h2h,totals only (運彩 football handicaps are
+  three-way, so Asian handicap prices compare with nothing); MLB keeps the run line.
 
 ### Code style (ECC python rules)
 - PEP 8, type annotations on every function signature, `from __future__ import annotations`.
@@ -107,6 +112,9 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   recommendations because a ROI number looks good — check `data/backtest_summary.json["passed"]`.
 - What the page is for now: fair odds (1 / de-vigged consensus prob) so the
   owner can compare against the price he can actually get (台灣運彩).
+- 模型分歧 is never emitted for cups (`cup_signals=False`: the pooled CL model cannot
+  compare leagues) or when a team has fewer than `min_signal_matches` (20) fitted
+  matches (promoted teams); the card says what was held back and why.
 
 ## 運彩 feed (Phase 4)
 - `blob3rd.sportslottery.com.tw/apidata/Pre/<sport>-Games.zh.json` is geo-blocked

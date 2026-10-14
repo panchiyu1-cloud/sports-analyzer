@@ -153,6 +153,30 @@ class BuildCardsTests(unittest.TestCase):
         ):
             self.assertIn(key, s)
 
+    def test_cup_and_thin_samples_get_no_signal_but_a_note(self):
+        # 2026-10-14: the pooled Champions League model and promoted teams produced
+        # 模型分歧 that were model error; they are held back with the reason shown.
+        loose = dict(edge_threshold=0.0, edge_mid=0.07, edge_high=0.10, min_model_prob=0.0)
+        cards, signals = analysis.build_cards(
+            COMPETITION_BY_CODE["CL"],
+            self.fixtures,
+            self.model,
+            self.standings,
+            self.results,
+            [],
+            self.events,
+            ModelConfig(**loose),
+        )
+        self.assertEqual(signals, [])
+        self.assertTrue(any("不列入：歐冠" in n for c in cards for n in c["notes"]))
+        cards, signals = self.build(ModelConfig(min_signal_matches=100, **loose))
+        self.assertEqual(signals, [])
+        self.assertTrue(
+            any("只有 38 場資料（需 ≥ 100 場）" in n for c in cards for n in c["notes"])
+        )
+        _, signals = self.build(ModelConfig(min_signal_matches=38, **loose))
+        self.assertTrue(signals)  # 38 fitted matches each is enough
+
     def test_missing_odds_adds_note(self):
         cards, _ = analysis.build_cards(
             COMPETITION_BY_CODE["PL"],

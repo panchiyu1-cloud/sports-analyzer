@@ -22,6 +22,7 @@ TW_DIR = DATA_DIR / "tw"
 REVIEW_DIR = DATA_DIR / "reviews"
 FOOTBALL_REVIEWS_PATH = REVIEW_DIR / "football.csv"
 MLB_REVIEWS_PATH = REVIEW_DIR / "mlb.csv"
+ODDS_BUDGET_PATH = DATA_DIR / "odds_budget.json"
 DOCS_DIR = ROOT / "docs"
 
 LOCAL_TZ = ZoneInfo("Asia/Taipei")
@@ -77,6 +78,12 @@ class ModelConfig:
     value_threshold: float = 0.02
     # Do not recommend very long shots even with edge; variance is too high to judge.
     min_model_prob: float = 0.25
+    # 模型分歧 only where the model can know the teams (2026-10-14 review): the pooled
+    # Champions League model cannot compare leagues (both CL signals lost; it gave Man City
+    # 82% vs PSG when the market said 45%), and promoted teams have only this season's
+    # handful of top-flight matches.
+    cup_signals: bool = False
+    min_signal_matches: int = 20
     # T-10 (baseball) G-value thresholds.
     g_threshold: float = 0.06
     # De-vig method: "power" (default) or "multiplicative".
