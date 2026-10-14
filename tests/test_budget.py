@@ -3,9 +3,8 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-from tests import conftest  # noqa: F401
-
 from sports_analyzer import budget
+from tests import conftest  # noqa: F401
 
 
 class BudgetTests(unittest.TestCase):
