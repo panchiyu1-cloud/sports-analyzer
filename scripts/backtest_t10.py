@@ -42,6 +42,9 @@ THRESHOLD = 0.06
 GRID = (0.02, 0.04, 0.06, 0.08, 0.10)
 # 運彩's measured MLB margin (2026-10 uploads): moneyline, run line and totals ~15%.
 TW_MARGIN = 0.15
+# Table rows with fewer games show only the count: a hit rate on a handful of games
+# (BetRivers had 3 qualifying underdogs) is noise that reads like a finding.
+MIN_N = 100
 
 
 def load(path: Path) -> list[dict[str, Any]]:
@@ -189,6 +192,7 @@ def analyse(games: list[dict[str, Any]]) -> dict[str, Any]:
         "books": dict(sorted(_count(x["book"] for x in games).items(), key=lambda kv: -kv[1])),
         "threshold": THRESHOLD,
         "tw_margin": TW_MARGIN,
+        "min_n": MIN_N,
     }
     s["main"] = {
         "fav": {

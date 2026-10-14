@@ -99,10 +99,12 @@
   </table></div>
 </section>
 
+{% macro cells(m) %}
+{% set ok = m.n >= s.min_n %}
+<td class="num">{{ m.n }}</td><td class="num">{{ '%+.1f'|format(m.gap_pp) if ok else '—' }}</td><td class="num {{ ('pos' if m.roi > 0 else 'neg') if ok else '' }}">{{ '%+.1f%%'|format(m.roi*100) if ok else '—' }}</td>
+{% endmacro %}
 {% macro row(label, f, d) %}
-<tr><td>{{ label }}</td>
-  <td class="num">{{ f.n }}</td><td class="num">{{ '%+.1f'|format(f.gap_pp) if f.n else '—' }}</td><td class="num {{ 'pos' if f.roi and f.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(f.roi*100) if f.n else '—' }}</td>
-  <td class="num">{{ d.n }}</td><td class="num">{{ '%+.1f'|format(d.gap_pp) if d.n else '—' }}</td><td class="num {{ 'pos' if d.roi and d.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(d.roi*100) if d.n else '—' }}</td></tr>
+<tr><td>{{ label }}</td>{{ cells(f) }}{{ cells(d) }}</tr>
 {% endmacro %}
 {% macro head(first) %}
 <tr><th>{{ first }}</th><th class="num">強隊 ML 場數</th><th class="num">比市場</th><th class="num">報酬率</th><th class="num">弱隊 +1.5 場數</th><th class="num">比市場</th><th class="num">報酬率</th></tr>
@@ -147,7 +149,7 @@
 <footer>
   資料：SportsBookReview 歷史賠率（DraftKings、FanDuel、Caesars、bet365、BetMGM、BetRivers 的開盤與收盤不讓分、讓分、大小），由
   <a href="https://github.com/ArnavSaraogi/mlb-odds-scraper">ArnavSaraogi/mlb-odds-scraper</a> 整理；只用例行賽與季後賽、讓分為 ±1.5 且由不讓分強隊讓分的比賽。
-  每場用一家莊家（DraftKings 優先）。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
+  每場用一家莊家（DraftKings 優先）。表格裡少於 {{ s.min_n }} 場的組別只列場數，不算比率（樣本太少）。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
 </footer>
 </div>
 </body>
