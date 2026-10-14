@@ -85,4 +85,11 @@
   .howto { font-size: .82rem; color: var(--muted); margin: 6px 0 12px; }
   details.more { margin-top: 10px; }
   details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
+
+  /* T-10 value block on MLB cards */
+  .t10 { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
+  .t10-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: .9rem; }
+  .t10-head .chip { margin-left: 0; }
+  table.mini tr.pick td { font-weight: 700; }
+  table.mini tr.pick td:first-child::after { content: " ←"; color: var(--good); }
 </style>

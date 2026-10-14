@@ -20,7 +20,7 @@
 </header>
 
 <section>
-  <h2>運彩價值注 <span class="count">{{ tw_values|length }} 個 · 門檻 EV ≥ {{ (cfg.value_threshold*100)|round(0)|int }}%</span></h2>
+  <h2>運彩價值注 <span class="count">{{ tw_values|length }} 個 · 門檻 EV ≥ 足球 {{ (cfg.value_threshold*100)|round(0)|int }}%、MLB {{ (cfg.mlb_value_threshold*100)|round(0)|int }}%</span></h2>
   {% if tw_reports %}
   <p class="sub">{% for r in tw_reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場，對上 {{ r.matched }} 場（{{ r.file }}）{% if r.avg_overround is not none %} · 運彩不讓分平均水錢 {{ '%.1f%%'|format(r.avg_overround*100) }}{% endif %}{% if r.unknown_teams %} · 未對照隊名 {{ r.unknown_teams|length }} 個{% endif %}{% if not loop.last %}　|　{% endif %}{% endfor %}</p>
   {% if tw_summary and (tw_summary.pending or tw_summary.settled) %}
@@ -44,7 +44,7 @@
     </tr>
     {% endfor %}
   </table></div>
-  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。標「推算」的玩法（其他大小盤、球隊大小、兩隊都進球、單雙、讓分 1:0、上半場）沒有國際盤可直接比，公允機率是用國際盤的勝平負和大小反推兩隊預期進球後算出來的；歷史驗證誤差約 1–2%，所以門檻提高到 EV ≥ {{ (cfg.derived_value_threshold*100)|round(0)|int }}%（上半場 {{ (cfg.ht_value_threshold*100)|round(0)|int }}%）。運彩的水錢（上方「平均水錢」）遠高於國際莊家的 2–5%，所以要出現價值注，通常得是運彩開盤後市場大幅移動的場次。</p>
+  <p class="sub">EV = 市場公允機率 × 運彩賠率 − 1。只有運彩賠率高於公允賠率的注才會出現在這裡；多數日子會是空的，這是正常的。標「推算」的玩法（其他大小盤、球隊大小、兩隊都進球、單雙、讓分 1:0、上半場）沒有國際盤可直接比，公允機率是用國際盤的勝平負和大小反推兩隊預期進球後算出來的；歷史驗證誤差約 1–2%，所以門檻提高到 EV ≥ {{ (cfg.derived_value_threshold*100)|round(0)|int }}%（上半場 {{ (cfg.ht_value_threshold*100)|round(0)|int }}%）。運彩的水錢（上方「平均水錢」）遠高於國際莊家的 2–5%，所以要出現價值注，通常得是運彩開盤後市場大幅移動的場次。只有國際價和運彩價相隔 {{ (cfg.max_price_gap_minutes / 60)|round|int }} 小時以內才判斷（隔太久，運彩可能已經反映了國際價還沒有的消息）；開賽前 {{ cfg.pregame_window_hours|round|int }} 小時內上傳運彩時，系統會先買一次最新國際價。</p>
   {% else %}
   <p class="none">{% if tw_reports %}運彩目前沒有賠率高於公允價的注。{% else %}尚未收到運彩賠率上傳（手機捷徑設定好後會自動出現）。{% endif %}</p>
   {% endif %}
@@ -138,9 +138,10 @@
       </div>
       <div class="legend"><span><i style="background:var(--model)"></i>模型</span><span><i style="background:var(--market);opacity:.55"></i>市場（去水）</span></div>
       <div class="facts">
-        {% if c.market and c.market.h2h %}<div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>主 <b>{{ c.market.h2h.home.fair_odds }}</b> · 和 <b>{{ c.market.h2h.draw.fair_odds }}</b> · 客 <b>{{ c.market.h2h.away.fair_odds }}</b>{% if c.market.totals %} · 大{{ c.market.totals.line }} <b>{{ c.market.totals.over.fair_odds }}</b> / 小 <b>{{ c.market.totals.under.fair_odds }}</b>{% endif %}</span></div>{% endif %}
+        {% if c.market and c.market.h2h %}<div style="grid-column: 1 / -1"><span>公允賠率（國際{% if c.market.h2h.odds_at %} {{ c.market.h2h.odds_at|tpe }}{% endif %}）</span><span>主 <b>{{ c.market.h2h.home.fair_odds }}</b> · 和 <b>{{ c.market.h2h.draw.fair_odds }}</b> · 客 <b>{{ c.market.h2h.away.fair_odds }}</b>{% if c.market.totals %} · 大{{ c.market.totals.line }} <b>{{ c.market.totals.over.fair_odds }}</b> / 小 <b>{{ c.market.totals.under.fair_odds }}</b>{% endif %}</span></div>{% endif %}
         {% if c.tw and c.tw.h2h %}<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">{{ c.tw.captured_at[11:16] if c.tw.captured_at else '' }}</span></span><span>{% for side, lab in (('home','主'),('draw','和'),('away','客')) %}{% if c.tw.h2h[side] %}{{ lab }} <b class="{{ 'pos' if c.tw.h2h[side].ev >= cfg.value_threshold else '' }}">{{ c.tw.h2h[side].price }}</b><span class="sub">({{ '%+.0f%%'|format(c.tw.h2h[side].ev*100) }})</span>{% if not loop.last %} · {% endif %}{% endif %}{% endfor %}{% if c.tw.totals %} · 大{{ c.tw.totals.line }} <b class="{{ 'pos' if c.tw.totals.over and c.tw.totals.over.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.over.price if c.tw.totals.over else '—' }}</b> / 小 <b class="{{ 'pos' if c.tw.totals.under and c.tw.totals.under.ev >= cfg.value_threshold else '' }}">{{ c.tw.totals.under.price if c.tw.totals.under else '—' }}</b>{% endif %}</span></div>{% endif %}
         {% if c.tw and c.tw.derived %}<div style="grid-column: 1 / -1"><span>其他玩法最接近公允價 <span class="chip">推算</span></span><span>{% for d in c.tw.derived[:2] %}{{ d.selection }} <b class="{{ 'pos' if d.ev >= cfg.derived_value_threshold else '' }}">{{ d.tw_price }}</b><span class="sub">（公允 {{ d.fair_odds }}，{{ '%+.0f%%'|format(d.ev*100) }}）</span>{% if not loop.last %} · {% endif %}{% endfor %}</span></div>{% endif %}
+        {% if c.tw and c.tw.fair_fresh is defined and not c.tw.fair_fresh %}<div class="note" style="grid-column: 1 / -1">國際價（{{ c.tw.fair_at|tpe }}）和運彩價（{{ c.tw.captured_at|tpe }}）相隔超過 {{ (cfg.max_price_gap_minutes / 60)|round|int }} 小時，這次不判斷價值，等下一次更新。</div>{% endif %}
         <div><span>預期進球</span><span>{{ c.model.lambda_home }} – {{ c.model.mu_away }}</span></div>
         <div><span>最可能比分</span><span>{{ c.model.most_likely }}</span></div>
         <div><span>大 2.5 球</span><span class="model-val">{{ '%.0f%%'|format(c.model.over25*100) }}{% if c.market and c.market.totals and c.market.totals.line == 2.5 %} <span class="market-val">/ {{ '%.0f%%'|format(c.market.totals.over.fair*100) }}</span>{% endif %}</span></div>
@@ -174,7 +175,7 @@
 
 {% if mlb %}
 <section>
-  <h2>MLB <span class="count">{{ mlb.games|length }} 場 · 市場公允賠率與 T-10 G 值（模型 Phase 3 建置中）</span></h2>
+  <h2>MLB <span class="count">{{ mlb.games|length }} 場 · T-10 價值版：運彩價 vs 國際公允價</span></h2>
   {% if mlb.games %}
   <div class="grid">
   {% for g in mlb.games %}
@@ -187,15 +188,32 @@
       </div>
       {% if g.market and g.market.h2h %}
       <div class="facts">
-        <div style="grid-column: 1 / -1"><span>公允賠率（市場）</span><span>客 <b>{{ g.market.h2h.away.fair_odds }}</b> · 主 <b>{{ g.market.h2h.home.fair_odds }}</b>{% if g.market.spread %} · 讓分 {{ '%+g'|format(g.market.spread.line) }} 主 <b>{{ g.market.spread.home.fair_odds }}</b> / 客 <b>{{ g.market.spread.away.fair_odds }}</b>{% endif %}{% if g.market.totals %} · 大小 {{ g.market.totals.line }} <b>{{ g.market.totals.over.fair_odds }}</b> / <b>{{ g.market.totals.under.fair_odds }}</b>{% endif %}</span></div>
-        {% if g.tw and g.tw.h2h %}<div style="grid-column: 1 / -1"><span>運彩賠率 <span class="sub">{{ g.tw.captured_at[11:16] if g.tw.captured_at else '' }}</span></span><span>{% if g.tw.h2h.away %}客 <b class="{{ 'pos' if g.tw.h2h.away.ev >= cfg.value_threshold else '' }}">{{ g.tw.h2h.away.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.h2h.away.ev*100) }})</span>{% endif %}{% if g.tw.h2h.home %} · 主 <b class="{{ 'pos' if g.tw.h2h.home.ev >= cfg.value_threshold else '' }}">{{ g.tw.h2h.home.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.h2h.home.ev*100) }})</span>{% endif %}{% if g.tw.spread and g.tw.spread.home %} · 讓分 主 <b class="{{ 'pos' if g.tw.spread.home.ev >= cfg.value_threshold else '' }}">{{ g.tw.spread.home.price }}</b> / 客 <b class="{{ 'pos' if g.tw.spread.away and g.tw.spread.away.ev >= cfg.value_threshold else '' }}">{{ g.tw.spread.away.price if g.tw.spread.away else '—' }}</b>{% endif %}{% if g.tw.totals and g.tw.totals.over %} · 大小 <b class="{{ 'pos' if g.tw.totals.over.ev >= cfg.value_threshold else '' }}">{{ g.tw.totals.over.price }}</b> / <b class="{{ 'pos' if g.tw.totals.under and g.tw.totals.under.ev >= cfg.value_threshold else '' }}">{{ g.tw.totals.under.price if g.tw.totals.under else '—' }}</b>{% endif %}</span></div>{% endif %}
+        <div style="grid-column: 1 / -1"><span>公允賠率（國際{% if g.market.h2h.odds_at %} {{ g.market.h2h.odds_at|tpe }}{% endif %}）</span><span>客 <b>{{ g.market.h2h.away.fair_odds }}</b> · 主 <b>{{ g.market.h2h.home.fair_odds }}</b>{% if g.market.spread %} · 讓分 {{ '%+g'|format(g.market.spread.line) }} 主 <b>{{ g.market.spread.home.fair_odds }}</b> / 客 <b>{{ g.market.spread.away.fair_odds }}</b>{% endif %}{% if g.market.totals %} · 大小 {{ g.market.totals.line }} <b>{{ g.market.totals.over.fair_odds }}</b> / <b>{{ g.market.totals.under.fair_odds }}</b>{% endif %}</span></div>
+        {% if g.tw and g.tw.totals and g.tw.totals.over %}<div style="grid-column: 1 / -1"><span>運彩大小 {{ g.tw.totals.line }}</span><span>大 <b class="{{ 'pos' if g.tw.totals.over.ev >= cfg.mlb_value_threshold else '' }}">{{ g.tw.totals.over.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.totals.over.ev*100) }})</span>{% if g.tw.totals.under %} · 小 <b class="{{ 'pos' if g.tw.totals.under.ev >= cfg.mlb_value_threshold else '' }}">{{ g.tw.totals.under.price }}</b><span class="sub">({{ '%+.0f%%'|format(g.tw.totals.under.ev*100) }})</span>{% endif %}</span></div>{% endif %}
         <div><span>市場勝率</span><span class="market-val">客 {{ '%.0f%%'|format(g.market.h2h.away.fair*100) }} · 主 {{ '%.0f%%'|format(g.market.h2h.home.fair*100) }}</span></div>
         <div><span>最佳賠率</span><span>{{ g.market.h2h.away.best }} / {{ g.market.h2h.home.best }} <span class="sub">({{ g.market.books }} 家)</span></span></div>
-        {% if g.t10 %}
-        <div style="grid-column: 1 / -1"><span>T-10 G 值（{{ '主' if g.t10.favourite == 'home' else '客' }}隊熱門）</span><span class="{{ 'model-val' if g.t10.signal else '' }}">{{ '%+.1f'|format(g.t10.g*100) }}pp{% if g.t10.signal == 'FAV_ML' %} → 熱門 ML{% elif g.t10.signal == 'DOG_PLUS_1_5' %} → 冷門 +1.5{% else %} → 無訊號（門檻 ±{{ (g.t10.threshold*100)|int }}pp）{% endif %}</span></div>
-        {% endif %}
         {% if g.venue %}<div><span>球場</span><span>{{ g.venue }}</span></div>{% endif %}
       </div>
+      {% set t = g.t10v %}
+      {% if t %}
+      <div class="t10">
+        <div class="t10-head"><b>T-10 價值版</b><span class="chip {{ 'high' if t.status == 'value' else '' }}">{{ {'value': '可下', 'pass': '不下', 'stale': '不判斷'}[t.status] }}</span>
+          <span class="sub">{% if t.timing == 'pregame' %}開賽前 {{ t.minutes_before }} 分比價{% elif t.minutes_before is not none and t.minutes_before > 0 %}早盤參考（距開賽約 {{ (t.minutes_before / 60)|round(1) }} 小時）{% endif %}</span></div>
+        <table class="mini">
+          <tr><th>運彩下法</th><th>運彩</th><th>公允</th><th>EV</th></tr>
+          {% for b in t.bets %}
+          <tr class="{{ 'pick' if t.pick and b.key == t.pick.key else '' }}"><td>{{ b.label }}</td><td><b>{{ b.price }}</b></td><td class="market-val">{{ b.fair_odds }}</td><td class="{{ 'pos' if b.fresh and b.ev >= t.threshold else ('neg' if b.ev < 0 else '') }}">{{ '%+.1f%%'|format(b.ev*100) }}</td></tr>
+          {% endfor %}
+        </table>
+        {% if t.g_intl is not none %}<div class="sub">G 值：國際 {{ '%+.1f'|format(t.g_intl*100) }}pp（{{ t.shape }}）{% if t.g_tw is not none %} · 運彩 {{ '%+.1f'|format(t.g_tw*100) }}pp · 差 {{ '%+.1f'|format(t.g_gap*100) }}pp{% endif %}</div>{% endif %}
+        {% for h in t.hints %}<div class="sub">・{{ h }}</div>{% endfor %}
+        <p class="conclusion"><b>結論</b>{% if t.status == 'value' %}可下 {{ t.pick.label }} @ {{ t.pick.price }}（公允 {{ t.pick.fair_odds }}，EV {{ '%+.1f%%'|format(t.pick.ev*100) }}）。下注前先確認運彩賠率沒有變低。{% elif t.status == 'pass' %}不下。最接近的是 {{ t.best.label }}（EV {{ '%+.1f%%'|format(t.best.ev*100) }}），門檻 EV ≥ +{{ (t.threshold*100)|round|int }}%。{% else %}不判斷：國際價（{{ t.fair_at|tpe }}）和運彩價（{{ t.tw_at|tpe }}）相隔超過 {{ (cfg.max_price_gap_minutes / 60)|round|int }} 小時，等下一次更新。{% endif %}</p>
+        <div class="sub">運彩 {{ t.tw_at|tpe }} · 國際 {{ t.fair_at|tpe }}</div>
+      </div>
+      {% elif g.t10 %}
+      <div class="t10"><div class="t10-head"><b>T-10 價值版</b><span class="sub">還沒有運彩賠率</span></div>
+        <div class="sub">G 值（國際）{{ '%+.1f'|format(g.t10.g*100) }}pp{% if g.t10.shape %}（{{ g.t10.shape }}）{% endif %}</div></div>
+      {% endif %}
       {% else %}
       <p class="none">尚無賠率。</p>
       {% endif %}
@@ -203,7 +221,7 @@
     </article>
   {% endfor %}
   </div>
-  <p class="sub">G 值用的是早上快照的賠率，不是 T-10 要求的開賽前 10 分鐘尾盤；尾盤請自行查詢後套用同一公式。</p>
+  <p class="sub">T-10 價值版：國際多家莊家去水後的價格當作真實機率，運彩的四種下法（強／弱隊不讓分、讓 1.5 分）各算 EV = 公允機率 × 運彩賠率 − 1，≥ +{{ (cfg.mlb_value_threshold*100)|round|int }}% 才可下；國際價和運彩價相隔 {{ (cfg.max_price_gap_minutes / 60)|round|int }} 小時以內才判斷。開賽前 {{ cfg.pregame_window_hours|round|int }} 小時內用捷徑上傳一次運彩，系統會先買最新的國際價再比（約 2–3 分鐘後網頁更新）。G 值只描述比賽型態，<a href="t10_backtest.html">2021–2025 回測</a>沒有優勢，不再用來決定下注。</p>
   {% else %}<p class="none">今天沒有 MLB 比賽。</p>{% endif %}
 </section>
 {% endif %}

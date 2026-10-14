@@ -1,7 +1,9 @@
 name: 運彩 compare
 
-# Runs whenever the phone uploads a 運彩 feed file (data/tw/**). Needs no API
-# keys: it compares the upload with the latest snapshots and re-renders.
+# Runs whenever the phone uploads a 運彩 feed file (data/tw/**). Compares the upload
+# with the latest snapshots and re-renders. Games starting within the next 3 hours
+# first get freshly bought international prices (T-10 價值版: decide just before
+# first pitch), within the odds credit budget; that is what the API key is for.
 
 on:
   push:
@@ -20,6 +22,7 @@ jobs:
   compare:
     runs-on: ubuntu-latest
     env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
       PYTHONPATH: src
     steps:
       - uses: actions/checkout@v4
@@ -31,8 +34,8 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - name: Compare 運彩 with fair odds and render
+      - name: Compare 運彩 with fair odds (pre-game refresh first) and render
         run: python -m sports_analyzer.pipeline tw
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/tw docs/index.html docs/reviews.html
+          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/odds_budget.json data/tw docs/index.html docs/reviews.html

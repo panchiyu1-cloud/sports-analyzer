@@ -376,7 +376,7 @@ class MlbReviewTests(unittest.TestCase):
             2,
         )
 
-    def entry(self, t10):
+    def entry(self, t10, t10v=None):
         mlb_card = {
             "game_pk": 9001,
             "kickoff_utc": "2026-10-15T00:08:00+00:00",
@@ -387,9 +387,33 @@ class MlbReviewTests(unittest.TestCase):
             "away_probable": "Someone Else",
             "market": {"h2h": {"home": {"fair": 0.58}, "away": {"fair": 0.42}}},
             "t10": t10,
+            "t10v": t10v,
         }
         snaps = [{"generated_at": "2026-10-14T12:30:00+00:00", "games": [mlb_card]}]
         return review.collect_prematch(snaps, lambda s: s["games"], "game_pk")["9001"]
+
+    @staticmethod
+    def value_block(status="value"):
+        pick = {
+            "key": "dog_rl",
+            "label": "客隊 +1.5",
+            "side": "away",
+            "line": 1.5,
+            "price": 1.80,
+            "fair_odds": 1.72,
+            "ev": 0.0465,
+        }
+        return {
+            "favourite": "home",
+            "g_intl": 0.072,
+            "g_tw": 0.101,
+            "status": status,
+            "pick": pick if status == "value" else None,
+            "best": {**pick, "ev": 0.0465 if status == "value" else -0.021},
+            "tw_at": "2026-10-15T07:50+08:00",
+            "fair_at": "2026-10-15T07:51+08:00",
+            "minutes_before": 18,
+        }
 
     def test_parse_box(self):
         self.assertEqual(self.box.innings_home[-1], None)  # the "x"
@@ -398,32 +422,51 @@ class MlbReviewTests(unittest.TestCase):
         self.assertEqual(PitcherLine("x", "6.1").outs, 19)
         self.assertEqual((self.box.hits_home, self.box.errors_away), (9, 1))
 
-    def test_t10_fav_ml_hit_and_wording(self):
-        t10 = {"favourite": "home", "g": 0.072, "signal": "FAV_ML", "threshold": 0.06}
-        row = review.mlb_row(self.entry(t10), self.game, self.box, NOW)
+    def test_t10_value_bet_is_graded_on_its_own_handicap(self):
+        t10 = {"favourite": "home", "g": 0.072, "shape": "強隊大勝型"}
+        row = review.mlb_row(self.entry(t10, self.value_block()), self.game, self.box, NOW)
         self.assertEqual((row["winner"], row["fav_won"], row["fav_cover"]), ("home", "1", "1"))
-        self.assertEqual(row["t10_result"], "win")
-        self.assertEqual(row["verdict"], "t10_hit")
+        # 客隊 +1.5 after a 5-2 home win: -3 + 1.5 < 0 -> lost one unit.
+        self.assertEqual((row["t10_result"], row["t10_units"]), ("loss", -1.0))
+        self.assertEqual(row["verdict"], "t10_value_loss")
         self.assertAlmostEqual(row["market_ll"], round(-math.log(0.58), 4))
         self.assertEqual(row["innings_h"], "0 0 1 0 0 0 4 0 x")
         text = " ".join(review.explain_mlb(row)["bullets"])
-        self.assertIn("T-10 G 值 +7.2pp → 熱門 ML（Home Club） → 命中 ✓", text)
+        self.assertIn(
+            "T-10 價值版（開賽前 18 分比價）：可下 客隊 +1.5 @ 1.8（公允 1.72，EV +4.7%） → 未命中 ✗",
+            text,
+        )
+        self.assertIn("G 值：國際 +7.2pp、運彩 +10.1pp", text)
         # The away starter went 6.1 innings: he was still in when the 7th began.
         self.assertIn("Home Club 第 7 局攻下 4 分（對方先發在這局退場）", text)
         self.assertIn("賽前預告的是 Someone Else，臨時換人", text)
 
-    def test_t10_dog_plus_one_and_a_half(self):
-        t10 = {"favourite": "home", "g": -0.07, "signal": "DOG_PLUS_1_5", "threshold": 0.06}
-        row = review.mlb_row(self.entry(t10), self.game, self.box, NOW)
-        self.assertEqual(row["t10_result"], "loss")  # favourite won by 3
         one_run = MlbGame(
             9001, self.game.game_date, "Final", "Home Club", "Away Club", None, None, None, 3, 2
         )
-        row = review.mlb_row(self.entry(t10), one_run, None, NOW)
-        self.assertEqual(row["t10_result"], "win")  # lost by one with +1.5
+        row = review.mlb_row(self.entry(t10, self.value_block()), one_run, None, NOW)
+        # Lost by one with +1.5: -1 + 1.5 > 0 -> won 0.80 at 1.80.
+        self.assertEqual((row["t10_result"], row["t10_units"]), ("win", 0.8))
         self.assertIn("一分差比賽", " ".join(review.explain_mlb(row)["bullets"]))
         s = review.summarize_mlb([row])
-        self.assertEqual(s["t10"], {"DOG_PLUS_1_5": {"n": 1, "hits": 1}})
+        self.assertEqual((s["t10_bets"], s["t10_wins"], s["t10_units"]), (1, 1, 0.8))
+        self.assertEqual(s["t10_judged"], 1)
+
+    def test_no_bet_is_not_graded_on_the_score(self):
+        t10 = {"favourite": "home", "g": 0.072}
+        row = review.mlb_row(self.entry(t10, self.value_block("pass")), self.game, self.box, NOW)
+        self.assertEqual((row["t10_result"], row["verdict"]), ("", "t10_pass"))
+        self.assertIn(
+            "不下，最接近的是 客隊 +1.5（EV -2.1%）", " ".join(review.explain_mlb(row)["bullets"])
+        )
+        stale = review.mlb_row(self.entry(t10, self.value_block("stale")), self.game, None, NOW)
+        self.assertEqual(stale["verdict"], "t10_stale")
+        # Snapshots from before the value version have no block at all.
+        old = review.mlb_row(
+            self.entry({"favourite": "home", "g": 0.072, "signal": "FAV_ML"}), self.game, None, NOW
+        )
+        self.assertEqual(old["verdict"], "no_t10")
+        self.assertEqual(review.summarize_mlb([row, stale, old])["t10_judged"], 1)
 
 
 class RegressionTests(unittest.TestCase):

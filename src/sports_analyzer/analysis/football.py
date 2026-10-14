@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from ..config import LOCAL_TZ, Competition, ModelConfig
@@ -75,8 +75,17 @@ def match_odds(
 
 def market_view(event: OddsEvent, method: str, totals_prefer: float | None = 2.5) -> dict[str, Any]:
     """Consensus for the match-winner market (1X2, or two-way when no draw is quoted),
-    the main totals line and the main spread line."""
+    the main totals line and the main spread line.
+
+    Every block carries `odds_at` (UTC, when the prices were bought) so that a block
+    carried into a later snapshot keeps its own age.
+    """
     view: dict[str, Any] = {"books": len(event.books), "h2h": None, "totals": None, "spread": None}
+    stamp = (
+        {"odds_at": event.fetched_at.astimezone(UTC).isoformat(timespec="minutes")}
+        if event.fetched_at
+        else {}
+    )
 
     three_way = any("draw" in b.h2h for b in event.books)
     if three_way:
@@ -88,7 +97,7 @@ def market_view(event: OddsEvent, method: str, totals_prefer: float | None = 2.5
     ]
     c = market.consensus(outcomes, h2h_quotes, method)
     if c:
-        view["h2h"] = {o: _side(c, o) for o in c.outcomes}
+        view["h2h"] = {**{o: _side(c, o) for o in c.outcomes}, **stamp}
 
     totals_line = _main_line([t.point for b in event.books for t in b.totals], prefer=totals_prefer)
     if totals_line is not None:
@@ -100,7 +109,11 @@ def market_view(event: OddsEvent, method: str, totals_prefer: float | None = 2.5
         ]
         c = market.consensus(("over", "under"), quotes, method)
         if c:
-            view["totals"] = {"line": totals_line, **{o: _side(c, o) for o in c.outcomes}}
+            view["totals"] = {
+                "line": totals_line,
+                **{o: _side(c, o) for o in c.outcomes},
+                **stamp,
+            }
 
     spread_line = _main_line([s.point for b in event.books for s in b.spreads], prefer=None)
     if spread_line is not None:
@@ -112,7 +125,11 @@ def market_view(event: OddsEvent, method: str, totals_prefer: float | None = 2.5
         ]
         c = market.consensus(("home", "away"), quotes, method)
         if c:
-            view["spread"] = {"line": spread_line, **{o: _side(c, o) for o in c.outcomes}}
+            view["spread"] = {
+                "line": spread_line,
+                **{o: _side(c, o) for o in c.outcomes},
+                **stamp,
+            }
     return view
 
 

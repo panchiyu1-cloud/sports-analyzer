@@ -22,6 +22,24 @@ class BudgetTests(unittest.TestCase):
             budget.allowance_today(budget.BudgetState("2026-10-12"), date(2026, 10, 14))
         )
 
+    def test_pregame_extra_raises_the_ceiling_but_never_touches_the_reserve(self):
+        st = budget.BudgetState(
+            "2026-10-12", used=27, remaining=473, day="2026-10-14", day_start_used=9
+        )
+        # 8.63 left of today's routine allowance (above) + 6 for pre-game refreshes.
+        self.assertAlmostEqual(
+            budget.allowance_today(st, date(2026, 10, 14), extra=budget.PREGAME_EXTRA),
+            14.629,
+            places=3,
+        )
+        # Near the end: nothing spent today, 30 left. Routine: 1.6 * (30 - 25) / 28 = 0.29;
+        # with the extra it would be 6.29, but only 30 - 25 = 5 sit above the reserve.
+        low = budget.BudgetState(
+            "2026-10-12", used=470, remaining=30, day="2026-10-14", day_start_used=470
+        )
+        self.assertAlmostEqual(budget.allowance_today(low, date(2026, 10, 14)), 0.286, places=3)
+        self.assertEqual(budget.allowance_today(low, date(2026, 10, 14), extra=6), 5)
+
     def test_plan_degrades_to_essentials_then_nothing(self):
         wanted, essential = ("h2h", "totals"), ("h2h",)
         self.assertEqual(budget.plan_markets(wanted, 5, 10.0, essential), wanted)

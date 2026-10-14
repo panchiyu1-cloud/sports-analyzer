@@ -27,6 +27,10 @@ RESERVE = 25
 # A day may spend up to this multiple of its even share: weekends need more than
 # midweek, and tomorrow's share shrinks by whatever today overspent.
 BURST = 1.6
+# Pre-game refreshes (analysis/pregame.py) may spend this much more per day than the
+# routine runs: a price minutes before first pitch is worth more than a routine one.
+# The overspend comes out of the following days' shares; the reserve is never touched.
+PREGAME_EXTRA = 6
 
 
 @dataclass(frozen=True)
@@ -51,13 +55,15 @@ def save(path: Path, state: BudgetState) -> None:
     path.write_text(json.dumps(asdict(state), indent=1) + "\n", encoding="utf-8")
 
 
-def allowance_today(state: BudgetState, today: date) -> float | None:
+def allowance_today(state: BudgetState, today: date, extra: float = 0.0) -> float | None:
     """Credits this run may still spend today; None = no limit known.
 
     Past the assumed end of the period the quota must have reset (the real period
     is never longer), but only a purchase reveals the new counters. So the run is
     let through (None) and `record` then sees `used` drop. Without this, a budget
     that ended near the reserve would buy nothing ever again.
+
+    `extra` raises today's ceiling (pre-game refreshes) but never past the reserve.
     """
     if state.remaining is None:
         return None
@@ -70,7 +76,10 @@ def allowance_today(state: BudgetState, today: date) -> float | None:
         and state.day_start_used is not None
     ):
         spent_today = max(0, state.used - state.day_start_used)
-    return max(0.0, BURST * daily_share(state, today, spent_today) - spent_today)
+    allowed = BURST * daily_share(state, today, spent_today) + extra - spent_today
+    if extra:
+        allowed = min(allowed, state.remaining - RESERVE)
+    return max(0.0, allowed)
 
 
 def daily_share(state: BudgetState, today: date, spent_today: int = 0) -> float:

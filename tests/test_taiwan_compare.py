@@ -83,6 +83,25 @@ class CompareTests(unittest.TestCase):
         self.assertEqual(derived["line"], -1.0)
         self.assertEqual(tw["captured_at"], "2026-10-17T08:00+08:00")
 
+    def test_old_fair_price_shows_ev_but_flags_nothing(self):
+        card = football_card()
+        for key in ("h2h", "totals"):
+            card["market"][key]["odds_at"] = "2026-10-16T12:25+00:00"  # 20:25 Taipei
+        late = datetime(2026, 10, 17, 8, 0, tzinfo=LOCAL_TZ)  # 11h35m later
+        tw = compare.compare(card, self.games[1], late, self.cfg)
+        self.assertAlmostEqual(tw["h2h"]["home"]["ev"], 0.02, places=4)
+        self.assertEqual(tw["values"], [])
+        self.assertEqual((tw["fair_fresh"], tw["fair_at"]), (False, "2026-10-16T20:25+08:00"))
+        soon = datetime(2026, 10, 16, 21, 0, tzinfo=LOCAL_TZ)  # 35 minutes later
+        tw = compare.compare(card, self.games[1], soon, self.cfg)
+        self.assertEqual([v["selection_key"] for v in tw["values"]], ["home", "hcp3_away"])
+        self.assertTrue(tw["fair_fresh"])
+        # A block carried over from an earlier snapshot is never fresh.
+        card["market"]["h2h"]["stale"] = True
+        self.assertFalse(compare.is_fresh(card["market"]["h2h"], soon, self.cfg))
+        tw = compare.compare(card, self.games[1], soon, self.cfg)
+        self.assertEqual(tw["values"], [])  # the derived 讓分 needs a fresh 1X2 too
+
     def test_swapped_listing_names_the_team_to_pick_on_tw(self):
         # Regression (review 2026-10-14): when 運彩 lists our away team as its home, the
         # value row said 主勝 next to the other team's price.

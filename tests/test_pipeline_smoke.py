@@ -7,7 +7,7 @@ credit budget, snapshot writing, carrying prices over when nothing is bought).
 import json
 import tempfile
 import unittest
-from datetime import date
+from datetime import UTC, date, datetime
 from pathlib import Path
 from unittest import mock
 
@@ -128,3 +128,164 @@ class FootballPipelineSmokeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FakeMlbOdds:
+    """The Odds API for one MLB game; `fetched_at` is set by the test (the run's clock)."""
+
+    calls: list[tuple[str, tuple[str, ...]]] = []
+    fetched_at = None
+
+    def __init__(self, api_key: str, regions: str = "eu", session=None) -> None:
+        self._used: int | None = None
+        self._remaining: int | None = None
+
+    def odds(self, sport_key, *, commence_from=None, commence_to=None, markets=()):
+        FakeMlbOdds.calls.append((sport_key, tuple(markets)))
+        self._used = (self._used or 100) + len(markets)
+        self._remaining = (self._remaining or 400) - len(markets)
+        books = tuple(
+            odds.BookOdds(
+                name,
+                {"home": 1.55, "away": 2.55},
+                (odds.SpreadLine(-1.5, 2.20, 1.72),),
+                (odds.TotalLine(7.5, 1.90, 1.92),),
+            )
+            for name in ("pinnacle", "betfair_ex_eu")
+        )
+        return [
+            odds.OddsEvent(
+                "e1",
+                "baseball_mlb",
+                datetime(2026, 10, 14, 0, 0, tzinfo=UTC),
+                "Los Angeles Dodgers",
+                "Philadelphia Phillies",
+                books,
+                fetched_at=FakeMlbOdds.fetched_at,
+            )
+        ]
+
+    def credits_remaining(self):
+        return self._remaining
+
+    def credits_used(self):
+        return self._used
+
+
+class PregameRefreshSmokeTests(unittest.TestCase):
+    """A 運彩 upload 40 minutes before first pitch buys fresh MLB prices first."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.paths = {
+            "SNAPSHOT_DIR": root / "snapshots",
+            "TW_DIR": root / "tw",
+            "TW_LEDGER_PATH": root / "tw_ledger.csv",
+            "ODDS_BUDGET_PATH": root / "odds_budget.json",
+            "IMPLIED_CALIBRATION_PATH": root / "implied_calibration.json",
+        }
+        self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
+        self.patches.append(mock.patch.object(pipeline, "OddsClient", FakeMlbOdds))
+        for p in self.patches:
+            p.start()
+        FakeMlbOdds.calls = []
+        # Last evening's snapshot holds the game (international prices from 20:25 Taipei);
+        # this morning's run already wrote tomorrow's games into a newer one.
+        card = {
+            "sport": "mlb",
+            "game_pk": 1,
+            "kickoff_utc": "2026-10-14T00:00:00+00:00",
+            "local": "10/14 08:00",
+            "status": "Scheduled",
+            "home": "Los Angeles Dodgers",
+            "away": "Philadelphia Phillies",
+            "home_key": "los angeles dodgers",
+            "away_key": "philadelphia phillies",
+            "market": {
+                "books": 2,
+                "h2h": {
+                    "home": {"fair": 0.62, "fair_odds": 1.61},
+                    "away": {"fair": 0.38, "fair_odds": 2.63},
+                    "odds_at": "2026-10-13T12:25+00:00",
+                },
+                "spread": None,
+                "totals": None,
+            },
+            "t10": None,
+            "notes": ["賠率為稍早快照（比賽可能已開打）"],
+        }
+        self._snapshot("2026-10-13", "2026-10-13T12:26:00+00:00", [card])
+        self._snapshot("2026-10-14", "2026-10-13T23:00:00+00:00", [])
+        upload = self.paths["TW_DIR"] / "baseball" / "2026-10-14-0720.json"  # 23:20 UTC
+        upload.parent.mkdir(parents=True)
+        upload.write_text(
+            (FIXTURES / "tw_games.json").read_text(encoding="utf-8"), encoding="utf-8"
+        )
+        self.settings = Settings("token", "key")
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        self.tmp.cleanup()
+
+    def _snapshot(self, day, made, games):
+        folder = self.paths["SNAPSHOT_DIR"] / day
+        folder.mkdir(parents=True)
+        payload = {"generated_at": made, "date": day, "games": games}
+        (folder / "mlb.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    def _card(self):
+        snap = json.loads(
+            (self.paths["SNAPSHOT_DIR"] / "2026-10-13" / "mlb.json").read_text(encoding="utf-8")
+        )
+        return snap["games"][0]
+
+    def test_upload_before_first_pitch_reprices_and_judges(self):
+        now = datetime(2026, 10, 13, 23, 21, tzinfo=UTC)
+        FakeMlbOdds.fetched_at = now
+        rep = pipeline.run_tw(settings=self.settings, now=now)["mlb"]
+        self.assertEqual(FakeMlbOdds.calls, [("baseball_mlb", ("h2h", "spreads", "totals"))])
+        self.assertEqual(
+            rep["pregame"], {"due": 1, "refreshed": 1, "markets": ["h2h", "spreads", "totals"]}
+        )
+        card = self._card()
+        self.assertEqual(card["market"]["h2h"]["odds_at"], "2026-10-13T23:21+00:00")
+        self.assertIsNotNone(card["t10"])
+        self.assertEqual(card["notes"], [])
+        # 運彩 Dodgers -1.5 at 2.50 against a fair cover chance of ~0.44: a value bet,
+        # judged 40 minutes before first pitch.
+        t = card["t10v"]
+        self.assertEqual(
+            (t["status"], t["pick"]["key"], t["timing"]), ("value", "fav_rl", "pregame")
+        )
+        self.assertEqual(t["minutes_before"], 40)
+        rows = pipeline.tw_ledger.read(self.paths["TW_LEDGER_PATH"])
+        self.assertEqual([(r["sport"], r["selection_key"]) for r in rows], [("mlb", "spread_home")])
+        self.assertEqual(rows[0]["clv"], "")
+        state = budget.load(self.paths["ODDS_BUDGET_PATH"], now.date())
+        self.assertEqual((state.used, state.remaining), (103, 397))
+
+        # 25 minutes later the prices are old enough to buy again: the earlier bet gets
+        # its closing-line value from them, and is not recorded twice.
+        later = datetime(2026, 10, 13, 23, 46, tzinfo=UTC)
+        FakeMlbOdds.fetched_at = later
+        pipeline.run_tw(settings=self.settings, now=later)
+        self.assertEqual(len(FakeMlbOdds.calls), 2)
+        rows = pipeline.tw_ledger.read(self.paths["TW_LEDGER_PATH"])
+        self.assertEqual(len(rows), 1)
+        self.assertNotEqual(rows[0]["clv"], "")
+
+        # Five minutes after that the prices are fresh: nothing is bought.
+        pipeline.run_tw(settings=self.settings, now=datetime(2026, 10, 13, 23, 51, tzinfo=UTC))
+        self.assertEqual(len(FakeMlbOdds.calls), 2)
+
+    def test_an_old_upload_buys_nothing(self):
+        now = datetime(2026, 10, 13, 23, 59, tzinfo=UTC)
+        upload = self.paths["TW_DIR"] / "baseball" / "2026-10-14-0720.json"
+        upload.rename(upload.with_name("2026-10-14-0510.json"))  # 21:10 UTC: 2h49m old
+        rep = pipeline.run_tw(settings=self.settings, now=now)["mlb"]
+        self.assertEqual(FakeMlbOdds.calls, [])
+        self.assertEqual(rep["pregame"]["skipped"], "upload not recent")
+        # The comparison still runs, but against prices 9 hours from the 運彩 capture.
+        self.assertEqual(self._card()["t10v"]["status"], "stale")

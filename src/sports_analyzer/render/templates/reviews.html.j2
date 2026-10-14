@@ -49,9 +49,11 @@
   <div class="kpis">
     <div class="kpi"><b>{{ reviews.mlb_summary.fav_wins }} / {{ reviews.mlb_summary.fav_n }}</b><span>熱門 ML 勝（市場預期 {{ reviews.mlb_summary.fav_expected }}）</span></div>
     <div class="kpi"><b>{{ reviews.mlb_summary.fav_covers }} / {{ reviews.mlb_summary.fav_n }}</b><span>熱門 −1.5 過盤</span></div>
-    {% for sig, b in reviews.mlb_summary.t10.items() %}
-    <div class="kpi"><b>{{ b.hits }} / {{ b.n }}</b><span>T-10 {{ '熱門 ML' if sig == 'FAV_ML' else '冷門 +1.5' }}</span></div>
-    {% endfor %}
+    <div class="kpi"><b>{{ reviews.mlb_summary.t10_bets }} / {{ reviews.mlb_summary.t10_judged }}</b><span>T-10 價值注 / 有判斷的場次</span></div>
+    {% if reviews.mlb_summary.t10_bets %}
+    <div class="kpi"><b>{{ reviews.mlb_summary.t10_wins }} / {{ reviews.mlb_summary.t10_bets }}</b><span>價值注贏（平均 EV {{ '%+.1f%%'|format(reviews.mlb_summary.t10_avg_ev*100) if reviews.mlb_summary.t10_avg_ev is not none else '—' }}）</span></div>
+    <div class="kpi"><b class="{{ 'pos' if reviews.mlb_summary.t10_units > 0 else ('neg' if reviews.mlb_summary.t10_units < 0 else '') }}">{{ '%+.2f'|format(reviews.mlb_summary.t10_units) }}</b><span>價值注損益（每注 1 單位）</span></div>
+    {% endif %}
   </div>
 </section>
 {% endif %}

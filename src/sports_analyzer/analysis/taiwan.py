@@ -14,11 +14,15 @@ Markets the international books are not asked for (totals at other lines, team
 totals, both teams to score, odd/even, three-way handicaps, first half) are priced
 from the market-implied goal model (`models.implied`), validated against closing
 prices and results, and need a larger EV (`derived_value_threshold`) to count.
+
+A value bet also needs a fair price bought close to the 運彩 capture (`is_fresh`):
+a consensus from the night before misses the news 運彩 may have priced in since.
 """
 
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -63,6 +67,33 @@ def match_game(card: dict[str, Any], games: list[TwGame], tolerance: timedelta) 
     return None
 
 
+def fair_time(block: Mapping[str, Any] | None) -> datetime | None:
+    """When a consensus block's prices were bought (None if the block has no stamp)."""
+    if not block or not block.get("odds_at"):
+        return None
+    try:
+        return datetime.fromisoformat(str(block["odds_at"]))
+    except ValueError:
+        return None
+
+
+def is_fresh(
+    block: Mapping[str, Any] | None, captured_at: datetime | None, cfg: ModelConfig
+) -> bool:
+    """Can a 運彩 price captured at `captured_at` be judged against this consensus block?
+
+    Not when the block was carried over from an earlier snapshot ("stale"), nor when it
+    was bought more than `max_price_gap_minutes` away from the 運彩 capture. Without a
+    time on either side (snapshots made before the stamps existed) it is judged as before.
+    """
+    if not block or block.get("stale"):
+        return False
+    bought = fair_time(block)
+    if bought is None or captured_at is None:
+        return True
+    return abs((captured_at - bought).total_seconds()) <= cfg.max_price_gap_minutes * 60
+
+
 def compare(
     card: dict[str, Any],
     game: TwGame,
@@ -75,6 +106,8 @@ def compare(
     # A neutral-venue listing can name the teams the other way round: 運彩's "home"
     # is then our away team. Only the match-winner market is safe to map back.
     swapped = game.home_key == card.get("away_key") and game.away_key == card.get("home_key")
+    fresh = {k: is_fresh(mv.get(k), captured_at, cfg) for k in ("h2h", "totals", "spread")}
+    bought = fair_time(mv.get("h2h"))
     block: dict[str, Any] = {
         "game_no": game.no,
         "home_zh": game.home_zh,
@@ -83,6 +116,9 @@ def compare(
         "captured_at": captured_at.astimezone(LOCAL_TZ).isoformat(timespec="minutes")
         if captured_at
         else None,
+        # The fair price's own time, and whether this comparison may flag value bets.
+        "fair_at": bought.astimezone(LOCAL_TZ).isoformat(timespec="minutes") if bought else None,
+        "fair_fresh": fresh["h2h"],
         "h2h": None,
         "totals": None,
         "spread": None,
@@ -100,6 +136,7 @@ def compare(
             "1X2" if "draw" in mv["h2h"] else "不讓分",
             tw_side={"home": "away", "away": "home"} if swapped else None,
             names={"home": game.home_zh, "away": game.away_zh},
+            record=fresh["h2h"],
         )
     if swapped:
         log.info(
@@ -110,7 +147,14 @@ def compare(
     tot = game.market("totals", line=mv["totals"]["line"]) if mv.get("totals") else None
     if tot:
         block["totals"] = _compare_sides(
-            tot, mv["totals"], ("over", "under"), tot.line, cfg, block["values"], "大小"
+            tot,
+            mv["totals"],
+            ("over", "under"),
+            tot.line,
+            cfg,
+            block["values"],
+            "大小",
+            record=fresh["totals"],
         )
     sp = game.market("spread")  # two-way only; the parser demotes three-way handicaps
     if sp and mv.get("spread"):
@@ -129,8 +173,11 @@ def compare(
                 block["values"],
                 "讓分",
                 key_prefix="spread_",
+                record=fresh["spread"],
             )
-    block["derived"] = derived_compare(mv, game, cfg, calib, block["values"])
+    block["derived"] = derived_compare(
+        mv, game, cfg, calib, block["values"], record=fresh["h2h"] and fresh["totals"]
+    )
     return block
 
 
@@ -145,10 +192,12 @@ def _compare_sides(
     key_prefix: str = "",
     tw_side: dict[str, str] | None = None,
     names: dict[str, str] | None = None,
+    record: bool = True,
 ) -> dict[str, Any]:
     """`tw_side` maps our side to 運彩's when it lists the teams the other way round;
     `names` (運彩's Chinese team names) makes the value label say which team to pick
-    on 運彩, in 運彩's own home/away terms."""
+    on 運彩, in 運彩's own home/away terms. With `record` False (the fair price is too
+    far in time from the 運彩 price) EVs are shown but no value bet is flagged."""
     out: dict[str, Any] = {"line": line}
     for side in sides:
         their = (tw_side or {}).get(side, side)
@@ -164,7 +213,7 @@ def _compare_sides(
             "ev": round(ev, 4),
         }
         out[side] = entry
-        if ev >= cfg.value_threshold:
+        if record and ev >= cfg.value_threshold:
             key = f"{key_prefix}{side}"
             label = SIDE_LABELS.get(f"{key_prefix}{their}", key)
             if names and their in names:
@@ -334,8 +383,10 @@ def derived_compare(
     cfg: ModelConfig,
     calib: Calibration,
     values: list[dict[str, Any]],
+    record: bool = True,
 ) -> list[dict[str, Any]]:
-    """EV of every 運彩 selection the implied model prices; value bets go to `values`.
+    """EV of every 運彩 selection the implied model prices; value bets go to `values`
+    (only with `record`: both the 1X2 and the totals line must be fresh).
 
     The totals line the market itself quotes is compared directly above, so it is
     skipped here.
@@ -371,7 +422,7 @@ def derived_compare(
             threshold = (
                 cfg.ht_value_threshold if key.startswith("ht_") else cfg.derived_value_threshold
             )
-            if ev >= threshold:
+            if record and ev >= threshold:
                 values.append(entry)
     out.sort(key=lambda e: -e["ev"])
     return out

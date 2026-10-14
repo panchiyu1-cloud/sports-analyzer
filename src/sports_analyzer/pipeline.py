@@ -16,6 +16,7 @@ import argparse
 import json
 import logging
 import sys
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -25,11 +26,13 @@ import requests
 from . import budget as budget_mod
 from . import ledger as ledger_mod
 from . import review_store, tw_ledger
-from .analysis import review
+from .analysis import pregame, review
 from .analysis.football import build_cards
 from .analysis.mlb import build_cards as build_mlb_cards
+from .analysis.mlb import g_value_block, t10_value_block
 from .analysis.taiwan import annotate as annotate_tw
 from .config import (
+    COMPETITION_BY_CODE,
     DATA_DIR,
     DOCS_DIR,
     FOOTBALL_COMPETITIONS,
@@ -365,6 +368,10 @@ def run_mlb(
     # morning found: games that have since started lose their odds, and the 運彩
     # comparison lives on the card.
     _merge_previous_mlb(snapshot, _latest_snapshot("mlb"))
+    for card in cards:
+        # A carried-over 運彩 block is re-judged against the new prices (and shown as
+        # not judged when the two are hours apart: analysis/taiwan.is_fresh).
+        card["t10v"] = t10_value_block(card, cfg)
     clv_updated = tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb")
     log.info(
         "mlb: %d cards with odds, %d 運彩 CLV filled",
@@ -398,21 +405,39 @@ def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | Non
 
 
 # ------------------------------------------------------------------ 運彩
-def run_tw(cfg: ModelConfig = MODEL) -> dict[str, Any]:
-    """Compare the newest 運彩 upload with the newest snapshots; record value bets."""
+def run_tw(
+    cfg: ModelConfig = MODEL, settings: Settings | None = None, now: datetime | None = None
+) -> dict[str, Any]:
+    """Compare the newest 運彩 upload with the newest snapshots; record value bets.
+
+    Games starting within the pre-game window first get freshly bought international
+    prices (analysis/pregame.py), when an Odds API key is set, the upload is recent
+    and the budget allows: the T-10 idea of deciding just before first pitch.
+    """
+    now = now or datetime.now(UTC)
     reports: dict[str, Any] = {}
     for src, dst in taiwan.normalize_uploads(TW_DIR):
         log.info("tw: renamed upload %s -> %s", src.relative_to(TW_DIR), dst.relative_to(TW_DIR))
+    calib = _implied_calibration()
+
     football = _latest_snapshot("football")
     games, path, parse_report = taiwan.load_latest(TW_DIR, "football")
     if football and path:
+        _backfill_odds_at(football)
         cards = [c for comp in football["competitions"] for c in comp["cards"]]
-        rep = annotate_tw(cards, games, taiwan.captured_at(path), cfg, calib=_implied_calibration())
+        captured = taiwan.captured_at(path)
+        pre, refreshed = _pregame_refresh("football", cards, captured, settings, now, cfg)
+        if refreshed:
+            # The fresh consensus is the closing proxy for 運彩 bets recorded earlier;
+            # filled before this run records new ones, so no bet is its own close.
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "football", calib)
+        rep = annotate_tw(cards, games, captured, cfg, calib=calib)
         rep.update(
             {
                 "file": path.name,
                 "unknown_teams": sorted(parse_report.unknown_teams),
                 "unknown_markets": parse_report.unknown_markets,
+                "pregame": pre,
             }
         )
         football["tw_report"] = rep
@@ -423,24 +448,124 @@ def run_tw(cfg: ModelConfig = MODEL) -> dict[str, Any]:
     elif path is None:
         log.info("tw football: no upload found under %s", TW_DIR / "football")
 
-    mlb = _latest_snapshot("mlb")
+    # The newest MLB snapshot holds the next US date; today's later first pitches sit
+    # in the one before it, and those are the games a pre-game upload is about.
+    mlb_snaps = _latest_snapshots("mlb", 2)
     games, path, parse_report = taiwan.load_latest(TW_DIR, "baseball")
-    if mlb and path:
-        cards = mlb["games"]
-        rep = annotate_tw(cards, games, taiwan.captured_at(path), cfg)
+    if mlb_snaps and path:
+        latest = mlb_snaps[-1]
+        cards = list(latest.get("games", []))
+        seen = {str(c.get("game_pk")) for c in cards}
+        for older in mlb_snaps[:-1]:
+            cards += [c for c in older.get("games", []) if str(c.get("game_pk")) not in seen]
+        for snap in mlb_snaps:
+            _backfill_odds_at(snap)
+        captured = taiwan.captured_at(path)
+        pre, refreshed = _pregame_refresh("mlb", cards, captured, settings, now, cfg)
+        for card in refreshed:
+            card["t10"] = g_value_block(card["market"], cfg)
+            card["notes"] = [n for n in card.get("notes", []) if "賠率" not in n]
+        if refreshed:
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb")
+        mlb_cfg = replace(cfg, value_threshold=cfg.mlb_value_threshold)
+        rep = annotate_tw(cards, games, captured, mlb_cfg)
+        for card in cards:
+            card["t10v"] = t10_value_block(card, cfg)
         rep.update(
             {
                 "file": path.name,
                 "unknown_teams": sorted(parse_report.unknown_teams),
                 "unknown_markets": parse_report.unknown_markets,
+                "pregame": pre,
             }
         )
-        mlb["tw_report"] = rep
+        latest["tw_report"] = rep
         rep["values_added"] = tw_ledger.append_values(TW_LEDGER_PATH, cards, "mlb")
-        _write_snapshot(date.fromisoformat(mlb["date"]), "mlb", mlb)
+        for snap in mlb_snaps:
+            _write_snapshot(date.fromisoformat(snap["date"]), "mlb", snap)
         reports["mlb"] = rep
         log.info("tw mlb: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
     return reports
+
+
+def _pregame_refresh(
+    sport: str,
+    cards: list[dict[str, Any]],
+    captured: datetime | None,
+    settings: Settings | None,
+    now: datetime,
+    cfg: ModelConfig,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """Buy fresh international prices for the cards about to start (see analysis/pregame).
+
+    One request per sport key (MLB, or each football competition with a due match),
+    h2h + spreads (+ totals) for MLB and h2h (+ totals) for football, within the
+    budget's allowance plus the pre-game extra. Returns a small report and the
+    refreshed cards.
+    """
+    due = pregame.due_cards(cards, now, cfg)
+    report: dict[str, Any] = {"due": len(due), "refreshed": 0}
+    if not due:
+        return report, []
+    if not pregame.upload_is_recent(captured, now):
+        report["skipped"] = "upload not recent"
+        return report, []
+    if not settings or not settings.odds_api_key:
+        report["skipped"] = "no API key"
+        return report, []
+    groups: dict[str, list[dict[str, Any]]] = {}
+    if sport == "mlb":
+        groups[MLB_ODDS_KEY] = due
+        wanted, essential, prefer = MLB_MARKETS, ("h2h", "spreads"), None
+    else:
+        for card in due:
+            comp = COMPETITION_BY_CODE.get(str(card.get("competition")))
+            if comp:
+                groups.setdefault(comp.odds_key, []).append(card)
+        wanted, essential, prefer = FOOTBALL_MARKETS, ("h2h",), 2.5
+    today = now.date()
+    state = budget_mod.load(ODDS_BUDGET_PATH, today)
+    allowance = budget_mod.allowance_today(state, today, extra=budget_mod.PREGAME_EXTRA)
+    markets = budget_mod.plan_markets(wanted, len(groups), allowance, essential)
+    if not markets or not groups:
+        report["skipped"] = "budget"
+        return report, []
+    odds = OddsClient(settings.odds_api_key, regions=settings.odds_regions)
+    events: list[OddsEvent] = []
+    for key, group in groups.items():
+        starts = [s for s in (pregame.kickoff(c) for c in group) if s is not None]
+        try:
+            events += odds.odds(
+                key,
+                commence_from=min(starts) - timedelta(hours=1),
+                commence_to=max(starts) + timedelta(hours=1),
+                markets=markets,
+            )
+        except requests.RequestException as exc:
+            log.warning("pre-game odds unavailable (%s); keeping earlier prices", exc)
+            break
+    budget_mod.save(
+        ODDS_BUDGET_PATH,
+        budget_mod.record(state, odds.credits_used(), odds.credits_remaining(), today),
+    )
+    refreshed = pregame.refresh_cards(due, events, cfg, totals_prefer=prefer)
+    report.update({"refreshed": len(refreshed), "markets": list(markets)})
+    log.info("pre-game %s: %s", sport, report)
+    return report, refreshed
+
+
+def _backfill_odds_at(snapshot: dict[str, Any]) -> None:
+    """Snapshots made before consensus blocks carried their own time: the snapshot's
+    time is when its fresh blocks were bought. Carried-over (stale) ones stay unstamped."""
+    made = snapshot.get("generated_at")
+    if not made:
+        return
+    cards = [c for comp in snapshot.get("competitions", []) for c in comp.get("cards", [])]
+    cards += list(snapshot.get("games", []))
+    for card in cards:
+        for block in (card.get("market") or {}).values():
+            if isinstance(block, dict) and not block.get("stale") and "odds_at" not in block:
+                block["odds_at"] = made
 
 
 # --------------------------------------------------------------------- review
@@ -552,8 +677,9 @@ def _kicked_off(card: dict[str, Any], now: datetime, hours: float) -> bool:
 
 # -------------------------------------------------------------------- render
 def render_latest() -> Path:
+    now = datetime.now(UTC)
     football = _latest_snapshot("football")
-    mlb = _latest_snapshot("mlb")
+    mlb = _mlb_for_page(now)
     summary = ledger_mod.summary(ledger_mod.read(LEDGER_PATH))
     backtest_path = DATA_DIR / "backtest_summary.json"
     backtest_total = None
@@ -571,7 +697,6 @@ def render_latest() -> Path:
             }
         except (OSError, ValueError, AttributeError):
             backtest_total = None
-    now = datetime.now(UTC)
     football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
     mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
     render_reviews_page(football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html")
@@ -588,6 +713,27 @@ def render_latest() -> Path:
         mlb_reviews=mlb_reviews,
         odds_budget=_budget_view(now.date()),
     )
+
+
+def _mlb_for_page(now: datetime) -> dict[str, Any] | None:
+    """The newest MLB snapshot plus the games of the one before that have not started.
+
+    The morning run already holds the next US date, so without this today's later
+    first pitches (and their pre-game comparisons) would drop off the page at 08:15.
+    """
+    snaps = _latest_snapshots("mlb", 2)
+    if not snaps:
+        return None
+    latest = snaps[-1]
+    games = list(latest.get("games", []))
+    seen = {str(g.get("game_pk")) for g in games}
+    for older in snaps[:-1]:
+        for g in older.get("games", []):
+            start = pregame.kickoff(g)
+            if str(g.get("game_pk")) not in seen and start is not None and start > now:
+                games.append(g)
+    games.sort(key=lambda g: str(g.get("kickoff_utc", "")))
+    return {**latest, "games": games}
 
 
 def _budget_view(today: date) -> dict[str, Any] | None:
@@ -611,6 +757,12 @@ def _latest_snapshot(sport: str) -> dict[str, Any] | None:
     if not candidates:
         return None
     return json.loads(candidates[-1].read_text(encoding="utf-8"))
+
+
+def _latest_snapshots(sport: str, n: int) -> list[dict[str, Any]]:
+    """The newest `n` snapshots of a sport, oldest first."""
+    paths = sorted(SNAPSHOT_DIR.glob(f"*/{sport}.json"))[-n:]
+    return [json.loads(p.read_text(encoding="utf-8")) for p in paths]
 
 
 # ----------------------------------------------------------------------- CLI
@@ -647,8 +799,9 @@ def main(argv: list[str] | None = None) -> int:
         log.info("rendered %s", out)
         return 0
     if args.task == "tw":
-        # Needs no network: the phone already uploaded the feed.
-        run_tw()
+        # The phone already uploaded the feed. The Odds API key is optional: with it,
+        # games about to start get fresh international prices first (budget allowing).
+        run_tw(settings=Settings.from_env(offline=True))
         out = render_latest()
         log.info("rendered %s", out)
         return 0

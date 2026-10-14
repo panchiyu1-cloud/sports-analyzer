@@ -78,6 +78,16 @@ class ModelConfig:
     signals_validated: bool = False
     # 運彩 price must beat the fair price by this much EV (fair_prob x price - 1) to count as a value bet.
     value_threshold: float = 0.02
+    # MLB (T-10 價值版, 2026-10-14): a 3% cushion. The fair price is a consensus of
+    # US-facing books whose de-vig carries ~1pp of error, which is ~2% EV at even odds.
+    mlb_value_threshold: float = 0.03
+    # A 運彩 price is judged only against a fair price bought within this many minutes
+    # of it: an older consensus misses the news 運彩 may already have priced in.
+    max_price_gap_minutes: int = 180
+    # When a 運彩 upload arrives, games starting within this many hours get freshly
+    # bought international prices (if the last ones are older than the minimum age).
+    pregame_window_hours: float = 3.0
+    pregame_min_age_minutes: int = 20
     # Markets priced through the market-implied goal model carry its error too
     # (validated: ~0.7pp on Asian handicaps, <=0.5pp mean bias after calibration,
     # 1-3pp in the worst probability band), so they need a larger margin of safety.

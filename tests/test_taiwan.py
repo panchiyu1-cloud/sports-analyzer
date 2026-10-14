@@ -51,6 +51,26 @@ class TaiwanFeedTests(unittest.TestCase):
         self.assertEqual(tot.price("under"), 1.85)
         self.assertIsNone(g.market("nope"))
 
+    def test_run_line_handicap_comes_from_each_teams_name(self):
+        # Real feed (2026-10 uploads): hv and mv carry the HOME handicap on both sides;
+        # the names carry each team's own. Home favourite, as uploaded:
+        raw = {
+            "name": "讓分 -1.5",
+            "mv": -1.5,
+            "cs": [
+                {"v": "A", "name": "密爾瓦基釀酒人 +1.5", "hv": "-1.5", "pd": "100", "pu": "63"},
+                {"v": "H", "name": "洛杉磯道奇 -1.5", "hv": "-1.5", "pd": "50", "pu": "43"},
+            ],
+        }
+        m = taiwan._parse_market(raw, taiwan.ParseReport())
+        lines = {s.side: s.line for s in m.selections}
+        self.assertEqual(lines, {"away": 1.5, "home": -1.5})
+        self.assertEqual(m.price("home"), 1.86)
+        # An away favourite must come out as home +1.5 whatever hv says.
+        raw["cs"][0]["name"], raw["cs"][1]["name"] = "密爾瓦基釀酒人 -1.5", "洛杉磯道奇 +1.5"
+        m = taiwan._parse_market(raw, taiwan.ParseReport())
+        self.assertEqual({s.side: s.line for s in m.selections}, {"away": -1.5, "home": 1.5})
+
     def test_football_1x2_with_draw(self):
         g = self.games[1]
         self.assertEqual(g.home_key, "arsenal")

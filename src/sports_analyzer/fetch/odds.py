@@ -59,6 +59,9 @@ class OddsEvent:
     home: str
     away: str
     books: tuple[BookOdds, ...] = ()
+    # When these prices were bought: a 運彩 price is only judged against a fair
+    # price from about the same time (analysis/taiwan.is_fresh).
+    fetched_at: datetime | None = None
 
     @property
     def home_key(self) -> str:
@@ -70,7 +73,9 @@ class OddsEvent:
 
 
 # ----------------------------------------------------------------------- parsing
-def parse_events(payload: list[dict[str, Any]]) -> list[OddsEvent]:
+def parse_events(
+    payload: list[dict[str, Any]], fetched_at: datetime | None = None
+) -> list[OddsEvent]:
     """Convert the raw `/sports/{key}/odds` array into OddsEvent records."""
     events: list[OddsEvent] = []
     for raw in payload:
@@ -86,6 +91,7 @@ def parse_events(payload: list[dict[str, Any]]) -> list[OddsEvent]:
                     home=home,
                     away=away,
                     books=tuple(b for b in books if b.h2h or b.spreads or b.totals),
+                    fetched_at=fetched_at,
                 )
             )
         except (KeyError, TypeError, ValueError) as exc:
@@ -187,7 +193,9 @@ class OddsClient:
         if commence_to:
             params["commenceTimeTo"] = _iso_z(commence_to)
         payload = self.session.get_json(f"{BASE_URL}/sports/{sport_key}/odds", params=params)
-        events = parse_events(payload if isinstance(payload, list) else [])
+        events = parse_events(
+            payload if isinstance(payload, list) else [], fetched_at=datetime.now(UTC)
+        )
         log.info(
             "odds[%s]: %d events, credits remaining=%s (last cost=%s)",
             sport_key,

@@ -19,12 +19,25 @@ RECENT_REVIEW_LIMIT = 12
 
 
 def _env() -> Environment:
-    return Environment(
+    env = Environment(
         loader=FileSystemLoader(str(TEMPLATE_DIR)),
         autoescape=select_autoescape(["html", "j2"]),
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    env.filters["tpe"] = taipei_time
+    return env
+
+
+def taipei_time(value: Any) -> str:
+    """Any ISO time with an offset -> '10/14 20:25' in Taipei; '—' when unknown."""
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return "—"
+    if dt.tzinfo is None:
+        return "—"
+    return dt.astimezone(LOCAL_TZ).strftime("%m/%d %H:%M")
 
 
 def render_index(

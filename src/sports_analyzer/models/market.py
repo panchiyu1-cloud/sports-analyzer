@@ -165,7 +165,9 @@ def g_value(fav_ml_prob: float, fav_cover_prob: float) -> float:
 
 
 def t10_signal(g: float, threshold: float = 0.06) -> str | None:
-    """+threshold or more -> favourite ML; -threshold or less -> underdog +1.5; else nothing."""
+    """The original T-10 rule: +threshold or more -> favourite ML; -threshold or less ->
+    underdog +1.5; else nothing. The 2021-2025 backtest found no edge in it, so it now
+    only names the game's shape (analysis/mlb.G_SHAPES); bets come from EV."""
     if g >= threshold:
         return "FAV_ML"
     if g <= -threshold:

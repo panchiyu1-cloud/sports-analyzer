@@ -177,6 +177,12 @@ def _parse_market(raw: dict[str, Any], report: ParseReport) -> TwMarket | None:
         if price is None:
             continue
         sel_line = _float(c.get("hv"))
+        own = _OWN_HANDICAP.search(str(c.get("name") or "").strip())
+        if kind == "spread" and own:
+            # The feed's hv/mv is the HOME team's handicap on both sides (2026-10 uploads:
+            # "道奇 -1.5" and "釀酒人 +1.5" both carry hv -1.5). The name states each
+            # team's own handicap, which stays right whichever team is favoured.
+            sel_line = float(own.group(1))
         selections.append(
             TwSelection(
                 name=str(c.get("name") or "").strip(),
@@ -207,6 +213,7 @@ def _parse_market(raw: dict[str, Any], report: ParseReport) -> TwMarket | None:
     )
 
 
+_OWN_HANDICAP = re.compile(r"\s([+-]\d+(?:\.\d+)?)$")
 _TOTALS_RE = re.compile(r"^(\[總分\])?大小( [\d.]+)?$")
 _HT_TOTALS_RE = re.compile(r"^\[上半場\]大小 [\d.]+$")
 _TEAM_TOTALS_RE = re.compile(r"^(?P<team>[^\[\]]+?) 大小 [\d.]+$")

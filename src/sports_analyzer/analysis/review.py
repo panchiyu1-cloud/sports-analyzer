@@ -70,9 +70,12 @@ VERDICTS: dict[str, tuple[str, str]] = {
     "push": ("走盤", "neutral"),
     "agree": ("模型與市場一致", "neutral"),
     "no_model": ("模型資料不足", "neutral"),
-    "t10_hit": ("T-10 命中", "good"),
-    "t10_miss": ("T-10 未命中", "bad"),
-    "no_signal": ("T-10 無訊號", "neutral"),
+    # MLB, T-10 價值版
+    "t10_value_win": ("價值注 贏", "good"),
+    "t10_value_loss": ("價值注 輸", "bad"),
+    "t10_pass": ("沒有價值，不下", "neutral"),
+    "t10_stale": ("價格相隔太久，未判斷", "neutral"),
+    "no_t10": ("沒有運彩比價", "neutral"),
 }
 
 
@@ -99,12 +102,18 @@ def collect_prematch(
             entry["card"] = card
             entry["card_at"] = snap.get("generated_at")
             if card.get("market"):
+                # A pre-game refresh rewrites a card inside an older snapshot: the
+                # prices' own time is the right clock for open/close, when they have one.
+                h2h = card["market"].get("h2h") or {}
+                at = (h2h.get("odds_at") if not h2h.get("stale") else None) or snap.get(
+                    "generated_at"
+                )
                 if "open" not in entry:
                     entry["open"] = card["market"]
-                    entry["open_at"] = snap.get("generated_at")
+                    entry["open_at"] = at
                     entry["first"] = card
                 entry["close"] = card["market"]
-                entry["close_at"] = snap.get("generated_at")
+                entry["close_at"] = at
             tw = card.get("tw")
             if tw and _newer_tw(tw, entry.get("tw"), kickoff):
                 entry["tw"] = tw
@@ -738,6 +747,9 @@ def mlb_row(
     card = entry["card"]
     m_open, m_close = entry.get("open") or {}, entry.get("close") or {}
     t10 = card.get("t10") or {}
+    # The T-10 decision the page showed last before first pitch.
+    t10v = card.get("t10v") or {}
+    pick, best = t10v.get("pick") or {}, t10v.get("best") or {}
     tw = entry.get("tw") or {}
     tw_h2h = tw.get("h2h") or {}
     spread = (m_close.get("spread") or m_open.get("spread")) or {}
@@ -761,10 +773,22 @@ def mlb_row(
         "rl_away": _num((spread.get("away") or {}).get("fair")),
         "total_line": _num(totals.get("line")),
         "over_p": _num((totals.get("over") or {}).get("fair")),
-        "t10_g": _num(t10.get("g")),
-        "t10_fav": t10.get("favourite", ""),
-        "t10_signal": t10.get("signal") or "",
-        "t10_threshold": _num(t10.get("threshold")),
+        "t10_g": _num(t10v.get("g_intl") if t10v else t10.get("g")),
+        "t10_fav": t10v.get("favourite") or t10.get("favourite", ""),
+        "g_tw": _num(t10v.get("g_tw")),
+        "t10_status": t10v.get("status", ""),
+        "t10_pick": pick.get("key", ""),
+        "t10_pick_label": pick.get("label", ""),
+        "t10_pick_side": pick.get("side", ""),
+        "t10_pick_line": _num(pick.get("line")),
+        "t10_price": _num(pick.get("price")),
+        "t10_fair": _num(pick.get("fair_odds")),
+        "t10_ev": _num(pick.get("ev")),
+        "t10_best_label": best.get("label", ""),
+        "t10_best_ev": _num(best.get("ev")),
+        "t10_at": t10v.get("tw_at") or "",
+        "t10_fair_at": t10v.get("fair_at") or "",
+        "t10_minutes": t10v.get("minutes_before"),
         "tw_home": _num((tw_h2h.get("home") or {}).get("price")),
         "tw_away": _num((tw_h2h.get("away") or {}).get("price")),
         "tw_at": tw.get("captured_at", "") if tw_h2h else "",
@@ -826,6 +850,13 @@ def _box_fields(box: BoxScore | None) -> dict[str, Any]:
 
 
 def assess_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Outcome facts plus the verdict on the T-10 decision (價值版).
+
+    Only a value bet has a result; "不下" stays "不下" whatever the score, since
+    a price below the fair price loses money on average however this game ended.
+    """
+    status = str(row.get("t10_status") or "")
+    no_bet = {"value": "no_t10", "pass": "t10_pass", "stale": "t10_stale"}.get(status, "no_t10")
     fh, fa = _i(row, "final_h"), _i(row, "final_a")
     if fh is None or fa is None or fh == fa:
         return {
@@ -835,7 +866,8 @@ def assess_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
             "fav_won": "",
             "fav_cover": "",
             "t10_result": "",
-            "verdict": "no_signal",
+            "t10_units": None,
+            "verdict": no_bet,
         }
     winner = "home" if fh > fa else "away"
     p_home = _f(row, "close_home") or _f(row, "open_home")
@@ -847,12 +879,18 @@ def assess_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
     margin = None
     if fav:
         margin = (fh - fa) if fav == "home" else (fa - fh)
-    signal = str(row.get("t10_signal") or "")
-    t10_result = ""
-    if signal == "FAV_ML" and margin is not None:
-        t10_result = WIN if margin > 0 else LOSS
-    elif signal == "DOG_PLUS_1_5" and margin is not None:
-        t10_result = WIN if margin <= 1 else LOSS
+    t10_result, units = "", None
+    side = str(row.get("t10_pick_side") or "")
+    price = _f(row, "t10_price")
+    if status == "value" and side in ("home", "away") and price:
+        # The backed team's margin plus its own handicap (none on the moneyline).
+        team_margin = (fh - fa) if side == "home" else (fa - fh)
+        won = team_margin + (_f(row, "t10_pick_line") or 0.0) > 0
+        t10_result = WIN if won else LOSS
+        units = round(price - 1, 3) if won else -1.0
+    verdict = (
+        "t10_value_win" if t10_result == WIN else "t10_value_loss" if t10_result == LOSS else no_bet
+    )
     return {
         "winner": winner,
         "market_ll": round(-math.log(p_win), 4) if p_win else None,
@@ -860,11 +898,8 @@ def assess_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
         "fav_won": _flag(margin is not None and margin > 0) if margin is not None else "",
         "fav_cover": _flag(margin is not None and margin >= 2) if margin is not None else "",
         "t10_result": t10_result,
-        "verdict": "t10_hit"
-        if t10_result == WIN
-        else "t10_miss"
-        if t10_result == LOSS
-        else "no_signal",
+        "t10_units": units,
+        "verdict": verdict,
     }
 
 
@@ -897,26 +932,18 @@ def explain_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
                 f"賽前市場：{home} 勝率 {_pct(o)} → {_pct(c)}（{(c - o) * 100:+.1f}pp）。"
             )
     fav = a["fav"]
-    g = _f(row, "t10_g")
-    if g is not None and fav:
-        thr = _f(row, "t10_threshold") or 0.06
-        signal = str(row.get("t10_signal") or "")
-        pick = {
-            "FAV_ML": f"熱門 ML（{name[fav]}）",
-            "DOG_PLUS_1_5": f"冷門 +1.5（{name['away' if fav == 'home' else 'home']}）",
-        }.get(signal, f"無訊號（門檻 ±{thr * 100:.0f}pp）")
-        text = f"T-10 G 值 {g * 100:+.1f}pp → {pick}"
-        if a["t10_result"]:
-            text += f" → {RESULT_TEXT[a['t10_result']]}"
-        bullets.append(text + "。")
+    bullets.extend(_t10_bullets(row, a))
+    g, g_tw = _f(row, "t10_g"), _f(row, "g_tw")
+    if g is not None:
+        text = f"G 值：國際 {g * 100:+.1f}pp"
+        if g_tw is not None:
+            text += f"、運彩 {g_tw * 100:+.1f}pp"
+        bullets.append(text + "（只描述比賽型態，不當下注依據）。")
     if fav and a["fav_won"] != "":
         rl = "過" if a["fav_cover"] == "1" else "沒過"
         bullets.append(
-            f"熱門 {name[fav]}：ML {'贏' if a['fav_won'] == '1' else '輸'}，−1.5 讓分{rl}"
-            "（每一場都記下來，累積後就能檢查 T-10 的 G 值門檻）。"
+            f"熱門 {name[fav]}：不讓分{'贏' if a['fav_won'] == '1' else '輸'}，−1.5 讓分{rl}。"
         )
-    elif g is None:
-        bullets.append("沒有 T-10 數據：賽前沒有抓到 ML 和 ±1.5 讓分盤。")
     bullets.extend(_starter_bullets(row, home, away))
     bullets.extend(_big_inning_bullets(row, home, away))
     if fh is not None and fa is not None and abs(fh - fa) == 1:
@@ -928,9 +955,11 @@ def explain_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
             + (f"（{at} 擷取）" if at else "")
         )
     conclusion = {
-        "t10_hit": "T-10 命中。單場命中不代表方法有效，看累計紀錄。",
-        "t10_miss": "T-10 未命中。看上面的先發和大局數，判斷是方法的問題還是比賽中的意外。",
-        "no_signal": "T-10 這場沒有訊號。",
+        "t10_value_win": "價值注贏了。單場輸贏多半是運氣，看累計的 CLV 和損益才知道方法有沒有用。",
+        "t10_value_loss": "價值注輸了。下注時 EV 為正，輸球是正常波動；收盤 CLV 也為正就代表判斷沒問題，看累計紀錄。",
+        "t10_pass": "運彩沒有比公允價好的價格，不下是對的決定，不論這場結果如何。",
+        "t10_stale": "國際價和運彩價時間差太多，這場沒有判斷。開賽前上傳一次運彩就能判斷。",
+        "no_t10": "這場沒有運彩和國際價的比價。",
     }[a["verdict"]]
     return {
         "verdict": a["verdict"],
@@ -940,6 +969,32 @@ def explain_mlb(row: Mapping[str, Any]) -> dict[str, Any]:
         "conclusion": conclusion,
         "assess": a,
     }
+
+
+def _t10_bullets(row: Mapping[str, Any], a: Mapping[str, Any]) -> list[str]:
+    """The pre-game T-10 decision in one line, with its result when a bet was made."""
+    status = str(row.get("t10_status") or "")
+    at = _local(row.get("t10_at"))
+    minutes = _i(row, "t10_minutes")
+    when = f"開賽前 {minutes} 分" if minutes is not None and 0 < minutes <= 180 else at
+    if status == "value":
+        text = (
+            f"T-10 價值版（{when}比價）：可下 {row.get('t10_pick_label')} @ {_f(row, 't10_price')}"
+            f"（公允 {_f(row, 't10_fair')}，EV {(_f(row, 't10_ev') or 0) * 100:+.1f}%）"
+        )
+        if a["t10_result"]:
+            text += f" → {RESULT_TEXT[a['t10_result']]}"
+        return [text + "。"]
+    if status == "pass":
+        best = row.get("t10_best_label")
+        ev = _f(row, "t10_best_ev")
+        tail = f"，最接近的是 {best}（EV {ev * 100:+.1f}%）" if best and ev is not None else ""
+        return [f"T-10 價值版（{when}比價）：不下{tail}。"]
+    if status == "stale":
+        return [
+            f"T-10 價值版：運彩價（{at}）和國際價（{_local(row.get('t10_fair_at'))}）相隔太久，沒有判斷。"
+        ]
+    return []
 
 
 def _starter_bullets(row: Mapping[str, Any], home: str, away: str) -> list[str]:
@@ -994,12 +1049,8 @@ def summarize_mlb(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
     expected_fav = sum(
         (_f(r, f"close_{a['fav']}") or _f(r, f"open_{a['fav']}") or 0.0) for r, a in favs
     )
-    t10 = [(r, a) for r, a in done if a["t10_result"]]
-    by_signal: dict[str, dict[str, int]] = {}
-    for r, a in t10:
-        b = by_signal.setdefault(str(r.get("t10_signal")), {"n": 0, "hits": 0})
-        b["n"] += 1
-        b["hits"] += int(a["t10_result"] == WIN)
+    bets = [(r, a) for r, a in done if a["t10_result"]]
+    evs = [_f(r, "t10_ev") for r, _ in bets]
     lls = [a["market_ll"] for _, a in done if a["market_ll"] is not None]
     return {
         "games": len(done),
@@ -1007,7 +1058,12 @@ def summarize_mlb(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
         "fav_wins": sum(1 for _, a in favs if a["fav_won"] == "1"),
         "fav_expected": round(expected_fav, 1),
         "fav_covers": sum(1 for _, a in favs if a["fav_cover"] == "1"),
-        "t10": by_signal,
+        # T-10 價值版: games judged, bets made and what they returned at 運彩's price.
+        "t10_judged": sum(1 for r, _ in done if r.get("t10_status") in ("value", "pass")),
+        "t10_bets": len(bets),
+        "t10_wins": sum(1 for _, a in bets if a["t10_result"] == WIN),
+        "t10_units": round(sum(a["t10_units"] or 0.0 for _, a in bets), 2),
+        "t10_avg_ev": round(sum(e for e in evs if e is not None) / len(evs), 4) if evs else None,
         "market_ll": round(sum(lls) / len(lls), 3) if lls else None,
     }
 
