@@ -56,6 +56,13 @@ def render_index(
             started.extend(c for c in comp.get("cards", []) if _started(c, generated_at))
             competitions.append({**comp, "cards": upcoming})
             signals.extend(s for s in comp.get("signals", []) if not _started(s, generated_at))
+    # Signals in a snapshot made before a rule change still obey today's rules.
+    cards_by_id = {
+        c.get("match_id"): c
+        for comp in (football or {}).get("competitions", [])
+        for c in comp.get("cards", [])
+    }
+    signals = [s for s in signals if _signal_allowed(s, cards_by_id.get(s.get("match_id")), cfg)]
     signals.sort(key=lambda s: s.get("kickoff_utc", ""))
     if mlb:
         started.extend(g for g in mlb.get("games", []) if _started(g, generated_at))
@@ -208,6 +215,17 @@ def _odds_table(row: Mapping[str, Any]) -> dict[str, Any]:
         )
     has_any = any(t["model"] != "—" or t["market"] != "—" for t in table)
     return {"table": table if has_any else [], "moved": moved}
+
+
+def _signal_allowed(
+    signal: Mapping[str, Any], card: Mapping[str, Any] | None, cfg: ModelConfig
+) -> bool:
+    """The same rules analysis/football.py applies when it builds a card."""
+    if signal.get("competition") == "CL" and not cfg.cup_signals:
+        return False
+    model = (card or {}).get("model") or {}
+    counts = [model.get("home_matches"), model.get("away_matches")]
+    return all(n is None or n >= cfg.min_signal_matches for n in counts)
 
 
 def _started(item: Mapping[str, Any], now: datetime) -> bool:
