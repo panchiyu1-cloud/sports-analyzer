@@ -40,6 +40,8 @@ formula is not obvious.
   assumed 30-day period; short of it a run buys h2h only, or nothing (prices carried
   over, marked stale). Football buys h2h,totals only (運彩 football handicaps are
   three-way, so Asian handicap prices compare with nothing); MLB keeps the run line.
+- Pre-game refreshes (`pipeline tw` after a recent upload, see "T-10 價值版") may
+  spend `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never the reserve.
 
 ### Code style (ECC python rules)
 - PEP 8, type annotations on every function signature, `from __future__ import annotations`.
@@ -103,7 +105,8 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   with ridge towards "market only". Fitted walk-forward in the backtest.
 - T-10 G value (owner's baseball method): G = p + c - 1 with p = de-vigged
   favourite ML prob and c = de-vigged favourite -1.5 run-line prob;
-  thresholds +/-6 percentage points. Lives in `models/market.py`.
+  thresholds +/-6 percentage points. Lives in `models/market.py`. Since 2026-10-14 it
+  only names the game's shape; the bet decision is EV (see "T-10 價值版").
 
 ## Backtest verdict (2026-10-13) — read before touching thresholds
 - The backtest is two-stage walk-forward with closing-line value (CLV). CLV is
@@ -128,8 +131,14 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   bets, CLV (from a later consensus; stale carried-over blocks never count) and
   settlement. Unknown Chinese names land in the snapshot's `tw_report.unknown_teams`:
   add them to `TW_ALIASES`, do not fuzzy-match Chinese.
-- Workflows: `tw.yml` on push to data/tw/**; `evening.yml` 12:25 UTC h2h-only
-  refresh (1 credit per competition) for CLV; `daily.yml` runs the tw step too.
+- Workflows: `tw.yml` on push to data/tw/** (has ODDS_API_KEY for the pre-game
+  refresh); `evening.yml` 12:25 UTC refresh for CLV; `daily.yml` runs the tw step too.
+- A value bet needs a fair price bought within `max_price_gap_minutes` (180) of the
+  運彩 capture (`analysis/taiwan.is_fresh`; consensus blocks carry `odds_at`, older
+  snapshots are backfilled from `generated_at`, carried-over "stale" blocks never
+  count). Otherwise EVs are shown with a "不判斷" note and nothing is recorded.
+- 運彩 run lines: `hv`/`mv` are the HOME handicap on both selections; each team's own
+  handicap is read from its name ("道奇 -1.5" / "釀酒人 +1.5").
 
 ## 賽後檢討 (post-match review)
 - `pipeline review` (daily + evening + manual `review.yml`) joins the last pre-kickoff
@@ -182,3 +191,23 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   international fair price (EV), not a pattern in one book's prices.
 - Verdict: not passed (data/t10_backtest_summary.json["passed"] is false). The prompt's
   Switch zones / price guard / overlays were not tested (rules not written down).
+
+## T-10 價值版 (2026-10-14) — the MLB decision rule since the backtest
+- `analysis/mlb.t10_value_block` (card["t10v"]): the four 運彩 bets (favourite / underdog x
+  moneyline / run line) against the international consensus, EV = fair x 運彩 price - 1.
+  "可下" (status value) needs EV >= `mlb_value_threshold` (3%) on a fresh comparison;
+  "不下" (pass) otherwise; "不判斷" (stale) when the fair price is > 3h from the 運彩 price.
+  MLB 運彩 values are recorded in tw_ledger at the same 3% (run_tw passes a cfg copy).
+- G (international) only describes the game (`G_SHAPES`: 強隊大勝型 / 一分差型 / 中性).
+  G from 運彩's own prices (same de-vig) minus it, split into dp (moneyline) and dc
+  (run line), becomes a hint: the side 運彩 underrates is the cheaper one. Hints are
+  pointers; the EVs decide.
+- Pre-game refresh (`analysis/pregame.py`, `pipeline._pregame_refresh`): when `run_tw` sees
+  an upload at most 90 minutes old, cards starting within `pregame_window_hours` (3) whose
+  h2h is older than `pregame_min_age_minutes` (20), carried over or missing get fresh
+  odds (one request per sport key) before the comparison; pending 運彩 bets get their
+  CLV from them first, so no bet is its own close.
+- The newest MLB snapshot holds the next US date: `run_tw` and the page (`_mlb_for_page`)
+  also use the unstarted games of the snapshot before it, and write both back.
+- MLB review rows record the last pre-game t10v; only a value bet is graded (its own
+  team + handicap, units at 運彩's price); "不下" is never judged on the score.
