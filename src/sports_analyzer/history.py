@@ -3,7 +3,8 @@
 Those files are free, cover many seasons of the top leagues, and include closing
 odds from several bookmakers, which makes them ideal for (a) seeding the model
 with last season and (b) backtesting. Column names follow the site's notes:
-Date, HomeTeam, AwayTeam, FTHG, FTAG, B365H/D/A, PSH/PSD/PSA (Pinnacle),
+Date, HomeTeam, AwayTeam, FTHG, FTAG, B365H/D/A, PSH/PSD/PSA (Pinnacle; gone from
+2026/27, where BFEH/BFED/BFEA = Betfair Exchange is the sharpest),
 B365>2.5, B365<2.5, AHh (Asian handicap line, home view), B365AHH, B365AHA.
 """
 
@@ -60,15 +61,23 @@ def read_csv(path: Path) -> list[HistoricalMatch]:
                         away=canonical(row["AwayTeam"]),
                         home_goals=int(float(h)),
                         away_goals=int(float(a)),
+                        # Sharpest available first. The 2026/27 files dropped Pinnacle;
+                        # Betfair Exchange is the next sharpest, Bet365 the last resort.
                         h2h=_triple(row, ("PSH", "PSD", "PSA"))
+                        or _triple(row, ("BFEH", "BFED", "BFEA"))
                         or _triple(row, ("B365H", "B365D", "B365A")),
                         over25=_pair(row, ("P>2.5", "P<2.5"))
+                        or _pair(row, ("BFE>2.5", "BFE<2.5"))
                         or _pair(row, ("B365>2.5", "B365<2.5")),
                         ah_line=_float(row.get("AHh")),
-                        ah=_pair(row, ("PAHH", "PAHA")) or _pair(row, ("B365AHH", "B365AHA")),
+                        ah=_pair(row, ("PAHH", "PAHA"))
+                        or _pair(row, ("BFEAHH", "BFEAHA"))
+                        or _pair(row, ("B365AHH", "B365AHA")),
                         h2h_close=_triple(row, ("PSCH", "PSCD", "PSCA"))
+                        or _triple(row, ("BFECH", "BFECD", "BFECA"))
                         or _triple(row, ("B365CH", "B365CD", "B365CA")),
                         over25_close=_pair(row, ("PC>2.5", "PC<2.5"))
+                        or _pair(row, ("BFEC>2.5", "BFEC<2.5"))
                         or _pair(row, ("B365C>2.5", "B365C<2.5")),
                         h2h_max=_triple(row, ("MaxH", "MaxD", "MaxA")),
                     )

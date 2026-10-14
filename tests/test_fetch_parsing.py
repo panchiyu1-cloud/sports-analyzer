@@ -159,6 +159,22 @@ class HistoryCsvTests(unittest.TestCase):
         self.assertEqual(rows[0].h2h_max, (1.86, 4.10, 4.80))
         self.assertEqual(rows[0].over25_close, (1.90, 2.00))
 
+    def test_without_pinnacle_the_exchange_beats_bet365(self):
+        # Regression: the 2026/27 files have no Pinnacle columns; the backtest's closing
+        # line fell back to Bet365 although Betfair Exchange closing prices are there.
+        import tempfile
+
+        csv_text = (
+            "Div,Date,HomeTeam,AwayTeam,FTHG,FTAG,B365CH,B365CD,B365CA,BFECH,BFECD,BFECA,BFEC>2.5,BFEC<2.5,B365C>2.5,B365C<2.5\n"
+            "E0,20/09/2026,Arsenal,Chelsea,2,1,1.70,3.80,4.50,1.78,4.05,4.95,1.96,2.02,1.90,1.90\n"
+        )
+        with tempfile.NamedTemporaryFile("w", suffix=".csv", delete=False, encoding="utf-8") as fh:
+            fh.write(csv_text)
+            path = Path(fh.name)
+        rows = history.read_csv(path)
+        self.assertEqual(rows[0].h2h_close, (1.78, 4.05, 4.95))
+        self.assertEqual(rows[0].over25_close, (1.96, 2.02))
+
 
 class SessionThrottleTests(unittest.TestCase):
     def test_sleeps_when_minute_quota_exhausted(self):
