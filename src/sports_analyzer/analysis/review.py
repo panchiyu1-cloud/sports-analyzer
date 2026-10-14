@@ -590,7 +590,8 @@ def _lean_vs_market(row: Mapping[str, Any], a: Mapping[str, Any]) -> str:
         "over": "這場的進球數",
         "under": "小分的可能",
     }.get(key, "這個方向")
-    return head + f"結果站在市場那邊：模型高估了{subject}。"
+    sep = " " if subject[:1].isascii() else ""  # a space before a Latin team name
+    return head + f"結果站在市場那邊：模型高估了{sep}{subject}。"
 
 
 def _evidence_text(a: Mapping[str, Any], positive: bool) -> str:

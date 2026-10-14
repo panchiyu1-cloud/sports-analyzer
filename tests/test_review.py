@@ -198,7 +198,7 @@ class FootballReviewTests(unittest.TestCase):
         row.update(review.assess_football(row))
         self.assertEqual(row["verdict"], "wrong")
         self.assertIn(
-            "結果站在市場那邊：模型高估了Arsenal FC。", review.explain_football(row)["conclusion"]
+            "結果站在市場那邊：模型高估了 Arsenal FC。", review.explain_football(row)["conclusion"]
         )
         self.assertIn("判讀", "".join(review.explain_football(row)["bullets"]) + "判讀")
 
