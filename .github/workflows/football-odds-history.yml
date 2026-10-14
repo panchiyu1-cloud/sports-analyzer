@@ -1,0 +1,51 @@
+name: Football odds history
+
+# Manual. Downloads football-data.co.uk results with early and closing odds for 22
+# leagues (top flights and lower divisions) since 2019/20, flattens them with
+# scripts/football_history_to_csv.py and puts the one small CSV on the
+# `odds-history` branch for the odds-movement studies. main stays small.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  data:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download season files
+        run: |
+          mkdir -p /tmp/fd
+          for season in 1920 2021 2122 2223 2324 2425 2526 2627; do
+            for div in E0 E1 E2 E3 EC SC0 SC1 SC2 SC3 D1 D2 I1 I2 SP1 SP2 F1 F2 N1 B1 P1 T1 G1; do
+              url="https://www.football-data.co.uk/mmz4281/${season}/${div}.csv"
+              if curl -fsSL --retry 3 --max-time 60 -o "/tmp/fd/${div}_${season}.csv" "$url" \
+                 && head -c 4 "/tmp/fd/${div}_${season}.csv" | grep -q "Div"; then
+                echo "ok   ${div} ${season}"
+              else
+                rm -f "/tmp/fd/${div}_${season}.csv"
+                echo "miss ${div} ${season}"
+              fi
+            done
+          done
+      - name: Flatten
+        run: python scripts/football_history_to_csv.py /tmp/fd /tmp/football_odds.csv.gz
+      - name: Publish to the odds-history branch
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout --orphan odds-history
+          git rm -rq --cached .
+          mkdir -p odds
+          cp /tmp/football_odds.csv.gz odds/
+          git add odds/football_odds.csv.gz
+          git commit -qm "data: football-data.co.uk results + early/closing odds, 22 leagues since 2019/20"
+          git push -f origin odds-history
