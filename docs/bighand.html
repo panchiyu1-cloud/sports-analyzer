@@ -90,6 +90,12 @@
   .conclusion { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; font-size: .86rem; }
   .conclusion b { color: var(--accent); margin-right: 4px; }
   .howto { font-size: .82rem; color: var(--muted); margin: 6px 0 12px; }
+  .picks { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 10px; }
+  .picks-head { font-size: .85rem; font-weight: 600; }
+  .pick { border-left: 3px solid var(--market); padding: 1px 0 1px 10px; display: flex; flex-direction: column; gap: 3px; font-size: .86rem; }
+  .pick.signal { border-color: var(--model); }
+  .pick .chip { margin-left: 0; }
+  .pick .verdict-row .chip { font-size: .75rem; padding: 1px 9px; }
   details.more { margin-top: 10px; }
   details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
 
@@ -129,7 +135,7 @@
 <div class="wrap">
 <header>
   <h1>大戶紀錄</h1>
-  <span class="meta">更新：2026-10-15 06:14（台北時間）</span>
+  <span class="meta">更新：2026-10-15 06:56（台北時間）</span>
   <a class="meta" href="index.html">回到每日分析</a>
 </header>
 
@@ -139,8 +145,8 @@
   <h2>累計</h2>
   <h3>運彩大戶 <span class="count">2 次 · 2 場</span></h3>
   <div class="kpis">
-    <div class="kpi"><b>0 / 0</b><span>這一邊贏的次數 / 國際盤當時預期（0 次有結果）</span></div>
-    <div class="kpi"><b>—</b><span>z 值（大於 2 才算有訊號）</span></div>
+    <div class="kpi"><b>0 / 0.6</b><span>這一邊贏的次數 / 國際盤當時預期（1 次有結果）</span></div>
+    <div class="kpi"><b>-1.2</b><span>z 值（大於 2 才算有訊號）</span></div>
     <div class="kpi"><b>0 / 1</b><span>開賽前國際盤續往同方向（回落 0）</span></div>
     <div class="kpi"><b>0</b><span>這一邊後來進了可下</span></div>
   </div>
@@ -189,7 +195,7 @@
     </details>
   </article>
   <article class="card" data-tags="tw_only football">
-    <div class="top"><span>歐冠 · 10/15 00:45 開賽</span><span>待結果</span></div>
+    <div class="top"><span>歐冠 · 10/15 00:45 開賽</span><span><b>3-2</b></span></div>
     <div class="title">飛燕諾 vs 科莫</div>
     <div class="zone">
 <span class="chip">沒進可下</span>    </div>
@@ -198,7 +204,7 @@
         <div class="head"><span class="chip warn">運彩大戶</span><span class="sub">10/14 20:00</span><b>小 3.5</b><span>運彩 @ 1.48</span></div>
         <div>運彩 +6.0pp vs 國際 +4.0pp <span class="sub">（10/14 08:00 → 10/14 20:00）</span></div>
         <div class="sub">當時國際 58% · 運彩 EV -13.7% · 開賽前國際 58%（+0.0pp 持平） · 運彩 1.48</div>
-        <div>可下：否 · 結果：<span class="">待結果</span></div>
+        <div>可下：否 · 結果：<span class="neg">輸</span></div>
       </li>
     </ul>
     <details class="more">
