@@ -19,7 +19,7 @@ for div in E0 SP1 D1 I1 F1; do
   url="https://www.football-data.co.uk/mmz4281/${season}/${div}.csv"
   out="data/history/${div}_${season}.csv"
   tmp="$(mktemp)"
-  if curl -fsSL --retry 3 --max-time 60 -o "$tmp" "$url" && head -c 4 "$tmp" | grep -q "Div"; then
+  if curl -fsSL --retry 3 --max-time 60 -o "$tmp" "$url" && bash scripts/is_football_csv.sh "$tmp"; then
     mv "$tmp" "$out"
     echo "ok   $out ($(wc -l < "$out") lines)"
   else

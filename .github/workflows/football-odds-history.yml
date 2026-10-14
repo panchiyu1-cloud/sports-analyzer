@@ -28,7 +28,7 @@ jobs:
             for div in E0 E1 E2 E3 EC SC0 SC1 SC2 SC3 D1 D2 I1 I2 SP1 SP2 F1 F2 N1 B1 P1 T1 G1; do
               url="https://www.football-data.co.uk/mmz4281/${season}/${div}.csv"
               if curl -fsSL --retry 3 --max-time 60 -o "/tmp/fd/${div}_${season}.csv" "$url" \
-                 && head -c 4 "/tmp/fd/${div}_${season}.csv" | grep -q "Div"; then
+                 && bash scripts/is_football_csv.sh "/tmp/fd/${div}_${season}.csv"; then
                 echo "ok   ${div} ${season}"
               else
                 rm -f "/tmp/fd/${div}_${season}.csv"
