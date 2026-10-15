@@ -258,17 +258,44 @@ def mlb_bet(x: dict[str, Any], side: str) -> dict[str, float] | None:
     }
 
 
-def mlb_form(games: list[dict[str, Any]]) -> dict[tuple, dict[str, Any]]:
-    """Each team's state before every game, season by season."""
+def mlb_results(path: Path) -> list[dict[str, Any]]:
+    """Every final game with a score, whether or not load_mlb could verify its odds:
+    streaks and series run through all of a team's games, not only the priced ones."""
+    seen: dict[tuple, dict[str, Any]] = {}
+    with gzip.open(path, "rt", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            if row["game_type"] not in MLB_GAME_TYPES or not row["status"].startswith("Final"):
+                continue
+            if row["home_score"] == "" or row["away_score"] == "":
+                continue
+            key = (row["start_utc"], row["home"], row["away"])
+            if key not in seen:
+                seen[key] = {
+                    "start": row["start_utc"],
+                    "season": row["start_utc"][:4],
+                    "home": row["home"],
+                    "away": row["away"],
+                    "scores": (int(float(row["home_score"])), int(float(row["away_score"]))),
+                }
+    return sorted(seen.values(), key=lambda g: g["start"])
+
+
+def mlb_form(
+    games: list[dict[str, Any]], results: list[dict[str, Any]] | None = None
+) -> dict[tuple, dict[str, dict[str, Any]]]:
+    """Both teams' state before every game, season by season, keyed by (start, home,
+    away): many games share a start time, so the start alone mixes up teams. The history
+    is `results` (every final game, mlb_results) when given, else the games themselves."""
     hist: dict[tuple, list[tuple[str, int, int, str]]] = defaultdict(list)
-    out = {}
-    for x in games:
+    out: dict[tuple, dict[str, dict[str, Any]]] = {}
+    for x in sorted(results if results is not None else games, key=lambda g: g["start"]):
         hs, as_ = x["scores"]
+        state = {}
         for side, team, opp in (("home", x["home"], x["away"]), ("away", x["away"], x["home"])):
             h = hist[(x["season"], team)]
             res = [y[0] for y in h]
             last = h[-1] if h else None
-            out[(x["start"], side)] = {
+            state[side] = {
                 "win_run": _run(res, "W"),
                 "loss_run": _run(res, "L"),
                 "last_rf": last[1] if last else None,
@@ -276,6 +303,7 @@ def mlb_form(games: list[dict[str, Any]]) -> dict[tuple, dict[str, Any]]:
                 "series_won": bool(last and last[3] == opp and last[0] == "W"),
                 "pct": res.count("W") / len(res) if len(res) >= 30 else None,
             }
+        out[(x["start"], x["home"], x["away"])] = state
         hist[(x["season"], x["home"])].append(("W" if hs > as_ else "L", hs, as_, x["away"]))
         hist[(x["season"], x["away"])].append(("W" if as_ > hs else "L", as_, hs, x["home"]))
     return out
@@ -290,12 +318,14 @@ def _run(results: list[str], want: str) -> int:
     return n
 
 
-def mlb_strategies(games: list[dict[str, Any]]) -> list[tuple[str, str, str, Callable]]:
+def mlb_strategies(
+    games: list[dict[str, Any]], results: list[dict[str, Any]] | None = None
+) -> list[tuple[str, str, str, Callable]]:
     """(key, group, name, pick) - pick(game) returns the side bet or None."""
-    form = mlb_form(games)
+    form = mlb_form(games, results)
 
     def f(x: dict[str, Any], side: str) -> dict[str, Any]:
-        return form[(x["start"], side)]
+        return form[(x["start"], x["home"], x["away"])][side]
 
     def team(x: dict[str, Any], side: str) -> str:
         return "fav_ml" if x["g"].favourite == side else "dog_ml"
@@ -377,9 +407,11 @@ def mlb_strategies(games: list[dict[str, Any]]) -> list[tuple[str, str, str, Cal
     ]  # fmt: skip
 
 
-def run_mlb(games: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def run_mlb(
+    games: list[dict[str, Any]], results: list[dict[str, Any]] | None = None
+) -> dict[str, dict[str, Any]]:
     out = {}
-    for key, group, name, pick in mlb_strategies(games):
+    for key, group, name, pick in mlb_strategies(games, results):
         mine, fade = [], []
         for x in games:
             side = pick(x)
@@ -504,6 +536,7 @@ def football_form(matches: list[dict[str, Any]]) -> list[dict[str, dict[str, Any
     """Both teams' state before every match, within their league-season."""
     hist: dict[tuple, list[tuple[str, int, int]]] = defaultdict(list)
     points: dict[tuple, int] = defaultdict(int)
+    goal_diff: dict[tuple, int] = defaultdict(int)
     teams: dict[tuple, set[str]] = defaultdict(set)
     for r in matches:
         teams[(r["div"], r["season"])].update((r["home"], r["away"]))
@@ -513,7 +546,9 @@ def football_form(matches: list[dict[str, Any]]) -> list[dict[str, dict[str, Any
     for r in matches:
         key = (r["div"], r["season"])
         state = {}
-        table = sorted(teams[key], key=lambda t: -points[key + (t,)])
+        # points, then goal difference; the name only makes a dead heat repeatable
+        # (a set's order changes from run to run)
+        table = sorted(teams[key], key=lambda t: (-points[key + (t,)], -goal_diff[key + (t,)], t))
         for side, team in (("H", r["home"]), ("A", r["away"])):
             h = hist[key + (team,)]
             res = [x[0] for x in h]
@@ -540,6 +575,8 @@ def football_form(matches: list[dict[str, Any]]) -> list[dict[str, dict[str, Any
         hist[key + (r["away"],)].append((a_res, r["ag"], r["hg"]))
         points[key + (r["home"],)] += {"W": 3, "D": 1, "L": 0}[h_res]
         points[key + (r["away"],)] += {"W": 3, "D": 1, "L": 0}[a_res]
+        goal_diff[key + (r["home"],)] += r["hg"] - r["ag"]
+        goal_diff[key + (r["away"],)] += r["ag"] - r["hg"]
     return out
 
 
@@ -769,11 +806,12 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     games = load_mlb(MLB_PATH)
-    print(f"MLB: {len(games)} games", flush=True)
+    results = mlb_results(MLB_PATH)
+    print(f"MLB: {len(games)} games ({len(results)} final games for form)", flush=True)
     mlb = halves(
-        run_mlb(games),
-        run_mlb([x for x in games if x["season"] <= "2023"]),
-        run_mlb([x for x in games if x["season"] >= "2024"]),
+        run_mlb(games, results),
+        run_mlb([x for x in games if x["season"] <= "2023"], results),
+        run_mlb([x for x in games if x["season"] >= "2024"], results),
     )
     matches = load_football(FOOTBALL_PATH)
     print(f"football: {len(matches)} matches", flush=True)

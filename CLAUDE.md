@@ -285,3 +285,10 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   favourite >= 55%, football longest outcome at fair odds >= 8, home underdog, 模型分歧)
   with the opposite bet's 運彩 price and EV, and `fade.fade_record` - the same opposite
   bets on finished games at the 運彩 price captured before kickoff (reviews + ledger).
+- Fixed 2026-10-15: MLB form (streaks, series, last game) is keyed by (start, home, away)
+  and built from every final game (`mlb_results`: 11,163, not only the 10,522 priced); keyed
+  by start time alone, ~2,400 games sharing a start read another game's teams. League
+  tables break ties on goal difference, then name (a set's order changed run to run). The 9
+  MLB form strategies moved by < 1.5pp, all still noise; the 10 consistent ones are unchanged.
+- Data gap: every row for Cleveland 2021 and the Athletics 2025 has game_type "Unknown"
+  (298 final games); every MLB study here leaves them out, also as opponents' history.
