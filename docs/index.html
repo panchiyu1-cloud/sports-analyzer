@@ -99,6 +99,20 @@
   details.more { margin-top: 10px; }
   details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
 
+  /* card lists (反者道之動, 延遲雷達) */
+  .items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+  .items li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; font-size: .88rem; }
+  .items .head { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .8rem; }
+  .items.radar li { border-left: 3px solid var(--good); }
+  .items .need b { color: var(--accent); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .plan-head { font-weight: 600; font-size: .92rem; margin: 16px 0 6px; }
+  .plan-head .count { color: var(--muted); font-weight: 400; font-size: .8rem; }
+  ul.plan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .86rem; }
+  ul.plan li { border-left: 3px solid var(--line); padding-left: 10px; }
+  ul.plan li.now { border-color: var(--market); }
+  ul.plan li.done { color: var(--muted); }
+  ul.plan .chip { font-size: .72rem; }
+
   /* T-10 value block on MLB cards */
   .t10 { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
   .t10-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: .9rem; }
@@ -110,7 +124,7 @@
 <div class="wrap">
 <header>
   <h1>比賽分析</h1>
-  <span class="meta">更新：2026-10-15 21:10（台北時間）</span>
+  <span class="meta">更新：2026-10-16 00:16（台北時間）</span>
 <span class="meta">賠率點數剩 435（每日預算約 15）</span><a class="meta" href="backtest.html">回測報告</a>  <a class="meta" href="t10_backtest.html">T-10 回測</a>
 <a class="meta" href="reviews.html">全部賽後檢討</a>  <a class="meta" href="bighand.html">大戶紀錄（2 場）</a>
   <a class="meta" href="fade.html">反者道之動</a>
@@ -127,6 +141,21 @@
     <div class="kpi"><b class="neg">-18.2%</b><span>平均 CLV（2 注）</span></div>
   </div>
   <p class="none">運彩目前沒有賠率高於公允價的注。</p>
+</section>
+
+<section id="radar">
+  <h2>延遲雷達 <span class="count">國際盤動了、運彩可能還沒跟 · 0 個</span></h2>
+  <p class="howto">運彩改價比國際盤慢。除了你上傳的時候，系統每天 23:40、02:40、05:40（台北時間，可能晚十幾分鐘）也會替開賽前 4 小時內、有運彩價格的比賽買一次國際盤，拿去對照你<b>最後一次上傳</b>的運彩賠率。如果運彩那時的賠率還沒變、就已經有 EV（足球 ≥ 2%、MLB ≥ 3%），就列在這裡：打開運彩 App，<b>賠率 ≥ 門檻就可下</b>；或按捷徑上傳一次，系統會用兩邊最新的價格確認、記進帳本。</p>
+  <p class="sub">最後更新　足球：運彩 10/15 20:01・國際 10/15 21:10　|　MLB：運彩 10/15 20:01・國際 10/15 21:10</p>
+  <p class="none">目前沒有運彩落後國際盤、而且落後到有 EV 的盤。</p>
+  <div class="plan-head">建議上傳時間 <span class="count">開賽前 1 小時上傳，系統會先買最新國際盤再比</span></div>
+  <ul class="plan">
+    <li class="now"><b>10/16 00:00</b>　MLB 01:00 開賽的 1 場 <span class="chip warn">現在上傳</span></li>
+    <li class=""><b>10/16 07:00</b>　MLB 08:00 開賽的 1 場</li>
+    <li class=""><b>10/17 01:30</b>　足球 02:30–03:00 開賽的 4 場</li>
+  </ul>
+  <p class="sub">在 iPhone 捷徑 App 的「自動化」裡，可以照常用的時間多加幾個每天自動上傳。</p>
+  <p class="sub">雷達抓到的每一筆都記在 <a href="bighand.html">大戶紀錄</a>（延遲雷達）：運彩後來有沒有跟、比賽結果。</p>
 </section>
 
 <section id="big-moves">

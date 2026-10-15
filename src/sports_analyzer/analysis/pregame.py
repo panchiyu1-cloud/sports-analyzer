@@ -12,7 +12,7 @@ Pure functions; the purchase itself (budget, API) lives in pipeline.py.
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -59,6 +59,72 @@ def due_cards(
             continue
         out.append(card)
     return out
+
+
+def radar_due(
+    cards: Iterable[dict[str, Any]], now: datetime, cfg: ModelConfig
+) -> list[dict[str, Any]]:
+    """延遲雷達's purchases (scheduled, no upload needed): cards with a 運彩 price to set the
+    new price against, starting within radar_window_hours, whose match-winner price is
+    missing or older than radar_min_age_minutes."""
+    window_end = now + timedelta(hours=cfg.radar_window_hours)
+    min_age = timedelta(minutes=cfg.radar_min_age_minutes)
+    out = []
+    for card in cards:
+        start = kickoff(card)
+        if start is None or not now < start <= window_end or not card.get("tw"):
+            continue
+        bought = fair_time((card.get("market") or {}).get("h2h"))
+        if bought is not None and now - bought < min_age:
+            continue
+        out.append(card)
+    return out
+
+
+# An upload this long before the first game of a group: lineups are mostly out and the
+# pre-game purchase still covers the games of the next pregame_window_hours.
+UPLOAD_LEAD = timedelta(minutes=60)
+
+
+def upload_plan(
+    starts_by_sport: Mapping[str, Iterable[datetime]],
+    last_upload: Mapping[str, datetime | None],
+    now: datetime,
+    cfg: ModelConfig,
+    horizon_hours: float = 30.0,
+) -> list[dict[str, Any]]:
+    """When to upload 運彩 so that every coming game is judged with fresh prices on both
+    sides: an upload UPLOAD_LEAD before the first game not yet covered (on the half
+    hour) gets fresh international prices for every game of the next
+    pregame_window_hours. `done`: the sport's last upload already falls in that slot
+    (from an hour before it to the first game); `now`: the slot is open and not done."""
+    window = timedelta(hours=cfg.pregame_window_hours)
+    end = now + timedelta(hours=horizon_hours)
+    plan = []
+    for sport, starts in starts_by_sport.items():
+        coming = sorted(s for s in starts if now < s <= end)  # one per game
+        i = 0
+        while i < len(coming):
+            first = coming[i]
+            at = first - UPLOAD_LEAD
+            at = at.replace(minute=0 if at.minute < 30 else 30, second=0, microsecond=0)
+            group = [s for s in coming[i:] if s <= at + window]
+            last = last_upload.get(sport)
+            done = last is not None and at - timedelta(hours=1) <= last < first
+            plan.append(
+                {
+                    "sport": sport,
+                    "at": at,
+                    "first": first,
+                    "last": group[-1],
+                    "games": len(group),
+                    "done": done,
+                    "now": not done and at <= now,
+                }
+            )
+            i += len(group)
+    plan.sort(key=lambda p: (p["at"], p["sport"]))
+    return plan
 
 
 def match_card_event(

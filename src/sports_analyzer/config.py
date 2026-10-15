@@ -100,6 +100,15 @@ class ModelConfig:
     # 運彩-only move: between two uploads 運彩's own (de-vigged) price moved this much
     # more than the international market's over the same times.
     tw_divergence_threshold: float = 0.02
+    # 延遲雷達 (pipeline radar, 3 scheduled runs a day): matches with a 運彩 price that
+    # start within this many hours get freshly bought international prices when their
+    # last ones are older than the minimum age; the newest international price is then
+    # set against the last uploaded 運彩 price.
+    radar_window_hours: float = 4.0
+    radar_min_age_minutes: int = 120
+    # The radar also lists, without a bet, sides the market moved toward by this much
+    # since the last 運彩 upload.
+    radar_watch_move: float = 0.04
     # Markets priced through the market-implied goal model carry its error too
     # (validated: ~0.7pp on Asian handicaps, <=0.5pp mean bias after calibration,
     # 1-3pp in the worst probability band), so they need a larger margin of safety.

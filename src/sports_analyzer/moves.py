@@ -21,9 +21,12 @@ before it has moved):
      (a 大單 when a side moved >= big_move_threshold);
   2. `track`: whether 運彩 followed over the same time;
   3. `tw_divergences`: 運彩's own moves that the market did not make (運彩's big
-     bettors), settled against results by `settle` / `divergence_summary`.
+     bettors), settled against results by `settle` / `divergence_summary`;
+  4. `radar` (延遲雷達): an international price bought hours after the last 運彩 upload,
+     set against that upload's prices: has the market moved far enough that 運彩's
+     price, if 運彩 has not moved yet, is a value bet?
 
-Every move caught (3, and `intl_big_moves` for 1) is also kept for good in
+Every move caught (3, `intl_big_moves` for 1, `radar_events` for 4) is also kept for good in
 data/moves/events.csv (`record_events`), whether or not it ever became a bet;
 `event_history` joins it with the prices up to kickoff and the result (docs/bighand.html).
 """
@@ -430,12 +433,152 @@ def intl_big_moves(rows: Iterable[Mapping[str, str]], cfg: ModelConfig) -> list[
     return events
 
 
+# ----------------------------------------------------------- 4: 延遲雷達
+def value_threshold(sport: str, cfg: ModelConfig) -> float:
+    """The EV a 運彩 price needs to count as a value bet (MLB keeps a larger cushion)."""
+    return cfg.mlb_value_threshold if sport == "mlb" else cfg.value_threshold
+
+
+def price_needed(prob: float, threshold: float) -> float:
+    """The lowest 運彩 price (two decimals, the way 運彩 quotes) whose EV against `prob`
+    reaches `threshold`."""
+    return math.ceil((1 + threshold) / prob * 100 - 1e-9) / 100
+
+
+def _stale_pairs(rows: Iterable[Mapping[str, str]], cfg: ModelConfig) -> list[dict[str, Any]]:
+    """Per market side and 運彩 upload: the international prices bought more than the
+    freshness window after the upload (and before the next upload and kickoff). A price
+    bought nearer the upload is judged by the regular comparison (可下); these are the
+    ones only the radar sees. `then` is the international probability at the upload
+    (the nearest within the window, else the last one before it)."""
+    rows = list(rows)
+    series = _series(rows)
+    meta = {(r["sport"], str(r["match_id"])): r for r in rows}
+    within = timedelta(minutes=cfg.max_price_gap_minutes)
+    out = []
+    for (sport, mid, market, line, side, source), tw_points in series.items():
+        if source != "tw":
+            continue
+        info = meta.get((sport, mid), {})
+        kickoff = parse_time(info.get("kickoff_utc"))
+        tw = _before(tw_points, kickoff)
+        intl = _before(series.get((sport, mid, market, line, side, "intl"), []), kickoff)
+        for k, (uploaded, _, price) in enumerate(tw):
+            following = tw[k + 1][0] if k + 1 < len(tw) else None
+            stale = [
+                p
+                for p in intl
+                if p[0] > uploaded + within and (following is None or p[0] < following)
+            ]
+            if not price or not stale:
+                continue
+            then = _near(intl, uploaded, within)
+            if then is None:
+                earlier = [p for p in intl if p[0] <= uploaded]
+                then = earlier[-1][1] if earlier else None
+            out.append(
+                {
+                    "sport": sport,
+                    "match_id": mid,
+                    "home": info.get("home", ""),
+                    "away": info.get("away", ""),
+                    "kickoff_utc": info.get("kickoff_utc", ""),
+                    "market": market,
+                    "line": line,
+                    "side": side,
+                    "uploaded": uploaded,
+                    "tw_price": price,
+                    "then": then,
+                    "stale": stale,
+                    "current": following is None,  # no newer 運彩 price for the side
+                }
+            )
+    return out
+
+
+def _radar_entry(pair: Mapping[str, Any], at: datetime, prob: float, cfg: ModelConfig) -> dict:
+    threshold = value_threshold(pair["sport"], cfg)
+    then = pair["then"]
+    return {
+        **{k: pair[k] for k in ("sport", "match_id", "home", "away", "kickoff_utc", "market")},
+        **{k: pair[k] for k in ("line", "side", "tw_price")},
+        "tw_at": _iso(pair["uploaded"]),
+        "intl_at": _iso(at),
+        "prob": round(prob, 4),
+        "prob_then": round(then, 4) if then is not None else None,
+        "move": round(prob - then, 4) if then is not None else None,
+        "ev": round(prob * pair["tw_price"] - 1, 4),
+        "threshold": threshold,
+        "need": price_needed(prob, threshold),
+    }
+
+
+def radar(rows: Iterable[Mapping[str, str]], now: datetime, cfg: ModelConfig) -> dict[str, Any]:
+    """延遲雷達 as of `now`, for the matches not started yet: the last uploaded 運彩 price of
+    each side against the newest international price bought more than the freshness
+    window after it. `candidates`: that 運彩 price, if unchanged, has the value-bet EV
+    (worth a look in the 運彩 app: `need` is the lowest price that still pays);
+    `watch`: the market moved toward the side by radar_watch_move since the upload, not
+    yet enough. `last`: per sport, the newest 運彩 upload and international price seen."""
+    rows = list(rows)
+    candidates, watch = [], []
+    for pair in _stale_pairs(rows, cfg):
+        kickoff = parse_time(pair["kickoff_utc"])
+        if not pair["current"] or kickoff is None or kickoff <= now:
+            continue
+        at, prob, _ = pair["stale"][-1]
+        entry = _radar_entry(pair, at, prob, cfg)
+        if entry["ev"] >= entry["threshold"]:
+            candidates.append(entry)
+        elif entry["move"] is not None and entry["move"] >= cfg.radar_watch_move:
+            watch.append(entry)
+    candidates.sort(key=lambda e: (e["kickoff_utc"], -e["ev"]))
+    watch.sort(key=lambda e: -e["move"])
+    last: dict[str, dict[str, str]] = {}
+    for r in rows:
+        seen = last.setdefault(r["sport"], {"tw": "", "intl": ""})
+        if r["source"] in seen and r["observed_at"] > seen[r["source"]]:
+            seen[r["source"]] = r["observed_at"]
+    return {"candidates": candidates, "watch": watch, "last": last}
+
+
+def radar_events(rows: Iterable[Mapping[str, str]], cfg: ModelConfig) -> list[dict[str, Any]]:
+    """For the permanent record: per 運彩 upload and side, the first international price
+    bought more than the freshness window after the upload (before the next one and
+    kickoff) that gave the uploaded price the value-bet EV. `current` (not saved): no
+    newer 運彩 price for the side, so the radar's question is still open."""
+    events = []
+    for pair in _stale_pairs(rows, cfg):
+        threshold = value_threshold(pair["sport"], cfg)
+        for at, prob, _ in pair["stale"]:
+            if prob * pair["tw_price"] - 1 < threshold:
+                continue
+            then = pair["then"]
+            events.append(
+                {
+                    "type": "radar",
+                    **{k: pair[k] for k in ("sport", "match_id", "home", "away", "kickoff_utc")},
+                    **{k: pair[k] for k in ("market", "line", "side", "tw_price", "current")},
+                    "from_at": _iso(pair["uploaded"]),
+                    "to_at": _iso(at),
+                    "tw_move": "",
+                    "intl_move": round(prob - then, 4) if then is not None else "",
+                    "divergence": "",
+                    "expected": round(prob, 4),
+                }
+            )
+            break
+    events.sort(key=lambda e: e["to_at"])
+    return events
+
+
 # ------------------------------------------------- the permanent 大戶 record
 EVENT_COLUMNS = [
     "id",
-    "type",  # tw_only (運彩大戶) | intl_big (國際大單)
-    "to_at",  # when the move was seen: the later 運彩 upload / the international price
-    "from_at",  # what it was measured from: the earlier upload / our first price
+    "type",  # tw_only (運彩大戶) | intl_big (國際大單) | radar (延遲雷達)
+    "to_at",  # when it was seen: the later 運彩 upload / the international price
+    "from_at",  # what it was measured from: the earlier upload / our first price / the
+    # 運彩 upload whose price the radar found behind the market
     "sport",
     "competition",
     "match_id",
@@ -459,7 +602,11 @@ EVENT_NUMBERS = ("tw_move", "intl_move", "divergence", "expected", "tw_price")
 def event_id(e: Mapping[str, Any]) -> str:
     """One record per detection: a 運彩-only move per match, market and upload (on the
     side it was first seen on, even if a later price would pick another), an
-    international 大單 per side."""
+    international 大單 per side, a radar finding per side and 運彩 upload (a later
+    international price saying the same about the same upload is not news)."""
+    if e["type"] == "radar":
+        keys = ("type", "sport", "match_id", "market", "line", "side", "from_at")
+        return hashlib.sha1("|".join(str(e[k]) for k in keys).encode()).hexdigest()[:12]
     parts = [str(e[k]) for k in ("type", "sport", "match_id", "market", "line", "to_at")]
     if e["type"] == "intl_big":
         parts.append(str(e["side"]))
@@ -470,11 +617,13 @@ def record_events(
     path: Path,
     events: Iterable[Mapping[str, Any]],
     names: Mapping[tuple[str, str], Mapping[str, str]] | None = None,
+    added: list[dict[str, Any]] | None = None,
 ) -> int:
     """Keep every detected 大戶 move (data/moves/events.csv), whatever happened next:
     the record is the point, not only the moves that became a bet. `names` maps
     (sport, match_id) to what is known at detection time and lost later (competition,
-    運彩's Chinese team names). Returns how many events were new."""
+    運彩's Chinese team names). Returns how many events were new; `added` collects them
+    (with every field the detection had, also those the file does not keep)."""
     existing = read_events(path)
     have = {r["id"] for r in existing}
     fresh = []
@@ -485,6 +634,8 @@ def record_events(
         have.add(eid)
         extra = (names or {}).get((str(e["sport"]), str(e["match_id"])), {})
         fresh.append({**extra, **e, "id": eid})
+    if added is not None:
+        added.extend(fresh)
     if not fresh:
         return 0
     path.parent.mkdir(parents=True, exist_ok=True)

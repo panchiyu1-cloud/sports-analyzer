@@ -65,6 +65,58 @@
   {% endif %}
 </section>
 
+{% if radar %}
+<section id="radar">
+  <h2>延遲雷達 <span class="count">國際盤動了、運彩可能還沒跟 · {{ radar.candidates|length }} 個</span></h2>
+  <p class="howto">運彩改價比國際盤慢。除了你上傳的時候，系統每天 {{ radar.times }}（台北時間，可能晚十幾分鐘）也會替開賽前 {{ cfg.radar_window_hours|round|int }} 小時內、有運彩價格的比賽買一次國際盤，拿去對照你<b>最後一次上傳</b>的運彩賠率。如果運彩那時的賠率還沒變、就已經有 EV（足球 ≥ {{ (cfg.value_threshold*100)|round|int }}%、MLB ≥ {{ (cfg.mlb_value_threshold*100)|round|int }}%），就列在這裡：打開運彩 App，<b>賠率 ≥ 門檻就可下</b>；或按捷徑上傳一次，系統會用兩邊最新的價格確認、記進帳本。</p>
+  {% if radar.last %}
+  <p class="sub">最後更新　{% for s in radar.last %}{{ s.sport }}：運彩 {{ s.tw|tpe }}・國際 {{ s.intl|tpe }}{% if not loop.last %}　|　{% endif %}{% endfor %}</p>
+  {% endif %}
+  {% if radar.candidates %}
+  <ul class="items radar">
+    {% for r in radar.candidates %}
+    <li>
+      <div class="head"><span>{{ r.competition }} · {{ r.kickoff_local }} 開賽 · 還有 {{ r.until }}</span></div>
+      <div><b>{{ r.match }}</b></div>
+      <div class="need">{{ r.label }}：運彩賠率 ≥ <b>{{ '%.2f'|format(r.need) }}</b> 就可下</div>
+      <div class="sub">國際 {% if r.prob_then is not none %}{{ '%.0f'|format(r.prob_then*100) }}% → {% endif %}{{ '%.0f'|format(r.prob*100) }}%{% if r.move is not none %}（{{ '%+.1f'|format(r.move*100) }}pp）{% endif %}・{{ r.intl_at|tpe }}</div>
+      <div class="sub">運彩上次 {{ '%.2f'|format(r.tw_price) }}・{{ r.tw_at|tpe }}，沒變的話 EV <span class="pos">{{ '%+.1f%%'|format(r.ev*100) }}</span></div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="none">目前沒有運彩落後國際盤、而且落後到有 EV 的盤。</p>
+  {% endif %}
+  {% if radar.watch %}
+  <details class="more">
+    <summary>國際盤在動、運彩上次的賠率還不夠（{{ radar.watch_total }}）</summary>
+    <div class="scroll"><table>
+      <tr><th>開賽</th><th>比賽</th><th>選項</th><th>國際（上傳後）</th><th>運彩上次</th><th>要到</th></tr>
+      {% for r in radar.watch %}
+      <tr>
+        <td>{{ r.kickoff_local }}</td><td>{{ r.match }}</td><td>{{ r.label }}</td>
+        <td>{{ '%.0f'|format(r.prob_then*100) }}% → {{ '%.0f'|format(r.prob*100) }}% <span class="pos">({{ '%+.1f'|format(r.move*100) }}pp)</span></td>
+        <td>{{ '%.2f'|format(r.tw_price) }}<div class="sub">EV {{ '%+.1f%%'|format(r.ev*100) }}</div></td>
+        <td><b>{{ '%.2f'|format(r.need) }}</b></td>
+      </tr>
+      {% endfor %}
+    </table></div>
+    <p class="sub">這些邊的國際機率在你上次上傳後升了 {{ (cfg.radar_watch_move*100)|round|int }}pp 以上，但運彩上次的賠率還不到門檻。運彩如果一直沒跟、國際盤又繼續往同一邊動，就會跑到上面。</p>
+  </details>
+  {% endif %}
+  {% if radar.plan %}
+  <div class="plan-head">建議上傳時間 <span class="count">開賽前 1 小時上傳，系統會先買最新國際盤再比</span></div>
+  <ul class="plan">
+    {% for p in radar.plan %}
+    <li class="{{ 'done' if p.done else ('now' if p.now else '') }}"><b>{{ p.at_local }}</b>　{{ p.sport_label }} {{ p.first_local }}{% if p.last_local != p.first_local %}–{{ p.last_local }}{% endif %} 開賽的 {{ p.games }} 場{% if p.done %} <span class="chip good">已上傳</span>{% elif p.now %} <span class="chip warn">現在上傳</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  <p class="sub">在 iPhone 捷徑 App 的「自動化」裡，可以照常用的時間多加幾個每天自動上傳。</p>
+  {% endif %}
+  <p class="sub">雷達抓到的每一筆都記在 <a href="bighand.html">大戶紀錄</a>（延遲雷達）：運彩後來有沒有跟、比賽結果。</p>
+</section>
+{% endif %}
+
 <section id="big-moves">
   <h2>大單追蹤 <span class="count">國際盤移動 ≥ {{ (cfg.big_move_threshold*100)|round|int }}pp · {{ big_moves|length }} 個</span></h2>
   <p class="howto">大單：國際盤從我們第一次看到這場比賽到現在，某一邊的機率移動超過 {{ (cfg.big_move_threshold*100)|round|int }}pp。2019–2027 年 22 個聯賽的資料裡，這種移動多半是對的（被推升 ≥ 8pp 的一邊，開盤 43%、收盤 53%、實際贏 55%）；能賺的是在價格還沒跟上的地方買到它，所以要看運彩有沒有跟、運彩現在的 EV。</p>

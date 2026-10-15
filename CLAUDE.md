@@ -40,8 +40,9 @@ formula is not obvious.
   assumed 30-day period; short of it a run buys h2h only, or nothing (prices carried
   over, marked stale). Football buys h2h,totals only (運彩 football handicaps are
   three-way, so Asian handicap prices compare with nothing); MLB keeps the run line.
-- Pre-game refreshes (`pipeline tw` after a recent upload, see "T-10 價值版") may
-  spend `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never the reserve.
+- Pre-game refreshes (`pipeline tw` after a recent upload, see "T-10 價值版") and the
+  延遲雷達 runs (`pipeline radar`, essential markets only) may spend
+  `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never the reserve.
 
 ### Code style (ECC python rules)
 - PEP 8, type annotations on every function signature, `from __future__ import annotations`.
@@ -96,6 +97,7 @@ src/sports_analyzer/
   review_store.py  data/reviews/{football,mlb}.csv (one row per finished match)
   ledger.py        append / settle signals in data/ledger.csv
   moves.py         line-move tape data/moves/YYYY-MM.csv + 大戶 record data/moves/events.csv
+                   + 延遲雷達 (radar, radar_events)
   render/          cards.py + templates/*.html.j2 -> docs/index.html, reviews.html, bighand.html
   pipeline.py      CLI entry point
 scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
@@ -320,3 +322,31 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   all 5 seasons (late z 2.55: 1 of 30 late lookups, ~15% by luck), still -1.2% at 運彩
   (needs +7.8pp). Patterns in prices are priced in; only a 運彩 price above the
   international fair price (positive EV) pays.
+
+## 延遲雷達 (2026-10-16) — 運彩 behind the market between uploads
+- 運彩 reprices later than the international market; the only edge found so far is a 運彩
+  price that has not followed a move yet (大手追蹤). The phone uploads at 08:00 / 20:00
+  Taipei and the routine runs bought international prices within the hour, so the tape had
+  no international price hours after an upload: nothing could see 運彩 lagging.
+- radar.yml (15:40, 18:40, 21:40 UTC = 23:40, 02:40, 05:40 Taipei; concurrency group daily)
+  runs `pipeline radar`: `pregame.radar_due` picks matches with a 運彩 price starting within
+  `radar_window_hours` (4) whose h2h is older than `radar_min_age_minutes` (120);
+  `_buy_fresh` (shared with the pre-game refresh) buys the essential markets only (h2h;
+  MLB also spreads) within the allowance plus PREGAME_EXTRA; pending 運彩 bets get CLV from
+  them; then `run_tw` re-judges the last upload (stale: "不判斷") and the render follows.
+  Nothing bought: no run_tw, no render, no commit (step output `refreshed`).
+- `moves.radar` (front page section 延遲雷達): for each side of a match not started, the
+  last 運彩 price against the newest international price bought more than
+  `max_price_gap_minutes` after it (a nearer one is the regular comparison, 可下).
+  Candidates: that price, unchanged, has the value-bet EV (`value_threshold`: football 2%,
+  MLB 3%); `need` (`price_needed`) is the lowest 運彩 price that still pays, for the owner
+  to check in the 運彩 app or confirm by uploading. Watch: the market moved toward the side
+  by `radar_watch_move` (4pp) since the upload, not enough yet.
+- `moves.radar_events` -> events.csv type "radar", one per side and 運彩 upload (event_id uses
+  from_at = the upload; to_at = the first international price that showed it); bighand.html
+  shows it with ev_at = the stale EV and close_tw_price = whether 運彩 followed. A new
+  finding still open (`current`: no newer 運彩 price; before kickoff) goes to the phone
+  (`notify.notify_radar`); every render gets NTFY_TOPIC (`render_latest(notify_topic)`).
+- `pregame.upload_plan` (建議上傳時間): an upload `UPLOAD_LEAD` (60 min) before the first
+  game not yet covered, on the half hour, covers the games of the next
+  `pregame_window_hours`; marked done when the sport's last upload falls in the slot.

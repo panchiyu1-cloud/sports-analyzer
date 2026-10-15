@@ -1,0 +1,46 @@
+name: 延遲雷達 (radar)
+
+# 15:40, 18:40, 21:40 UTC = 23:40, 02:40, 05:40 台北: hours after the phone's 08:00 /
+# 20:00 uploads, the matches with a 運彩 price that start within 4 hours get freshly
+# bought international prices (h2h; MLB also the run line), within the odds budget
+# plus the pre-game extra. The render then sets them against the last uploaded 運彩
+# prices: a price that, unchanged, would now be a value bet shows under 延遲雷達 on
+# the page, goes into the 大戶紀錄 and, when NTFY_TOPIC is set, to the phone.
+# Nothing due or no budget: nothing bought, nothing committed.
+
+on:
+  schedule:
+    - cron: "40 15,18,21 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}  # optional: phone notifications
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # a queued run starts from the newest commit, not the one that triggered it
+          fetch-depth: 60  # enough history to date the 運彩 uploads (fetch/taiwan.normalize_uploads)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Fresh prices for matches about to start, against the last 運彩 upload
+        id: radar
+        run: python -m sports_analyzer.pipeline radar
+      - name: Commit
+        if: steps.radar.outputs.refreshed != '0'
+        run: |
+          bash scripts/commit_generated.sh "chore(radar): $(date -u +%Y-%m-%dT%H:%M) prices near kickoff vs 運彩" data/snapshots data/tw_ledger.csv data/moves data/odds_budget.json data/tw docs/index.html docs/reviews.html docs/bighand.html docs/fade.html

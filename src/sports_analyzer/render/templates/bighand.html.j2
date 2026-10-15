@@ -18,6 +18,7 @@
   .evs li { border-left: 3px solid var(--line); padding: 1px 0 1px 10px; }
   .evs li.tw_only { border-color: var(--market); }
   .evs li.intl_big { border-color: var(--model); }
+  .evs li.radar { border-color: var(--good); border-left-style: dashed; }
   .evs .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
   .evs .head .chip { margin-left: 0; }
   .chip.intl { background: var(--model); color: #fff; }
@@ -40,7 +41,7 @@
   <a class="meta" href="index.html">回到每日分析</a>
 </header>
 
-<p class="howto">這裡永久記下每一場抓到大戶動向的比賽，不管後來有沒有進可下。<b>運彩大戶</b>：兩次運彩上傳之間，運彩把某一邊的價格調低（去水後機率多 {{ (cfg.tw_divergence_threshold*100)|round|int }}pp 以上），同一段時間國際盤沒有一樣的移動。<b>國際大單</b>：國際盤某一邊的機率，從我們第一次看到這場比賽起升了 {{ (cfg.big_move_threshold*100)|round|int }}pp 以上。每一筆記下當時的價格、之後到開賽前國際盤和運彩怎麼走、這一邊有沒有成為可下（EV 過門檻並記進運彩帳本）、MLB 的 T-10 G 值有沒有到 ±{{ (cfg.g_threshold*100)|round|int }}，以及比賽結果。每次運彩上傳（自動化或手動按捷徑）和每天 08:15、20:25 更新國際價之後都會自動檢查。</p>
+<p class="howto">這裡永久記下每一場抓到大戶動向的比賽，不管後來有沒有進可下。<b>運彩大戶</b>：兩次運彩上傳之間，運彩把某一邊的價格調低（去水後機率多 {{ (cfg.tw_divergence_threshold*100)|round|int }}pp 以上），同一段時間國際盤沒有一樣的移動。<b>國際大單</b>：國際盤某一邊的機率，從我們第一次看到這場比賽起升了 {{ (cfg.big_move_threshold*100)|round|int }}pp 以上。<b>延遲雷達</b>：你上傳運彩幾個小時後買到的國際盤，讓運彩上次的賠率（如果還沒變）有了可下的 EV。每一筆記下當時的價格、之後到開賽前國際盤和運彩怎麼走、這一邊有沒有成為可下（EV 過門檻並記進運彩帳本）、MLB 的 T-10 G 值有沒有到 ±{{ (cfg.g_threshold*100)|round|int }}，以及比賽結果。每次運彩上傳（自動化或手動按捷徑）、每天 08:15、20:25 更新國際價和延遲雷達每天三次買價之後都會自動檢查。</p>
 
 {% if summary %}
 <section>
@@ -65,6 +66,7 @@
     <button type="button" data-f="all" aria-pressed="true">全部</button>
     <button type="button" data-f="tw_only" aria-pressed="false">運彩大戶</button>
     <button type="button" data-f="intl_big" aria-pressed="false">國際大單</button>
+    <button type="button" data-f="radar" aria-pressed="false">延遲雷達</button>
     <button type="button" data-f="football" aria-pressed="false">足球</button>
     <button type="button" data-f="mlb" aria-pressed="false">MLB</button>
     <button type="button" data-f="value" aria-pressed="false">進了可下</button>
@@ -82,9 +84,11 @@
     <ul class="evs">
       {% for e in m.events %}
       <li class="{{ e.type }}">
-        <div class="head"><span class="chip {{ 'warn' if e.type == 'tw_only' else 'intl' }}">{{ e.type_label }}</span><span class="sub">{{ e.to_at|tpe }}</span><b>{{ e.label }}</b>{% if e.tw_price %}<span>運彩 @ {{ '%.2f'|format(e.tw_price) }}</span>{% endif %}</div>
+        <div class="head"><span class="chip {{ {'tw_only': 'warn', 'radar': 'good'}.get(e.type, 'intl') }}">{{ e.type_label }}</span><span class="sub">{{ e.to_at|tpe }}</span><b>{{ e.label }}</b>{% if e.tw_price %}<span>運彩 @ {{ '%.2f'|format(e.tw_price) }}</span>{% endif %}</div>
         {% if e.type == 'tw_only' %}
         <div>運彩 {{ '%+.1f'|format(e.tw_move*100) }}pp vs 國際 {{ '%+.1f'|format(e.intl_move*100) }}pp <span class="sub">（{{ e.from_at|tpe }} → {{ e.to_at|tpe }}）</span></div>
+        {% elif e.type == 'radar' %}
+        <div>運彩 {{ e.from_at|tpe }} 上傳的價格落後：國際 {% if e.intl_move is not none %}{{ '%.0f'|format((e.expected - e.intl_move)*100) }}% → {% endif %}{{ '%.0f'|format(e.expected*100) }}%{% if e.intl_move is not none %} <span class="pos">({{ '%+.1f'|format(e.intl_move*100) }}pp)</span>{% endif %}</div>
         {% else %}
         <div>國際 {{ '%.0f'|format((e.expected - e.intl_move)*100) }}% → {{ '%.0f'|format(e.expected*100) }}% <span class="pos">({{ '%+.1f'|format(e.intl_move*100) }}pp)</span> <span class="sub">{{ e.from_at|tpe }} 起</span></div>
         {% endif %}

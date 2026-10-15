@@ -4,10 +4,11 @@ They exercise the code that only runs on GitHub Actions (odds purchase under the
 credit budget, snapshot writing, carrying prices over when nothing is bought).
 """
 
+import dataclasses
 import json
 import tempfile
 import unittest
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
@@ -399,6 +400,123 @@ class BigHandRecordSmokeTests(unittest.TestCase):
         index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
         self.assertIn('href="bighand.html">大戶紀錄（1 場）', index)
         self.assertIn("洛杉磯道奇 不讓分", index)  # the 運彩大戶 table uses 運彩's names
+
+
+class FakeRadarOdds(FakeMlbOdds):
+    """FakeMlbOdds whose game starts when the test's card does."""
+
+    commence = None
+
+    def odds(self, sport_key, *, commence_from=None, commence_to=None, markets=()):
+        events = super().odds(sport_key, markets=markets)
+        return [dataclasses.replace(e, commence_time=FakeRadarOdds.commence) for e in events]
+
+
+class RadarSmokeTests(unittest.TestCase):
+    """`pipeline radar` on a schedule: no upload for 7 hours, the game starts in 2."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.paths = {
+            "DATA_DIR": root,
+            "DOCS_DIR": root / "docs",
+            "SNAPSHOT_DIR": root / "snapshots",
+            "TW_DIR": root / "tw",
+            "MOVES_DIR": root / "moves",
+            "LEDGER_PATH": root / "ledger.csv",
+            "TW_LEDGER_PATH": root / "tw_ledger.csv",
+            "ODDS_BUDGET_PATH": root / "odds_budget.json",
+            "IMPLIED_CALIBRATION_PATH": root / "implied_calibration.json",
+            "FOOTBALL_REVIEWS_PATH": root / "reviews" / "football.csv",
+            "MLB_REVIEWS_PATH": root / "reviews" / "mlb.csv",
+        }
+        self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
+        self.patches.append(mock.patch.object(pipeline, "OddsClient", FakeRadarOdds))
+        self.sent: list[tuple[str, str, str]] = []
+        self.patches.append(
+            mock.patch.object(
+                pipeline.notify,
+                "send",
+                lambda topic, title, body, session=None, tags=(): (
+                    self.sent.append((topic, title, body)) or True
+                ),
+            )
+        )
+        for p in self.patches:
+            p.start()
+        FakeMlbOdds.calls = []
+        # Real time: the render judges "not started yet" by the clock.
+        self.now = datetime.now(UTC).replace(second=0, microsecond=0)
+        kickoff = self.now + timedelta(hours=2)
+        FakeRadarOdds.commence, FakeMlbOdds.fetched_at = kickoff, self.now
+        self.card = {
+            "sport": "mlb",
+            "game_pk": 1,
+            "kickoff_utc": kickoff.isoformat(),
+            "home": "Los Angeles Dodgers",
+            "away": "Philadelphia Phillies",
+            "home_key": "los angeles dodgers",
+            "away_key": "philadelphia phillies",
+            "market": {
+                "h2h": {
+                    "home": {"fair": 0.55, "fair_odds": 1.82},
+                    "away": {"fair": 0.45, "fair_odds": 2.22},
+                    "odds_at": (self.now - timedelta(hours=6)).isoformat(),
+                },
+                "spread": None,
+                "totals": None,
+            },
+            "t10": None,
+            "tw": {
+                "captured_at": (self.now - timedelta(hours=7)).isoformat(),
+                "home_zh": "洛杉磯道奇",
+                "away_zh": "費城費城人",
+                "h2h": {"home": {"price": 1.75}, "away": {"price": 2.10}},
+            },
+        }
+        folder = self.paths["SNAPSHOT_DIR"] / self.now.date().isoformat()
+        folder.mkdir(parents=True)
+        payload = {"generated_at": self.card["market"]["h2h"]["odds_at"],
+                   "date": self.now.date().isoformat(), "games": [self.card]}  # fmt: skip
+        (folder / "mlb.json").write_text(json.dumps(payload), encoding="utf-8")
+        tape = pipeline.moves_mod
+        tape.record(self.paths["MOVES_DIR"], tape.intl_rows([self.card], "mlb"))
+        tape.record(self.paths["MOVES_DIR"], tape.tw_rows([self.card], "mlb"))
+        self.output = Path(self.tmp.name) / "github_output"
+
+    def tearDown(self):
+        for p in self.patches:
+            p.stop()
+        self.tmp.cleanup()
+
+    def test_scheduled_purchase_finds_the_stale_tw_price_and_tells_the_phone_once(self):
+        env = {"ODDS_API_KEY": "key", "NTFY_TOPIC": "test-topic", "GITHUB_OUTPUT": str(self.output)}
+        with mock.patch.dict("os.environ", env):
+            self.assertEqual(pipeline.main(["radar"]), 0)
+        # Essential markets only: the moneyline and the run line (the two halves of G).
+        self.assertEqual(FakeMlbOdds.calls, [("baseball_mlb", ("h2h", "spreads"))])
+        self.assertEqual(self.output.read_text(), "refreshed=1\n")
+        # 1.75 against a fresh fair ~62%: the upload 7 hours ago is behind the market.
+        self.assertEqual(len(self.sent), 1)
+        topic, title, body = self.sent[0]
+        self.assertEqual(topic, "test-topic")
+        self.assertTrue(title.startswith("延遲雷達 EV +"))
+        self.assertIn("費城費城人 @ 洛杉磯道奇", body)
+        index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
+        self.assertIn("洛杉磯道奇 不讓分：運彩賠率 ≥", index)
+        saved = pipeline.moves_mod.read_events(self.paths["MOVES_DIR"] / "events.csv")
+        self.assertEqual([(e["type"], e["home_zh"]) for e in saved], [("radar", "洛杉磯道奇")])
+        bighand = (self.paths["DOCS_DIR"] / "bighand.html").read_text(encoding="utf-8")
+        self.assertIn("延遲雷達", bighand)
+        # The next render (any task) does not announce the same finding again, and the
+        # next scheduled run finds the prices recent: nothing bought, nothing rendered.
+        pipeline.render_latest(notify_topic="test-topic")
+        self.assertEqual(len(self.sent), 1)
+        with mock.patch.dict("os.environ", env):
+            pipeline.main(["radar"])
+        self.assertEqual(len(FakeMlbOdds.calls), 1)
+        self.assertEqual(self.output.read_text(), "refreshed=1\nrefreshed=0\n")
 
 
 class FakeResults:

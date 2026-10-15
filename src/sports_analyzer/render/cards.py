@@ -61,10 +61,12 @@ def render_index(
     bighand_matches: int = 0,
     signal_rows: list[Mapping[str, Any]] | None = None,
     value_rows: list[Mapping[str, Any]] | None = None,
+    radar: Mapping[str, Any] | None = None,
 ) -> Path:
     """`moves` is moves.track() of the line-move tape; `tw_moves` holds the recorded
     運彩-only moves (oldest first, settled) and their summary; `bighand_matches` is how
-    many matches the 大戶紀錄 page (docs/bighand.html) lists."""
+    many matches the 大戶紀錄 page (docs/bighand.html) lists; `radar` is moves.radar()
+    with 運彩's names and pregame.upload_plan() (延遲雷達)."""
     template = _env().get_template("index.html.j2")
     moves = moves or {}
 
@@ -188,10 +190,80 @@ def render_index(
         ][:10],
         tw_moves_summary=(tw_moves or {}).get("summary") or {},
         bighand_matches=bighand_matches,
+        radar=radar_view(radar, generated_at) if radar is not None else None,
     )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(html, encoding="utf-8")
     return out_path
+
+
+SPORT_LABELS = {"football": "足球", "mlb": "MLB"}
+# The radar runs of radar.yml, in Taipei time, for the page's explanation.
+RADAR_TIMES = "23:40、02:40、05:40"
+WATCH_ROWS = 8
+
+
+def _until(start: datetime | None, now: datetime) -> str:
+    """'2 小時 10 分' until kickoff."""
+    if start is None:
+        return ""
+    minutes = max(0, int((start - now).total_seconds() // 60))
+    hours, rest = divmod(minutes, 60)
+    return f"{hours} 小時 {rest} 分" if hours else f"{rest} 分"
+
+
+def radar_view(radar: Mapping[str, Any], now: datetime) -> dict[str, Any]:
+    """延遲雷達 rows ready for the template: 運彩's names, Taipei times, the price that
+    still pays; the upload plan and when the radar last saw each price source."""
+    found = radar.get("found") or {}
+    names = radar.get("names") or {}
+
+    def row(e: Mapping[str, Any]) -> dict[str, Any]:
+        sport = e["sport"]
+        known = names.get((sport, str(e["match_id"]))) or {}
+        home = known.get("home_zh") or e["home"]
+        away = known.get("away_zh") or e["away"]
+        start = _parse(e["kickoff_utc"])
+        return {
+            **e,
+            "sport_label": SPORT_LABELS.get(sport, sport),
+            "competition": known.get("competition") or SPORT_LABELS.get(sport, ""),
+            "match": match_title(sport, home, away),
+            "label": side_label(sport, e["market"], e["side"], e["line"], home, away),
+            "kickoff_local": taipei_time(e["kickoff_utc"]),
+            "until": _until(start, now),
+        }
+
+    last = found.get("last") or {}
+    return {
+        "candidates": [row(e) for e in found.get("candidates", [])],
+        "watch": [row(e) for e in found.get("watch", [])][:WATCH_ROWS],
+        "watch_total": len(found.get("watch", [])),
+        "last": [
+            {"sport": SPORT_LABELS[s], "tw": last[s].get("tw"), "intl": last[s].get("intl")}
+            for s in ("football", "mlb")
+            if s in last
+        ],
+        "plan": [
+            {
+                **p,
+                "sport_label": SPORT_LABELS.get(p["sport"], p["sport"]),
+                "at_local": taipei_time(p["at"].isoformat()),
+                "first_local": taipei_time(p["first"].isoformat())[6:],
+                "last_local": taipei_time(p["last"].isoformat())[6:],
+            }
+            for p in radar.get("plan", [])
+        ][:6],
+        "times": RADAR_TIMES,
+    }
+
+
+def _parse(value: Any) -> datetime | None:
+    try:
+        dt = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return dt if dt.tzinfo else None
 
 
 def side_label(sport: str, market: str, side: str, line: str, home: str, away: str) -> str:
@@ -219,7 +291,7 @@ def _names(item: Mapping[str, Any]) -> tuple[str, str]:
     )
 
 
-EVENT_TYPES = {"tw_only": "運彩大戶", "intl_big": "國際大單"}
+EVENT_TYPES = {"tw_only": "運彩大戶", "intl_big": "國際大單", "radar": "延遲雷達"}
 SIDE_SHORT = {"home": "主", "draw": "和", "away": "客", "over": "大", "under": "小"}
 BET_STATUS = {
     "pending": "待結算",

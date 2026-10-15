@@ -99,6 +99,20 @@
   details.more { margin-top: 10px; }
   details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
 
+  /* card lists (反者道之動, 延遲雷達) */
+  .items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; }
+  .items li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; font-size: .88rem; }
+  .items .head { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .8rem; }
+  .items.radar li { border-left: 3px solid var(--good); }
+  .items .need b { color: var(--accent); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+  .plan-head { font-weight: 600; font-size: .92rem; margin: 16px 0 6px; }
+  .plan-head .count { color: var(--muted); font-weight: 400; font-size: .8rem; }
+  ul.plan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .86rem; }
+  ul.plan li { border-left: 3px solid var(--line); padding-left: 10px; }
+  ul.plan li.now { border-color: var(--market); }
+  ul.plan li.done { color: var(--muted); }
+  ul.plan .chip { font-size: .72rem; }
+
   /* T-10 value block on MLB cards */
   .t10 { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
   .t10-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: .9rem; }
@@ -130,8 +144,6 @@
   .legend-row .l-intl { width: 2px; height: 13px; background: var(--muted); }
   .legend-row .l-tw { width: 3px; height: 13px; background: var(--bad); }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; }
-  .items li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; font-size: .88rem; }
   .items .bet { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
   .items .bet .chip { margin-left: 0; }
   td .sub { display: block; }
@@ -145,7 +157,7 @@
 <div class="wrap">
 <header>
   <h1>反者道之動</h1>
-  <span class="meta">更新：2026-10-15 23:37（台北時間）</span>
+  <span class="meta">更新：2026-10-16 00:16（台北時間）</span>
   <a class="meta" href="index.html">回到每日分析</a>
 </header>
 

@@ -3,6 +3,7 @@
     python -m sports_analyzer.pipeline football [--days 2] [--date YYYY-MM-DD]
     python -m sports_analyzer.pipeline mlb
     python -m sports_analyzer.pipeline review           # post-match review of finished games
+    python -m sports_analyzer.pipeline radar            # 延遲雷達: fresh prices near kickoff
     python -m sports_analyzer.pipeline render            # re-render from the latest snapshots
     python -m sports_analyzer.pipeline football --offline  # same as render, kept for habit
 
@@ -15,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
@@ -537,13 +539,8 @@ def _pregame_refresh(
     now: datetime,
     cfg: ModelConfig,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """Buy fresh international prices for the cards about to start (see analysis/pregame).
-
-    One request per sport key (MLB, or each football competition with a due match),
-    h2h + spreads (+ totals) for MLB and h2h (+ totals) for football, within the
-    budget's allowance plus the pre-game extra. Returns a small report and the
-    refreshed cards.
-    """
+    """Buy fresh international prices for the cards about to start (see analysis/pregame),
+    when the 運彩 upload is recent. Returns a small report and the refreshed cards."""
     due = pregame.due_cards(cards, now, cfg)
     report: dict[str, Any] = {"due": len(due), "refreshed": 0}
     if not due:
@@ -551,6 +548,23 @@ def _pregame_refresh(
     if not pregame.upload_is_recent(captured, now):
         report["skipped"] = "upload not recent"
         return report, []
+    return _buy_fresh(sport, due, settings, now, cfg, report)
+
+
+def _buy_fresh(
+    sport: str,
+    due: list[dict[str, Any]],
+    settings: Settings | None,
+    now: datetime,
+    cfg: ModelConfig,
+    report: dict[str, Any],
+    essential_only: bool = False,
+) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    """One request per sport key (MLB, or each football competition with a due match):
+    h2h + spreads (+ totals) for MLB and h2h (+ totals) for football, or only the
+    essential ones (h2h; MLB also the run line, the other half of G), within the
+    budget's allowance plus the pre-game extra. Prices close to kickoff are worth more
+    than the routine runs' ones; the reserve is never touched."""
     if not settings or not settings.odds_api_key:
         report["skipped"] = "no API key"
         return report, []
@@ -564,6 +578,8 @@ def _pregame_refresh(
             if comp:
                 groups.setdefault(comp.odds_key, []).append(card)
         wanted, essential, prefer = FOOTBALL_MARKETS, ("h2h",), 2.5
+    if essential_only:
+        wanted = essential
     today = now.date()
     state = budget_mod.load(ODDS_BUDGET_PATH, today)
     allowance = budget_mod.allowance_today(state, today, extra=budget_mod.PREGAME_EXTRA)
@@ -593,6 +609,70 @@ def _pregame_refresh(
     report.update({"refreshed": len(refreshed), "markets": list(markets)})
     log.info("pre-game %s: %s", sport, report)
     return report, refreshed
+
+
+# ---------------------------------------------------------------- 延遲雷達
+def run_radar(
+    cfg: ModelConfig = MODEL, settings: Settings | None = None, now: datetime | None = None
+) -> dict[str, Any]:
+    """延遲雷達's own purchase, on a schedule (radar.yml) rather than on an upload: fresh
+    international prices for the matches with a 運彩 price that start within
+    radar_window_hours (pregame.radar_due), essential markets only, within the budget
+    plus the pre-game extra. The render that follows sets them against the last
+    uploaded 運彩 prices (moves.radar). Pending 運彩 bets get their closing-line value
+    from them first, as after a pre-game refresh."""
+    now = now or datetime.now(UTC)
+    reports: dict[str, Any] = {}
+
+    football = _latest_snapshot("football")
+    if football:
+        _backfill_odds_at(football)
+        cards = [c for comp in football["competitions"] for c in comp["cards"]]
+        due = pregame.radar_due(cards, now, cfg)
+        rep: dict[str, Any] = {"due": len(due), "refreshed": 0}
+        refreshed: list[dict[str, Any]] = []
+        if due:
+            rep, refreshed = _buy_fresh("football", due, settings, now, cfg, rep, True)
+        if refreshed:
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "football", _implied_calibration(), now=now)
+            moves_mod.record(MOVES_DIR, moves_mod.intl_rows(refreshed, "football"))
+            _write_snapshot(date.fromisoformat(football["date"]), "football", football)
+        reports["football"] = rep
+
+    # As in run_tw: the next US date's snapshot, plus the unstarted games of the one before.
+    mlb_snaps = _latest_snapshots("mlb", 2)
+    if mlb_snaps:
+        cards = list(mlb_snaps[-1].get("games", []))
+        seen = {str(c.get("game_pk")) for c in cards}
+        for older in mlb_snaps[:-1]:
+            cards += [c for c in older.get("games", []) if str(c.get("game_pk")) not in seen]
+        for snap in mlb_snaps:
+            _backfill_odds_at(snap)
+        due = pregame.radar_due(cards, now, cfg)
+        rep, refreshed = {"due": len(due), "refreshed": 0}, []
+        if due:
+            rep, refreshed = _buy_fresh("mlb", due, settings, now, cfg, rep, True)
+        if refreshed:
+            for card in refreshed:
+                card["t10"] = g_value_block(card["market"], cfg)
+                card["notes"] = [n for n in card.get("notes", []) if "賠率" not in n]
+                # Judged against the last upload: "不判斷" when that is hours away.
+                card["t10v"] = t10_value_block(card, cfg)
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "mlb", now=now)
+            moves_mod.record(MOVES_DIR, moves_mod.intl_rows(refreshed, "mlb"))
+            for snap in mlb_snaps:
+                _write_snapshot(date.fromisoformat(snap["date"]), "mlb", snap)
+        reports["mlb"] = rep
+    log.info("radar: %s", reports)
+    return reports
+
+
+def _github_output(name: str, value: Any) -> None:
+    """A step output for the workflow (radar.yml commits only when something was bought)."""
+    path = os.environ.get("GITHUB_OUTPUT")
+    if path:
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(f"{name}={value}\n")
 
 
 def _backfill_odds_at(snapshot: dict[str, Any]) -> None:
@@ -774,7 +854,10 @@ def _kicked_off(card: dict[str, Any], now: datetime, hours: float) -> bool:
 
 
 # -------------------------------------------------------------------- render
-def render_latest() -> Path:
+def render_latest(notify_topic: str | None = None) -> Path:
+    """Every page from the latest snapshots, the tape and the CSVs. The 大戶 record is
+    brought up to date first; a new 延遲雷達 finding that can still be acted on goes to
+    the phone when `notify_topic` is set (once: the record keeps it from coming back)."""
     now = datetime.now(UTC)
     football = _latest_snapshot("football")
     mlb = _mlb_for_page(now)
@@ -806,9 +889,16 @@ def render_latest() -> Path:
     tape = moves_mod.read(MOVES_DIR, months=None)
     scores = {("football", str(r["match_id"])): r for r in football_reviews}
     scores.update({("mlb", str(r["game_pk"])): r for r in mlb_reviews})
+    new_events: list[dict[str, Any]] = []
     history = moves_mod.event_history(
-        _record_bighand(tape, now, football, mlb), tape, _final_scores(scores), value_rows, now
+        _record_bighand(tape, now, football, mlb, added=new_events),
+        tape,
+        _final_scores(scores),
+        value_rows,
+        now,
     )
+    if notify_topic and new_events:
+        notify.notify_radar(notify_topic, new_events, now)
     bighand_summary = moves_mod.history_summary(history)
     render_bighand_page(history, bighand_summary, now, DOCS_DIR / "bighand.html")
     _render_fade(football, mlb, football_reviews, mlb_reviews, signal_rows, now)
@@ -836,7 +926,38 @@ def render_latest() -> Path:
         bighand_matches=len(history),
         signal_rows=signal_rows,
         value_rows=value_rows,
+        radar=_radar(tape, now, football, mlb),
     )
+
+
+def _radar(
+    tape: list[dict[str, str]],
+    now: datetime,
+    football: dict[str, Any] | None,
+    mlb: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """延遲雷達 for the front page: what the tape says now (moves.radar), the names 運彩
+    uses, and when to upload so that the coming games get judged with fresh prices."""
+    found = moves_mod.radar(tape, now, MODEL)
+    starts = {
+        "football": [
+            pregame.kickoff(c)
+            for comp in (football or {}).get("competitions", [])
+            for c in comp.get("cards", [])
+        ],
+        "mlb": [pregame.kickoff(g) for g in (mlb or {}).get("games", [])],
+    }
+    last_upload = {
+        sport: moves_mod.parse_time(found["last"].get(sport, {}).get("tw")) for sport in starts
+    }
+    plan = pregame.upload_plan(
+        {sport: [s for s in ks if s is not None] for sport, ks in starts.items()},
+        last_upload,
+        now,
+        MODEL,
+    )
+    names = _match_names([s for s in (football, mlb) if s])
+    return {"found": found, "names": names, "plan": plan}
 
 
 def _render_fade(
@@ -871,22 +992,30 @@ def _render_fade(
 
 
 def _record_bighand(
-    tape: list[dict[str, str]], now: datetime, *snapshots: dict[str, Any] | None
+    tape: list[dict[str, str]],
+    now: datetime,
+    *snapshots: dict[str, Any] | None,
+    added: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, str]]:
-    """Every 大戶 move the tape shows (運彩-only moves, international 大單) goes into
-    data/moves/events.csv once, with the competition and 運彩's Chinese team names known
-    now, whether or not it ever became a bet; returns the whole record. Done at render
-    time because every task ends with a render, whatever it added to the tape."""
-    detected = moves_mod.tw_divergences(tape, MODEL) + moves_mod.intl_big_moves(tape, MODEL)
+    """Every 大戶 move the tape shows (運彩-only moves, international 大單, 延遲雷達
+    findings) goes into data/moves/events.csv once, with the competition and 運彩's
+    Chinese team names known now, whether or not it ever became a bet; returns the whole
+    record (`added` collects the new ones). Done at render time because every task ends
+    with a render, whatever it added to the tape."""
+    detected = (
+        moves_mod.tw_divergences(tape, MODEL)
+        + moves_mod.intl_big_moves(tape, MODEL)
+        + moves_mod.radar_events(tape, MODEL)
+    )
     path = MOVES_DIR / moves_mod.EVENTS_FILE
     names = _match_names(
         [s for s in snapshots if s]
         + _recent_snapshots("football", now.date(), 14)[::-1]
         + _recent_snapshots("mlb", now.date(), 14)[::-1]
     )
-    added = moves_mod.record_events(path, detected, names)
-    if added:
-        log.info("大戶紀錄: %d new moves recorded", added)
+    n = moves_mod.record_events(path, detected, names, added=added)
+    if n:
+        log.info("大戶紀錄: %d new moves recorded", n)
     return moves_mod.read_events(path)
 
 
@@ -985,7 +1114,7 @@ def _latest_snapshots(sport: str, n: int) -> list[dict[str, Any]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sports_analyzer.pipeline")
     parser.add_argument(
-        "task", choices=["football", "mlb", "tw", "review", "render", "test-notify"]
+        "task", choices=["football", "mlb", "tw", "review", "radar", "render", "test-notify"]
     )
     parser.add_argument(
         "--days", type=int, default=None, help="fixture window in days (default from env or 2)"
@@ -1017,8 +1146,24 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     today = date.fromisoformat(args.date) if args.date else datetime.now(UTC).date()
+    # Optional everywhere: a new 延遲雷達 finding seen by any render goes to the phone.
+    topic = Settings.from_env(offline=True).ntfy_topic
     if args.task == "render" or args.offline:
-        out = render_latest()
+        out = render_latest(topic)
+        log.info("rendered %s", out)
+        return 0
+    if args.task == "radar":
+        # Scheduled (radar.yml): fresh prices for matches about to start, then the last
+        # upload is re-judged and the page shows what the new prices say about it.
+        settings = Settings.from_env(offline=True)
+        reports = run_radar(settings=settings)
+        bought = sum(r.get("refreshed", 0) for r in reports.values())
+        _github_output("refreshed", bought)
+        if not bought:
+            log.info("radar: nothing bought, nothing to compare")
+            return 0
+        run_tw(settings=settings)
+        out = render_latest(topic)
         log.info("rendered %s", out)
         return 0
     if args.task == "test-notify":
@@ -1035,7 +1180,7 @@ def main(argv: list[str] | None = None) -> int:
         # The phone already uploaded the feed. The Odds API key is optional: with it,
         # games about to start get fresh international prices first (budget allowing).
         run_tw(settings=Settings.from_env(offline=True))
-        out = render_latest()
+        out = render_latest(topic)
         log.info("rendered %s", out)
         return 0
 
@@ -1045,7 +1190,7 @@ def main(argv: list[str] | None = None) -> int:
         if not settings.football_data_token:
             raise SystemExit("Missing required environment variable: FOOTBALL_DATA_TOKEN")
         run_review(settings, new_only=args.new_only)
-        out = render_latest()
+        out = render_latest(topic)
         log.info("rendered %s", out)
         return 0
 
@@ -1059,7 +1204,7 @@ def main(argv: list[str] | None = None) -> int:
         run_football(settings, today, markets=markets)
     elif args.task == "mlb":
         run_mlb(datetime.now(LOCAL_TZ).date() if not args.date else today, settings)
-    out = render_latest()
+    out = render_latest(topic)
     log.info("rendered %s", out)
     return 0
 
