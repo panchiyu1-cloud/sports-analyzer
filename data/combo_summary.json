@@ -1,0 +1,8239 @@
+{
+ "generated": "2026-10-15",
+ "split": {
+  "mlb": [
+   "2021–2023",
+   "2024–2025"
+  ],
+  "football": [
+   "2019/20–2022/23",
+   "2023/24–2026/27"
+  ]
+ },
+ "min_train": 200,
+ "sports": {
+  "mlb": {
+   "games": 10522,
+   "conditions": 38,
+   "filters": 2478,
+   "sizes": {
+    "1": 210,
+    "2": 1182,
+    "3": 1086
+   },
+   "train_z2": 48,
+   "null_z2": 56.4,
+   "train_z3": 2,
+   "null_z3": 3.3,
+   "bonferroni_z": 4.11,
+   "train_tw_profit": 17,
+   "train_tw_profit_test_profit": 0,
+   "train_tw_profit_test_roi": -18.9,
+   "rules": {
+    "A": [
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押主場熱門（勝率≥55%）"
+        ],
+        "keys": [
+         [
+          "home_fav55",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押主場熱門（勝率≥55%）　＆　條件：押三連勝的球隊　＆　條件：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 292,
+       "hit": 58.9,
+       "fair": 50.1,
+       "gap_pp": 8.8,
+       "z": 3.01,
+       "roi_fair": 17.6,
+       "se_fair": 5.8,
+       "roi_intl": 11.7,
+       "se_intl": 5.5,
+       "need_intl": 2.7,
+       "roi_best": 13.4,
+       "se_best": 5.6,
+       "need_best": 1.8,
+       "roi_tw": 1.4,
+       "se_tw": 5.0,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 142,
+       "hit": 45.8,
+       "fair": 50.0,
+       "gap_pp": -4.2,
+       "z": -1.0,
+       "roi_fair": -7.9,
+       "se_fair": 8.5,
+       "roi_intl": -12.7,
+       "se_intl": 8.0,
+       "need_intl": 2.7,
+       "roi_best": -10.7,
+       "se_best": 8.2,
+       "need_best": 1.6,
+       "roi_tw": -20.6,
+       "se_tw": 7.3,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 85,
+        "hit": 51.8,
+        "fair": 50.0,
+        "gap_pp": 1.8
+       },
+       {
+        "season": "2022",
+        "n": 118,
+        "hit": 55.1,
+        "fair": 50.1,
+        "gap_pp": 5.01
+       },
+       {
+        "season": "2023",
+        "n": 89,
+        "hit": 70.8,
+        "fair": 50.3,
+        "gap_pp": 20.49
+       },
+       {
+        "season": "2024",
+        "n": 81,
+        "hit": 44.4,
+        "fair": 49.8,
+        "gap_pp": -5.33
+       },
+       {
+        "season": "2025",
+        "n": 61,
+        "hit": 47.5,
+        "fair": 50.2,
+        "gap_pp": -2.69
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押三連勝的球隊　＆　條件：T-10：G≥+6 押強隊不讓分（你的原始規則）　＆　條件：每場都押主隊不讓分",
+      "train": {
+       "n": 292,
+       "hit": 58.9,
+       "fair": 50.1,
+       "gap_pp": 8.8,
+       "z": 3.01,
+       "roi_fair": 17.6,
+       "se_fair": 5.8,
+       "roi_intl": 11.7,
+       "se_intl": 5.5,
+       "need_intl": 2.7,
+       "roi_best": 13.4,
+       "se_best": 5.6,
+       "need_best": 1.8,
+       "roi_tw": 1.4,
+       "se_tw": 5.0,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 142,
+       "hit": 45.8,
+       "fair": 50.0,
+       "gap_pp": -4.2,
+       "z": -1.0,
+       "roi_fair": -7.9,
+       "se_fair": 8.5,
+       "roi_intl": -12.7,
+       "se_intl": 8.0,
+       "need_intl": 2.7,
+       "roi_best": -10.7,
+       "se_best": 8.2,
+       "need_best": 1.6,
+       "roi_tw": -20.6,
+       "se_tw": 7.3,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 85,
+        "hit": 51.8,
+        "fair": 50.0,
+        "gap_pp": 1.8
+       },
+       {
+        "season": "2022",
+        "n": 118,
+        "hit": 55.1,
+        "fair": 50.1,
+        "gap_pp": 5.01
+       },
+       {
+        "season": "2023",
+        "n": 89,
+        "hit": 70.8,
+        "fair": 50.3,
+        "gap_pp": 20.49
+       },
+       {
+        "season": "2024",
+        "n": 81,
+        "hit": 44.4,
+        "fair": 49.8,
+        "gap_pp": -5.33
+       },
+       {
+        "season": "2025",
+        "n": 61,
+        "hit": 47.5,
+        "fair": 50.2,
+        "gap_pp": -2.69
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：系列賽：押昨天贏的那隊再贏　＆　條件：押三連勝的球隊　＆　條件：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 342,
+       "hit": 57.9,
+       "fair": 50.1,
+       "gap_pp": 7.77,
+       "z": 2.88,
+       "roi_fair": 15.4,
+       "se_fair": 5.3,
+       "roi_intl": 9.6,
+       "se_intl": 5.1,
+       "need_intl": 2.7,
+       "roi_best": 11.4,
+       "se_best": 5.2,
+       "need_best": 1.8,
+       "roi_tw": -0.5,
+       "se_tw": 4.6,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 154,
+       "hit": 46.8,
+       "fair": 50.0,
+       "gap_pp": -3.27,
+       "z": -0.81,
+       "roi_fair": -5.9,
+       "se_fair": 8.1,
+       "roi_intl": -10.6,
+       "se_intl": 7.7,
+       "need_intl": 2.6,
+       "roi_best": -8.9,
+       "se_best": 7.9,
+       "need_best": 1.7,
+       "roi_tw": -18.8,
+       "se_tw": 7.0,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 102,
+        "hit": 49.0,
+        "fair": 50.0,
+        "gap_pp": -0.94
+       },
+       {
+        "season": "2022",
+        "n": 144,
+        "hit": 56.2,
+        "fair": 50.2,
+        "gap_pp": 6.08
+       },
+       {
+        "season": "2023",
+        "n": 96,
+        "hit": 69.8,
+        "fair": 50.2,
+        "gap_pp": 19.56
+       },
+       {
+        "season": "2024",
+        "n": 86,
+        "hit": 44.2,
+        "fair": 49.9,
+        "gap_pp": -5.67
+       },
+       {
+        "season": "2025",
+        "n": 68,
+        "hit": 50.0,
+        "fair": 50.2,
+        "gap_pp": -0.23
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押三連勝的球隊　＆　條件：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 451,
+       "hit": 56.8,
+       "fair": 50.1,
+       "gap_pp": 6.62,
+       "z": 2.81,
+       "roi_fair": 13.2,
+       "se_fair": 4.7,
+       "roi_intl": 7.5,
+       "se_intl": 4.4,
+       "need_intl": 2.7,
+       "roi_best": 9.2,
+       "se_best": 4.5,
+       "need_best": 1.8,
+       "roi_tw": -2.4,
+       "se_tw": 4.0,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 204,
+       "hit": 50.5,
+       "fair": 50.0,
+       "gap_pp": 0.51,
+       "z": 0.14,
+       "roi_fair": 1.5,
+       "se_fair": 7.1,
+       "roi_intl": -3.7,
+       "se_intl": 6.7,
+       "need_intl": 2.6,
+       "roi_best": -1.9,
+       "se_best": 6.8,
+       "need_best": 1.7,
+       "roi_tw": -12.5,
+       "se_tw": 6.1,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 139,
+        "hit": 48.9,
+        "fair": 50.0,
+        "gap_pp": -1.04
+       },
+       {
+        "season": "2022",
+        "n": 188,
+        "hit": 54.3,
+        "fair": 50.2,
+        "gap_pp": 4.02
+       },
+       {
+        "season": "2023",
+        "n": 124,
+        "hit": 69.4,
+        "fair": 50.2,
+        "gap_pp": 19.14
+       },
+       {
+        "season": "2024",
+        "n": 115,
+        "hit": 48.7,
+        "fair": 49.8,
+        "gap_pp": -1.1
+       },
+       {
+        "season": "2025",
+        "n": 89,
+        "hit": 52.8,
+        "fair": 50.2,
+        "gap_pp": 2.58
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "熱門被國際盤買進 4pp↑ 還去追（大單）"
+        ],
+        "keys": [
+         [
+          "mlb_steam_fav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+3 押強隊不讓分"
+        ],
+        "keys": [
+         [
+          "t10_g3",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：熱門被國際盤買進 4pp↑ 還去追（大單）　＆　反：T-10：G≥+3 押強隊不讓分",
+      "train": {
+       "n": 392,
+       "hit": 40.6,
+       "fair": 34.1,
+       "gap_pp": 6.44,
+       "z": 2.7,
+       "roi_fair": 18.8,
+       "se_fair": 7.4,
+       "roi_intl": 10.2,
+       "se_intl": 6.8,
+       "need_intl": 2.6,
+       "roi_best": 12.2,
+       "se_best": 7.0,
+       "need_best": 1.9,
+       "roi_tw": 2.4,
+       "se_tw": 6.4,
+       "need_tw": 5.5
+      },
+      "test": {
+       "n": 205,
+       "hit": 34.1,
+       "fair": 33.2,
+       "gap_pp": 0.95,
+       "z": 0.29,
+       "roi_fair": 1.8,
+       "se_fair": 10.0,
+       "roi_intl": -6.8,
+       "se_intl": 9.2,
+       "need_intl": 3.0,
+       "roi_best": -5.0,
+       "se_best": 9.3,
+       "need_best": 2.4,
+       "roi_tw": -12.2,
+       "se_tw": 8.7,
+       "need_tw": 5.3
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 77,
+        "hit": 35.1,
+        "fair": 33.5,
+        "gap_pp": 1.58
+       },
+       {
+        "season": "2022",
+        "n": 160,
+        "hit": 39.4,
+        "fair": 33.9,
+        "gap_pp": 5.47
+       },
+       {
+        "season": "2023",
+        "n": 155,
+        "hit": 44.5,
+        "fair": 34.7,
+        "gap_pp": 9.85
+       },
+       {
+        "season": "2024",
+        "n": 130,
+        "hit": 34.6,
+        "fair": 33.4,
+        "gap_pp": 1.26
+       },
+       {
+        "season": "2025",
+        "n": 75,
+        "hit": 33.3,
+        "fair": 32.9,
+        "gap_pp": 0.43
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜反：押客場大熱門（勝率≥60%）",
+      "train": {
+       "n": 770,
+       "hit": 52.7,
+       "fair": 48.0,
+       "gap_pp": 4.75,
+       "z": 2.65,
+       "roi_fair": 9.9,
+       "se_fair": 3.8,
+       "roi_intl": 4.4,
+       "se_intl": 3.6,
+       "need_intl": 2.6,
+       "roi_best": 7.5,
+       "se_best": 3.7,
+       "need_best": 1.1,
+       "roi_tw": -5.2,
+       "se_tw": 3.3,
+       "need_tw": 7.7
+      },
+      "test": {
+       "n": 317,
+       "hit": 45.7,
+       "fair": 47.4,
+       "gap_pp": -1.68,
+       "z": -0.6,
+       "roi_fair": -3.7,
+       "se_fair": 6.0,
+       "roi_intl": -8.7,
+       "se_intl": 5.7,
+       "need_intl": 2.6,
+       "roi_best": -6.0,
+       "se_best": 5.8,
+       "need_best": 1.0,
+       "roi_tw": -17.0,
+       "se_tw": 5.1,
+       "need_tw": 7.6
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 226,
+        "hit": 53.1,
+        "fair": 48.2,
+        "gap_pp": 4.9
+       },
+       {
+        "season": "2022",
+        "n": 306,
+        "hit": 52.0,
+        "fair": 48.3,
+        "gap_pp": 3.69
+       },
+       {
+        "season": "2023",
+        "n": 238,
+        "hit": 53.4,
+        "fair": 47.4,
+        "gap_pp": 5.98
+       },
+       {
+        "season": "2024",
+        "n": 188,
+        "hit": 41.5,
+        "fair": 47.9,
+        "gap_pp": -6.37
+       },
+       {
+        "season": "2025",
+        "n": 129,
+        "hit": 51.9,
+        "fair": 46.8,
+        "gap_pp": 5.15
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+3 押強隊不讓分"
+        ],
+        "keys": [
+         [
+          "t10_g3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押三連勝的球隊　＆　條件：T-10：G≥+3 押強隊不讓分　＆　條件：每場都押主隊不讓分",
+      "train": {
+       "n": 343,
+       "hit": 57.1,
+       "fair": 50.0,
+       "gap_pp": 7.11,
+       "z": 2.64,
+       "roi_fair": 14.2,
+       "se_fair": 5.4,
+       "roi_intl": 8.4,
+       "se_intl": 5.1,
+       "need_intl": 2.7,
+       "roi_best": 10.2,
+       "se_best": 5.2,
+       "need_best": 1.8,
+       "roi_tw": -1.5,
+       "se_tw": 4.6,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 161,
+       "hit": 46.6,
+       "fair": 49.9,
+       "gap_pp": -3.3,
+       "z": -0.84,
+       "roi_fair": -6.1,
+       "se_fair": 8.0,
+       "roi_intl": -11.1,
+       "se_intl": 7.5,
+       "need_intl": 2.7,
+       "roi_best": -9.2,
+       "se_best": 7.7,
+       "need_best": 1.7,
+       "roi_tw": -19.1,
+       "se_tw": 6.9,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 101,
+        "hit": 49.5,
+        "fair": 49.9,
+        "gap_pp": -0.41
+       },
+       {
+        "season": "2022",
+        "n": 130,
+        "hit": 53.8,
+        "fair": 50.0,
+        "gap_pp": 3.81
+       },
+       {
+        "season": "2023",
+        "n": 112,
+        "hit": 67.9,
+        "fair": 50.1,
+        "gap_pp": 17.72
+       },
+       {
+        "season": "2024",
+        "n": 91,
+        "hit": 45.1,
+        "fair": 49.8,
+        "gap_pp": -4.74
+       },
+       {
+        "season": "2025",
+        "n": 70,
+        "hit": 48.6,
+        "fair": 50.0,
+        "gap_pp": -1.42
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押主場熱門（勝率≥55%）"
+        ],
+        "keys": [
+         [
+          "home_fav55",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+3 押強隊不讓分"
+        ],
+        "keys": [
+         [
+          "t10_g3",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押主場熱門（勝率≥55%）　＆　條件：押三連勝的球隊　＆　條件：T-10：G≥+3 押強隊不讓分",
+      "train": {
+       "n": 343,
+       "hit": 57.1,
+       "fair": 50.0,
+       "gap_pp": 7.11,
+       "z": 2.64,
+       "roi_fair": 14.2,
+       "se_fair": 5.4,
+       "roi_intl": 8.4,
+       "se_intl": 5.1,
+       "need_intl": 2.7,
+       "roi_best": 10.2,
+       "se_best": 5.2,
+       "need_best": 1.8,
+       "roi_tw": -1.5,
+       "se_tw": 4.6,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 161,
+       "hit": 46.6,
+       "fair": 49.9,
+       "gap_pp": -3.3,
+       "z": -0.84,
+       "roi_fair": -6.1,
+       "se_fair": 8.0,
+       "roi_intl": -11.1,
+       "se_intl": 7.5,
+       "need_intl": 2.7,
+       "roi_best": -9.2,
+       "se_best": 7.7,
+       "need_best": 1.7,
+       "roi_tw": -19.1,
+       "se_tw": 6.9,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 101,
+        "hit": 49.5,
+        "fair": 49.9,
+        "gap_pp": -0.41
+       },
+       {
+        "season": "2022",
+        "n": 130,
+        "hit": 53.8,
+        "fair": 50.0,
+        "gap_pp": 3.81
+       },
+       {
+        "season": "2023",
+        "n": 112,
+        "hit": 67.9,
+        "fair": 50.1,
+        "gap_pp": 17.72
+       },
+       {
+        "season": "2024",
+        "n": 91,
+        "hit": 45.1,
+        "fair": 49.8,
+        "gap_pp": -4.74
+       },
+       {
+        "season": "2025",
+        "n": 70,
+        "hit": 48.6,
+        "fair": 50.0,
+        "gap_pp": -1.42
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜反：押客場大熱門（勝率≥60%）　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 760,
+       "hit": 52.6,
+       "fair": 47.9,
+       "gap_pp": 4.75,
+       "z": 2.63,
+       "roi_fair": 9.9,
+       "se_fair": 3.8,
+       "roi_intl": 4.4,
+       "se_intl": 3.6,
+       "need_intl": 2.6,
+       "roi_best": 7.5,
+       "se_best": 3.7,
+       "need_best": 1.1,
+       "roi_tw": -5.2,
+       "se_tw": 3.3,
+       "need_tw": 7.7
+      },
+      "test": {
+       "n": 316,
+       "hit": 45.6,
+       "fair": 47.4,
+       "gap_pp": -1.83,
+       "z": -0.66,
+       "roi_fair": -4.0,
+       "se_fair": 6.0,
+       "roi_intl": -9.0,
+       "se_intl": 5.7,
+       "need_intl": 2.6,
+       "roi_best": -6.2,
+       "se_best": 5.8,
+       "need_best": 1.0,
+       "roi_tw": -17.3,
+       "se_tw": 5.2,
+       "need_tw": 7.6
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 224,
+        "hit": 53.1,
+        "fair": 48.1,
+        "gap_pp": 4.98
+       },
+       {
+        "season": "2022",
+        "n": 301,
+        "hit": 52.2,
+        "fair": 48.2,
+        "gap_pp": 4.0
+       },
+       {
+        "season": "2023",
+        "n": 235,
+        "hit": 52.8,
+        "fair": 47.3,
+        "gap_pp": 5.48
+       },
+       {
+        "season": "2024",
+        "n": 188,
+        "hit": 41.5,
+        "fair": 47.9,
+        "gap_pp": -6.37
+       },
+       {
+        "season": "2025",
+        "n": 128,
+        "hit": 51.6,
+        "fair": 46.7,
+        "gap_pp": 4.83
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押主場冷門",
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home_dog",
+          "dog_ml"
+         ],
+         [
+          "mlb_home",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≤−6 押弱隊 +1.5（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_gm6",
+          "dog_rl"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押主場冷門＝每場都押主隊不讓分　＆　條件：系列賽：押昨天贏的那隊再贏　＆　條件：T-10：G≤−6 押弱隊 +1.5（你的原始規則）",
+      "train": {
+       "n": 209,
+       "hit": 58.9,
+       "fair": 49.9,
+       "gap_pp": 8.91,
+       "z": 2.58,
+       "roi_fair": 18.0,
+       "se_fair": 6.9,
+       "roi_intl": 11.9,
+       "se_intl": 6.5,
+       "need_intl": 2.7,
+       "roi_best": 13.6,
+       "se_best": 6.6,
+       "need_best": 2.0,
+       "roi_tw": 1.7,
+       "se_tw": 5.9,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 183,
+       "hit": 49.7,
+       "fair": 50.0,
+       "gap_pp": -0.27,
+       "z": -0.07,
+       "roi_fair": -0.5,
+       "se_fair": 7.4,
+       "roi_intl": -5.6,
+       "se_intl": 7.1,
+       "need_intl": 2.7,
+       "roi_best": -4.6,
+       "se_best": 7.1,
+       "need_best": 2.2,
+       "roi_tw": -14.2,
+       "se_tw": 6.4,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 55,
+        "hit": 63.6,
+        "fair": 50.0,
+        "gap_pp": 13.64
+       },
+       {
+        "season": "2022",
+        "n": 73,
+        "hit": 60.3,
+        "fair": 50.1,
+        "gap_pp": 10.18
+       },
+       {
+        "season": "2023",
+        "n": 81,
+        "hit": 54.3,
+        "fair": 49.8,
+        "gap_pp": 4.56
+       },
+       {
+        "season": "2024",
+        "n": 98,
+        "hit": 45.9,
+        "fair": 50.1,
+        "gap_pp": -4.18
+       },
+       {
+        "season": "2025",
+        "n": 85,
+        "hit": 54.1,
+        "fair": 49.9,
+        "gap_pp": 4.24
+       }
+      ]
+     }
+    ],
+    "B": [
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　跟：系列賽：押昨天贏的那隊再贏",
+      "train": {
+       "n": 204,
+       "hit": 45.1,
+       "fair": 36.6,
+       "gap_pp": 8.52,
+       "z": 2.53,
+       "roi_fair": 23.7,
+       "se_fair": 9.6,
+       "roi_intl": 16.3,
+       "se_intl": 9.0,
+       "need_intl": 2.4,
+       "roi_best": 20.0,
+       "se_best": 9.3,
+       "need_best": 1.1,
+       "roi_tw": 6.6,
+       "se_tw": 8.3,
+       "need_tw": 5.9
+      },
+      "test": {
+       "n": 87,
+       "hit": 31.0,
+       "fair": 36.5,
+       "gap_pp": -5.46,
+       "z": -1.06,
+       "roi_fair": -16.1,
+       "se_fair": 13.5,
+       "roi_intl": -22.3,
+       "se_intl": 12.5,
+       "need_intl": 2.8,
+       "roi_best": -18.1,
+       "se_best": 13.2,
+       "need_best": 1.1,
+       "roi_tw": -27.6,
+       "se_tw": 11.7,
+       "need_tw": 5.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 64,
+        "hit": 51.6,
+        "fair": 37.0,
+        "gap_pp": 14.57
+       },
+       {
+        "season": "2022",
+        "n": 79,
+        "hit": 41.8,
+        "fair": 36.4,
+        "gap_pp": 5.42
+       },
+       {
+        "season": "2023",
+        "n": 61,
+        "hit": 42.6,
+        "fair": 36.4,
+        "gap_pp": 6.19
+       },
+       {
+        "season": "2024",
+        "n": 46,
+        "hit": 26.1,
+        "fair": 36.5,
+        "gap_pp": -10.38
+       },
+       {
+        "season": "2025",
+        "n": 41,
+        "hit": 36.6,
+        "fair": 36.5,
+        "gap_pp": 0.05
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　跟：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 200,
+       "hit": 45.0,
+       "fair": 36.5,
+       "gap_pp": 8.48,
+       "z": 2.5,
+       "roi_fair": 23.6,
+       "se_fair": 9.7,
+       "roi_intl": 16.2,
+       "se_intl": 9.1,
+       "need_intl": 2.4,
+       "roi_best": 19.9,
+       "se_best": 9.4,
+       "need_best": 1.1,
+       "roi_tw": 6.6,
+       "se_tw": 8.4,
+       "need_tw": 5.8
+      },
+      "test": {
+       "n": 87,
+       "hit": 31.0,
+       "fair": 36.5,
+       "gap_pp": -5.46,
+       "z": -1.06,
+       "roi_fair": -16.1,
+       "se_fair": 13.5,
+       "roi_intl": -22.3,
+       "se_intl": 12.5,
+       "need_intl": 2.8,
+       "roi_best": -18.1,
+       "se_best": 13.2,
+       "need_best": 1.1,
+       "roi_tw": -27.6,
+       "se_tw": 11.7,
+       "need_tw": 5.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 64,
+        "hit": 51.6,
+        "fair": 37.0,
+        "gap_pp": 14.57
+       },
+       {
+        "season": "2022",
+        "n": 77,
+        "hit": 41.6,
+        "fair": 36.3,
+        "gap_pp": 5.28
+       },
+       {
+        "season": "2023",
+        "n": 59,
+        "hit": 42.4,
+        "fair": 36.3,
+        "gap_pp": 6.06
+       },
+       {
+        "season": "2024",
+        "n": 46,
+        "hit": 26.1,
+        "fair": 36.5,
+        "gap_pp": -10.38
+       },
+       {
+        "season": "2025",
+        "n": 41,
+        "hit": 36.6,
+        "fair": 36.5,
+        "gap_pp": 0.05
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "熱門被國際盤買進 4pp↑ 還去追（大單）"
+        ],
+        "keys": [
+         [
+          "mlb_steam_fav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+3 押強隊不讓分"
+        ],
+        "keys": [
+         [
+          "t10_g3",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：熱門被國際盤買進 4pp↑ 還去追（大單）　＆　反：T-10：G≥+3 押強隊不讓分",
+      "train": {
+       "n": 392,
+       "hit": 40.6,
+       "fair": 34.1,
+       "gap_pp": 6.44,
+       "z": 2.7,
+       "roi_fair": 18.8,
+       "se_fair": 7.4,
+       "roi_intl": 10.2,
+       "se_intl": 6.8,
+       "need_intl": 2.6,
+       "roi_best": 12.2,
+       "se_best": 7.0,
+       "need_best": 1.9,
+       "roi_tw": 2.4,
+       "se_tw": 6.4,
+       "need_tw": 5.5
+      },
+      "test": {
+       "n": 205,
+       "hit": 34.1,
+       "fair": 33.2,
+       "gap_pp": 0.95,
+       "z": 0.29,
+       "roi_fair": 1.8,
+       "se_fair": 10.0,
+       "roi_intl": -6.8,
+       "se_intl": 9.2,
+       "need_intl": 3.0,
+       "roi_best": -5.0,
+       "se_best": 9.3,
+       "need_best": 2.4,
+       "roi_tw": -12.2,
+       "se_tw": 8.7,
+       "need_tw": 5.3
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 77,
+        "hit": 35.1,
+        "fair": 33.5,
+        "gap_pp": 1.58
+       },
+       {
+        "season": "2022",
+        "n": 160,
+        "hit": 39.4,
+        "fair": 33.9,
+        "gap_pp": 5.47
+       },
+       {
+        "season": "2023",
+        "n": 155,
+        "hit": 44.5,
+        "fair": 34.7,
+        "gap_pp": 9.85
+       },
+       {
+        "season": "2024",
+        "n": 130,
+        "hit": 34.6,
+        "fair": 33.4,
+        "gap_pp": 1.26
+       },
+       {
+        "season": "2025",
+        "n": 75,
+        "hit": 33.3,
+        "fair": 32.9,
+        "gap_pp": 0.43
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押大熱門（勝率≥65%）不讓分",
+         "大熱門（≥65%）押 −1.5"
+        ],
+        "keys": [
+         [
+          "mlb_bigfav",
+          "fav_ml"
+         ],
+         [
+          "mlb_bigfav_rl",
+          "fav_rl"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　反：押大熱門（勝率≥65%）不讓分＝大熱門（≥65%）押 −1.5",
+      "train": {
+       "n": 279,
+       "hit": 38.0,
+       "fair": 32.1,
+       "gap_pp": 5.94,
+       "z": 2.13,
+       "roi_fair": 19.3,
+       "se_fair": 9.2,
+       "roi_intl": 10.8,
+       "se_intl": 8.6,
+       "need_intl": 2.5,
+       "roi_best": 13.0,
+       "se_best": 8.7,
+       "need_best": 1.6,
+       "roi_tw": 2.9,
+       "se_tw": 8.0,
+       "need_tw": 5.1
+      },
+      "test": {
+       "n": 110,
+       "hit": 29.1,
+       "fair": 31.6,
+       "gap_pp": -2.52,
+       "z": -0.57,
+       "roi_fair": -7.6,
+       "se_fair": 13.9,
+       "roi_intl": -15.1,
+       "se_intl": 12.8,
+       "need_intl": 2.8,
+       "roi_best": -12.8,
+       "se_best": 13.1,
+       "need_best": 1.8,
+       "roi_tw": -20.3,
+       "se_tw": 12.0,
+       "need_tw": 5.1
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 72,
+        "hit": 37.5,
+        "fair": 32.4,
+        "gap_pp": 5.12
+       },
+       {
+        "season": "2022",
+        "n": 112,
+        "hit": 33.0,
+        "fair": 32.0,
+        "gap_pp": 1.05
+       },
+       {
+        "season": "2023",
+        "n": 95,
+        "hit": 44.2,
+        "fair": 31.9,
+        "gap_pp": 12.33
+       },
+       {
+        "season": "2024",
+        "n": 65,
+        "hit": 30.8,
+        "fair": 32.2,
+        "gap_pp": -1.41
+       },
+       {
+        "season": "2025",
+        "n": 45,
+        "hit": 26.7,
+        "fair": 30.8,
+        "gap_pp": -4.11
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押大熱門（勝率≥65%）不讓分",
+         "大熱門（≥65%）押 −1.5"
+        ],
+        "keys": [
+         [
+          "mlb_bigfav",
+          "fav_ml"
+         ],
+         [
+          "mlb_bigfav_rl",
+          "fav_rl"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押主場冷門",
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home_dog",
+          "dog_ml"
+         ],
+         [
+          "mlb_home",
+          "dog_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押大熱門（勝率≥65%）不讓分＝大熱門（≥65%）押 −1.5　＆　跟：押主場冷門＝每場都押主隊不讓分",
+      "train": {
+       "n": 279,
+       "hit": 38.0,
+       "fair": 32.1,
+       "gap_pp": 5.94,
+       "z": 2.13,
+       "roi_fair": 19.3,
+       "se_fair": 9.2,
+       "roi_intl": 10.8,
+       "se_intl": 8.6,
+       "need_intl": 2.5,
+       "roi_best": 13.0,
+       "se_best": 8.7,
+       "need_best": 1.6,
+       "roi_tw": 2.9,
+       "se_tw": 8.0,
+       "need_tw": 5.1
+      },
+      "test": {
+       "n": 110,
+       "hit": 29.1,
+       "fair": 31.6,
+       "gap_pp": -2.52,
+       "z": -0.57,
+       "roi_fair": -7.6,
+       "se_fair": 13.9,
+       "roi_intl": -15.1,
+       "se_intl": 12.8,
+       "need_intl": 2.8,
+       "roi_best": -12.8,
+       "se_best": 13.1,
+       "need_best": 1.8,
+       "roi_tw": -20.3,
+       "se_tw": 12.0,
+       "need_tw": 5.1
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 72,
+        "hit": 37.5,
+        "fair": 32.4,
+        "gap_pp": 5.12
+       },
+       {
+        "season": "2022",
+        "n": 112,
+        "hit": 33.0,
+        "fair": 32.0,
+        "gap_pp": 1.05
+       },
+       {
+        "season": "2023",
+        "n": 95,
+        "hit": 44.2,
+        "fair": 31.9,
+        "gap_pp": 12.33
+       },
+       {
+        "season": "2024",
+        "n": 65,
+        "hit": 30.8,
+        "fair": 32.2,
+        "gap_pp": -1.41
+       },
+       {
+        "season": "2025",
+        "n": 45,
+        "hit": 26.7,
+        "fair": 30.8,
+        "gap_pp": -4.11
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押主場冷門",
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home_dog",
+          "dog_ml"
+         ],
+         [
+          "mlb_home",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≤−6 押弱隊 +1.5（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_gm6",
+          "dog_rl"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押主場冷門＝每場都押主隊不讓分　＆　條件：系列賽：押昨天贏的那隊再贏　＆　條件：T-10：G≤−6 押弱隊 +1.5（你的原始規則）",
+      "train": {
+       "n": 209,
+       "hit": 58.9,
+       "fair": 49.9,
+       "gap_pp": 8.91,
+       "z": 2.58,
+       "roi_fair": 18.0,
+       "se_fair": 6.9,
+       "roi_intl": 11.9,
+       "se_intl": 6.5,
+       "need_intl": 2.7,
+       "roi_best": 13.6,
+       "se_best": 6.6,
+       "need_best": 2.0,
+       "roi_tw": 1.7,
+       "se_tw": 5.9,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 183,
+       "hit": 49.7,
+       "fair": 50.0,
+       "gap_pp": -0.27,
+       "z": -0.07,
+       "roi_fair": -0.5,
+       "se_fair": 7.4,
+       "roi_intl": -5.6,
+       "se_intl": 7.1,
+       "need_intl": 2.7,
+       "roi_best": -4.6,
+       "se_best": 7.1,
+       "need_best": 2.2,
+       "roi_tw": -14.2,
+       "se_tw": 6.4,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 55,
+        "hit": 63.6,
+        "fair": 50.0,
+        "gap_pp": 13.64
+       },
+       {
+        "season": "2022",
+        "n": 73,
+        "hit": 60.3,
+        "fair": 50.1,
+        "gap_pp": 10.18
+       },
+       {
+        "season": "2023",
+        "n": 81,
+        "hit": 54.3,
+        "fair": 49.8,
+        "gap_pp": 4.56
+       },
+       {
+        "season": "2024",
+        "n": 98,
+        "hit": 45.9,
+        "fair": 50.1,
+        "gap_pp": -4.18
+       },
+       {
+        "season": "2025",
+        "n": 85,
+        "hit": 54.1,
+        "fair": 49.9,
+        "gap_pp": 4.24
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押三連勝的球隊　＆　條件：T-10：G≥+6 押強隊不讓分（你的原始規則）　＆　條件：每場都押主隊不讓分",
+      "train": {
+       "n": 292,
+       "hit": 58.9,
+       "fair": 50.1,
+       "gap_pp": 8.8,
+       "z": 3.01,
+       "roi_fair": 17.6,
+       "se_fair": 5.8,
+       "roi_intl": 11.7,
+       "se_intl": 5.5,
+       "need_intl": 2.7,
+       "roi_best": 13.4,
+       "se_best": 5.6,
+       "need_best": 1.8,
+       "roi_tw": 1.4,
+       "se_tw": 5.0,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 142,
+       "hit": 45.8,
+       "fair": 50.0,
+       "gap_pp": -4.2,
+       "z": -1.0,
+       "roi_fair": -7.9,
+       "se_fair": 8.5,
+       "roi_intl": -12.7,
+       "se_intl": 8.0,
+       "need_intl": 2.7,
+       "roi_best": -10.7,
+       "se_best": 8.2,
+       "need_best": 1.6,
+       "roi_tw": -20.6,
+       "se_tw": 7.3,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 85,
+        "hit": 51.8,
+        "fair": 50.0,
+        "gap_pp": 1.8
+       },
+       {
+        "season": "2022",
+        "n": 118,
+        "hit": 55.1,
+        "fair": 50.1,
+        "gap_pp": 5.01
+       },
+       {
+        "season": "2023",
+        "n": 89,
+        "hit": 70.8,
+        "fair": 50.3,
+        "gap_pp": 20.49
+       },
+       {
+        "season": "2024",
+        "n": 81,
+        "hit": 44.4,
+        "fair": 49.8,
+        "gap_pp": -5.33
+       },
+       {
+        "season": "2025",
+        "n": 61,
+        "hit": 47.5,
+        "fair": 50.2,
+        "gap_pp": -2.69
+       }
+      ]
+     },
+     {
+      "bet": "under",
+      "bet_label": "小分",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押主場熱門（勝率≥55%）"
+        ],
+        "keys": [
+         [
+          "home_fav55",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_win3",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押小分｜條件：押主場熱門（勝率≥55%）　＆　條件：押三連勝的球隊　＆　條件：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 292,
+       "hit": 58.9,
+       "fair": 50.1,
+       "gap_pp": 8.8,
+       "z": 3.01,
+       "roi_fair": 17.6,
+       "se_fair": 5.8,
+       "roi_intl": 11.7,
+       "se_intl": 5.5,
+       "need_intl": 2.7,
+       "roi_best": 13.4,
+       "se_best": 5.6,
+       "need_best": 1.8,
+       "roi_tw": 1.4,
+       "se_tw": 5.0,
+       "need_tw": 8.0
+      },
+      "test": {
+       "n": 142,
+       "hit": 45.8,
+       "fair": 50.0,
+       "gap_pp": -4.2,
+       "z": -1.0,
+       "roi_fair": -7.9,
+       "se_fair": 8.5,
+       "roi_intl": -12.7,
+       "se_intl": 8.0,
+       "need_intl": 2.7,
+       "roi_best": -10.7,
+       "se_best": 8.2,
+       "need_best": 1.6,
+       "roi_tw": -20.6,
+       "se_tw": 7.3,
+       "need_tw": 8.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 85,
+        "hit": 51.8,
+        "fair": 50.0,
+        "gap_pp": 1.8
+       },
+       {
+        "season": "2022",
+        "n": 118,
+        "hit": 55.1,
+        "fair": 50.1,
+        "gap_pp": 5.01
+       },
+       {
+        "season": "2023",
+        "n": 89,
+        "hit": 70.8,
+        "fair": 50.3,
+        "gap_pp": 20.49
+       },
+       {
+        "season": "2024",
+        "n": 81,
+        "hit": 44.4,
+        "fair": 49.8,
+        "gap_pp": -5.33
+       },
+       {
+        "season": "2025",
+        "n": 61,
+        "hit": 47.5,
+        "fair": 50.2,
+        "gap_pp": -2.69
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "人氣球隊當客隊"
+        ],
+        "keys": [
+         [
+          "mlb_popular_away",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　反：人氣球隊當客隊",
+      "train": {
+       "n": 221,
+       "hit": 41.6,
+       "fair": 35.4,
+       "gap_pp": 6.2,
+       "z": 1.93,
+       "roi_fair": 18.0,
+       "se_fair": 9.5,
+       "roi_intl": 10.6,
+       "se_intl": 8.9,
+       "need_intl": 2.4,
+       "roi_best": 13.9,
+       "se_best": 9.2,
+       "need_best": 1.2,
+       "roi_tw": 1.7,
+       "se_tw": 8.2,
+       "need_tw": 5.7
+      },
+      "test": {
+       "n": 102,
+       "hit": 31.4,
+       "fair": 35.1,
+       "gap_pp": -3.73,
+       "z": -0.79,
+       "roi_fair": -11.2,
+       "se_fair": 13.3,
+       "roi_intl": -17.9,
+       "se_intl": 12.2,
+       "need_intl": 2.7,
+       "roi_best": -15.3,
+       "se_best": 12.6,
+       "need_best": 1.7,
+       "roi_tw": -23.4,
+       "se_tw": 11.4,
+       "need_tw": 5.6
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 66,
+        "hit": 39.4,
+        "fair": 35.8,
+        "gap_pp": 3.56
+       },
+       {
+        "season": "2022",
+        "n": 102,
+        "hit": 36.3,
+        "fair": 35.0,
+        "gap_pp": 1.29
+       },
+       {
+        "season": "2023",
+        "n": 53,
+        "hit": 54.7,
+        "fair": 35.8,
+        "gap_pp": 18.93
+       },
+       {
+        "season": "2024",
+        "n": 55,
+        "hit": 27.3,
+        "fair": 35.2,
+        "gap_pp": -7.94
+       },
+       {
+        "season": "2025",
+        "n": 47,
+        "hit": 36.2,
+        "fair": 35.0,
+        "gap_pp": 1.19
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押人氣球隊（洋基、道奇、紅襪、小熊、大都會）"
+        ],
+        "keys": [
+         [
+          "mlb_popular",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　反：押人氣球隊（洋基、道奇、紅襪、小熊、大都會）",
+      "train": {
+       "n": 221,
+       "hit": 41.6,
+       "fair": 35.4,
+       "gap_pp": 6.2,
+       "z": 1.93,
+       "roi_fair": 18.0,
+       "se_fair": 9.5,
+       "roi_intl": 10.6,
+       "se_intl": 8.9,
+       "need_intl": 2.4,
+       "roi_best": 13.9,
+       "se_best": 9.2,
+       "need_best": 1.2,
+       "roi_tw": 1.7,
+       "se_tw": 8.2,
+       "need_tw": 5.7
+      },
+      "test": {
+       "n": 102,
+       "hit": 31.4,
+       "fair": 35.1,
+       "gap_pp": -3.73,
+       "z": -0.79,
+       "roi_fair": -11.2,
+       "se_fair": 13.3,
+       "roi_intl": -17.9,
+       "se_intl": 12.2,
+       "need_intl": 2.7,
+       "roi_best": -15.3,
+       "se_best": 12.6,
+       "need_best": 1.7,
+       "roi_tw": -23.4,
+       "se_tw": 11.4,
+       "need_tw": 5.6
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 66,
+        "hit": 39.4,
+        "fair": 35.8,
+        "gap_pp": 3.56
+       },
+       {
+        "season": "2022",
+        "n": 102,
+        "hit": 36.3,
+        "fair": 35.0,
+        "gap_pp": 1.29
+       },
+       {
+        "season": "2023",
+        "n": 53,
+        "hit": 54.7,
+        "fair": 35.8,
+        "gap_pp": 18.93
+       },
+       {
+        "season": "2024",
+        "n": 55,
+        "hit": 27.3,
+        "fair": 35.2,
+        "gap_pp": -7.94
+       },
+       {
+        "season": "2025",
+        "n": 47,
+        "hit": 36.2,
+        "fair": 35.0,
+        "gap_pp": 1.19
+       }
+      ]
+     }
+    ],
+    "C": [
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "熱門被國際盤買進 4pp↑ 還去追（大單）"
+        ],
+        "keys": [
+         [
+          "mlb_steam_fav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+3 押強隊不讓分"
+        ],
+        "keys": [
+         [
+          "t10_g3",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：熱門被國際盤買進 4pp↑ 還去追（大單）　＆　反：T-10：G≥+3 押強隊不讓分",
+      "train": {
+       "n": 392,
+       "hit": 40.6,
+       "fair": 34.1,
+       "gap_pp": 6.44,
+       "z": 2.7,
+       "roi_fair": 18.8,
+       "se_fair": 7.4,
+       "roi_intl": 10.2,
+       "se_intl": 6.8,
+       "need_intl": 2.6,
+       "roi_best": 12.2,
+       "se_best": 7.0,
+       "need_best": 1.9,
+       "roi_tw": 2.4,
+       "se_tw": 6.4,
+       "need_tw": 5.5
+      },
+      "test": {
+       "n": 205,
+       "hit": 34.1,
+       "fair": 33.2,
+       "gap_pp": 0.95,
+       "z": 0.29,
+       "roi_fair": 1.8,
+       "se_fair": 10.0,
+       "roi_intl": -6.8,
+       "se_intl": 9.2,
+       "need_intl": 3.0,
+       "roi_best": -5.0,
+       "se_best": 9.3,
+       "need_best": 2.4,
+       "roi_tw": -12.2,
+       "se_tw": 8.7,
+       "need_tw": 5.3
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 77,
+        "hit": 35.1,
+        "fair": 33.5,
+        "gap_pp": 1.58
+       },
+       {
+        "season": "2022",
+        "n": 160,
+        "hit": 39.4,
+        "fair": 33.9,
+        "gap_pp": 5.47
+       },
+       {
+        "season": "2023",
+        "n": 155,
+        "hit": 44.5,
+        "fair": 34.7,
+        "gap_pp": 9.85
+       },
+       {
+        "season": "2024",
+        "n": 130,
+        "hit": 34.6,
+        "fair": 33.4,
+        "gap_pp": 1.26
+       },
+       {
+        "season": "2025",
+        "n": 75,
+        "hit": 33.3,
+        "fair": 32.9,
+        "gap_pp": 0.43
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜反：押客場大熱門（勝率≥60%）　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 760,
+       "hit": 52.6,
+       "fair": 47.9,
+       "gap_pp": 4.75,
+       "z": 2.63,
+       "roi_fair": 9.9,
+       "se_fair": 3.8,
+       "roi_intl": 4.4,
+       "se_intl": 3.6,
+       "need_intl": 2.6,
+       "roi_best": 7.5,
+       "se_best": 3.7,
+       "need_best": 1.1,
+       "roi_tw": -5.2,
+       "se_tw": 3.3,
+       "need_tw": 7.7
+      },
+      "test": {
+       "n": 316,
+       "hit": 45.6,
+       "fair": 47.4,
+       "gap_pp": -1.83,
+       "z": -0.66,
+       "roi_fair": -4.0,
+       "se_fair": 6.0,
+       "roi_intl": -9.0,
+       "se_intl": 5.7,
+       "need_intl": 2.6,
+       "roi_best": -6.2,
+       "se_best": 5.8,
+       "need_best": 1.0,
+       "roi_tw": -17.3,
+       "se_tw": 5.2,
+       "need_tw": 7.6
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 224,
+        "hit": 53.1,
+        "fair": 48.1,
+        "gap_pp": 4.98
+       },
+       {
+        "season": "2022",
+        "n": 301,
+        "hit": 52.2,
+        "fair": 48.2,
+        "gap_pp": 4.0
+       },
+       {
+        "season": "2023",
+        "n": 235,
+        "hit": 52.8,
+        "fair": 47.3,
+        "gap_pp": 5.48
+       },
+       {
+        "season": "2024",
+        "n": 188,
+        "hit": 41.5,
+        "fair": 47.9,
+        "gap_pp": -6.37
+       },
+       {
+        "season": "2025",
+        "n": 128,
+        "hit": 51.6,
+        "fair": 46.7,
+        "gap_pp": 4.83
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 760,
+       "hit": 40.3,
+       "fair": 35.8,
+       "gap_pp": 4.44,
+       "z": 2.56,
+       "roi_fair": 13.2,
+       "se_fair": 5.1,
+       "roi_intl": 6.1,
+       "se_intl": 4.7,
+       "need_intl": 2.4,
+       "roi_best": 9.3,
+       "se_best": 4.9,
+       "need_best": 1.2,
+       "roi_tw": -2.4,
+       "se_tw": 4.4,
+       "need_tw": 5.7
+      },
+      "test": {
+       "n": 316,
+       "hit": 35.1,
+       "fair": 35.7,
+       "gap_pp": -0.54,
+       "z": -0.2,
+       "roi_fair": -1.8,
+       "se_fair": 7.6,
+       "roi_intl": -8.9,
+       "se_intl": 7.0,
+       "need_intl": 2.7,
+       "roi_best": -6.0,
+       "se_best": 7.3,
+       "need_best": 1.5,
+       "roi_tw": -15.4,
+       "se_tw": 6.5,
+       "need_tw": 5.7
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 224,
+        "hit": 41.1,
+        "fair": 36.2,
+        "gap_pp": 4.83
+       },
+       {
+        "season": "2022",
+        "n": 301,
+        "hit": 38.2,
+        "fair": 35.8,
+        "gap_pp": 2.39
+       },
+       {
+        "season": "2023",
+        "n": 235,
+        "hit": 42.1,
+        "fair": 35.4,
+        "gap_pp": 6.68
+       },
+       {
+        "season": "2024",
+        "n": 188,
+        "hit": 31.9,
+        "fair": 35.9,
+        "gap_pp": -3.95
+       },
+       {
+        "season": "2025",
+        "n": 128,
+        "hit": 39.8,
+        "fair": 35.4,
+        "gap_pp": 4.46
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜反：押客場大熱門（勝率≥60%）　＆　跟：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 200,
+       "hit": 45.0,
+       "fair": 36.5,
+       "gap_pp": 8.48,
+       "z": 2.5,
+       "roi_fair": 23.6,
+       "se_fair": 9.7,
+       "roi_intl": 16.2,
+       "se_intl": 9.1,
+       "need_intl": 2.4,
+       "roi_best": 19.9,
+       "se_best": 9.4,
+       "need_best": 1.1,
+       "roi_tw": 6.6,
+       "se_tw": 8.4,
+       "need_tw": 5.8
+      },
+      "test": {
+       "n": 87,
+       "hit": 31.0,
+       "fair": 36.5,
+       "gap_pp": -5.46,
+       "z": -1.06,
+       "roi_fair": -16.1,
+       "se_fair": 13.5,
+       "roi_intl": -22.3,
+       "se_intl": 12.5,
+       "need_intl": 2.8,
+       "roi_best": -18.1,
+       "se_best": 13.2,
+       "need_best": 1.1,
+       "roi_tw": -27.6,
+       "se_tw": 11.7,
+       "need_tw": 5.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 64,
+        "hit": 51.6,
+        "fair": 37.0,
+        "gap_pp": 14.57
+       },
+       {
+        "season": "2022",
+        "n": 77,
+        "hit": 41.6,
+        "fair": 36.3,
+        "gap_pp": 5.28
+       },
+       {
+        "season": "2023",
+        "n": 59,
+        "hit": 42.4,
+        "fair": 36.3,
+        "gap_pp": 6.06
+       },
+       {
+        "season": "2024",
+        "n": 46,
+        "hit": 26.1,
+        "fair": 36.5,
+        "gap_pp": -10.38
+       },
+       {
+        "season": "2025",
+        "n": 41,
+        "hit": 36.6,
+        "fair": 36.5,
+        "gap_pp": 0.05
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押上一場贏 5 分↑的球隊"
+        ],
+        "keys": [
+         [
+          "mlb_bigwin",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜反：押上一場贏 5 分↑的球隊　＆　反：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 342,
+       "hit": 55.0,
+       "fair": 48.6,
+       "gap_pp": 6.39,
+       "z": 2.37,
+       "roi_fair": 12.1,
+       "se_fair": 5.6,
+       "roi_intl": 6.7,
+       "se_intl": 5.3,
+       "need_intl": 2.5,
+       "roi_best": 9.7,
+       "se_best": 5.4,
+       "need_best": 1.1,
+       "roi_tw": -3.3,
+       "se_tw": 4.8,
+       "need_tw": 7.8
+      },
+      "test": {
+       "n": 154,
+       "hit": 59.1,
+       "fair": 48.9,
+       "gap_pp": 10.2,
+       "z": 2.55,
+       "roi_fair": 20.0,
+       "se_fair": 8.2,
+       "roi_intl": 14.0,
+       "se_intl": 7.8,
+       "need_intl": 2.6,
+       "roi_best": 17.3,
+       "se_best": 8.0,
+       "need_best": 1.2,
+       "roi_tw": 3.4,
+       "se_tw": 7.1,
+       "need_tw": 7.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 100,
+        "hit": 57.0,
+        "fair": 48.8,
+        "gap_pp": 8.18
+       },
+       {
+        "season": "2022",
+        "n": 114,
+        "hit": 54.4,
+        "fair": 48.3,
+        "gap_pp": 6.12
+       },
+       {
+        "season": "2023",
+        "n": 128,
+        "hit": 53.9,
+        "fair": 48.7,
+        "gap_pp": 5.22
+       },
+       {
+        "season": "2024",
+        "n": 91,
+        "hit": 57.1,
+        "fair": 49.9,
+        "gap_pp": 7.29
+       },
+       {
+        "season": "2025",
+        "n": 63,
+        "hit": 61.9,
+        "fair": 47.5,
+        "gap_pp": 14.4
+       }
+      ]
+     },
+     {
+      "bet": "dog_ml",
+      "bet_label": "冷門不讓分",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+3 押強隊不讓分"
+        ],
+        "keys": [
+         [
+          "t10_g3",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門不讓分｜跟：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+3 押強隊不讓分",
+      "train": {
+       "n": 727,
+       "hit": 39.6,
+       "fair": 35.6,
+       "gap_pp": 4.06,
+       "z": 2.3,
+       "roi_fair": 12.2,
+       "se_fair": 5.2,
+       "roi_intl": 4.7,
+       "se_intl": 4.9,
+       "need_intl": 2.5,
+       "roi_best": 7.7,
+       "se_best": 5.0,
+       "need_best": 1.3,
+       "roi_tw": -3.3,
+       "se_tw": 4.5,
+       "need_tw": 5.7
+      },
+      "test": {
+       "n": 364,
+       "hit": 34.6,
+       "fair": 36.0,
+       "gap_pp": -1.34,
+       "z": -0.53,
+       "roi_fair": -5.6,
+       "se_fair": 6.9,
+       "roi_intl": -12.6,
+       "se_intl": 6.3,
+       "need_intl": 2.9,
+       "roi_best": -9.6,
+       "se_best": 6.6,
+       "need_best": 1.6,
+       "roi_tw": -18.6,
+       "se_tw": 5.9,
+       "need_tw": 5.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 211,
+        "hit": 43.1,
+        "fair": 35.8,
+        "gap_pp": 7.28
+       },
+       {
+        "season": "2022",
+        "n": 254,
+        "hit": 37.8,
+        "fair": 35.2,
+        "gap_pp": 2.6
+       },
+       {
+        "season": "2023",
+        "n": 262,
+        "hit": 38.5,
+        "fair": 35.7,
+        "gap_pp": 2.89
+       },
+       {
+        "season": "2024",
+        "n": 210,
+        "hit": 31.0,
+        "fair": 35.9,
+        "gap_pp": -4.92
+       },
+       {
+        "season": "2025",
+        "n": 154,
+        "hit": 39.6,
+        "fair": 36.1,
+        "gap_pp": 3.56
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜反：押客場大熱門（勝率≥60%）　＆　反：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 320,
+       "hit": 53.8,
+       "fair": 47.4,
+       "gap_pp": 6.35,
+       "z": 2.28,
+       "roi_fair": 13.6,
+       "se_fair": 5.9,
+       "roi_intl": 7.8,
+       "se_intl": 5.6,
+       "need_intl": 2.5,
+       "roi_best": 11.1,
+       "se_best": 5.8,
+       "need_best": 1.1,
+       "roi_tw": -2.1,
+       "se_tw": 5.1,
+       "need_tw": 7.6
+      },
+      "test": {
+       "n": 120,
+       "hit": 50.8,
+       "fair": 46.4,
+       "gap_pp": 4.45,
+       "z": 0.98,
+       "roi_fair": 8.1,
+       "se_fair": 9.9,
+       "roi_intl": 2.7,
+       "se_intl": 9.4,
+       "need_intl": 2.5,
+       "roi_best": 5.4,
+       "se_best": 9.6,
+       "need_best": 1.2,
+       "roi_tw": -6.8,
+       "se_tw": 8.5,
+       "need_tw": 7.4
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 93,
+        "hit": 46.2,
+        "fair": 47.8,
+        "gap_pp": -1.56
+       },
+       {
+        "season": "2022",
+        "n": 130,
+        "hit": 56.2,
+        "fair": 47.7,
+        "gap_pp": 8.45
+       },
+       {
+        "season": "2023",
+        "n": 97,
+        "hit": 57.7,
+        "fair": 46.6,
+        "gap_pp": 11.13
+       },
+       {
+        "season": "2024",
+        "n": 73,
+        "hit": 46.6,
+        "fair": 47.4,
+        "gap_pp": -0.78
+       },
+       {
+        "season": "2025",
+        "n": 47,
+        "hit": 57.4,
+        "fair": 44.9,
+        "gap_pp": 12.58
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押主場冷門",
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home_dog",
+          "dog_ml"
+         ],
+         [
+          "mlb_home",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜跟：押主場冷門＝每場都押主隊不讓分　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 884,
+       "hit": 52.3,
+       "fair": 48.5,
+       "gap_pp": 3.81,
+       "z": 2.27,
+       "roi_fair": 8.0,
+       "se_fair": 3.5,
+       "roi_intl": 2.6,
+       "se_intl": 3.3,
+       "need_intl": 2.6,
+       "roi_best": 5.5,
+       "se_best": 3.4,
+       "need_best": 1.1,
+       "roi_tw": -6.9,
+       "se_tw": 3.0,
+       "need_tw": 7.8
+      },
+      "test": {
+       "n": 388,
+       "hit": 48.2,
+       "fair": 48.4,
+       "gap_pp": -0.16,
+       "z": -0.06,
+       "roi_fair": -0.8,
+       "se_fair": 5.3,
+       "roi_intl": -5.8,
+       "se_intl": 5.0,
+       "need_intl": 2.6,
+       "roi_best": -2.9,
+       "se_best": 5.2,
+       "need_best": 1.0,
+       "roi_tw": -14.5,
+       "se_tw": 4.6,
+       "need_tw": 7.7
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 266,
+        "hit": 51.5,
+        "fair": 48.7,
+        "gap_pp": 2.76
+       },
+       {
+        "season": "2022",
+        "n": 333,
+        "hit": 51.7,
+        "fair": 48.5,
+        "gap_pp": 3.14
+       },
+       {
+        "season": "2023",
+        "n": 285,
+        "hit": 53.7,
+        "fair": 48.1,
+        "gap_pp": 5.57
+       },
+       {
+        "season": "2024",
+        "n": 239,
+        "hit": 44.8,
+        "fair": 48.8,
+        "gap_pp": -4.07
+       },
+       {
+        "season": "2025",
+        "n": 149,
+        "hit": 53.7,
+        "fair": 47.6,
+        "gap_pp": 6.13
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押主場冷門",
+         "每場都押主隊不讓分"
+        ],
+        "keys": [
+         [
+          "mlb_home_dog",
+          "dog_ml"
+         ],
+         [
+          "mlb_home",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜跟：押主場冷門＝每場都押主隊不讓分　＆　反：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 364,
+       "hit": 53.8,
+       "fair": 47.9,
+       "gap_pp": 5.9,
+       "z": 2.26,
+       "roi_fair": 12.5,
+       "se_fair": 5.5,
+       "roi_intl": 6.9,
+       "se_intl": 5.2,
+       "need_intl": 2.5,
+       "roi_best": 10.0,
+       "se_best": 5.4,
+       "need_best": 1.2,
+       "roi_tw": -3.0,
+       "se_tw": 4.8,
+       "need_tw": 7.7
+      },
+      "test": {
+       "n": 144,
+       "hit": 51.4,
+       "fair": 47.4,
+       "gap_pp": 3.97,
+       "z": 0.96,
+       "roi_fair": 7.2,
+       "se_fair": 8.8,
+       "roi_intl": 1.9,
+       "se_intl": 8.4,
+       "need_intl": 2.5,
+       "roi_best": 4.7,
+       "se_best": 8.6,
+       "need_best": 1.1,
+       "roi_tw": -7.6,
+       "se_tw": 7.6,
+       "need_tw": 7.6
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 108,
+        "hit": 48.1,
+        "fair": 48.4,
+        "gap_pp": -0.22
+       },
+       {
+        "season": "2022",
+        "n": 141,
+        "hit": 53.9,
+        "fair": 48.0,
+        "gap_pp": 5.88
+       },
+       {
+        "season": "2023",
+        "n": 115,
+        "hit": 59.1,
+        "fair": 47.5,
+        "gap_pp": 11.67
+       },
+       {
+        "season": "2024",
+        "n": 89,
+        "hit": 47.2,
+        "fair": 48.3,
+        "gap_pp": -1.13
+       },
+       {
+        "season": "2025",
+        "n": 55,
+        "hit": 58.2,
+        "fair": 46.0,
+        "gap_pp": 12.21
+       }
+      ]
+     },
+     {
+      "bet": "dog_rl",
+      "bet_label": "冷門 +1.5",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押客場大熱門（勝率≥60%）"
+        ],
+        "keys": [
+         [
+          "mlb_away_bigfav",
+          "fav_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "系列賽：押昨天贏的那隊再贏"
+        ],
+        "keys": [
+         [
+          "mlb_series",
+          "dog_ml"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "T-10：G≥+6 押強隊不讓分（你的原始規則）"
+        ],
+        "keys": [
+         [
+          "t10_g6",
+          "fav_ml"
+         ]
+        ]
+       }
+      ],
+      "text": "押冷門 +1.5｜反：押客場大熱門（勝率≥60%）　＆　跟：系列賽：押昨天贏的那隊再贏　＆　反：T-10：G≥+6 押強隊不讓分（你的原始規則）",
+      "train": {
+       "n": 200,
+       "hit": 56.0,
+       "fair": 48.5,
+       "gap_pp": 7.48,
+       "z": 2.12,
+       "roi_fair": 15.0,
+       "se_fair": 7.3,
+       "roi_intl": 9.3,
+       "se_intl": 6.9,
+       "need_intl": 2.6,
+       "roi_best": 12.1,
+       "se_best": 7.1,
+       "need_best": 1.1,
+       "roi_tw": -0.9,
+       "se_tw": 6.3,
+       "need_tw": 7.8
+      },
+      "test": {
+       "n": 87,
+       "hit": 41.4,
+       "fair": 48.5,
+       "gap_pp": -7.16,
+       "z": -1.34,
+       "roi_fair": -14.7,
+       "se_fair": 11.0,
+       "roi_intl": -19.2,
+       "se_intl": 10.4,
+       "need_intl": 2.6,
+       "roi_best": -16.4,
+       "se_best": 10.8,
+       "need_best": 0.8,
+       "roi_tw": -26.4,
+       "se_tw": 9.5,
+       "need_tw": 7.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 64,
+        "hit": 62.5,
+        "fair": 48.9,
+        "gap_pp": 13.61
+       },
+       {
+        "season": "2022",
+        "n": 77,
+        "hit": 55.8,
+        "fair": 48.6,
+        "gap_pp": 7.26
+       },
+       {
+        "season": "2023",
+        "n": 59,
+        "hit": 49.2,
+        "fair": 48.0,
+        "gap_pp": 1.1
+       },
+       {
+        "season": "2024",
+        "n": 46,
+        "hit": 34.8,
+        "fair": 48.5,
+        "gap_pp": -13.71
+       },
+       {
+        "season": "2025",
+        "n": 41,
+        "hit": 48.8,
+        "fair": 48.6,
+        "gap_pp": 0.18
+       }
+      ]
+     }
+    ],
+    "D": []
+   },
+   "deciles": {
+    "filters": 2274,
+    "rows": [
+     {
+      "decile": 1,
+      "filters": 228,
+      "train_gap_pp": -4.32,
+      "test_gap_pp": 0.25,
+      "test_need_tw_pp": 8.49,
+      "train_roi_tw": -21.0,
+      "test_roi_tw": -13.4
+     },
+     {
+      "decile": 2,
+      "filters": 227,
+      "train_gap_pp": -2.54,
+      "test_gap_pp": -0.02,
+      "test_need_tw_pp": 8.18,
+      "train_roi_tw": -18.2,
+      "test_roi_tw": -13.7
+     },
+     {
+      "decile": 3,
+      "filters": 227,
+      "train_gap_pp": -1.68,
+      "test_gap_pp": 0.23,
+      "test_need_tw_pp": 8.08,
+      "train_roi_tw": -16.7,
+      "test_roi_tw": -13.1
+     },
+     {
+      "decile": 4,
+      "filters": 228,
+      "train_gap_pp": -0.97,
+      "test_gap_pp": -0.02,
+      "test_need_tw_pp": 7.99,
+      "train_roi_tw": -15.5,
+      "test_roi_tw": -13.9
+     },
+     {
+      "decile": 5,
+      "filters": 227,
+      "train_gap_pp": -0.31,
+      "test_gap_pp": 0.42,
+      "test_need_tw_pp": 7.82,
+      "train_roi_tw": -14.3,
+      "test_roi_tw": -13.0
+     },
+     {
+      "decile": 6,
+      "filters": 227,
+      "train_gap_pp": 0.31,
+      "test_gap_pp": -0.42,
+      "test_need_tw_pp": 8.18,
+      "train_roi_tw": -13.3,
+      "test_roi_tw": -14.5
+     },
+     {
+      "decile": 7,
+      "filters": 228,
+      "train_gap_pp": 0.97,
+      "test_gap_pp": 0.02,
+      "test_need_tw_pp": 8.01,
+      "train_roi_tw": -12.1,
+      "test_roi_tw": -13.9
+     },
+     {
+      "decile": 8,
+      "filters": 227,
+      "train_gap_pp": 1.68,
+      "test_gap_pp": -0.23,
+      "test_need_tw_pp": 7.92,
+      "train_roi_tw": -10.8,
+      "test_roi_tw": -13.9
+     },
+     {
+      "decile": 9,
+      "filters": 227,
+      "train_gap_pp": 2.54,
+      "test_gap_pp": 0.02,
+      "test_need_tw_pp": 7.82,
+      "train_roi_tw": -9.2,
+      "test_roi_tw": -13.7
+     },
+     {
+      "decile": 10,
+      "filters": 228,
+      "train_gap_pp": 4.32,
+      "test_gap_pp": -0.25,
+      "test_need_tw_pp": 7.51,
+      "train_roi_tw": -5.5,
+      "test_roi_tw": -14.5
+     }
+    ],
+    "corr": -0.074
+   },
+   "votes": {
+    "1": {
+     "train": {
+      "n": 11991,
+      "hit": 49.8,
+      "fair": 48.2,
+      "gap_pp": 1.64,
+      "z": 3.68,
+      "roi_fair": 3.7,
+      "se_fair": 1.0,
+      "roi_intl": -1.4,
+      "se_intl": 0.9,
+      "need_intl": 2.3,
+      "roi_best": 1.0,
+      "se_best": 1.0,
+      "need_best": 1.1,
+      "roi_tw": -10.6,
+      "se_tw": 0.9,
+      "need_tw": 7.7
+     },
+     "test": {
+      "n": 7139,
+      "hit": 49.8,
+      "fair": 49.3,
+      "gap_pp": 0.51,
+      "z": 0.89,
+      "roi_fair": 1.3,
+      "se_fair": 1.3,
+      "roi_intl": -3.9,
+      "se_intl": 1.2,
+      "need_intl": 2.5,
+      "roi_best": -1.9,
+      "se_best": 1.2,
+      "need_best": 1.5,
+      "roi_tw": -12.7,
+      "se_tw": 1.1,
+      "need_tw": 7.9
+     }
+    },
+    "2": {
+     "train": {
+      "n": 6858,
+      "hit": 45.8,
+      "fair": 43.7,
+      "gap_pp": 2.14,
+      "z": 3.65,
+      "roi_fair": 5.1,
+      "se_fair": 1.4,
+      "roi_intl": -0.7,
+      "se_intl": 1.4,
+      "need_intl": 2.4,
+      "roi_best": 1.9,
+      "se_best": 1.4,
+      "need_best": 1.2,
+      "roi_tw": -9.4,
+      "se_tw": 1.2,
+      "need_tw": 7.0
+     },
+     "test": {
+      "n": 3882,
+      "hit": 45.4,
+      "fair": 45.0,
+      "gap_pp": 0.41,
+      "z": 0.53,
+      "roi_fair": 1.2,
+      "se_fair": 1.9,
+      "roi_intl": -4.7,
+      "se_intl": 1.8,
+      "need_intl": 2.6,
+      "roi_best": -2.5,
+      "se_best": 1.8,
+      "need_best": 1.6,
+      "roi_tw": -12.7,
+      "se_tw": 1.6,
+      "need_tw": 7.2
+     }
+    },
+    "3": {
+     "train": {
+      "n": 3869,
+      "hit": 41.0,
+      "fair": 39.0,
+      "gap_pp": 2.07,
+      "z": 2.69,
+      "roi_fair": 5.5,
+      "se_fair": 2.1,
+      "roi_intl": -1.1,
+      "se_intl": 2.0,
+      "need_intl": 2.5,
+      "roi_best": 1.6,
+      "se_best": 2.0,
+      "need_best": 1.3,
+      "roi_tw": -9.1,
+      "se_tw": 1.8,
+      "need_tw": 6.2
+     },
+     "test": {
+      "n": 1988,
+      "hit": 39.9,
+      "fair": 39.8,
+      "gap_pp": 0.09,
+      "z": 0.08,
+      "roi_fair": 0.6,
+      "se_fair": 2.9,
+      "roi_intl": -6.3,
+      "se_intl": 2.7,
+      "need_intl": 2.7,
+      "roi_best": -3.9,
+      "se_best": 2.7,
+      "need_best": 1.7,
+      "roi_tw": -13.3,
+      "se_tw": 2.5,
+      "need_tw": 6.4
+     }
+    },
+    "4": {
+     "train": {
+      "n": 2137,
+      "hit": 38.0,
+      "fair": 35.4,
+      "gap_pp": 2.57,
+      "z": 2.51,
+      "roi_fair": 7.1,
+      "se_fair": 3.1,
+      "roi_intl": -0.3,
+      "se_intl": 2.8,
+      "need_intl": 2.5,
+      "roi_best": 2.5,
+      "se_best": 2.9,
+      "need_best": 1.5,
+      "roi_tw": -7.7,
+      "se_tw": 2.6,
+      "need_tw": 5.7
+     },
+     "test": {
+      "n": 1039,
+      "hit": 35.8,
+      "fair": 35.4,
+      "gap_pp": 0.44,
+      "z": 0.3,
+      "roi_fair": 1.4,
+      "se_fair": 4.3,
+      "roi_intl": -6.5,
+      "se_intl": 4.0,
+      "need_intl": 2.9,
+      "roi_best": -3.9,
+      "se_best": 4.1,
+      "need_best": 1.9,
+      "roi_tw": -12.5,
+      "se_tw": 3.7,
+      "need_tw": 5.7
+     }
+    }
+   },
+   "model": {
+    "test_logloss_market": 0.67968,
+    "test_logloss_model": 0.67963,
+    "test_max_ev_tw": -7.0,
+    "test_bets_ev_min": {
+     "n": 0
+    }
+   },
+   "owner": [
+    {
+     "label": "G≥+6 而且主場熱門≥55% → 押客隊不讓分",
+     "bet": "dog_ml",
+     "all": {
+      "n": 2282,
+      "hit": 34.0,
+      "fair": 32.6,
+      "gap_pp": 1.44,
+      "z": 1.47,
+      "roi_fair": 4.1,
+      "se_fair": 3.1,
+      "roi_intl": -4.0,
+      "se_intl": 2.8,
+      "need_intl": 2.7,
+      "roi_best": -1.2,
+      "se_best": 2.9,
+      "need_best": 1.7,
+      "roi_tw": -10.2,
+      "se_tw": 2.7,
+      "need_tw": 5.2
+     },
+     "train": {
+      "n": 1527,
+      "hit": 33.7,
+      "fair": 32.6,
+      "gap_pp": 1.12,
+      "z": 0.94,
+      "roi_fair": 3.6,
+      "se_fair": 3.8,
+      "roi_intl": -4.2,
+      "se_intl": 3.5,
+      "need_intl": 2.6,
+      "roi_best": -1.3,
+      "se_best": 3.6,
+      "need_best": 1.5,
+      "roi_tw": -10.7,
+      "se_tw": 3.3,
+      "need_tw": 5.2
+     },
+     "test": {
+      "n": 755,
+      "hit": 34.6,
+      "fair": 32.5,
+      "gap_pp": 2.08,
+      "z": 1.22,
+      "roi_fair": 5.2,
+      "se_fair": 5.3,
+      "roi_intl": -3.5,
+      "se_intl": 4.9,
+      "need_intl": 2.9,
+      "roi_best": -1.0,
+      "se_best": 5.0,
+      "need_best": 2.0,
+      "roi_tw": -9.3,
+      "se_tw": 4.6,
+      "need_tw": 5.2
+     }
+    },
+    {
+     "label": "G≥+6 而且主場熱門≥55% → 押客隊 +1.5",
+     "bet": "dog_rl",
+     "all": {
+      "n": 2282,
+      "hit": 50.7,
+      "fair": 50.4,
+      "gap_pp": 0.37,
+      "z": 0.36,
+      "roi_fair": 0.6,
+      "se_fair": 2.1,
+      "roi_intl": -4.2,
+      "se_intl": 2.0,
+      "need_intl": 2.5,
+      "roi_best": -1.6,
+      "se_best": 2.0,
+      "need_best": 1.1,
+      "roi_tw": -13.2,
+      "se_tw": 1.8,
+      "need_tw": 8.1
+     },
+     "train": {
+      "n": 1527,
+      "hit": 50.2,
+      "fair": 50.3,
+      "gap_pp": -0.13,
+      "z": -0.1,
+      "roi_fair": -0.3,
+      "se_fair": 2.6,
+      "roi_intl": -5.1,
+      "se_intl": 2.4,
+      "need_intl": 2.5,
+      "roi_best": -2.4,
+      "se_best": 2.5,
+      "need_best": 1.1,
+      "roi_tw": -14.1,
+      "se_tw": 2.2,
+      "need_tw": 8.0
+     },
+     "test": {
+      "n": 755,
+      "hit": 51.9,
+      "fair": 50.5,
+      "gap_pp": 1.39,
+      "z": 0.77,
+      "roi_fair": 2.6,
+      "se_fair": 3.6,
+      "roi_intl": -2.4,
+      "se_intl": 3.4,
+      "need_intl": 2.6,
+      "roi_best": 0.0,
+      "se_best": 3.5,
+      "need_best": 1.3,
+      "roi_tw": -11.6,
+      "se_tw": 3.1,
+      "need_tw": 8.1
+     }
+    },
+    {
+     "label": "G≥+6 而且熱門被買進 4pp↑ → 押冷門不讓分",
+     "bet": "dog_ml",
+     "all": {
+      "n": 506,
+      "hit": 36.0,
+      "fair": 32.8,
+      "gap_pp": 3.16,
+      "z": 1.52,
+      "roi_fair": 9.7,
+      "se_fair": 6.6,
+      "roi_intl": 1.0,
+      "se_intl": 6.1,
+      "need_intl": 2.8,
+      "roi_best": 2.8,
+      "se_best": 6.2,
+      "need_best": 2.1,
+      "roi_tw": -5.4,
+      "se_tw": 5.7,
+      "need_tw": 5.2
+     },
+     "train": {
+      "n": 332,
+      "hit": 37.7,
+      "fair": 33.2,
+      "gap_pp": 4.48,
+      "z": 1.74,
+      "roi_fair": 14.2,
+      "se_fair": 8.2,
+      "roi_intl": 5.6,
+      "se_intl": 7.6,
+      "need_intl": 2.6,
+      "roi_best": 7.5,
+      "se_best": 7.7,
+      "need_best": 2.0,
+      "roi_tw": -1.5,
+      "se_tw": 7.1,
+      "need_tw": 5.3
+     },
+     "test": {
+      "n": 174,
+      "hit": 32.8,
+      "fair": 32.1,
+      "gap_pp": 0.64,
+      "z": 0.18,
+      "roi_fair": 1.0,
+      "se_fair": 11.1,
+      "roi_intl": -7.8,
+      "se_intl": 10.1,
+      "need_intl": 3.0,
+      "roi_best": -6.1,
+      "se_best": 10.3,
+      "need_best": 2.4,
+      "roi_tw": -12.9,
+      "se_tw": 9.6,
+      "need_tw": 5.1
+     }
+    },
+    {
+     "label": "G≥+6 而且熱門三連勝 → 押冷門不讓分",
+     "bet": "dog_ml",
+     "all": {
+      "n": 684,
+      "hit": 35.1,
+      "fair": 33.0,
+      "gap_pp": 2.1,
+      "z": 1.17,
+      "roi_fair": 6.0,
+      "se_fair": 5.6,
+      "roi_intl": -1.9,
+      "se_intl": 5.2,
+      "need_intl": 2.6,
+      "roi_best": 0.9,
+      "se_best": 5.3,
+      "need_best": 1.6,
+      "roi_tw": -8.6,
+      "se_tw": 4.8,
+      "need_tw": 5.3
+     },
+     "train": {
+      "n": 471,
+      "hit": 34.0,
+      "fair": 33.1,
+      "gap_pp": 0.89,
+      "z": 0.41,
+      "roi_fair": 2.8,
+      "se_fair": 6.7,
+      "roi_intl": -4.7,
+      "se_intl": 6.2,
+      "need_intl": 2.5,
+      "roi_best": -1.7,
+      "se_best": 6.4,
+      "need_best": 1.5,
+      "roi_tw": -11.4,
+      "se_tw": 5.8,
+      "need_tw": 5.3
+     },
+     "test": {
+      "n": 213,
+      "hit": 37.6,
+      "fair": 32.8,
+      "gap_pp": 4.77,
+      "z": 1.49,
+      "roi_fair": 13.2,
+      "se_fair": 10.2,
+      "roi_intl": 4.4,
+      "se_intl": 9.4,
+      "need_intl": 2.8,
+      "roi_best": 6.8,
+      "se_best": 9.6,
+      "need_best": 1.9,
+      "roi_tw": -2.5,
+      "se_tw": 8.8,
+      "need_tw": 5.2
+     }
+    }
+   ]
+  },
+  "football": {
+   "games": 54880,
+   "conditions": 49,
+   "filters": 3448,
+   "sizes": {
+    "1": 392,
+    "2": 2048,
+    "3": 1008
+   },
+   "train_z2": 39,
+   "null_z2": 78.4,
+   "train_z3": 1,
+   "null_z3": 4.7,
+   "bonferroni_z": 4.18,
+   "train_tw_profit": 3,
+   "train_tw_profit_test_profit": 0,
+   "train_tw_profit_test_roi": -12.3,
+   "rules": {
+    "A": [
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押客場熱門",
+         "押主場冷門",
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_away_fav",
+          "SA"
+         ],
+         [
+          "home_dog",
+          "SH"
+         ],
+         [
+          "fb_fav",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押 5 場沒贏的球隊"
+        ],
+        "keys": [
+         [
+          "fb_winless5",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜跟：押客場熱門＝押主場冷門＝每場都押熱門　＆　跟：押升班馬　＆　跟：押 5 場沒贏的球隊",
+      "train": {
+       "n": 280,
+       "hit": 30.7,
+       "fair": 23.3,
+       "gap_pp": 7.44,
+       "z": 3.0,
+       "roi_fair": 25.9,
+       "se_fair": 13.6,
+       "roi_intl": 14.8,
+       "se_intl": 11.7,
+       "need_intl": 2.0,
+       "roi_best": 26.6,
+       "se_best": 13.7,
+       "need_best": -0.0,
+       "roi_tw": -4.3,
+       "se_tw": 9.2,
+       "need_tw": 6.7
+      },
+      "test": {
+       "n": 336,
+       "hit": 22.0,
+       "fair": 23.7,
+       "gap_pp": -1.69,
+       "z": -0.75,
+       "roi_fair": -11.0,
+       "se_fair": 9.8,
+       "roi_intl": -19.5,
+       "se_intl": 8.8,
+       "need_intl": 2.2,
+       "roi_best": -13.7,
+       "se_best": 9.5,
+       "need_best": 0.5,
+       "roi_tw": -31.3,
+       "se_tw": 7.3,
+       "need_tw": 6.7
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 94,
+        "hit": 29.8,
+        "fair": 22.9,
+        "gap_pp": 6.88
+       },
+       {
+        "season": "2122",
+        "n": 91,
+        "hit": 27.5,
+        "fair": 23.3,
+        "gap_pp": 4.2
+       },
+       {
+        "season": "2223",
+        "n": 95,
+        "hit": 34.7,
+        "fair": 23.6,
+        "gap_pp": 11.11
+       },
+       {
+        "season": "2324",
+        "n": 120,
+        "hit": 21.7,
+        "fair": 23.8,
+        "gap_pp": -2.17
+       },
+       {
+        "season": "2425",
+        "n": 100,
+        "hit": 26.0,
+        "fair": 23.1,
+        "gap_pp": 2.92
+       },
+       {
+        "season": "2526",
+        "n": 111,
+        "hit": 18.0,
+        "fair": 24.2,
+        "gap_pp": -6.19
+       },
+       {
+        "season": "2627",
+        "n": 5,
+        "hit": 40.0,
+        "fair": 22.9,
+        "gap_pp": 17.07
+       }
+      ]
+     },
+     {
+      "bet": "ND",
+      "bet_label": "主勝＋客勝",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押上一場大敗（輸3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigloss",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押被市場拋售的一邊（−4pp↓）"
+        ],
+        "keys": [
+         [
+          "fb_drift",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝＋客勝｜條件：押上一場大敗（輸3球↑）的球隊　＆　條件：押被市場拋售的一邊（−4pp↓）",
+      "train": {
+       "n": 309,
+       "hit": 79.6,
+       "fair": 72.7,
+       "gap_pp": 6.96,
+       "z": 2.75,
+       "roi_fair": 9.9,
+       "se_fair": 3.2,
+       "roi_intl": 3.2,
+       "se_intl": 3.0,
+       "need_intl": 4.6,
+       "roi_best": 10.7,
+       "se_best": 3.2,
+       "need_best": -0.6,
+       "roi_tw": -7.0,
+       "se_tw": 2.7,
+       "need_tw": 13.1
+      },
+      "test": {
+       "n": 229,
+       "hit": 72.9,
+       "fair": 72.8,
+       "gap_pp": 0.09,
+       "z": 0.03,
+       "roi_fair": 0.0,
+       "se_fair": 4.1,
+       "roi_intl": -6.1,
+       "se_intl": 3.8,
+       "need_intl": 4.8,
+       "roi_best": -0.6,
+       "se_best": 4.0,
+       "need_best": 0.4,
+       "roi_tw": -15.3,
+       "se_tw": 3.4,
+       "need_tw": 13.2
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 65,
+        "hit": 80.0,
+        "fair": 72.3,
+        "gap_pp": 7.74
+       },
+       {
+        "season": "2021",
+        "n": 81,
+        "hit": 85.2,
+        "fair": 72.7,
+        "gap_pp": 12.5
+       },
+       {
+        "season": "2122",
+        "n": 79,
+        "hit": 74.7,
+        "fair": 72.4,
+        "gap_pp": 2.24
+       },
+       {
+        "season": "2223",
+        "n": 84,
+        "hit": 78.6,
+        "fair": 73.1,
+        "gap_pp": 5.44
+       },
+       {
+        "season": "2324",
+        "n": 82,
+        "hit": 74.4,
+        "fair": 73.0,
+        "gap_pp": 1.43
+       },
+       {
+        "season": "2425",
+        "n": 74,
+        "hit": 70.3,
+        "fair": 72.5,
+        "gap_pp": -2.21
+       },
+       {
+        "season": "2526",
+        "n": 51,
+        "hit": 76.5,
+        "fair": 72.6,
+        "gap_pp": 3.91
+       },
+       {
+        "season": "2627",
+        "n": 22,
+        "hit": 68.2,
+        "fair": 74.2,
+        "gap_pp": -6.02
+       }
+      ]
+     },
+     {
+      "bet": "TU",
+      "bet_label": "小 2.5",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押上一場大敗（輸3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigloss",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_loss3",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押小 2.5｜條件：押上一場大敗（輸3球↑）的球隊　＆　條件：押三連敗的球隊",
+      "train": {
+       "n": 265,
+       "hit": 55.1,
+       "fair": 47.2,
+       "gap_pp": 7.89,
+       "z": 2.63,
+       "roi_fair": 18.6,
+       "se_fair": 6.9,
+       "roi_intl": 10.5,
+       "se_intl": 6.4,
+       "need_intl": 3.1,
+       "roi_best": 16.5,
+       "se_best": 6.8,
+       "need_best": 0.5,
+       "roi_tw": -1.3,
+       "se_tw": 5.6,
+       "need_tw": 8.8
+      },
+      "test": {
+       "n": 219,
+       "hit": 43.8,
+       "fair": 44.8,
+       "gap_pp": -0.99,
+       "z": -0.3,
+       "roi_fair": -4.8,
+       "se_fair": 7.5,
+       "roi_intl": -10.9,
+       "se_intl": 7.0,
+       "need_intl": 3.3,
+       "roi_best": -6.5,
+       "se_best": 7.4,
+       "need_best": 1.1,
+       "roi_tw": -20.8,
+       "se_tw": 6.2,
+       "need_tw": 9.1
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 60,
+        "hit": 56.7,
+        "fair": 45.2,
+        "gap_pp": 11.47
+       },
+       {
+        "season": "2021",
+        "n": 70,
+        "hit": 58.6,
+        "fair": 49.1,
+        "gap_pp": 9.47
+       },
+       {
+        "season": "2122",
+        "n": 68,
+        "hit": 50.0,
+        "fair": 47.1,
+        "gap_pp": 2.9
+       },
+       {
+        "season": "2223",
+        "n": 67,
+        "hit": 55.2,
+        "fair": 47.1,
+        "gap_pp": 8.09
+       },
+       {
+        "season": "2324",
+        "n": 82,
+        "hit": 34.1,
+        "fair": 43.6,
+        "gap_pp": -9.41
+       },
+       {
+        "season": "2425",
+        "n": 69,
+        "hit": 46.4,
+        "fair": 44.6,
+        "gap_pp": 1.79
+       },
+       {
+        "season": "2526",
+        "n": 62,
+        "hit": 54.8,
+        "fair": 46.5,
+        "gap_pp": 8.31
+       },
+       {
+        "season": "2627",
+        "n": 6,
+        "hit": 33.3,
+        "fair": 47.2,
+        "gap_pp": -13.9
+       }
+      ]
+     },
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押 5 場沒贏的球隊"
+        ],
+        "keys": [
+         [
+          "fb_winless5",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜跟：押升班馬　＆　跟：押 5 場沒贏的球隊",
+      "train": {
+       "n": 437,
+       "hit": 36.2,
+       "fair": 30.6,
+       "gap_pp": 5.55,
+       "z": 2.61,
+       "roi_fair": 18.2,
+       "se_fair": 9.3,
+       "roi_intl": 9.4,
+       "se_intl": 8.1,
+       "need_intl": 2.0,
+       "roi_best": 19.1,
+       "se_best": 9.4,
+       "need_best": -0.2,
+       "roi_tw": -6.2,
+       "se_tw": 6.5,
+       "need_tw": 6.6
+      },
+      "test": {
+       "n": 529,
+       "hit": 30.6,
+       "fair": 31.0,
+       "gap_pp": -0.39,
+       "z": -0.2,
+       "roi_fair": -5.0,
+       "se_fair": 7.0,
+       "roi_intl": -12.5,
+       "se_intl": 6.3,
+       "need_intl": 2.3,
+       "roi_best": -7.3,
+       "se_best": 6.7,
+       "need_best": 0.5,
+       "roi_tw": -23.0,
+       "se_tw": 5.4,
+       "need_tw": 6.7
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 130,
+        "hit": 36.2,
+        "fair": 28.3,
+        "gap_pp": 7.84
+       },
+       {
+        "season": "2122",
+        "n": 153,
+        "hit": 33.3,
+        "fair": 32.0,
+        "gap_pp": 1.36
+       },
+       {
+        "season": "2223",
+        "n": 154,
+        "hit": 39.0,
+        "fair": 31.2,
+        "gap_pp": 7.77
+       },
+       {
+        "season": "2324",
+        "n": 176,
+        "hit": 28.4,
+        "fair": 30.2,
+        "gap_pp": -1.77
+       },
+       {
+        "season": "2425",
+        "n": 150,
+        "hit": 34.0,
+        "fair": 29.7,
+        "gap_pp": 4.31
+       },
+       {
+        "season": "2526",
+        "n": 190,
+        "hit": 28.9,
+        "fair": 32.3,
+        "gap_pp": -3.4
+       },
+       {
+        "season": "2627",
+        "n": 13,
+        "hit": 46.2,
+        "fair": 38.2,
+        "gap_pp": 8.0
+       }
+      ]
+     },
+     {
+      "bet": "NA",
+      "bet_label": "主勝＋和局",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押大冷門（賠率≥8）"
+        ],
+        "keys": [
+         [
+          "longshot8",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝＋和局｜條件：追盤口移動（早盤→收盤 +4pp↑）　＆　反：押大冷門（賠率≥8）",
+      "train": {
+       "n": 288,
+       "hit": 96.9,
+       "fair": 93.0,
+       "gap_pp": 3.88,
+       "z": 2.59,
+       "roi_fair": 4.2,
+       "se_fair": 1.1,
+       "roi_intl": -0.2,
+       "se_intl": 1.1,
+       "need_intl": 4.1,
+       "roi_best": 5.3,
+       "se_best": 1.1,
+       "need_best": -0.8,
+       "roi_tw": -9.0,
+       "se_tw": 1.0,
+       "need_tw": 13.5
+      },
+      "test": {
+       "n": 223,
+       "hit": 96.0,
+       "fair": 92.7,
+       "gap_pp": 3.27,
+       "z": 1.88,
+       "roi_fair": 3.5,
+       "se_fair": 1.4,
+       "roi_intl": -1.0,
+       "se_intl": 1.4,
+       "need_intl": 4.2,
+       "roi_best": 3.6,
+       "se_best": 1.5,
+       "need_best": 0.0,
+       "roi_tw": -9.6,
+       "se_tw": 1.3,
+       "need_tw": 13.4
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 64,
+        "hit": 96.9,
+        "fair": 93.0,
+        "gap_pp": 3.91
+       },
+       {
+        "season": "2021",
+        "n": 70,
+        "hit": 97.1,
+        "fair": 92.8,
+        "gap_pp": 4.3
+       },
+       {
+        "season": "2122",
+        "n": 78,
+        "hit": 98.7,
+        "fair": 93.1,
+        "gap_pp": 5.58
+       },
+       {
+        "season": "2223",
+        "n": 76,
+        "hit": 94.7,
+        "fair": 93.0,
+        "gap_pp": 1.7
+       },
+       {
+        "season": "2324",
+        "n": 74,
+        "hit": 94.6,
+        "fair": 92.9,
+        "gap_pp": 1.74
+       },
+       {
+        "season": "2425",
+        "n": 85,
+        "hit": 96.5,
+        "fair": 92.5,
+        "gap_pp": 3.93
+       },
+       {
+        "season": "2526",
+        "n": 49,
+        "hit": 95.9,
+        "fair": 92.3,
+        "gap_pp": 3.58
+       },
+       {
+        "season": "2627",
+        "n": 15,
+        "hit": 100.0,
+        "fair": 94.0,
+        "gap_pp": 6.03
+       }
+      ]
+     },
+     {
+      "bet": "SD",
+      "bet_label": "和局",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押 5 場沒贏的球隊"
+        ],
+        "keys": [
+         [
+          "fb_winless5",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局｜反：押升班馬　＆　反：押 5 場沒贏的球隊",
+      "train": {
+       "n": 364,
+       "hit": 34.1,
+       "fair": 28.0,
+       "gap_pp": 6.06,
+       "z": 2.58,
+       "roi_fair": 24.6,
+       "se_fair": 9.6,
+       "roi_intl": 15.9,
+       "se_intl": 8.8,
+       "need_intl": 1.9,
+       "roi_best": 22.8,
+       "se_best": 9.3,
+       "need_best": 0.2,
+       "roi_tw": -1.7,
+       "se_tw": 7.3,
+       "need_tw": 6.9
+      },
+      "test": {
+       "n": 388,
+       "hit": 24.5,
+       "fair": 27.3,
+       "gap_pp": -2.86,
+       "z": -1.27,
+       "roi_fair": -9.7,
+       "se_fair": 8.2,
+       "roi_intl": -16.5,
+       "se_intl": 7.5,
+       "need_intl": 2.1,
+       "roi_best": -12.6,
+       "se_best": 7.9,
+       "need_best": 0.7,
+       "roi_tw": -28.2,
+       "se_tw": 6.4,
+       "need_tw": 6.9
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 99,
+        "hit": 40.4,
+        "fair": 28.3,
+        "gap_pp": 12.07
+       },
+       {
+        "season": "2122",
+        "n": 121,
+        "hit": 32.2,
+        "fair": 28.1,
+        "gap_pp": 4.09
+       },
+       {
+        "season": "2223",
+        "n": 144,
+        "hit": 31.2,
+        "fair": 27.7,
+        "gap_pp": 3.59
+       },
+       {
+        "season": "2324",
+        "n": 126,
+        "hit": 20.6,
+        "fair": 27.6,
+        "gap_pp": -7.0
+       },
+       {
+        "season": "2425",
+        "n": 127,
+        "hit": 26.8,
+        "fair": 28.0,
+        "gap_pp": -1.21
+       },
+       {
+        "season": "2526",
+        "n": 126,
+        "hit": 26.2,
+        "fair": 26.6,
+        "gap_pp": -0.43
+       },
+       {
+        "season": "2627",
+        "n": 9,
+        "hit": 22.2,
+        "fair": 24.5,
+        "gap_pp": -2.25
+       }
+      ]
+     },
+     {
+      "bet": "ND",
+      "bet_label": "主勝＋客勝",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押被市場拋售的一邊（−4pp↓）"
+        ],
+        "keys": [
+         [
+          "fb_drift",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_fav",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝＋客勝｜條件：押被市場拋售的一邊（−4pp↓）　＆　條件：押升班馬　＆　條件：每場都押熱門",
+      "train": {
+       "n": 329,
+       "hit": 78.7,
+       "fair": 72.4,
+       "gap_pp": 6.29,
+       "z": 2.56,
+       "roi_fair": 8.5,
+       "se_fair": 3.1,
+       "roi_intl": 2.0,
+       "se_intl": 2.9,
+       "need_intl": 4.6,
+       "roi_best": 8.6,
+       "se_best": 3.1,
+       "need_best": -0.1,
+       "roi_tw": -8.1,
+       "se_tw": 2.6,
+       "need_tw": 13.0
+      },
+      "test": {
+       "n": 343,
+       "hit": 71.4,
+       "fair": 73.7,
+       "gap_pp": -2.24,
+       "z": -0.95,
+       "roi_fair": -3.2,
+       "se_fair": 3.3,
+       "roi_intl": -9.2,
+       "se_intl": 3.1,
+       "need_intl": 4.9,
+       "roi_best": -3.9,
+       "se_best": 3.3,
+       "need_best": 0.6,
+       "roi_tw": -17.7,
+       "se_tw": 2.8,
+       "need_tw": 13.0
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 116,
+        "hit": 72.4,
+        "fair": 72.2,
+        "gap_pp": 0.25
+       },
+       {
+        "season": "2122",
+        "n": 99,
+        "hit": 80.8,
+        "fair": 72.3,
+        "gap_pp": 8.48
+       },
+       {
+        "season": "2223",
+        "n": 114,
+        "hit": 83.3,
+        "fair": 72.8,
+        "gap_pp": 10.52
+       },
+       {
+        "season": "2324",
+        "n": 118,
+        "hit": 71.2,
+        "fair": 73.7,
+        "gap_pp": -2.52
+       },
+       {
+        "season": "2425",
+        "n": 113,
+        "hit": 72.6,
+        "fair": 73.5,
+        "gap_pp": -0.92
+       },
+       {
+        "season": "2526",
+        "n": 84,
+        "hit": 70.2,
+        "fair": 73.4,
+        "gap_pp": -3.13
+       },
+       {
+        "season": "2627",
+        "n": 28,
+        "hit": 71.4,
+        "fair": 75.2,
+        "gap_pp": -3.78
+       }
+      ]
+     },
+     {
+      "bet": "SD",
+      "bet_label": "和局",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押上一場大敗（輸3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigloss",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押三連敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_loss3",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局｜反：押上一場大敗（輸3球↑）的球隊　＆　反：押三連敗的球隊",
+      "train": {
+       "n": 265,
+       "hit": 29.8,
+       "fair": 23.4,
+       "gap_pp": 6.4,
+       "z": 2.48,
+       "roi_fair": 27.3,
+       "se_fair": 13.0,
+       "roi_intl": 16.1,
+       "se_intl": 11.6,
+       "need_intl": 2.1,
+       "roi_best": 24.9,
+       "se_best": 12.7,
+       "need_best": 0.5,
+       "roi_tw": -5.3,
+       "se_tw": 9.2,
+       "need_tw": 7.4
+      },
+      "test": {
+       "n": 219,
+       "hit": 22.4,
+       "fair": 22.2,
+       "gap_pp": 0.2,
+       "z": 0.07,
+       "roi_fair": -5.8,
+       "se_fair": 12.2,
+       "roi_intl": -13.5,
+       "se_intl": 11.1,
+       "need_intl": 2.2,
+       "roi_best": -8.8,
+       "se_best": 11.7,
+       "need_best": 0.8,
+       "roi_tw": -28.4,
+       "se_tw": 9.1,
+       "need_tw": 7.5
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 60,
+        "hit": 45.0,
+        "fair": 22.6,
+        "gap_pp": 22.4
+       },
+       {
+        "season": "2021",
+        "n": 70,
+        "hit": 25.7,
+        "fair": 24.2,
+        "gap_pp": 1.55
+       },
+       {
+        "season": "2122",
+        "n": 68,
+        "hit": 26.5,
+        "fair": 23.5,
+        "gap_pp": 2.93
+       },
+       {
+        "season": "2223",
+        "n": 67,
+        "hit": 23.9,
+        "fair": 23.2,
+        "gap_pp": 0.65
+       },
+       {
+        "season": "2324",
+        "n": 82,
+        "hit": 22.0,
+        "fair": 21.6,
+        "gap_pp": 0.34
+       },
+       {
+        "season": "2425",
+        "n": 69,
+        "hit": 20.3,
+        "fair": 21.6,
+        "gap_pp": -1.35
+       },
+       {
+        "season": "2526",
+        "n": 62,
+        "hit": 25.8,
+        "fair": 23.3,
+        "gap_pp": 2.52
+       },
+       {
+        "season": "2627",
+        "n": 6,
+        "hit": 16.7,
+        "fair": 24.5,
+        "gap_pp": -7.84
+       }
+      ]
+     },
+     {
+      "bet": "NH",
+      "bet_label": "和局＋客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押上一場大勝（贏3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigwin",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押上一場進4球↑的球隊"
+        ],
+        "keys": [
+         [
+          "fb_scored4",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押冷門（賠率≥5）"
+        ],
+        "keys": [
+         [
+          "longshot5",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局＋客勝｜反：押上一場大勝（贏3球↑）的球隊　＆　反：押上一場進4球↑的球隊　＆　條件：押冷門（賠率≥5）",
+      "train": {
+       "n": 374,
+       "hit": 32.1,
+       "fair": 26.6,
+       "gap_pp": 5.48,
+       "z": 2.46,
+       "roi_fair": 21.1,
+       "se_fair": 10.4,
+       "roi_intl": 3.8,
+       "se_intl": 8.5,
+       "need_intl": 3.9,
+       "roi_best": 17.0,
+       "se_best": 9.8,
+       "need_best": 0.8,
+       "roi_tw": -25.5,
+       "se_tw": 5.8,
+       "need_tw": 15.0
+      },
+      "test": {
+       "n": 283,
+       "hit": 25.4,
+       "fair": 26.1,
+       "gap_pp": -0.65,
+       "z": -0.26,
+       "roi_fair": -7.0,
+       "se_fair": 10.8,
+       "roi_intl": -21.9,
+       "se_intl": 8.6,
+       "need_intl": 4.4,
+       "roi_best": -14.1,
+       "se_best": 9.6,
+       "need_best": 1.7,
+       "roi_tw": -42.2,
+       "se_tw": 6.1,
+       "need_tw": 15.0
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 84,
+        "hit": 28.6,
+        "fair": 25.5,
+        "gap_pp": 3.12
+       },
+       {
+        "season": "2021",
+        "n": 87,
+        "hit": 40.2,
+        "fair": 26.3,
+        "gap_pp": 13.94
+       },
+       {
+        "season": "2122",
+        "n": 109,
+        "hit": 27.5,
+        "fair": 27.5,
+        "gap_pp": -0.0
+       },
+       {
+        "season": "2223",
+        "n": 94,
+        "hit": 33.0,
+        "fair": 26.9,
+        "gap_pp": 6.12
+       },
+       {
+        "season": "2324",
+        "n": 97,
+        "hit": 20.6,
+        "fair": 24.8,
+        "gap_pp": -4.2
+       },
+       {
+        "season": "2425",
+        "n": 105,
+        "hit": 27.6,
+        "fair": 27.6,
+        "gap_pp": 0.06
+       },
+       {
+        "season": "2526",
+        "n": 65,
+        "hit": 29.2,
+        "fair": 27.4,
+        "gap_pp": 1.83
+       },
+       {
+        "season": "2627",
+        "n": 16,
+        "hit": 25.0,
+        "fair": 18.8,
+        "gap_pp": 6.16
+       }
+      ]
+     },
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押三連敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_loss3",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_fav",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜跟：押三連敗的球隊　＆　跟：每場都押熱門",
+      "train": {
+       "n": 747,
+       "hit": 49.4,
+       "fair": 45.0,
+       "gap_pp": 4.42,
+       "z": 2.46,
+       "roi_fair": 10.0,
+       "se_fair": 4.2,
+       "roi_intl": 5.3,
+       "se_intl": 4.0,
+       "need_intl": 2.0,
+       "roi_best": 10.8,
+       "se_best": 4.2,
+       "need_best": -0.3,
+       "roi_tw": -4.2,
+       "se_tw": 3.6,
+       "need_tw": 6.5
+      },
+      "test": {
+       "n": 610,
+       "hit": 42.3,
+       "fair": 45.9,
+       "gap_pp": -3.61,
+       "z": -1.82,
+       "roi_fair": -7.0,
+       "se_fair": 4.5,
+       "roi_intl": -11.7,
+       "se_intl": 4.3,
+       "need_intl": 2.3,
+       "roi_best": -7.9,
+       "se_best": 4.5,
+       "need_best": 0.4,
+       "roi_tw": -18.9,
+       "se_tw": 3.9,
+       "need_tw": 6.5
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 184,
+        "hit": 50.5,
+        "fair": 44.8,
+        "gap_pp": 5.77
+       },
+       {
+        "season": "2021",
+        "n": 142,
+        "hit": 50.7,
+        "fair": 45.6,
+        "gap_pp": 5.05
+       },
+       {
+        "season": "2122",
+        "n": 214,
+        "hit": 44.4,
+        "fair": 45.2,
+        "gap_pp": -0.84
+       },
+       {
+        "season": "2223",
+        "n": 207,
+        "hit": 52.7,
+        "fair": 44.4,
+        "gap_pp": 8.22
+       },
+       {
+        "season": "2324",
+        "n": 218,
+        "hit": 44.5,
+        "fair": 45.7,
+        "gap_pp": -1.24
+       },
+       {
+        "season": "2425",
+        "n": 185,
+        "hit": 36.2,
+        "fair": 46.4,
+        "gap_pp": -10.18
+       },
+       {
+        "season": "2526",
+        "n": 179,
+        "hit": 45.3,
+        "fair": 45.6,
+        "gap_pp": -0.36
+       },
+       {
+        "season": "2627",
+        "n": 28,
+        "hit": 46.4,
+        "fair": 45.8,
+        "gap_pp": 0.63
+       }
+      ]
+     }
+    ],
+    "B": [
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押三連敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_loss3",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜反：押三連敗的球隊　＆　反：押升班馬",
+      "train": {
+       "n": 231,
+       "hit": 61.5,
+       "fair": 55.7,
+       "gap_pp": 5.8,
+       "z": 1.86,
+       "roi_fair": 13.0,
+       "se_fair": 6.4,
+       "roi_intl": 8.8,
+       "se_intl": 6.1,
+       "need_intl": 1.9,
+       "roi_best": 13.8,
+       "se_best": 6.4,
+       "need_best": -0.4,
+       "roi_tw": 0.8,
+       "se_tw": 5.6,
+       "need_tw": 6.0
+      },
+      "test": {
+       "n": 243,
+       "hit": 56.8,
+       "fair": 58.0,
+       "gap_pp": -1.18,
+       "z": -0.39,
+       "roi_fair": -1.0,
+       "se_fair": 6.1,
+       "roi_intl": -5.0,
+       "se_intl": 5.8,
+       "need_intl": 2.1,
+       "roi_best": -1.5,
+       "se_best": 6.0,
+       "need_best": -0.0,
+       "roi_tw": -11.2,
+       "se_tw": 5.4,
+       "need_tw": 5.9
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 79,
+        "hit": 59.5,
+        "fair": 57.3,
+        "gap_pp": 2.15
+       },
+       {
+        "season": "2122",
+        "n": 69,
+        "hit": 63.8,
+        "fair": 55.0,
+        "gap_pp": 8.8
+       },
+       {
+        "season": "2223",
+        "n": 83,
+        "hit": 61.4,
+        "fair": 54.7,
+        "gap_pp": 6.78
+       },
+       {
+        "season": "2324",
+        "n": 85,
+        "hit": 55.3,
+        "fair": 59.3,
+        "gap_pp": -4.03
+       },
+       {
+        "season": "2425",
+        "n": 75,
+        "hit": 57.3,
+        "fair": 58.3,
+        "gap_pp": -0.95
+       },
+       {
+        "season": "2526",
+        "n": 75,
+        "hit": 61.3,
+        "fair": 56.3,
+        "gap_pp": 5.02
+       },
+       {
+        "season": "2627",
+        "n": 8,
+        "hit": 25.0,
+        "fair": 56.1,
+        "gap_pp": -31.15
+       }
+      ]
+     },
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押豪門（曼聯、皇馬、拜仁…）"
+        ],
+        "keys": [
+         [
+          "fb_bigclub",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押 8 場不敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_unbeaten8",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押冷門（賠率≥5）"
+        ],
+        "keys": [
+         [
+          "longshot5",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜跟：押豪門（曼聯、皇馬、拜仁…）　＆　跟：押 8 場不敗的球隊　＆　反：押冷門（賠率≥5）",
+      "train": {
+       "n": 232,
+       "hit": 84.1,
+       "fair": 79.5,
+       "gap_pp": 4.57,
+       "z": 1.77,
+       "roi_fair": 6.4,
+       "se_fair": 3.2,
+       "roi_intl": 4.4,
+       "se_intl": 3.1,
+       "need_intl": 1.5,
+       "roi_best": 8.2,
+       "se_best": 3.2,
+       "need_best": -1.2,
+       "roi_tw": 0.4,
+       "se_tw": 3.0,
+       "need_tw": 4.5
+      },
+      "test": {
+       "n": 214,
+       "hit": 73.4,
+       "fair": 79.1,
+       "gap_pp": -5.72,
+       "z": -2.1,
+       "roi_fair": -7.8,
+       "se_fair": 3.9,
+       "roi_intl": -9.3,
+       "se_intl": 3.8,
+       "need_intl": 1.3,
+       "roi_best": -6.8,
+       "se_best": 3.9,
+       "need_best": -0.9,
+       "roi_tw": -12.9,
+       "se_tw": 3.6,
+       "need_tw": 4.5
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 53,
+        "hit": 83.0,
+        "fair": 80.9,
+        "gap_pp": 2.17
+       },
+       {
+        "season": "2021",
+        "n": 69,
+        "hit": 81.2,
+        "fair": 76.7,
+        "gap_pp": 4.51
+       },
+       {
+        "season": "2122",
+        "n": 57,
+        "hit": 87.7,
+        "fair": 79.9,
+        "gap_pp": 7.83
+       },
+       {
+        "season": "2223",
+        "n": 53,
+        "hit": 84.9,
+        "fair": 81.4,
+        "gap_pp": 3.55
+       },
+       {
+        "season": "2324",
+        "n": 81,
+        "hit": 76.5,
+        "fair": 80.6,
+        "gap_pp": -4.06
+       },
+       {
+        "season": "2425",
+        "n": 68,
+        "hit": 70.6,
+        "fair": 78.6,
+        "gap_pp": -8.04
+       },
+       {
+        "season": "2526",
+        "n": 65,
+        "hit": 72.3,
+        "fair": 77.7,
+        "gap_pp": -5.35
+       }
+      ]
+     },
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押三連敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_loss3",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_fav",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜反：押三連敗的球隊　＆　反：押升班馬　＆　跟：每場都押熱門",
+      "train": {
+       "n": 219,
+       "hit": 62.6,
+       "fair": 57.2,
+       "gap_pp": 5.32,
+       "z": 1.65,
+       "roi_fair": 12.0,
+       "se_fair": 6.2,
+       "roi_intl": 8.1,
+       "se_intl": 6.0,
+       "need_intl": 1.9,
+       "roi_best": 13.0,
+       "se_best": 6.3,
+       "need_best": -0.5,
+       "roi_tw": 0.5,
+       "se_tw": 5.5,
+       "need_tw": 6.0
+      },
+      "test": {
+       "n": 227,
+       "hit": 57.7,
+       "fair": 59.9,
+       "gap_pp": -2.16,
+       "z": -0.69,
+       "roi_fair": -3.9,
+       "se_fair": 5.9,
+       "roi_intl": -7.4,
+       "se_intl": 5.6,
+       "need_intl": 2.1,
+       "roi_best": -4.0,
+       "se_best": 5.8,
+       "need_best": -0.1,
+       "roi_tw": -13.0,
+       "se_tw": 5.2,
+       "need_tw": 5.8
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 75,
+        "hit": 61.3,
+        "fair": 59.1,
+        "gap_pp": 2.19
+       },
+       {
+        "season": "2122",
+        "n": 66,
+        "hit": 65.2,
+        "fair": 56.4,
+        "gap_pp": 8.74
+       },
+       {
+        "season": "2223",
+        "n": 78,
+        "hit": 61.5,
+        "fair": 56.1,
+        "gap_pp": 5.42
+       },
+       {
+        "season": "2324",
+        "n": 81,
+        "hit": 56.8,
+        "fair": 60.8,
+        "gap_pp": -4.0
+       },
+       {
+        "season": "2425",
+        "n": 69,
+        "hit": 56.5,
+        "fair": 60.7,
+        "gap_pp": -4.2
+       },
+       {
+        "season": "2526",
+        "n": 70,
+        "hit": 62.9,
+        "fair": 58.0,
+        "gap_pp": 4.87
+       },
+       {
+        "season": "2627",
+        "n": 7,
+        "hit": 28.6,
+        "fair": 59.4,
+        "gap_pp": -30.86
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "兩隊上一場都 4 球↑：押大 2.5"
+        ],
+        "keys": [
+         [
+          "fb_over_after4",
+          "TO"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜條件：兩隊上一場都 4 球↑：押大 2.5　＆　反：押升班馬",
+      "train": {
+       "n": 273,
+       "hit": 42.5,
+       "fair": 36.6,
+       "gap_pp": 5.93,
+       "z": 2.18,
+       "roi_fair": 22.7,
+       "se_fair": 10.7,
+       "roi_intl": 12.9,
+       "se_intl": 9.4,
+       "need_intl": 2.2,
+       "roi_best": 21.5,
+       "se_best": 10.4,
+       "need_best": -0.0,
+       "roi_tw": -0.5,
+       "se_tw": 8.0,
+       "need_tw": 6.5
+      },
+      "test": {
+       "n": 378,
+       "hit": 37.6,
+       "fair": 36.1,
+       "gap_pp": 1.45,
+       "z": 0.62,
+       "roi_fair": 2.5,
+       "se_fair": 8.0,
+       "roi_intl": -5.8,
+       "se_intl": 7.1,
+       "need_intl": 2.5,
+       "roi_best": -0.5,
+       "se_best": 7.7,
+       "need_best": 0.5,
+       "roi_tw": -15.6,
+       "se_tw": 6.2,
+       "need_tw": 6.5
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 79,
+        "hit": 40.5,
+        "fair": 39.7,
+        "gap_pp": 0.85
+       },
+       {
+        "season": "2122",
+        "n": 100,
+        "hit": 43.0,
+        "fair": 33.4,
+        "gap_pp": 9.64
+       },
+       {
+        "season": "2223",
+        "n": 94,
+        "hit": 43.6,
+        "fair": 37.4,
+        "gap_pp": 6.26
+       },
+       {
+        "season": "2324",
+        "n": 111,
+        "hit": 40.5,
+        "fair": 37.7,
+        "gap_pp": 2.84
+       },
+       {
+        "season": "2425",
+        "n": 119,
+        "hit": 35.3,
+        "fair": 35.9,
+        "gap_pp": -0.59
+       },
+       {
+        "season": "2526",
+        "n": 116,
+        "hit": 36.2,
+        "fair": 34.5,
+        "gap_pp": 1.75
+       },
+       {
+        "season": "2627",
+        "n": 32,
+        "hit": 40.6,
+        "fair": 37.5,
+        "gap_pp": 3.11
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "勢均力敵（主客差<5pp）押和局"
+        ],
+        "keys": [
+         [
+          "fb_close_draw",
+          "SD"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押被市場拋售的一邊（−4pp↓）"
+        ],
+        "keys": [
+         [
+          "fb_drift",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_fav",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜反：勢均力敵（主客差<5pp）押和局　＆　反：押被市場拋售的一邊（−4pp↓）　＆　反：每場都押熱門",
+      "train": {
+       "n": 271,
+       "hit": 40.6,
+       "fair": 34.2,
+       "gap_pp": 6.38,
+       "z": 2.22,
+       "roi_fair": 19.0,
+       "se_fair": 8.8,
+       "roi_intl": 13.2,
+       "se_intl": 8.3,
+       "need_intl": 1.8,
+       "roi_best": 22.2,
+       "se_best": 9.0,
+       "need_best": -0.7,
+       "roi_tw": -0.6,
+       "se_tw": 7.3,
+       "need_tw": 6.7
+      },
+      "test": {
+       "n": 178,
+       "hit": 36.5,
+       "fair": 34.3,
+       "gap_pp": 2.19,
+       "z": 0.62,
+       "roi_fair": 6.3,
+       "se_fair": 10.6,
+       "roi_intl": 0.8,
+       "se_intl": 10.0,
+       "need_intl": 2.0,
+       "roi_best": 7.6,
+       "se_best": 10.7,
+       "need_best": -0.3,
+       "roi_tw": -11.0,
+       "se_tw": 8.8,
+       "need_tw": 6.7
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 54,
+        "hit": 35.2,
+        "fair": 34.2,
+        "gap_pp": 0.96
+       },
+       {
+        "season": "2021",
+        "n": 79,
+        "hit": 41.8,
+        "fair": 34.2,
+        "gap_pp": 7.62
+       },
+       {
+        "season": "2122",
+        "n": 68,
+        "hit": 36.8,
+        "fair": 34.3,
+        "gap_pp": 2.44
+       },
+       {
+        "season": "2223",
+        "n": 70,
+        "hit": 47.1,
+        "fair": 34.2,
+        "gap_pp": 12.99
+       },
+       {
+        "season": "2324",
+        "n": 72,
+        "hit": 38.9,
+        "fair": 34.6,
+        "gap_pp": 4.26
+       },
+       {
+        "season": "2425",
+        "n": 60,
+        "hit": 36.7,
+        "fair": 33.9,
+        "gap_pp": 2.75
+       },
+       {
+        "season": "2526",
+        "n": 32,
+        "hit": 34.4,
+        "fair": 34.5,
+        "gap_pp": -0.08
+       },
+       {
+        "season": "2627",
+        "n": 14,
+        "hit": 28.6,
+        "fair": 34.3,
+        "gap_pp": -5.69
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押客場熱門",
+         "押主場冷門",
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_away_fav",
+          "SA"
+         ],
+         [
+          "home_dog",
+          "SH"
+         ],
+         [
+          "fb_fav",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押 5 場沒贏的球隊"
+        ],
+        "keys": [
+         [
+          "fb_winless5",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜跟：押客場熱門＝押主場冷門＝每場都押熱門　＆　跟：押 5 場沒贏的球隊",
+      "train": {
+       "n": 295,
+       "hit": 48.1,
+       "fair": 41.9,
+       "gap_pp": 6.23,
+       "z": 2.19,
+       "roi_fair": 15.2,
+       "se_fair": 7.1,
+       "roi_intl": 9.5,
+       "se_intl": 6.7,
+       "need_intl": 2.1,
+       "roi_best": 15.7,
+       "se_best": 7.1,
+       "need_best": -0.2,
+       "roi_tw": -0.7,
+       "se_tw": 6.1,
+       "need_tw": 6.6
+      },
+      "test": {
+       "n": 238,
+       "hit": 47.9,
+       "fair": 42.5,
+       "gap_pp": 5.36,
+       "z": 1.69,
+       "roi_fair": 12.9,
+       "se_fair": 7.8,
+       "roi_intl": 6.7,
+       "se_intl": 7.4,
+       "need_intl": 2.4,
+       "roi_best": 11.8,
+       "se_best": 7.7,
+       "need_best": 0.4,
+       "roi_tw": -2.5,
+       "se_tw": 6.7,
+       "need_tw": 6.5
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 53,
+        "hit": 34.0,
+        "fair": 43.6,
+        "gap_pp": -9.65
+       },
+       {
+        "season": "2021",
+        "n": 117,
+        "hit": 50.4,
+        "fair": 42.0,
+        "gap_pp": 8.4
+       },
+       {
+        "season": "2122",
+        "n": 63,
+        "hit": 57.1,
+        "fair": 40.3,
+        "gap_pp": 16.83
+       },
+       {
+        "season": "2223",
+        "n": 62,
+        "hit": 46.8,
+        "fair": 41.8,
+        "gap_pp": 4.95
+       },
+       {
+        "season": "2324",
+        "n": 73,
+        "hit": 52.1,
+        "fair": 42.7,
+        "gap_pp": 9.4
+       },
+       {
+        "season": "2425",
+        "n": 66,
+        "hit": 47.0,
+        "fair": 43.4,
+        "gap_pp": 3.54
+       },
+       {
+        "season": "2526",
+        "n": 85,
+        "hit": 43.5,
+        "fair": 41.7,
+        "gap_pp": 1.81
+       },
+       {
+        "season": "2627",
+        "n": 14,
+        "hit": 57.1,
+        "fair": 42.8,
+        "gap_pp": 14.36
+       }
+      ]
+     },
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押豪門（曼聯、皇馬、拜仁…）"
+        ],
+        "keys": [
+         [
+          "fb_bigclub",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "押 8 場不敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_unbeaten8",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_fav",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜跟：押豪門（曼聯、皇馬、拜仁…）　＆　跟：押 8 場不敗的球隊　＆　跟：每場都押熱門",
+      "train": {
+       "n": 246,
+       "hit": 82.1,
+       "fair": 77.9,
+       "gap_pp": 4.2,
+       "z": 1.64,
+       "roi_fair": 5.7,
+       "se_fair": 3.3,
+       "roi_intl": 3.6,
+       "se_intl": 3.3,
+       "need_intl": 1.5,
+       "roi_best": 7.5,
+       "se_best": 3.4,
+       "need_best": -1.2,
+       "roi_tw": -0.5,
+       "se_tw": 3.1,
+       "need_tw": 4.6
+      },
+      "test": {
+       "n": 232,
+       "hit": 72.0,
+       "fair": 76.9,
+       "gap_pp": -4.9,
+       "z": -1.84,
+       "roi_fair": -6.2,
+       "se_fair": 4.1,
+       "roi_intl": -7.9,
+       "se_intl": 4.0,
+       "need_intl": 1.3,
+       "roi_best": -5.3,
+       "se_best": 4.1,
+       "need_best": -0.9,
+       "roi_tw": -11.9,
+       "se_tw": 3.8,
+       "need_tw": 4.7
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 56,
+        "hit": 78.6,
+        "fair": 78.9,
+        "gap_pp": -0.37
+       },
+       {
+        "season": "2021",
+        "n": 76,
+        "hit": 80.3,
+        "fair": 74.5,
+        "gap_pp": 5.79
+       },
+       {
+        "season": "2122",
+        "n": 60,
+        "hit": 85.0,
+        "fair": 78.6,
+        "gap_pp": 6.39
+       },
+       {
+        "season": "2223",
+        "n": 54,
+        "hit": 85.2,
+        "fair": 80.9,
+        "gap_pp": 4.25
+       },
+       {
+        "season": "2324",
+        "n": 87,
+        "hit": 78.2,
+        "fair": 78.5,
+        "gap_pp": -0.34
+       },
+       {
+        "season": "2425",
+        "n": 72,
+        "hit": 66.7,
+        "fair": 77.3,
+        "gap_pp": -10.6
+       },
+       {
+        "season": "2526",
+        "n": 73,
+        "hit": 69.9,
+        "fair": 74.6,
+        "gap_pp": -4.71
+       }
+      ]
+     },
+     {
+      "bet": "SH",
+      "bet_label": "主勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押大冷門（賠率≥8）"
+        ],
+        "keys": [
+         [
+          "longshot8",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝｜反：押升班馬　＆　反：押大冷門（賠率≥8）",
+      "train": {
+       "n": 292,
+       "hit": 83.2,
+       "fair": 79.3,
+       "gap_pp": 3.95,
+       "z": 1.69,
+       "roi_fair": 5.5,
+       "se_fair": 2.8,
+       "roi_intl": 3.5,
+       "se_intl": 2.8,
+       "need_intl": 1.5,
+       "roi_best": 7.0,
+       "se_best": 2.9,
+       "need_best": -1.2,
+       "roi_tw": -0.5,
+       "se_tw": 2.7,
+       "need_tw": 4.6
+      },
+      "test": {
+       "n": 380,
+       "hit": 78.7,
+       "fair": 80.5,
+       "gap_pp": -1.83,
+       "z": -0.91,
+       "roi_fair": -2.1,
+       "se_fair": 2.7,
+       "roi_intl": -3.8,
+       "se_intl": 2.6,
+       "need_intl": 1.4,
+       "roi_best": -1.1,
+       "se_best": 2.7,
+       "need_best": -0.8,
+       "roi_tw": -7.3,
+       "se_tw": 2.5,
+       "need_tw": 4.5
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 81,
+        "hit": 79.0,
+        "fair": 78.4,
+        "gap_pp": 0.64
+       },
+       {
+        "season": "2122",
+        "n": 100,
+        "hit": 80.0,
+        "fair": 79.4,
+        "gap_pp": 0.63
+       },
+       {
+        "season": "2223",
+        "n": 111,
+        "hit": 89.2,
+        "fair": 79.8,
+        "gap_pp": 9.36
+       },
+       {
+        "season": "2324",
+        "n": 134,
+        "hit": 79.9,
+        "fair": 80.9,
+        "gap_pp": -1.07
+       },
+       {
+        "season": "2425",
+        "n": 129,
+        "hit": 80.6,
+        "fair": 79.8,
+        "gap_pp": 0.79
+       },
+       {
+        "season": "2526",
+        "n": 99,
+        "hit": 75.8,
+        "fair": 80.2,
+        "gap_pp": -4.44
+       },
+       {
+        "season": "2627",
+        "n": 18,
+        "hit": 72.2,
+        "fair": 84.1,
+        "gap_pp": -11.86
+       }
+      ]
+     },
+     {
+      "bet": "SD",
+      "bet_label": "和局",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押 5 場沒贏的球隊"
+        ],
+        "keys": [
+         [
+          "fb_winless5",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局｜反：押升班馬　＆　反：押 5 場沒贏的球隊",
+      "train": {
+       "n": 364,
+       "hit": 34.1,
+       "fair": 28.0,
+       "gap_pp": 6.06,
+       "z": 2.58,
+       "roi_fair": 24.6,
+       "se_fair": 9.6,
+       "roi_intl": 15.9,
+       "se_intl": 8.8,
+       "need_intl": 1.9,
+       "roi_best": 22.8,
+       "se_best": 9.3,
+       "need_best": 0.2,
+       "roi_tw": -1.7,
+       "se_tw": 7.3,
+       "need_tw": 6.9
+      },
+      "test": {
+       "n": 388,
+       "hit": 24.5,
+       "fair": 27.3,
+       "gap_pp": -2.86,
+       "z": -1.27,
+       "roi_fair": -9.7,
+       "se_fair": 8.2,
+       "roi_intl": -16.5,
+       "se_intl": 7.5,
+       "need_intl": 2.1,
+       "roi_best": -12.6,
+       "se_best": 7.9,
+       "need_best": 0.7,
+       "roi_tw": -28.2,
+       "se_tw": 6.4,
+       "need_tw": 6.9
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 99,
+        "hit": 40.4,
+        "fair": 28.3,
+        "gap_pp": 12.07
+       },
+       {
+        "season": "2122",
+        "n": 121,
+        "hit": 32.2,
+        "fair": 28.1,
+        "gap_pp": 4.09
+       },
+       {
+        "season": "2223",
+        "n": 144,
+        "hit": 31.2,
+        "fair": 27.7,
+        "gap_pp": 3.59
+       },
+       {
+        "season": "2324",
+        "n": 126,
+        "hit": 20.6,
+        "fair": 27.6,
+        "gap_pp": -7.0
+       },
+       {
+        "season": "2425",
+        "n": 127,
+        "hit": 26.8,
+        "fair": 28.0,
+        "gap_pp": -1.21
+       },
+       {
+        "season": "2526",
+        "n": 126,
+        "hit": 26.2,
+        "fair": 26.6,
+        "gap_pp": -0.43
+       },
+       {
+        "season": "2627",
+        "n": 9,
+        "hit": 22.2,
+        "fair": 24.5,
+        "gap_pp": -2.25
+       }
+      ]
+     },
+     {
+      "bet": "TU",
+      "bet_label": "小 2.5",
+      "conds": [
+       {
+        "rel": "ctx",
+        "names": [
+         "押上一場大敗（輸3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigloss",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "ctx",
+        "names": [
+         "押三連敗的球隊"
+        ],
+        "keys": [
+         [
+          "fb_loss3",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押小 2.5｜條件：押上一場大敗（輸3球↑）的球隊　＆　條件：押三連敗的球隊",
+      "train": {
+       "n": 265,
+       "hit": 55.1,
+       "fair": 47.2,
+       "gap_pp": 7.89,
+       "z": 2.63,
+       "roi_fair": 18.6,
+       "se_fair": 6.9,
+       "roi_intl": 10.5,
+       "se_intl": 6.4,
+       "need_intl": 3.1,
+       "roi_best": 16.5,
+       "se_best": 6.8,
+       "need_best": 0.5,
+       "roi_tw": -1.3,
+       "se_tw": 5.6,
+       "need_tw": 8.8
+      },
+      "test": {
+       "n": 219,
+       "hit": 43.8,
+       "fair": 44.8,
+       "gap_pp": -0.99,
+       "z": -0.3,
+       "roi_fair": -4.8,
+       "se_fair": 7.5,
+       "roi_intl": -10.9,
+       "se_intl": 7.0,
+       "need_intl": 3.3,
+       "roi_best": -6.5,
+       "se_best": 7.4,
+       "need_best": 1.1,
+       "roi_tw": -20.8,
+       "se_tw": 6.2,
+       "need_tw": 9.1
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 60,
+        "hit": 56.7,
+        "fair": 45.2,
+        "gap_pp": 11.47
+       },
+       {
+        "season": "2021",
+        "n": 70,
+        "hit": 58.6,
+        "fair": 49.1,
+        "gap_pp": 9.47
+       },
+       {
+        "season": "2122",
+        "n": 68,
+        "hit": 50.0,
+        "fair": 47.1,
+        "gap_pp": 2.9
+       },
+       {
+        "season": "2223",
+        "n": 67,
+        "hit": 55.2,
+        "fair": 47.1,
+        "gap_pp": 8.09
+       },
+       {
+        "season": "2324",
+        "n": 82,
+        "hit": 34.1,
+        "fair": 43.6,
+        "gap_pp": -9.41
+       },
+       {
+        "season": "2425",
+        "n": 69,
+        "hit": 46.4,
+        "fair": 44.6,
+        "gap_pp": 1.79
+       },
+       {
+        "season": "2526",
+        "n": 62,
+        "hit": 54.8,
+        "fair": 46.5,
+        "gap_pp": 8.31
+       },
+       {
+        "season": "2627",
+        "n": 6,
+        "hit": 33.3,
+        "fair": 47.2,
+        "gap_pp": -13.9
+       }
+      ]
+     }
+    ],
+    "C": [
+     {
+      "bet": "SD",
+      "bet_label": "和局",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押上一場大勝（贏3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigwin",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局｜反：押上一場大勝（贏3球↑）的球隊　＆　反：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 209,
+       "hit": 28.7,
+       "fair": 22.5,
+       "gap_pp": 6.23,
+       "z": 2.18,
+       "roi_fair": 31.2,
+       "se_fair": 16.3,
+       "roi_intl": 14.5,
+       "se_intl": 13.4,
+       "need_intl": 2.4,
+       "roi_best": 24.6,
+       "se_best": 14.9,
+       "need_best": 0.8,
+       "roi_tw": -6.0,
+       "se_tw": 10.6,
+       "need_tw": 7.5
+      },
+      "test": {
+       "n": 180,
+       "hit": 20.0,
+       "fair": 22.1,
+       "gap_pp": -2.1,
+       "z": -0.68,
+       "roi_fair": -8.6,
+       "se_fair": 15.1,
+       "roi_intl": -19.4,
+       "se_intl": 12.6,
+       "need_intl": 2.4,
+       "roi_best": -14.4,
+       "se_best": 13.5,
+       "need_best": 1.1,
+       "roi_tw": -34.1,
+       "se_tw": 10.0,
+       "need_tw": 7.5
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 42,
+        "hit": 26.2,
+        "fair": 23.5,
+        "gap_pp": 2.69
+       },
+       {
+        "season": "2021",
+        "n": 48,
+        "hit": 31.2,
+        "fair": 21.6,
+        "gap_pp": 9.63
+       },
+       {
+        "season": "2122",
+        "n": 69,
+        "hit": 21.7,
+        "fair": 22.4,
+        "gap_pp": -0.69
+       },
+       {
+        "season": "2223",
+        "n": 50,
+        "hit": 38.0,
+        "fair": 22.5,
+        "gap_pp": 15.48
+       },
+       {
+        "season": "2324",
+        "n": 61,
+        "hit": 16.4,
+        "fair": 21.6,
+        "gap_pp": -5.2
+       },
+       {
+        "season": "2425",
+        "n": 61,
+        "hit": 19.7,
+        "fair": 22.1,
+        "gap_pp": -2.46
+       },
+       {
+        "season": "2526",
+        "n": 46,
+        "hit": 28.3,
+        "fair": 23.6,
+        "gap_pp": 4.71
+       },
+       {
+        "season": "2627",
+        "n": 12,
+        "hit": 8.3,
+        "fair": 18.9,
+        "gap_pp": -10.53
+       }
+      ]
+     },
+     {
+      "bet": "NH",
+      "bet_label": "和局＋客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押上一場大勝（贏3球↑）的球隊"
+        ],
+        "keys": [
+         [
+          "fb_bigwin",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局＋客勝｜反：押上一場大勝（贏3球↑）的球隊　＆　反：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 209,
+       "hit": 49.3,
+       "fair": 42.7,
+       "gap_pp": 6.6,
+       "z": 2.04,
+       "roi_fair": 17.2,
+       "se_fair": 10.7,
+       "roi_intl": 1.4,
+       "se_intl": 8.3,
+       "need_intl": 4.9,
+       "roi_best": 11.7,
+       "se_best": 9.5,
+       "need_best": 1.2,
+       "roi_tw": -16.3,
+       "se_tw": 6.3,
+       "need_tw": 14.1
+      },
+      "test": {
+       "n": 180,
+       "hit": 40.0,
+       "fair": 42.0,
+       "gap_pp": -2.03,
+       "z": -0.58,
+       "roi_fair": -1.4,
+       "se_fair": 11.0,
+       "roi_intl": -14.3,
+       "se_intl": 8.8,
+       "need_intl": 4.9,
+       "roi_best": -7.6,
+       "se_best": 9.7,
+       "need_best": 2.0,
+       "roi_tw": -30.0,
+       "se_tw": 6.8,
+       "need_tw": 14.1
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 42,
+        "hit": 52.4,
+        "fair": 45.9,
+        "gap_pp": 6.47
+       },
+       {
+        "season": "2021",
+        "n": 48,
+        "hit": 50.0,
+        "fair": 42.0,
+        "gap_pp": 7.98
+       },
+       {
+        "season": "2122",
+        "n": 69,
+        "hit": 46.4,
+        "fair": 41.3,
+        "gap_pp": 5.07
+       },
+       {
+        "season": "2223",
+        "n": 50,
+        "hit": 50.0,
+        "fair": 42.5,
+        "gap_pp": 7.5
+       },
+       {
+        "season": "2324",
+        "n": 61,
+        "hit": 32.8,
+        "fair": 40.9,
+        "gap_pp": -8.09
+       },
+       {
+        "season": "2425",
+        "n": 61,
+        "hit": 42.6,
+        "fair": 41.2,
+        "gap_pp": 1.4
+       },
+       {
+        "season": "2526",
+        "n": 46,
+        "hit": 45.7,
+        "fair": 46.5,
+        "gap_pp": -0.89
+       },
+       {
+        "season": "2627",
+        "n": 12,
+        "hit": 41.7,
+        "fair": 34.7,
+        "gap_pp": 6.95
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "勢均力敵（主客差<5pp）押和局"
+        ],
+        "keys": [
+         [
+          "fb_close_draw",
+          "SD"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜反：勢均力敵（主客差<5pp）押和局　＆　跟：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 359,
+       "hit": 40.7,
+       "fair": 35.6,
+       "gap_pp": 5.06,
+       "z": 2.0,
+       "roi_fair": 14.2,
+       "se_fair": 7.3,
+       "roi_intl": 8.6,
+       "se_intl": 7.0,
+       "need_intl": 1.9,
+       "roi_best": 17.4,
+       "se_best": 7.5,
+       "need_best": -0.8,
+       "roi_tw": -3.9,
+       "se_tw": 6.1,
+       "need_tw": 6.7
+      },
+      "test": {
+       "n": 242,
+       "hit": 35.5,
+       "fair": 36.0,
+       "gap_pp": -0.5,
+       "z": -0.16,
+       "roi_fair": -1.1,
+       "se_fair": 8.6,
+       "roi_intl": -6.2,
+       "se_intl": 8.2,
+       "need_intl": 2.1,
+       "roi_best": 0.2,
+       "se_best": 8.7,
+       "need_best": -0.4,
+       "roi_tw": -16.6,
+       "se_tw": 7.2,
+       "need_tw": 6.7
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 83,
+        "hit": 42.2,
+        "fair": 35.9,
+        "gap_pp": 6.25
+       },
+       {
+        "season": "2021",
+        "n": 113,
+        "hit": 38.9,
+        "fair": 35.3,
+        "gap_pp": 3.63
+       },
+       {
+        "season": "2122",
+        "n": 89,
+        "hit": 41.6,
+        "fair": 35.6,
+        "gap_pp": 6.02
+       },
+       {
+        "season": "2223",
+        "n": 74,
+        "hit": 40.5,
+        "fair": 35.8,
+        "gap_pp": 4.75
+       },
+       {
+        "season": "2324",
+        "n": 82,
+        "hit": 35.4,
+        "fair": 36.1,
+        "gap_pp": -0.7
+       },
+       {
+        "season": "2425",
+        "n": 91,
+        "hit": 38.5,
+        "fair": 35.9,
+        "gap_pp": 2.55
+       },
+       {
+        "season": "2526",
+        "n": 44,
+        "hit": 36.4,
+        "fair": 36.0,
+        "gap_pp": 0.35
+       },
+       {
+        "season": "2627",
+        "n": 25,
+        "hit": 24.0,
+        "fair": 36.4,
+        "gap_pp": -12.44
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押客場熱門",
+         "押主場冷門",
+         "每場都押熱門"
+        ],
+        "keys": [
+         [
+          "fb_away_fav",
+          "SA"
+         ],
+         [
+          "home_dog",
+          "SH"
+         ],
+         [
+          "fb_fav",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押被市場拋售的一邊（−4pp↓）"
+        ],
+        "keys": [
+         [
+          "fb_drift",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜跟：押客場熱門＝押主場冷門＝每場都押熱門　＆　反：押被市場拋售的一邊（−4pp↓）　＆　跟：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 1109,
+       "hit": 50.3,
+       "fair": 47.5,
+       "gap_pp": 2.86,
+       "z": 1.94,
+       "roi_fair": 6.9,
+       "se_fair": 3.3,
+       "roi_intl": 2.9,
+       "se_intl": 3.2,
+       "need_intl": 1.7,
+       "roi_best": 10.0,
+       "se_best": 3.4,
+       "need_best": -1.4,
+       "roi_tw": -6.4,
+       "se_tw": 2.9,
+       "need_tw": 6.4
+      },
+      "test": {
+       "n": 764,
+       "hit": 48.4,
+       "fair": 46.2,
+       "gap_pp": 2.27,
+       "z": 1.28,
+       "roi_fair": 4.1,
+       "se_fair": 4.0,
+       "roi_intl": -0.3,
+       "se_intl": 3.8,
+       "need_intl": 2.0,
+       "roi_best": 5.5,
+       "se_best": 4.1,
+       "need_best": -0.6,
+       "roi_tw": -8.9,
+       "se_tw": 3.5,
+       "need_tw": 6.5
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 225,
+        "hit": 44.9,
+        "fair": 47.2,
+        "gap_pp": -2.27
+       },
+       {
+        "season": "2021",
+        "n": 361,
+        "hit": 50.4,
+        "fair": 46.4,
+        "gap_pp": 3.97
+       },
+       {
+        "season": "2122",
+        "n": 277,
+        "hit": 55.6,
+        "fair": 48.8,
+        "gap_pp": 6.75
+       },
+       {
+        "season": "2223",
+        "n": 246,
+        "hit": 49.2,
+        "fair": 47.6,
+        "gap_pp": 1.57
+       },
+       {
+        "season": "2324",
+        "n": 223,
+        "hit": 48.9,
+        "fair": 46.5,
+        "gap_pp": 2.37
+       },
+       {
+        "season": "2425",
+        "n": 274,
+        "hit": 51.1,
+        "fair": 45.4,
+        "gap_pp": 5.7
+       },
+       {
+        "season": "2526",
+        "n": 200,
+        "hit": 45.5,
+        "fair": 46.8,
+        "gap_pp": -1.29
+       },
+       {
+        "season": "2627",
+        "n": 67,
+        "hit": 44.8,
+        "fair": 46.2,
+        "gap_pp": -1.41
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "pick",
+        "names": [
+         "押被市場拋售的一邊（−4pp↓）"
+        ],
+        "keys": [
+         [
+          "fb_drift",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "開季前 5 輪押熱門"
+        ],
+        "keys": [
+         [
+          "fb_early_fav",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜跟：押被市場拋售的一邊（−4pp↓）　＆　反：開季前 5 輪押熱門　＆　反：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 247,
+       "hit": 30.0,
+       "fair": 24.7,
+       "gap_pp": 5.28,
+       "z": 1.94,
+       "roi_fair": 26.4,
+       "se_fair": 13.0,
+       "roi_intl": 13.9,
+       "se_intl": 11.7,
+       "need_intl": 2.7,
+       "roi_best": 24.5,
+       "se_best": 12.8,
+       "need_best": 0.4,
+       "roi_tw": -2.6,
+       "se_tw": 9.8,
+       "need_tw": 6.7
+      },
+      "test": {
+       "n": 165,
+       "hit": 26.7,
+       "fair": 24.1,
+       "gap_pp": 2.55,
+       "z": 0.77,
+       "roi_fair": 13.3,
+       "se_fair": 15.7,
+       "roi_intl": 0.5,
+       "se_intl": 13.7,
+       "need_intl": 2.7,
+       "roi_best": 8.9,
+       "se_best": 15.0,
+       "need_best": 0.9,
+       "roi_tw": -13.3,
+       "se_tw": 11.7,
+       "need_tw": 6.7
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 55,
+        "hit": 30.9,
+        "fair": 24.2,
+        "gap_pp": 6.74
+       },
+       {
+        "season": "2021",
+        "n": 49,
+        "hit": 30.6,
+        "fair": 24.8,
+        "gap_pp": 5.83
+       },
+       {
+        "season": "2122",
+        "n": 90,
+        "hit": 28.9,
+        "fair": 24.7,
+        "gap_pp": 4.15
+       },
+       {
+        "season": "2223",
+        "n": 53,
+        "hit": 30.2,
+        "fair": 25.0,
+        "gap_pp": 5.18
+       },
+       {
+        "season": "2324",
+        "n": 34,
+        "hit": 23.5,
+        "fair": 25.3,
+        "gap_pp": -1.72
+       },
+       {
+        "season": "2425",
+        "n": 52,
+        "hit": 28.8,
+        "fair": 23.4,
+        "gap_pp": 5.49
+       },
+       {
+        "season": "2526",
+        "n": 27,
+        "hit": 25.9,
+        "fair": 25.1,
+        "gap_pp": 0.87
+       },
+       {
+        "season": "2627",
+        "n": 52,
+        "hit": 26.9,
+        "fair": 23.6,
+        "gap_pp": 3.28
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "押升班馬"
+        ],
+        "keys": [
+         [
+          "fb_promoted",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜反：押升班馬　＆　跟：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 351,
+       "hit": 50.7,
+       "fair": 45.8,
+       "gap_pp": 4.87,
+       "z": 1.92,
+       "roi_fair": 10.0,
+       "se_fair": 6.4,
+       "roi_intl": 5.6,
+       "se_intl": 6.0,
+       "need_intl": 1.8,
+       "roi_best": 13.9,
+       "se_best": 6.6,
+       "need_best": -1.2,
+       "roi_tw": -4.5,
+       "se_tw": 5.4,
+       "need_tw": 6.3
+      },
+      "test": {
+       "n": 316,
+       "hit": 44.6,
+       "fair": 44.5,
+       "gap_pp": 0.08,
+       "z": 0.03,
+       "roi_fair": -0.1,
+       "se_fair": 6.8,
+       "roi_intl": -4.4,
+       "se_intl": 6.5,
+       "need_intl": 2.0,
+       "roi_best": 2.0,
+       "se_best": 7.0,
+       "need_best": -0.5,
+       "roi_tw": -13.7,
+       "se_tw": 5.8,
+       "need_tw": 6.4
+      },
+      "seasons": [
+       {
+        "season": "2021",
+        "n": 149,
+        "hit": 51.0,
+        "fair": 47.2,
+        "gap_pp": 3.78
+       },
+       {
+        "season": "2122",
+        "n": 100,
+        "hit": 46.0,
+        "fair": 43.7,
+        "gap_pp": 2.31
+       },
+       {
+        "season": "2223",
+        "n": 102,
+        "hit": 54.9,
+        "fair": 45.9,
+        "gap_pp": 8.96
+       },
+       {
+        "season": "2324",
+        "n": 117,
+        "hit": 51.3,
+        "fair": 45.3,
+        "gap_pp": 5.98
+       },
+       {
+        "season": "2425",
+        "n": 106,
+        "hit": 41.5,
+        "fair": 41.5,
+        "gap_pp": -0.01
+       },
+       {
+        "season": "2526",
+        "n": 75,
+        "hit": 40.0,
+        "fair": 47.1,
+        "gap_pp": -7.07
+       },
+       {
+        "season": "2627",
+        "n": 18,
+        "hit": 38.9,
+        "fair": 46.8,
+        "gap_pp": -7.94
+       }
+      ]
+     },
+     {
+      "bet": "NH",
+      "bet_label": "和局＋客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "開季前 5 輪押熱門"
+        ],
+        "keys": [
+         [
+          "fb_early_fav",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SH"
+         ]
+        ]
+       }
+      ],
+      "text": "押和局＋客勝｜反：開季前 5 輪押熱門　＆　反：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 425,
+       "hit": 52.2,
+       "fair": 47.9,
+       "gap_pp": 4.33,
+       "z": 1.84,
+       "roi_fair": 7.9,
+       "se_fair": 5.4,
+       "roi_intl": -2.4,
+       "se_intl": 4.8,
+       "need_intl": 4.8,
+       "roi_best": 5.4,
+       "se_best": 5.2,
+       "need_best": 1.0,
+       "roi_tw": -16.8,
+       "se_tw": 4.0,
+       "need_tw": 13.8
+      },
+      "test": {
+       "n": 329,
+       "hit": 48.3,
+       "fair": 45.4,
+       "gap_pp": 2.92,
+       "z": 1.09,
+       "roi_fair": 5.4,
+       "se_fair": 6.5,
+       "roi_intl": -5.6,
+       "se_intl": 5.7,
+       "need_intl": 4.9,
+       "roi_best": 0.7,
+       "se_best": 6.1,
+       "need_best": 1.8,
+       "roi_tw": -20.2,
+       "se_tw": 4.7,
+       "need_tw": 13.9
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 111,
+        "hit": 47.7,
+        "fair": 46.5,
+        "gap_pp": 1.25
+       },
+       {
+        "season": "2021",
+        "n": 87,
+        "hit": 51.7,
+        "fair": 47.6,
+        "gap_pp": 4.12
+       },
+       {
+        "season": "2122",
+        "n": 146,
+        "hit": 59.6,
+        "fair": 48.9,
+        "gap_pp": 10.69
+       },
+       {
+        "season": "2223",
+        "n": 81,
+        "hit": 45.7,
+        "fair": 48.4,
+        "gap_pp": -2.7
+       },
+       {
+        "season": "2324",
+        "n": 67,
+        "hit": 50.7,
+        "fair": 47.6,
+        "gap_pp": 3.15
+       },
+       {
+        "season": "2425",
+        "n": 101,
+        "hit": 46.5,
+        "fair": 45.8,
+        "gap_pp": 0.76
+       },
+       {
+        "season": "2526",
+        "n": 59,
+        "hit": 47.5,
+        "fair": 46.3,
+        "gap_pp": 1.21
+       },
+       {
+        "season": "2627",
+        "n": 102,
+        "hit": 49.0,
+        "fair": 43.1,
+        "gap_pp": 5.9
+       }
+      ]
+     },
+     {
+      "bet": "SA",
+      "bet_label": "客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "勢均力敵（主客差<5pp）押和局"
+        ],
+        "keys": [
+         [
+          "fb_close_draw",
+          "SD"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押被市場拋售的一邊（−4pp↓）"
+        ],
+        "keys": [
+         [
+          "fb_drift",
+          "SH"
+         ]
+        ]
+       },
+       {
+        "rel": "pick",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押客勝｜反：勢均力敵（主客差<5pp）押和局　＆　反：押被市場拋售的一邊（−4pp↓）　＆　跟：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 311,
+       "hit": 40.5,
+       "fair": 35.5,
+       "gap_pp": 4.97,
+       "z": 1.83,
+       "roi_fair": 14.1,
+       "se_fair": 7.9,
+       "roi_intl": 8.5,
+       "se_intl": 7.5,
+       "need_intl": 1.9,
+       "roi_best": 17.4,
+       "se_best": 8.1,
+       "need_best": -0.8,
+       "roi_tw": -4.0,
+       "se_tw": 6.6,
+       "need_tw": 6.7
+      },
+      "test": {
+       "n": 224,
+       "hit": 35.3,
+       "fair": 36.0,
+       "gap_pp": -0.76,
+       "z": -0.24,
+       "roi_fair": -1.6,
+       "se_fair": 8.9,
+       "roi_intl": -6.8,
+       "se_intl": 8.5,
+       "need_intl": 2.2,
+       "roi_best": -0.4,
+       "se_best": 9.1,
+       "need_best": -0.3,
+       "roi_tw": -17.1,
+       "se_tw": 7.5,
+       "need_tw": 6.7
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 67,
+        "hit": 37.3,
+        "fair": 35.7,
+        "gap_pp": 1.58
+       },
+       {
+        "season": "2021",
+        "n": 100,
+        "hit": 40.0,
+        "fair": 35.3,
+        "gap_pp": 4.7
+       },
+       {
+        "season": "2122",
+        "n": 80,
+        "hit": 42.5,
+        "fair": 35.6,
+        "gap_pp": 6.94
+       },
+       {
+        "season": "2223",
+        "n": 64,
+        "hit": 42.2,
+        "fair": 35.7,
+        "gap_pp": 6.51
+       },
+       {
+        "season": "2324",
+        "n": 78,
+        "hit": 34.6,
+        "fair": 36.0,
+        "gap_pp": -1.43
+       },
+       {
+        "season": "2425",
+        "n": 82,
+        "hit": 37.8,
+        "fair": 35.9,
+        "gap_pp": 1.91
+       },
+       {
+        "season": "2526",
+        "n": 40,
+        "hit": 37.5,
+        "fair": 36.0,
+        "gap_pp": 1.51
+       },
+       {
+        "season": "2627",
+        "n": 24,
+        "hit": 25.0,
+        "fair": 36.5,
+        "gap_pp": -11.5
+       }
+      ]
+     },
+     {
+      "bet": "ND",
+      "bet_label": "主勝＋客勝",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SD"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝＋客勝｜反：追盤口移動（早盤→收盤 +4pp↑）",
+      "train": {
+       "n": 266,
+       "hit": 76.3,
+       "fair": 71.4,
+       "gap_pp": 4.93,
+       "z": 1.79,
+       "roi_fair": 7.0,
+       "se_fair": 3.7,
+       "roi_intl": -0.7,
+       "se_intl": 3.4,
+       "need_intl": 5.4,
+       "roi_best": 6.1,
+       "se_best": 3.7,
+       "need_best": 0.5,
+       "roi_tw": -9.4,
+       "se_tw": 3.1,
+       "need_tw": 12.8
+      },
+      "test": {
+       "n": 151,
+       "hit": 74.8,
+       "fair": 72.7,
+       "gap_pp": 2.1,
+       "z": 0.59,
+       "roi_fair": 3.3,
+       "se_fair": 5.0,
+       "roi_intl": -4.3,
+       "se_intl": 4.6,
+       "need_intl": 5.7,
+       "roi_best": 1.5,
+       "se_best": 4.9,
+       "need_best": 1.2,
+       "roi_tw": -12.3,
+       "se_tw": 4.2,
+       "need_tw": 12.8
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 43,
+        "hit": 76.7,
+        "fair": 70.8,
+        "gap_pp": 5.99
+       },
+       {
+        "season": "2021",
+        "n": 101,
+        "hit": 79.2,
+        "fair": 71.6,
+        "gap_pp": 7.65
+       },
+       {
+        "season": "2122",
+        "n": 91,
+        "hit": 73.6,
+        "fair": 71.4,
+        "gap_pp": 2.22
+       },
+       {
+        "season": "2223",
+        "n": 31,
+        "hit": 74.2,
+        "fair": 71.6,
+        "gap_pp": 2.58
+       },
+       {
+        "season": "2324",
+        "n": 49,
+        "hit": 77.6,
+        "fair": 73.3,
+        "gap_pp": 4.24
+       },
+       {
+        "season": "2425",
+        "n": 79,
+        "hit": 79.7,
+        "fair": 71.8,
+        "gap_pp": 7.9
+       },
+       {
+        "season": "2526",
+        "n": 21,
+        "hit": 52.4,
+        "fair": 74.6,
+        "gap_pp": -22.24
+       },
+       {
+        "season": "2627",
+        "n": 2,
+        "hit": 50.0,
+        "fair": 73.6,
+        "gap_pp": -23.63
+       }
+      ]
+     },
+     {
+      "bet": "NA",
+      "bet_label": "主勝＋和局",
+      "conds": [
+       {
+        "rel": "fade",
+        "names": [
+         "追盤口移動（早盤→收盤 +4pp↑）"
+        ],
+        "keys": [
+         [
+          "fb_steam4",
+          "SA"
+         ]
+        ]
+       },
+       {
+        "rel": "fade",
+        "names": [
+         "押三連勝的球隊"
+        ],
+        "keys": [
+         [
+          "fb_win3",
+          "SA"
+         ]
+        ]
+       }
+      ],
+      "text": "押主勝＋和局｜反：追盤口移動（早盤→收盤 +4pp↑）　＆　反：押三連勝的球隊",
+      "train": {
+       "n": 241,
+       "hit": 50.2,
+       "fair": 44.9,
+       "gap_pp": 5.32,
+       "z": 1.75,
+       "roi_fair": 13.4,
+       "se_fair": 8.4,
+       "roi_intl": 0.8,
+       "se_intl": 7.2,
+       "need_intl": 4.8,
+       "roi_best": 9.7,
+       "se_best": 8.0,
+       "need_best": 1.0,
+       "roi_tw": -16.3,
+       "se_tw": 5.7,
+       "need_tw": 14.0
+      },
+      "test": {
+       "n": 151,
+       "hit": 47.7,
+       "fair": 47.5,
+       "gap_pp": 0.19,
+       "z": 0.05,
+       "roi_fair": -5.0,
+       "se_fair": 9.1,
+       "roi_intl": -14.5,
+       "se_intl": 8.0,
+       "need_intl": 5.0,
+       "roi_best": -9.0,
+       "se_best": 8.6,
+       "need_best": 1.9,
+       "roi_tw": -27.0,
+       "se_tw": 6.6,
+       "need_tw": 13.9
+      },
+      "seasons": [
+       {
+        "season": "1920",
+        "n": 49,
+        "hit": 51.0,
+        "fair": 46.4,
+        "gap_pp": 4.58
+       },
+       {
+        "season": "2021",
+        "n": 82,
+        "hit": 47.6,
+        "fair": 44.0,
+        "gap_pp": 3.51
+       },
+       {
+        "season": "2122",
+        "n": 48,
+        "hit": 56.2,
+        "fair": 47.0,
+        "gap_pp": 9.22
+       },
+       {
+        "season": "2223",
+        "n": 62,
+        "hit": 48.4,
+        "fair": 43.1,
+        "gap_pp": 5.28
+       },
+       {
+        "season": "2324",
+        "n": 57,
+        "hit": 50.9,
+        "fair": 45.3,
+        "gap_pp": 5.58
+       },
+       {
+        "season": "2425",
+        "n": 49,
+        "hit": 36.7,
+        "fair": 49.0,
+        "gap_pp": -12.31
+       },
+       {
+        "season": "2526",
+        "n": 34,
+        "hit": 64.7,
+        "fair": 51.1,
+        "gap_pp": 13.57
+       },
+       {
+        "season": "2627",
+        "n": 11,
+        "hit": 27.3,
+        "fair": 40.6,
+        "gap_pp": -13.33
+       }
+      ]
+     }
+    ],
+    "D": []
+   },
+   "deciles": {
+    "filters": 3440,
+    "rows": [
+     {
+      "decile": 1,
+      "filters": 344,
+      "train_gap_pp": -3.54,
+      "test_gap_pp": -0.56,
+      "test_need_tw_pp": 9.61,
+      "train_roi_tw": -27.0,
+      "test_roi_tw": -21.3
+     },
+     {
+      "decile": 2,
+      "filters": 344,
+      "train_gap_pp": -2.12,
+      "test_gap_pp": 0.02,
+      "test_need_tw_pp": 9.6,
+      "train_roi_tw": -24.2,
+      "test_roi_tw": -20.3
+     },
+     {
+      "decile": 3,
+      "filters": 344,
+      "train_gap_pp": -1.39,
+      "test_gap_pp": 0.19,
+      "test_need_tw_pp": 9.55,
+      "train_roi_tw": -22.8,
+      "test_roi_tw": -19.7
+     },
+     {
+      "decile": 4,
+      "filters": 344,
+      "train_gap_pp": -0.81,
+      "test_gap_pp": 0.02,
+      "test_need_tw_pp": 9.41,
+      "train_roi_tw": -21.7,
+      "test_roi_tw": -19.9
+     },
+     {
+      "decile": 5,
+      "filters": 344,
+      "train_gap_pp": -0.27,
+      "test_gap_pp": -0.07,
+      "test_need_tw_pp": 9.67,
+      "train_roi_tw": -20.4,
+      "test_roi_tw": -19.9
+     },
+     {
+      "decile": 6,
+      "filters": 344,
+      "train_gap_pp": 0.27,
+      "test_gap_pp": 0.07,
+      "test_need_tw_pp": 9.59,
+      "train_roi_tw": -18.6,
+      "test_roi_tw": -18.5
+     },
+     {
+      "decile": 7,
+      "filters": 344,
+      "train_gap_pp": 0.81,
+      "test_gap_pp": -0.02,
+      "test_need_tw_pp": 9.89,
+      "train_roi_tw": -17.7,
+      "test_roi_tw": -19.1
+     },
+     {
+      "decile": 8,
+      "filters": 344,
+      "train_gap_pp": 1.39,
+      "test_gap_pp": -0.19,
+      "test_need_tw_pp": 9.77,
+      "train_roi_tw": -16.5,
+      "test_roi_tw": -19.7
+     },
+     {
+      "decile": 9,
+      "filters": 344,
+      "train_gap_pp": 2.12,
+      "test_gap_pp": -0.02,
+      "test_need_tw_pp": 9.62,
+      "train_roi_tw": -14.7,
+      "test_roi_tw": -19.2
+     },
+     {
+      "decile": 10,
+      "filters": 344,
+      "train_gap_pp": 3.54,
+      "test_gap_pp": 0.56,
+      "test_need_tw_pp": 9.66,
+      "train_roi_tw": -11.6,
+      "test_roi_tw": -17.8
+     }
+    ],
+    "corr": 0.05
+   },
+   "votes": {
+    "1": {
+     "train": {
+      "n": 42147,
+      "hit": 44.3,
+      "fair": 43.2,
+      "gap_pp": 1.08,
+      "z": 4.93,
+      "roi_fair": 2.4,
+      "se_fair": 0.7,
+      "roi_intl": -4.0,
+      "se_intl": 0.6,
+      "need_intl": 2.4,
+      "roi_best": 2.1,
+      "se_best": 0.7,
+      "need_best": -0.0,
+      "roi_tw": -15.8,
+      "se_tw": 0.5,
+      "need_tw": 7.9
+     },
+     "test": {
+      "n": 35512,
+      "hit": 43.3,
+      "fair": 42.6,
+      "gap_pp": 0.67,
+      "z": 2.81,
+      "roi_fair": 2.0,
+      "se_fair": 0.8,
+      "roi_intl": -5.5,
+      "se_intl": 0.7,
+      "need_intl": 2.6,
+      "roi_best": -0.5,
+      "se_best": 0.7,
+      "need_best": 0.6,
+      "roi_tw": -16.9,
+      "se_tw": 0.6,
+      "need_tw": 7.9
+     }
+    },
+    "2": {
+     "train": {
+      "n": 9074,
+      "hit": 48.3,
+      "fair": 46.0,
+      "gap_pp": 2.26,
+      "z": 4.95,
+      "roi_fair": 6.4,
+      "se_fair": 1.5,
+      "roi_intl": 0.2,
+      "se_intl": 1.4,
+      "need_intl": 2.1,
+      "roi_best": 7.0,
+      "se_best": 1.5,
+      "need_best": -0.4,
+      "roi_tw": -11.8,
+      "se_tw": 1.1,
+      "need_tw": 7.3
+     },
+     "test": {
+      "n": 7273,
+      "hit": 45.8,
+      "fair": 44.6,
+      "gap_pp": 1.21,
+      "z": 2.38,
+      "roi_fair": 4.6,
+      "se_fair": 2.0,
+      "roi_intl": -3.3,
+      "se_intl": 1.6,
+      "need_intl": 2.4,
+      "roi_best": 2.1,
+      "se_best": 1.7,
+      "need_best": 0.3,
+      "roi_tw": -14.9,
+      "se_tw": 1.3,
+      "need_tw": 7.2
+     }
+    },
+    "3": {
+     "train": {
+      "n": 2207,
+      "hit": 45.5,
+      "fair": 43.2,
+      "gap_pp": 2.38,
+      "z": 2.46,
+      "roi_fair": 7.4,
+      "se_fair": 3.1,
+      "roi_intl": 1.4,
+      "se_intl": 2.8,
+      "need_intl": 1.9,
+      "roi_best": 8.8,
+      "se_best": 3.1,
+      "need_best": -0.8,
+      "roi_tw": -10.5,
+      "se_tw": 2.4,
+      "need_tw": 6.8
+     },
+     "test": {
+      "n": 1581,
+      "hit": 41.7,
+      "fair": 40.2,
+      "gap_pp": 1.51,
+      "z": 1.33,
+      "roi_fair": 7.7,
+      "se_fair": 5.5,
+      "roi_intl": -2.8,
+      "se_intl": 3.6,
+      "need_intl": 2.2,
+      "roi_best": 3.7,
+      "se_best": 4.0,
+      "need_best": -0.0,
+      "roi_tw": -14.7,
+      "se_tw": 2.9,
+      "need_tw": 6.9
+     }
+    },
+    "4": {
+     "train": {
+      "n": 243,
+      "hit": 47.3,
+      "fair": 46.3,
+      "gap_pp": 1.06,
+      "z": 0.37,
+      "roi_fair": -0.5,
+      "se_fair": 8.6,
+      "roi_intl": -6.3,
+      "se_intl": 7.8,
+      "need_intl": 2.0,
+      "roi_best": 0.0,
+      "se_best": 8.4,
+      "need_best": -0.8,
+      "roi_tw": -15.7,
+      "se_tw": 6.7,
+      "need_tw": 6.6
+     },
+     "test": {
+      "n": 154,
+      "hit": 40.3,
+      "fair": 41.8,
+      "gap_pp": -1.55,
+      "z": -0.44,
+      "roi_fair": 20.1,
+      "se_fair": 40.5,
+      "roi_intl": -13.8,
+      "se_intl": 13.2,
+      "need_intl": 2.2,
+      "roi_best": -3.6,
+      "se_best": 18.9,
+      "need_best": 0.1,
+      "roi_tw": -25.7,
+      "se_tw": 9.3,
+      "need_tw": 6.8
+     }
+    }
+   },
+   "model": {
+    "test_logloss_market": 0.6049,
+    "test_logloss_model": 0.60488,
+    "test_max_ev_tw": -1.2,
+    "test_bets_ev_min": {
+     "n": 0
+    }
+   },
+   "owner": [
+    {
+     "label": "主隊是冷門而且賠率≥8 → 押和局＋客勝",
+     "bet": "NH",
+     "all": {
+      "n": 933,
+      "hit": 93.1,
+      "fair": 92.0,
+      "gap_pp": 1.12,
+      "z": 1.27,
+      "roi_fair": 1.3,
+      "se_fair": 0.9,
+      "roi_intl": -3.0,
+      "se_intl": 0.9,
+      "need_intl": 4.1,
+      "roi_best": 1.5,
+      "se_best": 0.9,
+      "need_best": -0.1,
+      "roi_tw": -11.6,
+      "se_tw": 0.8,
+      "need_tw": 13.4
+     },
+     "train": {
+      "n": 544,
+      "hit": 93.4,
+      "fair": 92.0,
+      "gap_pp": 1.39,
+      "z": 1.2,
+      "roi_fair": 1.6,
+      "se_fair": 1.2,
+      "roi_intl": -2.6,
+      "se_intl": 1.1,
+      "need_intl": 3.9,
+      "roi_best": 2.0,
+      "se_best": 1.2,
+      "need_best": -0.4,
+      "roi_tw": -11.4,
+      "se_tw": 1.0,
+      "need_tw": 13.5
+     },
+     "test": {
+      "n": 389,
+      "hit": 92.8,
+      "fair": 92.1,
+      "gap_pp": 0.75,
+      "z": 0.55,
+      "roi_fair": 0.8,
+      "se_fair": 1.4,
+      "roi_intl": -3.6,
+      "se_intl": 1.4,
+      "need_intl": 4.3,
+      "roi_best": 0.8,
+      "se_best": 1.5,
+      "need_best": 0.4,
+      "roi_tw": -12.0,
+      "se_tw": 1.2,
+      "need_tw": 13.4
+     }
+    },
+    {
+     "label": "主隊是冷門而且三連勝 → 押和局＋客勝",
+     "bet": "NH",
+     "all": {
+      "n": 284,
+      "hit": 73.9,
+      "fair": 72.2,
+      "gap_pp": 1.73,
+      "z": 0.66,
+      "roi_fair": 2.7,
+      "se_fair": 3.7,
+      "roi_intl": -2.7,
+      "se_intl": 3.5,
+      "need_intl": 3.9,
+      "roi_best": 2.8,
+      "se_best": 3.7,
+      "need_best": 0.2,
+      "roi_tw": -13.4,
+      "se_tw": 3.1,
+      "need_tw": 13.3
+     },
+     "train": {
+      "n": 173,
+      "hit": 71.1,
+      "fair": 72.3,
+      "gap_pp": -1.23,
+      "z": -0.36,
+      "roi_fair": -1.8,
+      "se_fair": 4.8,
+      "roi_intl": -6.7,
+      "se_intl": 4.6,
+      "need_intl": 3.7,
+      "roi_best": -1.3,
+      "se_best": 4.8,
+      "need_best": -0.3,
+      "roi_tw": -17.1,
+      "se_tw": 4.1,
+      "need_tw": 13.3
+     },
+     "test": {
+      "n": 111,
+      "hit": 78.4,
+      "fair": 72.0,
+      "gap_pp": 6.34,
+      "z": 1.51,
+      "roi_fair": 9.7,
+      "se_fair": 5.6,
+      "roi_intl": 3.5,
+      "se_intl": 5.3,
+      "need_intl": 4.3,
+      "roi_best": 9.1,
+      "se_best": 5.8,
+      "need_best": 1.0,
+      "roi_tw": -7.6,
+      "se_tw": 4.7,
+      "need_tw": 13.3
+     }
+    },
+    {
+     "label": "主隊是冷門而且上一場大勝 → 押和局＋客勝",
+     "bet": "NH",
+     "all": {
+      "n": 454,
+      "hit": 74.9,
+      "fair": 72.9,
+      "gap_pp": 2.03,
+      "z": 0.98,
+      "roi_fair": 2.8,
+      "se_fair": 2.8,
+      "roi_intl": -2.8,
+      "se_intl": 2.7,
+      "need_intl": 4.2,
+      "roi_best": 1.8,
+      "se_best": 2.8,
+      "need_best": 0.7,
+      "roi_tw": -13.1,
+      "se_tw": 2.4,
+      "need_tw": 13.3
+     },
+     "train": {
+      "n": 257,
+      "hit": 73.9,
+      "fair": 73.2,
+      "gap_pp": 0.76,
+      "z": 0.28,
+      "roi_fair": 1.1,
+      "se_fair": 3.8,
+      "roi_intl": -4.1,
+      "se_intl": 3.6,
+      "need_intl": 3.9,
+      "roi_best": 0.9,
+      "se_best": 3.8,
+      "need_best": 0.0,
+      "roi_tw": -14.6,
+      "se_tw": 3.2,
+      "need_tw": 13.3
+     },
+     "test": {
+      "n": 197,
+      "hit": 76.1,
+      "fair": 72.5,
+      "gap_pp": 3.67,
+      "z": 1.17,
+      "roi_fair": 5.2,
+      "se_fair": 4.3,
+      "roi_intl": -1.2,
+      "se_intl": 4.0,
+      "need_intl": 4.6,
+      "roi_best": 2.9,
+      "se_best": 4.2,
+      "need_best": 1.5,
+      "roi_tw": -11.2,
+      "se_tw": 3.6,
+      "need_tw": 13.3
+     }
+    },
+    {
+     "label": "三連勝而且上一場大勝的主隊 → 押和局＋客勝",
+     "bet": "NH",
+     "all": {
+      "n": 577,
+      "hit": 36.0,
+      "fair": 34.9,
+      "gap_pp": 1.16,
+      "z": 0.63,
+      "roi_fair": 3.2,
+      "se_fair": 7.3,
+      "roi_intl": -10.3,
+      "se_intl": 5.9,
+      "need_intl": 4.3,
+      "roi_best": -0.9,
+      "se_best": 6.7,
+      "need_best": 1.1,
+      "roi_tw": -31.7,
+      "se_tw": 4.1,
+      "need_tw": 14.6
+     },
+     "train": {
+      "n": 319,
+      "hit": 34.8,
+      "fair": 35.2,
+      "gap_pp": -0.4,
+      "z": -0.16,
+      "roi_fair": -1.0,
+      "se_fair": 9.3,
+      "roi_intl": -12.5,
+      "se_intl": 7.9,
+      "need_intl": 4.1,
+      "roi_best": -2.3,
+      "se_best": 9.1,
+      "need_best": 0.7,
+      "roi_tw": -33.8,
+      "se_tw": 5.4,
+      "need_tw": 14.6
+     },
+     "test": {
+      "n": 258,
+      "hit": 37.6,
+      "fair": 34.5,
+      "gap_pp": 3.08,
+      "z": 1.12,
+      "roi_fair": 8.4,
+      "se_fair": 11.4,
+      "roi_intl": -7.6,
+      "se_intl": 8.9,
+      "need_intl": 4.5,
+      "roi_best": 0.7,
+      "se_best": 10.0,
+      "need_best": 1.6,
+      "roi_tw": -29.0,
+      "se_tw": 6.2,
+      "need_tw": 14.6
+     }
+    },
+    {
+     "label": "三連勝而且上一場大勝的客隊 → 押主勝＋和局",
+     "bet": "NA",
+     "all": {
+      "n": 762,
+      "hit": 52.0,
+      "fair": 49.1,
+      "gap_pp": 2.88,
+      "z": 1.71,
+      "roi_fair": 9.0,
+      "se_fair": 6.5,
+      "roi_intl": -4.3,
+      "se_intl": 4.0,
+      "need_intl": 4.2,
+      "roi_best": 3.8,
+      "se_best": 4.7,
+      "need_best": 0.8,
+      "roi_tw": -20.4,
+      "se_tw": 3.0,
+      "need_tw": 13.9
+     },
+     "train": {
+      "n": 401,
+      "hit": 48.4,
+      "fair": 48.9,
+      "gap_pp": -0.53,
+      "z": -0.23,
+      "roi_fair": -2.1,
+      "se_fair": 5.9,
+      "roi_intl": -11.1,
+      "se_intl": 5.2,
+      "need_intl": 4.0,
+      "roi_best": -3.5,
+      "se_best": 5.8,
+      "need_best": 0.3,
+      "roi_tw": -25.9,
+      "se_tw": 4.1,
+      "need_tw": 13.9
+     },
+     "test": {
+      "n": 361,
+      "hit": 56.0,
+      "fair": 49.3,
+      "gap_pp": 6.66,
+      "z": 2.72,
+      "roi_fair": 21.4,
+      "se_fair": 11.9,
+      "roi_intl": 3.3,
+      "se_intl": 6.1,
+      "need_intl": 4.6,
+      "roi_best": 11.9,
+      "se_best": 7.7,
+      "need_best": 1.5,
+      "roi_tw": -14.2,
+      "se_tw": 4.4,
+      "need_tw": 13.9
+     }
+    }
+   ]
+  }
+ }
+}

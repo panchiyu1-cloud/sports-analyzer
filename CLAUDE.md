@@ -63,7 +63,7 @@ formula is not obvious.
 - Generated files that ARE committed: `docs/index.html`, `docs/reviews.html`,
   `docs/bighand.html`, `docs/fade.html`, `data/snapshots/**`, `data/ledger.csv`,
   `data/tw_ledger.csv`, `data/reviews/*.csv`, `data/history/*.csv`, `data/moves/*.csv`,
-  `data/fade_summary.json`. Raw dumps under `data/raw/` are not.
+  `data/fade_summary.json`, `data/combo_summary.json`. Raw dumps under `data/raw/` are not.
 - Workflows commit through `scripts/commit_generated.sh` (handles two runs racing).
 
 ## Commands
@@ -77,6 +77,8 @@ python -m sports_analyzer.pipeline football --offline   # render from last snaps
 python -m sports_analyzer.pipeline review         # post-match review (football-data token only)
 python scripts/backtest_football.py data/history/*.csv  # backtest + docs/backtest.html
 python scripts/validate_implied.py                      # validate + recalibrate the implied model
+python scripts/backtest_fade.py --model-records records.json  # 反者道之動 (needs data/raw/)
+python scripts/backtest_combos.py                       # 組合篩選 (needs data/raw/)
 ```
 
 ## Layout
@@ -97,6 +99,8 @@ src/sports_analyzer/
   render/          cards.py + templates/*.html.j2 -> docs/index.html, reviews.html, bighand.html
   pipeline.py      CLI entry point
 scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
+scripts/backtest_fade.py       65 strategies vs the market (反者道之動) -> data/fade_summary.json
+scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo_summary.json
 ```
 
 ## Model notes (so nobody "simplifies" them away)
@@ -292,3 +296,27 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   MLB form strategies moved by < 1.5pp, all still noise; the 10 consistent ones are unchanged.
 - Data gap: every row for Cleveland 2021 and the Athletics 2025 has game_type "Unknown"
   (298 final games); every MLB study here leaves them out, also as opponents' history.
+
+## 組合篩選 (2026-10-15) — combining strategies does not beat 運彩
+- Owner's question: can T-10, the 反者道之動 fades and the 65 strategies, combined, pick bets
+  with a higher win rate? `scripts/backtest_combos.py` -> data/combo_summary.json. A filter
+  = one bet type + 1-3 conditions ("strategy k fired, pointing at X"; always-on conditions
+  dropped, identical ones merged). Filters with >= 200 early bets are scored on the early
+  seasons; fixed rules (best early z; best early 運彩 t-stat; agreement filters using T-10 /
+  steam; Bonferroni) take 10 each, and only those are looked up on the late seasons.
+- Result: 5,926 filters (MLB 2,478, football 3,448); early z >= 2: 48 / 39, no more than
+  chance (56 / 78); none survives Bonferroni. 20 made money at 運彩 early, 0 of them late
+  (mean -19% / -12%). The early top decile, +4.3 / +3.5pp over the market, was -0.3 /
+  +0.6pp late (corr -0.07 / +0.05) where 運彩 needs +7.5 / +9.7pp. Vote counts (conditions
+  that backed a bet and beat the market early, k agreeing): late -1.6 to +1.5pp, 運彩 -12
+  to -26%. Ridge logistic on top of the market's log-odds (all conditions): late log-loss
+  0.67963 vs 0.67968 (MLB), 0.60488 vs 0.60490; its best late 運彩 EV was -7.0% / -1.2%
+  (never a bet). A gradient-boosted correction (scratch, sklearn) did worse than the
+  market. The owner's T-10 + fade combos: +0.4 to +3.2pp, 運彩 -5% to -32%.
+- High win rates are cheap: home steamed >= 4pp with an away longshot >= 8 -> home or draw
+  won 96.5% (market 92.9%, ahead in all 8 seasons), but 運彩's dutch of two prices pays
+  0.94: -9.3%. One late survivor to watch, not a rule: MLB favourite with G >= +6 that beat
+  the same opponent by 5+ the game before -> underdog +1.5, +7.6pp over the market, ahead in
+  all 5 seasons (late z 2.55: 1 of 30 late lookups, ~15% by luck), still -1.2% at 運彩
+  (needs +7.8pp). Patterns in prices are priced in; only a 運彩 price above the
+  international fair price (positive EV) pays.
