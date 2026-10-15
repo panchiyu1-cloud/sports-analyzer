@@ -17,21 +17,21 @@
    "away_probable": "Griffin Jax",
    "venue": "Progressive Field",
    "market": {
-    "books": 23,
+    "books": 22,
     "h2h": {
      "home": {
-      "fair": 0.5502,
-      "fair_odds": 1.82,
+      "fair": 0.5395,
+      "fair_odds": 1.85,
       "best": 1.84,
       "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.4498,
-      "fair_odds": 2.22,
-      "best": 2.22,
+      "fair": 0.4605,
+      "fair_odds": 2.17,
+      "best": 2.15,
       "book": "everygame"
      },
-     "odds_at": "2026-10-15T13:10+00:00"
+     "odds_at": "2026-10-15T16:17+00:00"
     },
     "totals": {
      "line": 6.5,
@@ -47,30 +47,31 @@
       "best": 2.1,
       "book": "williamhill"
      },
-     "odds_at": "2026-10-15T13:10+00:00"
+     "odds_at": "2026-10-15T13:10+00:00",
+     "stale": true
     },
     "spread": {
      "line": -1.5,
      "home": {
-      "fair": 0.3518,
-      "fair_odds": 2.84,
-      "best": 2.82,
-      "book": "matchbook"
+      "fair": 0.3411,
+      "fair_odds": 2.93,
+      "best": 2.83,
+      "book": "pinnacle"
      },
      "away": {
-      "fair": 0.6482,
-      "fair_odds": 1.54,
+      "fair": 0.6589,
+      "fair_odds": 1.52,
       "best": 1.51,
-      "book": "betanysports"
+      "book": "matchbook"
      },
-     "odds_at": "2026-10-15T13:10+00:00"
+     "odds_at": "2026-10-15T16:17+00:00"
     }
    },
    "t10": {
     "favourite": "home",
-    "p_ml": 0.5502,
-    "c_cover": 0.3518,
-    "g": -0.098,
+    "p_ml": 0.5395,
+    "c_cover": 0.3411,
+    "g": -0.1194,
     "shape": "一分差型",
     "threshold": 0.06
    },
@@ -80,21 +81,21 @@
     "home_zh": "克里夫蘭守護者",
     "away_zh": "坦帕灣光芒",
     "captured_at": "2026-10-15T20:01+08:00",
-    "fair_at": "2026-10-15T21:10+08:00",
-    "fair_fresh": true,
+    "fair_at": "2026-10-16T00:17+08:00",
+    "fair_fresh": false,
     "h2h": {
      "line": null,
      "home": {
       "price": 1.64,
-      "fair_odds": 1.82,
-      "fair_prob": 0.5502,
-      "ev": -0.0977
+      "fair_odds": 1.85,
+      "fair_prob": 0.5395,
+      "ev": -0.1152
      },
      "away": {
       "price": 1.85,
-      "fair_odds": 2.22,
-      "fair_prob": 0.4498,
-      "ev": -0.1679
+      "fair_odds": 2.17,
+      "fair_prob": 0.4605,
+      "ev": -0.1481
      }
     },
     "totals": {
@@ -116,15 +117,15 @@
      "line": -1.5,
      "home": {
       "price": 2.33,
-      "fair_odds": 2.84,
-      "fair_prob": 0.3518,
-      "ev": -0.1803
+      "fair_odds": 2.93,
+      "fair_prob": 0.3411,
+      "ev": -0.2052
      },
      "away": {
       "price": 1.39,
-      "fair_odds": 1.54,
-      "fair_prob": 0.6482,
-      "ev": -0.099
+      "fair_odds": 1.52,
+      "fair_prob": 0.6589,
+      "ev": -0.0841
      }
     },
     "values": [],
@@ -134,16 +135,13 @@
     "favourite": "home",
     "fav_zh": "克里夫蘭守護者",
     "dog_zh": "坦帕灣光芒",
-    "g_intl": -0.098,
+    "g_intl": -0.1194,
     "g_tw": -0.1206,
-    "g_gap": -0.0226,
-    "dp": -0.0125,
-    "dc": -0.0101,
+    "g_gap": -0.0012,
+    "dp": -0.0018,
+    "dc": 0.0006,
     "shape": "一分差型",
-    "hints": [
-     "運彩把克里夫蘭守護者贏 2 分以上算得比國際低 1.0pp → 克里夫蘭守護者 −1.5 相對划算",
-     "運彩把克里夫蘭守護者贏球算得比國際低 1.2pp → 克里夫蘭守護者 不讓分相對划算"
-    ],
+    "hints": [],
     "bets": [
      {
       "key": "fav_ml",
@@ -151,10 +149,10 @@
       "side": "home",
       "line": null,
       "price": 1.64,
-      "fair_prob": 0.5502,
-      "fair_odds": 1.82,
-      "ev": -0.0977,
-      "fresh": true
+      "fair_prob": 0.5395,
+      "fair_odds": 1.85,
+      "ev": -0.1152,
+      "fresh": false
      },
      {
       "key": "dog_ml",
@@ -162,10 +160,10 @@
       "side": "away",
       "line": null,
       "price": 1.85,
-      "fair_prob": 0.4498,
-      "fair_odds": 2.22,
-      "ev": -0.1679,
-      "fresh": true
+      "fair_prob": 0.4605,
+      "fair_odds": 2.17,
+      "ev": -0.1481,
+      "fresh": false
      },
      {
       "key": "fav_rl",
@@ -173,10 +171,10 @@
       "side": "home",
       "line": -1.5,
       "price": 2.33,
-      "fair_prob": 0.3518,
-      "fair_odds": 2.84,
-      "ev": -0.1803,
-      "fresh": true
+      "fair_prob": 0.3411,
+      "fair_odds": 2.93,
+      "ev": -0.2052,
+      "fresh": false
      },
      {
       "key": "dog_rl",
@@ -184,28 +182,28 @@
       "side": "away",
       "line": 1.5,
       "price": 1.39,
-      "fair_prob": 0.6482,
-      "fair_odds": 1.54,
-      "ev": -0.099,
-      "fresh": true
+      "fair_prob": 0.6589,
+      "fair_odds": 1.52,
+      "ev": -0.0841,
+      "fresh": false
      }
     ],
     "best": {
-     "key": "fav_ml",
-     "label": "克里夫蘭守護者 不讓分",
-     "side": "home",
-     "line": null,
-     "price": 1.64,
-     "fair_prob": 0.5502,
-     "fair_odds": 1.82,
-     "ev": -0.0977,
-     "fresh": true
+     "key": "dog_rl",
+     "label": "坦帕灣光芒 +1.5",
+     "side": "away",
+     "line": 1.5,
+     "price": 1.39,
+     "fair_prob": 0.6589,
+     "fair_odds": 1.52,
+     "ev": -0.0841,
+     "fresh": false
     },
     "pick": null,
-    "status": "pass",
+    "status": "stale",
     "threshold": 0.03,
     "tw_at": "2026-10-15T20:01+08:00",
-    "fair_at": "2026-10-15T21:10+08:00",
+    "fair_at": "2026-10-16T00:17+08:00",
     "minutes_before": 299,
     "timing": "early"
    }
