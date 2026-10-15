@@ -225,18 +225,18 @@
     "books": 21,
     "h2h": {
      "home": {
-      "fair": 0.591,
-      "fair_odds": 1.69,
+      "fair": 0.5888,
+      "fair_odds": 1.7,
       "best": 1.71,
-      "book": "unibet_nl"
+      "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.409,
-      "fair_odds": 2.45,
-      "best": 2.45,
-      "book": "everygame"
+      "fair": 0.4112,
+      "fair_odds": 2.43,
+      "best": 2.38,
+      "book": "betfair_ex_eu"
      },
-     "odds_at": "2026-10-15T13:10+00:00"
+     "odds_at": "2026-10-15T22:03+00:00"
     },
     "totals": {
      "line": 7.5,
@@ -252,30 +252,31 @@
       "best": 2.02,
       "book": "matchbook"
      },
-     "odds_at": "2026-10-15T13:10+00:00"
+     "odds_at": "2026-10-15T13:10+00:00",
+     "stale": true
     },
     "spread": {
      "line": -1.5,
      "home": {
-      "fair": 0.3959,
-      "fair_odds": 2.53,
-      "best": 2.46,
-      "book": "matchbook"
-     },
-     "away": {
-      "fair": 0.6041,
-      "fair_odds": 1.66,
-      "best": 1.65,
+      "fair": 0.3971,
+      "fair_odds": 2.52,
+      "best": 2.56,
       "book": "onexbet"
      },
-     "odds_at": "2026-10-15T13:10+00:00"
+     "away": {
+      "fair": 0.6029,
+      "fair_odds": 1.66,
+      "best": 1.63,
+      "book": "matchbook"
+     },
+     "odds_at": "2026-10-15T22:03+00:00"
     }
    },
    "t10": {
     "favourite": "home",
-    "p_ml": 0.591,
-    "c_cover": 0.3959,
-    "g": -0.0131,
+    "p_ml": 0.5888,
+    "c_cover": 0.3971,
+    "g": -0.0141,
     "shape": "中性",
     "threshold": 0.06
    },
@@ -284,14 +285,14 @@
     "favourite": "home",
     "fav_zh": "洛杉磯道奇",
     "dog_zh": "密爾瓦基釀酒人",
-    "g_intl": -0.0131,
+    "g_intl": -0.0141,
     "g_tw": 0.01,
-    "g_gap": 0.0231,
-    "dp": 0.0041,
-    "dc": 0.019,
+    "g_gap": 0.0241,
+    "dp": 0.0063,
+    "dc": 0.0178,
     "shape": "中性",
     "hints": [
-     "運彩把洛杉磯道奇贏 2 分以上算得比國際高 1.9pp → 密爾瓦基釀酒人 +1.5 相對划算"
+     "運彩把洛杉磯道奇贏 2 分以上算得比國際高 1.8pp → 密爾瓦基釀酒人 +1.5 相對划算"
     ],
     "bets": [
      {
@@ -300,10 +301,10 @@
       "side": "home",
       "line": null,
       "price": 1.51,
-      "fair_prob": 0.591,
-      "fair_odds": 1.69,
-      "ev": -0.1076,
-      "fresh": true
+      "fair_prob": 0.5888,
+      "fair_odds": 1.7,
+      "ev": -0.1109,
+      "fresh": false
      },
      {
       "key": "dog_ml",
@@ -311,10 +312,10 @@
       "side": "away",
       "line": null,
       "price": 2.05,
-      "fair_prob": 0.409,
-      "fair_odds": 2.44,
-      "ev": -0.1616,
-      "fresh": true
+      "fair_prob": 0.4112,
+      "fair_odds": 2.43,
+      "ev": -0.157,
+      "fresh": false
      },
      {
       "key": "fav_rl",
@@ -322,10 +323,10 @@
       "side": "home",
       "line": -1.5,
       "price": 2.01,
-      "fair_prob": 0.3959,
-      "fair_odds": 2.53,
-      "ev": -0.2042,
-      "fresh": true
+      "fair_prob": 0.3971,
+      "fair_odds": 2.52,
+      "ev": -0.2018,
+      "fresh": false
      },
      {
       "key": "dog_rl",
@@ -333,10 +334,10 @@
       "side": "away",
       "line": 1.5,
       "price": 1.53,
-      "fair_prob": 0.6041,
+      "fair_prob": 0.6029,
       "fair_odds": 1.66,
-      "ev": -0.0757,
-      "fresh": true
+      "ev": -0.0776,
+      "fresh": false
      }
     ],
     "best": {
@@ -345,16 +346,16 @@
      "side": "away",
      "line": 1.5,
      "price": 1.53,
-     "fair_prob": 0.6041,
+     "fair_prob": 0.6029,
      "fair_odds": 1.66,
-     "ev": -0.0757,
-     "fresh": true
+     "ev": -0.0776,
+     "fresh": false
     },
     "pick": null,
-    "status": "pass",
+    "status": "stale",
     "threshold": 0.03,
     "tw_at": "2026-10-15T20:01+08:00",
-    "fair_at": "2026-10-15T21:10+08:00",
+    "fair_at": "2026-10-16T06:03+08:00",
     "minutes_before": 719,
     "timing": "early"
    },
@@ -363,21 +364,21 @@
     "home_zh": "洛杉磯道奇",
     "away_zh": "密爾瓦基釀酒人",
     "captured_at": "2026-10-15T20:01+08:00",
-    "fair_at": "2026-10-15T21:10+08:00",
-    "fair_fresh": true,
+    "fair_at": "2026-10-16T06:03+08:00",
+    "fair_fresh": false,
     "h2h": {
      "line": null,
      "home": {
       "price": 1.51,
-      "fair_odds": 1.69,
-      "fair_prob": 0.591,
-      "ev": -0.1076
+      "fair_odds": 1.7,
+      "fair_prob": 0.5888,
+      "ev": -0.1109
      },
      "away": {
       "price": 2.05,
-      "fair_odds": 2.45,
-      "fair_prob": 0.409,
-      "ev": -0.1616
+      "fair_odds": 2.43,
+      "fair_prob": 0.4112,
+      "ev": -0.157
      }
     },
     "totals": {
@@ -399,15 +400,15 @@
      "line": -1.5,
      "home": {
       "price": 2.01,
-      "fair_odds": 2.53,
-      "fair_prob": 0.3959,
-      "ev": -0.2042
+      "fair_odds": 2.52,
+      "fair_prob": 0.3971,
+      "ev": -0.2018
      },
      "away": {
       "price": 1.53,
       "fair_odds": 1.66,
-      "fair_prob": 0.6041,
-      "ev": -0.0757
+      "fair_prob": 0.6029,
+      "ev": -0.0776
      }
     },
     "values": [],
