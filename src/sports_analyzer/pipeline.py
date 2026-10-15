@@ -27,6 +27,7 @@ from . import budget as budget_mod
 from . import ledger as ledger_mod
 from . import moves as moves_mod
 from . import notify, review_store, tw_ledger
+from .analysis import fade as fade_mod
 from .analysis import pregame, review
 from .analysis.football import build_cards
 from .analysis.mlb import build_cards as build_mlb_cards
@@ -61,7 +62,13 @@ from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
 from .models.implied import IDENTITY, Calibration
-from .render.cards import render_bighand_page, render_index, render_reviews_page, taipei_time
+from .render.cards import (
+    render_bighand_page,
+    render_fade_page,
+    render_index,
+    render_reviews_page,
+    taipei_time,
+)
 
 log = logging.getLogger("sports_analyzer")
 
@@ -804,6 +811,7 @@ def render_latest() -> Path:
     )
     bighand_summary = moves_mod.history_summary(history)
     render_bighand_page(history, bighand_summary, now, DOCS_DIR / "bighand.html")
+    _render_fade(football, mlb, football_reviews, mlb_reviews, signal_rows, now)
     tw_events = sorted(
         (e for m in history for e in m["events"] if e["type"] == "tw_only"),
         key=lambda e: str(e["to_at"]),
@@ -829,6 +837,37 @@ def render_latest() -> Path:
         signal_rows=signal_rows,
         value_rows=value_rows,
     )
+
+
+def _render_fade(
+    football: dict[str, Any] | None,
+    mlb: dict[str, Any] | None,
+    football_reviews: list[dict[str, str]],
+    mlb_reviews: list[dict[str, str]],
+    signal_rows: list[dict[str, str]],
+    now: datetime,
+) -> Path:
+    """docs/fade.html (反者道之動): the backtest summary (scripts/backtest_fade.py), today's
+    games where a consistently bad strategy points one way, and the forward record."""
+    summary = None
+    try:
+        summary = json.loads((DATA_DIR / "fade_summary.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        log.info("fade: no backtest summary yet (scripts/backtest_fade.py)")
+
+    def upcoming(card: dict[str, Any]) -> bool:
+        start = pregame.kickoff(card)
+        return start is not None and start > now
+
+    comps = (football or {}).get("competitions", [])
+    live = fade_mod.live_candidates(
+        [c for comp in comps for c in comp.get("cards", []) if upcoming(c)],
+        [s for comp in comps for s in comp.get("signals", [])],
+        [g for g in (mlb or {}).get("games", []) if upcoming(g)],
+        MODEL,
+    )
+    record = fade_mod.fade_record(football_reviews, mlb_reviews, signal_rows)
+    return render_fade_page(summary, live, record, now, DOCS_DIR / "fade.html")
 
 
 def _record_bighand(

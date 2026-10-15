@@ -45,4 +45,4 @@ jobs:
         run: python -m sports_analyzer.pipeline review --new-only
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/ledger.csv data/reviews data/moves data/odds_budget.json data/tw docs/index.html docs/reviews.html docs/bighand.html
+          bash scripts/commit_generated.sh "chore(tw): compare upload with fair odds" data/snapshots data/tw_ledger.csv data/ledger.csv data/reviews data/moves data/odds_budget.json data/tw docs/index.html docs/reviews.html docs/bighand.html docs/fade.html

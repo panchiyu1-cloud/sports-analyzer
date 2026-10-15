@@ -9,7 +9,7 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from ..analysis import review
+from ..analysis import fade, review
 from ..analysis.mlb import G_SHAPES
 from ..config import LOCAL_TZ, MODEL, ModelConfig
 from ..models.market import t10_signal
@@ -231,6 +231,114 @@ BET_STATUS = {
     "void": "取消",
 }
 RESULT_LABELS = {"win": "贏", "loss": "輸", "push": "走盤"}
+
+
+FADE_RESULTS = {
+    "win": "贏",
+    "loss": "輸",
+    "push": "走盤",
+    "half_win": "贏一半",
+    "half_loss": "輸一半",
+}
+# The chart's scale (points); the 運彩 break-even lines of football fades sit near 14.
+FADE_CHART_MAX = 15.0
+
+
+def render_fade_page(
+    summary: Mapping[str, Any] | None,
+    live: list[Mapping[str, Any]],
+    record: list[Mapping[str, Any]],
+    generated_at: datetime,
+    out_path: Path,
+    cfg: ModelConfig = MODEL,
+) -> Path:
+    """docs/fade.html (反者道之動): the backtest of the worst strategies and of betting
+    against them (data/fade_summary.json), today's games where one of them points one
+    way, and the forward record of the opposite bets at real 運彩 prices."""
+    html = (
+        _env()
+        .get_template("fade.html.j2")
+        .render(
+            generated_local=generated_at.astimezone(LOCAL_TZ).strftime("%Y-%m-%d %H:%M"),
+            s=fade_summary_view(summary) if summary else None,
+            live=[
+                {**r, "names": [fade.STRATEGIES[k]["name"] for k in r["strategies"]]} for r in live
+            ],
+            record=[
+                {
+                    **r,
+                    "strategy_name": fade.STRATEGIES[r["strategy"]]["name"],
+                    "result_label": FADE_RESULTS.get(r["result"], r["result"]),
+                }
+                for r in record
+            ][:60],
+            record_n=len(record),
+            record_summary=[
+                {"key": k, **fade.STRATEGIES[k], **v}
+                for k, v in fade.record_summary(record).items()
+            ],
+            strategies=fade.STRATEGIES,
+            cfg=cfg,
+        )
+    )
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(html, encoding="utf-8")
+    return out_path
+
+
+def fade_summary_view(summary: Mapping[str, Any]) -> dict[str, Any]:
+    """The backtest summary arranged for the page: the consistently bad strategies, the
+    owner's and the system's own, the rest, and the chart rows."""
+    rows = [{"key": k, **v} for k, v in summary.get("strategies", {}).items()]
+    for r in rows:
+        f = r["fade"]
+        r["impossible"] = (f.get("fair") or 0) + (f.get("need_tw") or 0) >= 100
+    by_z = sorted(rows, key=lambda r: r["self"].get("z") if r["self"].get("z") is not None else 0)
+    consistent = [r for r in by_z if r["verdict"] == "consistent"]
+    mine = [r for r in by_z if r["group"] == "mine"]
+    shown = {r["key"] for r in consistent} | {r["key"] for r in mine}
+    rest = [r for r in by_z if r["key"] not in shown]
+    chart_keys = [r["key"] for r in consistent] + [
+        k for k in ("model4", "model10", "mlb_steam_fav") if k not in {r["key"] for r in consistent}
+    ]
+    chart = []
+    for k in chart_keys:
+        r = next((x for x in rows if x["key"] == k), None)
+        if r is None or not r["fade"].get("n"):
+            continue
+        have = r["fade"]["gap_pp"]
+        chart.append(
+            {
+                "sport": r["sport"],
+                "name": r["name"],
+                "have": have,
+                "need_intl": r["fade"].get("need_intl"),
+                "need_tw": r["fade"].get("need_tw"),
+                "impossible": r["impossible"],
+                "w_have": round(max(0.0, min(have, FADE_CHART_MAX)) / FADE_CHART_MAX * 100, 1),
+                "x_intl": round(
+                    min(r["fade"].get("need_intl") or 0, FADE_CHART_MAX) / FADE_CHART_MAX * 100, 1
+                ),
+                "x_tw": round(
+                    min(r["fade"].get("need_tw") or 0, FADE_CHART_MAX) / FADE_CHART_MAX * 100, 1
+                ),
+            }
+        )
+    chart.sort(key=lambda c: -c["have"])
+    tw_rois = [(r["fade"].get("roi_tw"), r) for r in rows if r["fade"].get("roi_tw") is not None]
+    best_tw = max(tw_rois, key=lambda x: x[0]) if tw_rois else (None, None)
+    return {
+        **summary,
+        "tested": len(rows),
+        "consistent": consistent,
+        "mine": mine,
+        "rest": rest,
+        "chart": chart,
+        "chart_max": FADE_CHART_MAX,
+        "profitable_tw": sum(1 for roi, _ in tw_rois if roi > 0),
+        "best_tw": {"roi": best_tw[0], "name": best_tw[1]["name"] if best_tw[1] else ""},
+        "worst": by_z[0] if by_z else None,
+    }
 
 
 def render_bighand_page(

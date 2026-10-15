@@ -61,9 +61,9 @@ formula is not obvious.
 ### Git workflow
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
 - Generated files that ARE committed: `docs/index.html`, `docs/reviews.html`,
-  `docs/bighand.html`, `data/snapshots/**`, `data/ledger.csv`, `data/tw_ledger.csv`,
-  `data/reviews/*.csv`, `data/history/*.csv`, `data/moves/*.csv`. Raw dumps under
-  `data/raw/` are not.
+  `docs/bighand.html`, `docs/fade.html`, `data/snapshots/**`, `data/ledger.csv`,
+  `data/tw_ledger.csv`, `data/reviews/*.csv`, `data/history/*.csv`, `data/moves/*.csv`,
+  `data/fade_summary.json`. Raw dumps under `data/raw/` are not.
 - Workflows commit through `scripts/commit_generated.sh` (handles two runs racing).
 
 ## Commands
@@ -264,3 +264,24 @@ scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
   carried-over "stale" blocks; only an unstamped carried block is never fresh.
 - `notify.py`: new 運彩 value bets go to the phone through ntfy.sh when the NTFY_TOPIC
   secret is set (JSON API; the topic is a secret: never log it). One message per bet id.
+
+## 反者道之動 (2026-10-15) — betting against the worst strategies
+- Owner's idea: find the strategy that fails most and do the opposite. A high failure rate
+  means nothing (long odds pay for it); "bad" = picks win less often than the closing
+  market's own fair probability. `scripts/backtest_fade.py` (data/raw/ from the `t10-data`
+  and `odds-history` branches, plus the football model's walk-forward stage 1) scores 65
+  strategies and their exact opposite (two-way: the other side; 1X2: the other two
+  outcomes dutched) -> data/fade_summary.json. Halves by season (MLB 2021-23 / 24-25,
+  football 19/20-22/23 / 23/24-26/27): "consistent" = z <= -1.8 overall and negative in both.
+- Result: 10 consistent (worst: football longshots >= 8 odds z -3.1, home underdogs, 3-win
+  streak teams; MLB T-10 G >= +6 z -2.3, favourites, overs, home favourites >= 55%). Fading
+  them gains 0.4-5% at fair prices, loses 2-7% at international prices and 6-23% at 運彩;
+  no strategy's opposite makes money at 運彩. The worst are only 1-3pp off the market.
+- 運彩's price model (`analysis/fade.tw_prices`): football spreads its margin by a power law
+  (13% on favourites, 40% on the longest outcome; within 4% on 191 real 1X2 markets, an
+  even spread was 21% off); MLB fits an even 16%. A dutch of two 運彩 prices can be < 1.
+- docs/fade.html (`render_fade_page`, every render): the summary, today's games where a
+  consistently bad strategy points one way (`fade.live_candidates`: T-10 G >= +6, MLB home
+  favourite >= 55%, football longest outcome at fair odds >= 8, home underdog, 模型分歧)
+  with the opposite bet's 運彩 price and EV, and `fade.fade_record` - the same opposite
+  bets on finished games at the 運彩 price captured before kickoff (reviews + ledger).

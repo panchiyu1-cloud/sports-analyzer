@@ -61,4 +61,4 @@ jobs:
 
       - name: Commit snapshot, ledgers and page
         run: |
-          bash scripts/commit_generated.sh "chore(daily): $(date -u +%Y-%m-%d) snapshot + page" data/snapshots data/ledger.csv data/tw_ledger.csv data/moves data/odds_budget.json data/tw data/reviews data/history docs/index.html docs/reviews.html docs/bighand.html
+          bash scripts/commit_generated.sh "chore(daily): $(date -u +%Y-%m-%d) snapshot + page" data/snapshots data/ledger.csv data/tw_ledger.csv data/moves data/odds_budget.json data/tw data/reviews data/history docs/index.html docs/reviews.html docs/bighand.html docs/fade.html

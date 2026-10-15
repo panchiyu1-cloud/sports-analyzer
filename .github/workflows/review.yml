@@ -36,4 +36,4 @@ jobs:
         run: python -m sports_analyzer.pipeline review
       - name: Commit
         run: |
-          bash scripts/commit_generated.sh "chore(review): $(date -u +%Y-%m-%d) post-match review" data/reviews data/history data/ledger.csv data/tw_ledger.csv data/moves docs/index.html docs/reviews.html docs/bighand.html
+          bash scripts/commit_generated.sh "chore(review): $(date -u +%Y-%m-%d) post-match review" data/reviews data/history data/ledger.csv data/tw_ledger.csv data/moves docs/index.html docs/reviews.html docs/bighand.html docs/fade.html
