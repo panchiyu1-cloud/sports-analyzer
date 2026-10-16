@@ -523,6 +523,37 @@ class RenderFailureTests(unittest.TestCase):
         self.assertIn("render failed", logs.output[0])
 
 
+class QuickReviewRenderTests(unittest.TestCase):
+    """The 盯盤 rounds ask for `review --new-only` every ten minutes until a result is in
+    (2026-10-16: an MLB playoff game runs past its 2.5 h review time). A round that found
+    nothing final writes nothing: no render, so the workflow has nothing to commit."""
+
+    def renders(self, report: dict, argv: list[str]) -> int:
+        done: list[int] = []
+        with (
+            mock.patch.object(pipeline, "run_review", lambda settings, new_only=False: report),
+            mock.patch.object(pipeline, "render_latest", lambda: done.append(1) or Path("x")),
+            mock.patch.dict("os.environ", {"FOOTBALL_DATA_TOKEN": "token"}),
+        ):
+            self.assertEqual(pipeline.main(argv), 0)
+        return len(done)
+
+    def test_nothing_final_yet_renders_nothing(self):
+        waiting = {"mlb": {"due": 1, "added": 0, "settled": 0}}
+        self.assertEqual(self.renders(waiting, ["review", "--new-only"]), 0)
+        final = {"mlb": {"due": 1, "added": 1, "settled": 0}}
+        self.assertEqual(self.renders(final, ["review", "--new-only"]), 1)
+        # The routine review rebuilds every football row: it always renders.
+        self.assertEqual(self.renders(waiting, ["review"]), 1)
+
+    def test_what_counts_as_written(self):
+        self.assertFalse(pipeline.review_changed({}))
+        nothing = {"due": 2, "added": 0, "updated": 0, "settled": 0, "signals_closed": 0}
+        self.assertFalse(pipeline.review_changed({"football": nothing}))
+        self.assertTrue(pipeline.review_changed({"football": {**nothing, "settled": 1}}))
+        self.assertTrue(pipeline.review_changed({"mlb": {"due": 1, "added": 1}}))
+
+
 class FakeResults:
     """football-data.org with one finished CL match (id 7): 2-1, 1-0 at half-time."""
 

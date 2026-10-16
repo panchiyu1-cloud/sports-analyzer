@@ -37,8 +37,12 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
+      # The same two days as the morning run: the pages and the 盯盤 sensor take their
+      # matches from the newest snapshot, so a one-day window dropped the second day's
+      # matches every evening until the next morning. Credits go per competition, not
+      # per match, so the wider window costs the same.
       - name: Football — fresh match-winner consensus (fills CLV for morning 運彩 bets)
-        run: python -m sports_analyzer.pipeline football --days 1 --markets h2h
+        run: python -m sports_analyzer.pipeline football --days 2 --markets h2h
       # Tomorrow-morning (Taipei) MLB games: lines are posted by now, and this
       # is what the 20:00 baseball upload is compared against. 2 credits.
       - name: MLB — refresh odds for the next Taipei morning

@@ -19,6 +19,7 @@ import logging
 import math
 import os
 import sys
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -1003,6 +1004,15 @@ def run_review(
     return report
 
 
+def review_changed(report: Mapping[str, Any]) -> bool:
+    """Did a review run write anything: a review row, a settled bet, a closed signal?"""
+    return any(
+        (report.get(sport) or {}).get(key)
+        for sport in ("football", "mlb")
+        for key in ("added", "updated", "settled", "signals_closed")
+    )
+
+
 def _close_signals(entries: dict[str, dict[str, Any]]) -> int:
     """Give each 模型分歧 of these finished matches its closing line: the selection's fair
     probability in the last consensus before kickoff and close_p x price - 1 (CLV)."""
@@ -1472,7 +1482,13 @@ def main(argv: list[str] | None = None) -> int:
         settings = Settings.from_env(offline=True)
         if not settings.football_data_token:
             raise SystemExit("Missing required environment variable: FOOTBALL_DATA_TOKEN")
-        run_review(settings, new_only=args.new_only)
+        report = run_review(settings, new_only=args.new_only)
+        # The 盯盤 rounds ask for a quick review every ten minutes until a result is in (an
+        # MLB game often runs past its review time): one that found nothing final writes
+        # nothing, so no render and nothing for the workflow to commit.
+        if args.new_only and not review_changed(report):
+            log.info("review: nothing new is final yet, nothing to render")
+            return 0
         render_safely()
         return 0
 

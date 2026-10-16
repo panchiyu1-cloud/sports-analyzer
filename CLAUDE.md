@@ -47,7 +47,9 @@ formula is not obvious.
   延遲雷達 purchases (`pipeline radar`, essential markets only; triggered by the 盯盤
   sensor) may spend `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never
   the reserve. The evening run buys match-winner prices only (football h2h, MLB h2h +
-  run line); the morning's totals stay, marked stale.
+  run line); the morning's totals stay, marked stale. It covers the morning's two days
+  (`--days 2`): the pages and the sensor read the newest snapshot, and a one-day window
+  dropped the second day's matches every evening (credits go per competition, not match).
 - odds-api.io (the owner's free key, `ODDS_API_IO_KEY`): 100 requests/hour, 500/day
   (when its day starts is not documented: `sensor.py` counts any 24 hours), two
   bookmakers. Free keys are "for development and testing" and its data may not be
@@ -170,7 +172,8 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - `pipeline review` (daily + evening + manual `review.yml`, and `--new-only` from sensor.yml's
   act job as soon as a match should have finished: `review_due`, football 2 h / MLB 2.5 h after
   kickoff, asked each round until the result is in, at most 6 h / 9 h after kickoff; owner,
-  2026-10-16: "比賽結束就立刻檢討") joins the last pre-kickoff
+  2026-10-16: "比賽結束就立刻檢討"; a `--new-only` run that finds nothing final renders
+  nothing, `review_changed`, so a round waiting for a result leaves nothing to commit) joins the last pre-kickoff
   card from the snapshots of the last 14 days with the result (football-data.org /
   MLB Stats API box score) and football-data.co.uk statistics (HxG/AxG, shots, cards;
   domestic leagues only, 2-3 days late; `scripts/refresh_history.sh` refreshes them daily).
