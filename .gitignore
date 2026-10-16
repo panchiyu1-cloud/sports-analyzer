@@ -24,3 +24,6 @@ Thumbs.db
 
 # Large raw downloads (history CSVs are committed on purpose; raw API dumps are not)
 data/raw/
+
+# The 盯盤 sensor's state (odds-api.io data): kept in the Actions cache, never committed
+.sensor/

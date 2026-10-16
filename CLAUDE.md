@@ -21,7 +21,9 @@ formula is not obvious.
 
 ### Security
 - NEVER hardcode secrets. Tokens come only from environment variables
-  (`FOOTBALL_DATA_TOKEN`, `ODDS_API_KEY`) via `sports_analyzer.config.Settings`.
+  (`FOOTBALL_DATA_TOKEN`, `ODDS_API_KEY`, optional `ODDS_API_IO_KEY`, `NTFY_TOPIC`) via
+  `sports_analyzer.config.Settings`. An exception's text can carry a request URL with
+  its key: log `type(exc).__name__`, not the exception.
 - Never print or log a token, even partially. Never write tokens into
   snapshots, ledgers, HTML, or test fixtures.
 - Fail fast at startup if a required token is missing (unless `--offline`).
@@ -42,8 +44,15 @@ formula is not obvious.
   over, marked stale). Football buys h2h,totals only (運彩 football handicaps are
   three-way, so Asian handicap prices compare with nothing); MLB keeps the run line.
 - Pre-game refreshes (`pipeline tw` after a recent upload, see "T-10 價值版") and the
-  延遲雷達 runs (`pipeline radar`, essential markets only) may spend
-  `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never the reserve.
+  延遲雷達 purchases (`pipeline radar`, essential markets only; triggered by the 盯盤
+  sensor) may spend `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never
+  the reserve. The evening run buys match-winner prices only (football h2h, MLB h2h +
+  run line); the morning's totals stay, marked stale.
+- odds-api.io (the owner's free key, `ODDS_API_IO_KEY`): 100 requests/hour, 500/day
+  (when its day starts is not documented: `sensor.py` counts any 24 hours), two
+  bookmakers. Free keys are "for development and testing" and its data may not be
+  redistributed: it never goes into the repo, the pages or the logs (see "盯盤").
+  One free account per person: never suggest a second one.
 
 ### Code style (ECC python rules)
 - PEP 8, type annotations on every function signature, `from __future__ import annotations`.
@@ -77,6 +86,8 @@ ruff check . && ruff format .                    # lint + format
 python -m sports_analyzer.pipeline football      # daily football run (needs .env)
 python -m sports_analyzer.pipeline football --offline   # render from last snapshot
 python -m sports_analyzer.pipeline review         # post-match review (football-data token only)
+python -m sports_analyzer.pipeline sensor         # one 盯盤 round (ODDS_API_IO_KEY; state in .sensor/)
+python -m sports_analyzer.pipeline radar --only PL,MLB  # buy the consensus for these competitions
 python scripts/backtest_football.py data/history/*.csv  # backtest + docs/backtest.html
 python scripts/validate_implied.py                      # validate + recalibrate the implied model
 python scripts/backtest_fade.py --model-records records.json  # 反者道之動 (needs data/raw/)
@@ -90,7 +101,8 @@ src/sports_analyzer/
   config.py        competitions, sport keys, thresholds, Settings (env)
   http.py          shared requests session: retries, header-based throttling
   teams.py         team-name normalisation + alias table across data sources
-  fetch/           football.py (football-data.org), odds.py (The Odds API), mlb.py
+  fetch/           football.py (football-data.org), odds.py (The Odds API), mlb.py,
+                   oddsio.py (odds-api.io: the 盯盤 sensor's two bookmakers)
   models/          dixon_coles.py, market.py (de-vig, edge, T-10 G value),
                    implied.py (market-implied goal model + per-market calibration)
   analysis/        football.py — fixtures + model + odds -> card dicts + signals
@@ -102,6 +114,7 @@ src/sports_analyzer/
   render/          site.py — Site (everything a render needs) -> one view per page -> docs/*.html
                    cards.py — shared helpers (names, times, labels, 大戶 record, review cards)
                    templates/ base + _style (look), _ui (macros), one .html.j2 per page
+  sensor.py        盯盤: what to read when, the quota, when a move asks for a purchase
   pipeline.py      CLI entry point
 scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 scripts/backtest_fade.py       65 strategies vs the market (反者道之動) -> data/fade_summary.json
@@ -333,9 +346,11 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   price that has not followed a move yet (大手追蹤). The phone uploads at 08:00 / 20:00
   Taipei and the routine runs bought international prices within the hour, so the tape had
   no international price hours after an upload: nothing could see 運彩 lagging.
-- radar.yml (15:40, 18:40, 21:40 UTC = 23:40, 02:40, 05:40 Taipei; concurrency group daily)
-  runs `pipeline radar`: `pregame.radar_due` picks matches with a 運彩 price starting within
-  `radar_window_hours` (4) whose h2h is older than `radar_min_age_minutes` (120);
+- Purchases (`pipeline radar`): since 2026-10-16 triggered by the 盯盤 sensor (sensor.yml's
+  buy job, `--only` the competitions that moved: all their matches with a 運彩 price within
+  48 h, one request each), no longer at fixed times; radar.yml is manual only (without
+  `--only`: `pregame.radar_due`, matches with a 運彩 price starting within
+  `radar_window_hours` (4) whose h2h is older than `radar_min_age_minutes` (120)).
   `_buy_fresh` (shared with the pre-game refresh) buys the essential markets only (h2h;
   MLB also spreads) within the allowance plus PREGAME_EXTRA; pending 運彩 bets get CLV from
   them; then `run_tw` re-judges the last upload (stale: "不判斷") and the render follows.
@@ -354,6 +369,51 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - `pregame.upload_plan` (建議上傳時間): an upload `UPLOAD_LEAD` (60 min) before the first
   game not yet covered, on the half hour, covers the games of the next
   `pregame_window_hours`; marked done when the sport's last upload falls in the slot.
+
+## 盯盤 (2026-10-16) — two bookmakers watched, the consensus bought when they move
+- Owner's request: use odds-api.io's free quota to the full, buy the evening's match-winner
+  prices only, drop the three fixed radar runs. The Odds API's many-book consensus stays
+  the fair price; 500 credits a month buy about one full look a day. odds-api.io's two
+  books (FanDuel + Bet365) can look every ten minutes but are not a consensus (their
+  de-vigged average sat 0.6pp median, 1.6pp worst from it on 36 matches): they say WHEN,
+  the consensus says HOW MUCH. A move is measured on the two books' own readings, never
+  against the consensus (that would read the gap between sources as a move).
+- sensor.yml, every ten minutes (cron 2-59/10, concurrency group sensor). Job `watch`:
+  restores .sensor/ from the Actions cache, runs `pipeline sensor` (`--hold` when a
+  daily-group run is queued, waiting or running: a purchase queued then could cancel a
+  waiting upload's run), saves the cache, pushes a counts-only status.json to the orphan
+  branch sensor-status. Job `buy` (job concurrency group daily), when `buy` is not empty:
+  `pipeline radar --only <competitions>`, commit.
+- `sensor.watched`: matches with a 運彩 price (`tw`) within `WINDOW_HOURS` (48) in a
+  competition of `fetch/oddsio.LEAGUES` (MLB: regular-season and playoff slugs). Matched to
+  odds-api.io events by competition, kickoff within 2 h and both names (`teams.canonical`,
+  else difflib; home and away must agree). Event lists are asked for the window only
+  (`from`/`to`: the answer is not in date order) every 6 h, or after 1 h while a watched
+  match is missing.
+- Tiers (`TIERS`): within 24 h every run, 24-48 h every 30 min (1 min of slack); due
+  matches go ten to a request (`/odds/multi`), soonest kickoff first. Free places of a
+  request and spare requests read the other matches (`reads`): the spare is an even share
+  of what the forecast of the next 24 hours' tiers (`forecast`, 72 h of cards with or
+  without a 運彩 price) leaves of DAILY_CAP, never more than leaves every 24-hour window
+  ahead room for the forecast (`headroom`) and SPARE_MARGIN (20). Caps: HOURLY_CAP 90 and
+  DAILY_CAP 480 over ANY hour / 24 hours (the API's own day is undocumented; a UTC-day count
+  reached 552 in some 24 h in simulation), BURST 10 a run, stop when the API says 10 or
+  fewer are left this hour. No retries (a 429 can ask for most of an hour's wait).
+  Simulated typical week (scratch, real code): football only 152-451 requests a day, every
+  window <= 480, matches 24-48 h out read every 10 min (median); with 15 MLB games a day
+  the cap binds and far matches fall back to 30 min.
+- Reading: each book's match-winner prices de-vigged (power), averaged over the books
+  that quote every side. Trigger (`moved`): a side moved `MOVE` (3pp) or more since the
+  reading nearest the later of the h2h block's `odds_at` and the last purchase asked for
+  that competition (`triggers`: a purchase that never came must not be asked for every ten
+  minutes); not within `MIN_GAP` (20 min) of either; the latest reading <= 30 min old.
+  Purchases are trimmed to what The Odds API's allowance (+ PREGAME_EXTRA) can pay
+  (`purchase_cost`: 1, MLB 2); a held one (busy queue, budget) is not recorded and comes
+  back next round.
+- Privacy: odds-api.io's terms forbid redistribution. Readings live only in the Actions
+  cache (.sensor/state.json, de-vigged probabilities); status.json has counts and our own
+  team names of unmatched matches; logs print counts and exception type names only.
+- MLB in season (March on) will press on the cap: revisit `TIERS` with real numbers then.
 
 ## 網站 (2026-10-16) — one page per analysis method
 - Owner's request: the old single page was too busy. `render/site.py` builds every page from

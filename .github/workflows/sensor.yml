@@ -1,0 +1,122 @@
+name: 盯盤 (sensor)
+
+# Every ten minutes the owner's free odds-api.io key (two bookmakers; 100 requests an
+# hour, 500 a day) reads the match-winner prices of the matches with a 運彩 price that
+# start within 48 hours: every ten minutes within 24 hours, every 30 beyond, and more
+# often whenever a request has free places or the day has requests to spare
+# (src/sports_analyzer/sensor.py). When a side has moved 3 percentage points or more
+# since The Odds API's consensus was last bought, the buy job buys that competition's
+# consensus (h2h; MLB also the run line: 1-2 credits, within the budget plus the
+# pre-game extra), judges the last 運彩 upload against it (延遲雷達), renders and commits.
+#
+# odds-api.io's data never reaches the repo or the page (its terms): the sensor's state
+# stays in the Actions cache, and only a counts-only status goes to the side branch
+# sensor-status. Nothing is pushed to the phone (owner's choice).
+
+on:
+  schedule:
+    - cron: "2-59/10 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: sensor
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read  # to see whether a daily-group task is running or waiting
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    outputs:
+      buy: ${{ steps.sensor.outputs.buy }}
+    env:
+      ODDS_API_IO_KEY: ${{ secrets.ODDS_API_IO_KEY }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Restore the sensor's state
+        uses: actions/cache/restore@v4
+        with:
+          path: .sensor
+          key: sensor-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: sensor-
+      # A purchase waits for the daily group. If a task of that group is running or
+      # waiting, a purchase queued now could cancel a waiting upload's run (a group
+      # keeps one waiting run), so this round reads but asks for nothing.
+      - name: Is a daily-group task running or waiting?
+        id: idle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=60" --jq '
+            [.workflow_runs[] | select(.status != "completed")
+             | select(.path | test("/(daily|evening|tw|radar|review|backtest)\\.yml$"))]
+            | length') || busy=1
+          echo "busy=$busy" >> "$GITHUB_OUTPUT"
+          echo "daily-group runs not finished: $busy"
+      - name: Read the two bookmakers
+        id: sensor
+        run: |
+          if [ "${{ steps.idle.outputs.busy }}" = "0" ]; then
+            python -m sports_analyzer.pipeline sensor
+          else
+            python -m sports_analyzer.pipeline sensor --hold
+          fi
+      - name: Keep the sensor's state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .sensor
+          key: sensor-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Status (counts only) to the side branch sensor-status
+        if: always()
+        run: |
+          [ -f .sensor/status.json ] || exit 0
+          cp .sensor/status.json "$RUNNER_TEMP/status.json"
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -q --orphan sensor-status
+          git rm -rq --cached .
+          mkdir -p sensor && cp "$RUNNER_TEMP/status.json" sensor/status.json
+          git add -f sensor/status.json
+          git commit -qm "chore(sensor): status"
+          git push -qf origin sensor-status
+
+  buy:
+    needs: watch
+    if: needs.watch.outputs.buy != ''
+    runs-on: ubuntu-latest
+    # The same group as every task that writes the snapshots, so none of them race.
+    concurrency:
+      group: daily
+      cancel-in-progress: false
+    env:
+      ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      BUY: ${{ needs.watch.outputs.buy }}
+      PYTHONPATH: src
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # a queued run starts from the newest commit, not the one that triggered it
+          fetch-depth: 60  # enough history to date the 運彩 uploads (fetch/taiwan.normalize_uploads)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Buy the consensus for the competitions that moved, against the last 運彩 upload
+        id: radar
+        run: python -m sports_analyzer.pipeline radar --only "$BUY"
+      - name: Commit
+        if: steps.radar.outputs.refreshed != '0'
+        run: |
+          bash scripts/commit_generated.sh "chore(radar): $(date -u +%Y-%m-%dT%H:%M) $BUY moved, consensus vs 運彩" data/snapshots data/tw_ledger.csv data/moves data/odds_budget.json data/tw docs

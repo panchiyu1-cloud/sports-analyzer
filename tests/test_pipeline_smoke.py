@@ -668,3 +668,43 @@ class ReviewSmokeTests(unittest.TestCase):
         rep = pipeline.run_review(self.settings, now=now, new_only=True)
         self.assertEqual(FakeResults.calls, ["CL"])
         self.assertEqual(rep, {})
+
+
+class EveningMlbMergeTests(unittest.TestCase):
+    def test_the_evening_keeps_the_morning_totals_as_stale(self):
+        """The evening buys h2h + run line only (evening.yml): the morning's totals stay."""
+        morning = {
+            "date": "2026-10-17",
+            "games": [
+                {
+                    "game_pk": 9,
+                    "market": {
+                        "books": 8,
+                        "h2h": {"home": 0.55, "away": 0.45},
+                        "totals": {"line": 7.5, "over": 0.5, "under": 0.5},
+                        "spread": {"home": 0.4, "away": 0.6},
+                    },
+                    "tw": {"captured_at": "x"},
+                }
+            ],
+        }
+        evening = {
+            "date": "2026-10-17",
+            "games": [
+                {
+                    "game_pk": 9,
+                    "market": {
+                        "books": 7,
+                        "h2h": {"home": 0.58, "away": 0.42},
+                        "totals": None,
+                        "spread": {"home": 0.43, "away": 0.57},
+                    },
+                }
+            ],
+        }
+        pipeline._merge_previous_mlb(evening, morning)
+        market = evening["games"][0]["market"]
+        self.assertEqual(market["totals"], {"line": 7.5, "over": 0.5, "under": 0.5, "stale": True})
+        self.assertEqual(market["h2h"], {"home": 0.58, "away": 0.42})  # the new prices win
+        self.assertNotIn("stale", market["spread"])
+        self.assertEqual(evening["games"][0]["tw"], {"captured_at": "x"})

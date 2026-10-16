@@ -15,6 +15,7 @@ from ..analysis.mlb import G_SHAPES
 from ..config import LOCAL_TZ, MODEL, ModelConfig
 from ..models.market import t10_signal
 from ..moves import FOLLOW_MIN, MARKET_SIDES
+from ..sensor import MOVE, RUN_MINUTES
 
 TEMPLATE_DIR = Path(__file__).parent / "templates"
 
@@ -42,8 +43,6 @@ def taipei_time(value: Any) -> str:
 
 
 SPORT_LABELS = {"football": "足球", "mlb": "MLB"}
-# The radar runs of radar.yml, in Taipei time, for the page's explanation.
-RADAR_TIMES = "23:40、02:40、05:40"
 WATCH_ROWS = 8
 
 
@@ -98,7 +97,9 @@ def radar_view(radar: Mapping[str, Any], now: datetime) -> dict[str, Any]:
             }
             for p in radar.get("plan", [])
         ][:6],
-        "times": RADAR_TIMES,
+        # 盯盤 (sensor.py), for the page's explanation: how often it looks, what move buys.
+        "sensor_minutes": RUN_MINUTES,
+        "sensor_move": round(MOVE * 100),
     }
 
 

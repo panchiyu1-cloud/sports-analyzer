@@ -29,6 +29,7 @@ from . import budget as budget_mod
 from . import ledger as ledger_mod
 from . import moves as moves_mod
 from . import notify, review_store, tw_ledger
+from . import sensor as sensor_mod
 from .analysis import fade as fade_mod
 from .analysis import pregame, review
 from .analysis.football import build_cards
@@ -50,6 +51,7 @@ from .config import (
     MODEL,
     MOVES_DIR,
     ODDS_BUDGET_PATH,
+    SENSOR_DIR,
     SNAPSHOT_DIR,
     TW_DIR,
     TW_LEDGER_PATH,
@@ -61,6 +63,8 @@ from .fetch import taiwan
 from .fetch.football import FootballDataClient, Match
 from .fetch.mlb import MlbClient
 from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
+from .fetch.oddsio import LEAGUES as IO_LEAGUES
+from .fetch.oddsio import MAX_IDS, OddsIoClient
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
 from .models.implied import IDENTITY, Calibration
@@ -333,9 +337,13 @@ def _model_summary(model: dc.FittedModel | None) -> dict[str, Any] | None:
 
 # ------------------------------------------------------------------------ MLB
 def run_mlb(
-    today_local: date, settings: Settings | None = None, cfg: ModelConfig = MODEL
+    today_local: date,
+    settings: Settings | None = None,
+    cfg: ModelConfig = MODEL,
+    markets: tuple[str, ...] = MLB_MARKETS,
 ) -> dict[str, Any]:
-    """Today's MLB games (Taipei date) with market consensus, fair odds and the T-10 G value."""
+    """Today's MLB games (Taipei date) with market consensus, fair odds and the T-10 G value.
+    `markets`: the evening run keeps the run line (half of G) and drops the totals."""
     client = MlbClient()
     games = client.schedule(today_local)
     # Yesterday's finals settle the 運彩 ledger (the Taipei "day" spans two US dates).
@@ -351,7 +359,7 @@ def run_mlb(
     credits = None
     budget = budget_mod.load(ODDS_BUDGET_PATH, today_local)
     markets = budget_mod.plan_markets(
-        MLB_MARKETS,
+        markets,
         1 if games else 0,
         budget_mod.allowance_today(budget, datetime.now(UTC).date()),
         essential=("h2h", "spreads"),  # the two halves of the T-10 G value
@@ -421,6 +429,12 @@ def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | Non
                 if bought
                 else "國際價為稍早快照（這次沒有更新：預算不足或比賽已開打）"
             ]
+        elif card.get("market") and old.get("market"):
+            # The evening run buys the match-winner and run line only: the morning's
+            # totals stay, marked stale like any carried-over block.
+            for key in ("totals", "spread"):
+                if card["market"].get(key) is None and old["market"].get(key):
+                    card["market"][key] = {**old["market"][key], "stale": True}
         if old.get("tw") and not card.get("tw"):
             card["tw"] = old["tw"]
 
@@ -594,7 +608,10 @@ def _buy_fresh(
                 markets=markets,
             )
         except requests.RequestException as exc:
-            log.warning("pre-game odds unavailable (%s); keeping earlier prices", exc)
+            # The type only: a connection error's text carries the URL, key included.
+            log.warning(
+                "pre-game odds unavailable (%s); keeping earlier prices", type(exc).__name__
+            )
             break
     budget_mod.save(
         ODDS_BUDGET_PATH,
@@ -606,24 +623,157 @@ def _buy_fresh(
     return report, refreshed
 
 
+# ---------------------------------------------------------------- 盯盤
+def run_sensor(
+    settings: Settings | None,
+    now: datetime | None = None,
+    client: OddsIoClient | None = None,
+    hold: bool = False,
+) -> dict[str, Any]:
+    """One 盯盤 round (sensor.py; sensor.yml every ten minutes): read the two odds-api.io
+    bookmakers for the watched matches, within the free key's quota, and return the
+    competitions whose matches moved (`buy`) for `pipeline radar --only`. `hold`: a
+    daily-group task is running or waiting, so nothing is asked for (the move is still
+    there next round). Nothing is bought here and nothing goes into the repo: the state
+    stays in .sensor/ (the Actions cache); status.json there holds counts, no prices."""
+    now = now or datetime.now(UTC)
+    report: dict[str, Any] = {"at": now.isoformat(timespec="seconds"), "buy": []}
+    if not settings or not settings.odds_api_io_key:
+        report["skipped"] = "no ODDS_API_IO_KEY"
+        return report
+    path = SENSOR_DIR / "state.json"
+    state = sensor_mod.load_state(path)
+    cards: list[tuple[str, dict[str, Any]]] = []
+    football = _latest_snapshot("football")
+    for comp in (football or {}).get("competitions", []):
+        cards += [("football", c) for c in comp.get("cards", [])]
+    for snap in _latest_snapshots("mlb", 2)[::-1]:  # newest first: it wins a duplicate
+        cards += [("mlb", g) for g in snap.get("games", [])]
+    watch = sensor_mod.watched(cards, now)
+    client = client or OddsIoClient(settings.odds_api_io_key)
+    budget = sensor_mod.allowance(state["usage"], now)
+    mapped: dict[str, str] = {}
+    readings = extra = 0
+    try:
+        if watch and budget and sensor_mod.books_due(state, now):
+            state["books"] = client.selected_books()
+            state["books_at"] = report["at"]
+        mapped = sensor_mod.match_events(watch, sensor_mod.cached_events(state))
+        # Lists cover the window for as long as they are kept (EVENTS_TTL).
+        since = now - sensor_mod.MATCH_TOLERANCE
+        until = now + timedelta(hours=sensor_mod.WINDOW_HOURS) + sensor_mod.EVENTS_TTL
+        for league in sensor_mod.stale_leagues(watch, state, mapped, now):
+            sport, slugs = IO_LEAGUES[league]
+            if client.requests + len(slugs) > budget:
+                break
+            events = [e for slug in slugs for e in client.events(sport, slug, since, until)]
+            sensor_mod.store_events(state, league, events, now)
+        mapped = sensor_mod.match_events(watch, sensor_mod.cached_events(state))
+        readable = [w for w in watch if w.key in mapped]
+        last = sensor_mod.last_readings(state)
+        population = sensor_mod.watched(cards, now, hours=sensor_mod.FORECAST_HOURS, need_tw=False)
+        due_keys = {w.key for w in sensor_mod.due(readable, last, now)}
+        must = min(-(-len(due_keys) // MAX_IDS), budget - client.requests)
+        plan = sensor_mod.forecast(population, now)
+        spare = sensor_mod.spare_requests(state["usage"], now, plan, client.requests, must)
+        report["spare"] = spare
+        for chunk in sensor_mod.reads(readable, last, now, budget - client.requests, spare):
+            left = client.remaining_this_hour
+            if not state["books"] or (left is not None and left <= sensor_mod.HOUR_MARGIN):
+                break
+            found = {
+                p.event_id: p for p in client.odds([mapped[w.key] for w in chunk], state["books"])
+            }
+            for w in chunk:
+                prices = found.get(mapped[w.key])
+                probs = sensor_mod.two_book_probs(prices, w.sides) if prices else None
+                if probs:
+                    state["readings"].append({"at": report["at"], "key": w.key, "p": probs})
+                    readings += 1
+                    extra += w.key not in due_keys
+    except requests.RequestException as exc:
+        # The type only: the request URL carries the key.
+        log.warning("盯盤: odds-api.io unavailable (%s); stopping this round", type(exc).__name__)
+        report["error"] = type(exc).__name__
+    state["usage"] = sensor_mod.record_usage(state["usage"], client.requests, now)
+    sensor_mod.prune(state, now)
+    moving = sensor_mod.moved(watch, state["readings"], now, state["triggers"])
+    buy = sensor_mod.purchases(moving)
+    if buy and hold:
+        report["held_busy"] = buy
+        buy = []
+    if buy:
+        # Only what The Odds API's budget can pay for today (the pre-game extra included).
+        odds_budget = budget_mod.load(ODDS_BUDGET_PATH, now.date())
+        credits = budget_mod.allowance_today(
+            odds_budget, now.date(), extra=budget_mod.PREGAME_EXTRA
+        )
+        affordable: list[str] = []
+        for league in buy:
+            cost = sum(sensor_mod.purchase_cost(x) for x in [*affordable, league])
+            if credits is None or cost <= credits:
+                affordable.append(league)
+        if len(affordable) < len(buy):
+            report["held_budget"] = [x for x in buy if x not in affordable]
+        buy = affordable
+    sensor_mod.record_triggers(state, buy, now)
+    report.update(
+        {
+            "buy": buy,
+            "moving": len(moving),
+            "watched": len(watch),
+            "mapped": len(mapped),
+            "unmapped": [f"{w.league} {w.home} vs {w.away}" for w in watch if w.key not in mapped],
+            "readings": readings,
+            "extra_readings": extra,
+            "requests": client.requests,
+            "requests_24h": sensor_mod.used(state["usage"], now),
+            "remaining_this_hour": client.remaining_this_hour,
+        }
+    )
+    sensor_mod.save_state(path, state)
+    (SENSOR_DIR / "status.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    log.info("盯盤: %s", {k: v for k, v in report.items() if k != "unmapped"})
+    return report
+
+
 # ---------------------------------------------------------------- 延遲雷達
 def run_radar(
-    cfg: ModelConfig = MODEL, settings: Settings | None = None, now: datetime | None = None
+    cfg: ModelConfig = MODEL,
+    settings: Settings | None = None,
+    now: datetime | None = None,
+    only: set[str] | None = None,
 ) -> dict[str, Any]:
-    """延遲雷達's own purchase, on a schedule (radar.yml) rather than on an upload: fresh
-    international prices for the matches with a 運彩 price that start within
-    radar_window_hours (pregame.radar_due), essential markets only, within the budget
-    plus the pre-game extra. The render that follows sets them against the last
+    """延遲雷達's own purchase, rather than on an upload: fresh international prices,
+    essential markets only, within the budget plus the pre-game extra. `only` (from the
+    盯盤 sensor): the competitions (PL ... CL, MLB) whose matches moved, all their
+    matches with a 運彩 price within the sensor's window; without it (a manual run),
+    the matches starting within radar_window_hours whose price is old
+    (pregame.radar_due). The render that follows sets the new prices against the last
     uploaded 運彩 prices (moves.radar). Pending 運彩 bets get their closing-line value
     from them first, as after a pre-game refresh."""
     now = now or datetime.now(UTC)
     reports: dict[str, Any] = {}
 
+    def pick(cards: list[dict[str, Any]], sport: str) -> list[dict[str, Any]]:
+        if only is None:
+            return pregame.radar_due(cards, now, cfg)
+        end = now + timedelta(hours=sensor_mod.WINDOW_HOURS)
+        out = []
+        for c in cards:
+            start = pregame.kickoff(c)
+            league = "MLB" if sport == "mlb" else str(c.get("competition", ""))
+            if c.get("tw") and start is not None and now < start <= end and league in only:
+                out.append(c)
+        return out
+
     football = _latest_snapshot("football")
     if football:
         _backfill_odds_at(football)
         cards = [c for comp in football["competitions"] for c in comp["cards"]]
-        due = pregame.radar_due(cards, now, cfg)
+        due = pick(cards, "football")
         rep: dict[str, Any] = {"due": len(due), "refreshed": 0}
         refreshed: list[dict[str, Any]] = []
         if due:
@@ -643,7 +793,7 @@ def run_radar(
             cards += [c for c in older.get("games", []) if str(c.get("game_pk")) not in seen]
         for snap in mlb_snaps:
             _backfill_odds_at(snap)
-        due = pregame.radar_due(cards, now, cfg)
+        due = pick(cards, "mlb")
         rep, refreshed = {"due": len(due), "refreshed": 0}, []
         if due:
             rep, refreshed = _buy_fresh("mlb", due, settings, now, cfg, rep, True)
@@ -663,7 +813,8 @@ def run_radar(
 
 
 def _github_output(name: str, value: Any) -> None:
-    """A step output for the workflow (radar.yml commits only when something was bought)."""
+    """A step output for the workflow (sensor.yml: `buy` starts the purchase job, whose
+    commit follows only when something was bought, `refreshed`)."""
     path = os.environ.get("GITHUB_OUTPUT")
     if path:
         with open(path, "a", encoding="utf-8") as fh:
@@ -1131,7 +1282,8 @@ def _latest_snapshots(sport: str, n: int) -> list[dict[str, Any]]:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sports_analyzer.pipeline")
     parser.add_argument(
-        "task", choices=["football", "mlb", "tw", "review", "radar", "render", "test-notify"]
+        "task",
+        choices=["football", "mlb", "tw", "review", "radar", "sensor", "render", "test-notify"],
     )
     parser.add_argument(
         "--days", type=int, default=None, help="fixture window in days (default from env or 2)"
@@ -1143,7 +1295,19 @@ def main(argv: list[str] | None = None) -> int:
         "--markets",
         type=str,
         default=None,
-        help="comma-separated football odds markets, e.g. h2h (default h2h,totals)",
+        help="comma-separated odds markets, e.g. h2h (football default h2h,totals; "
+        "mlb default h2h,spreads,totals)",
+    )
+    parser.add_argument(
+        "--only",
+        type=str,
+        default=None,
+        help="radar: only these competitions, e.g. PL,SA,MLB (what the 盯盤 sensor saw move)",
+    )
+    parser.add_argument(
+        "--hold",
+        action="store_true",
+        help="sensor: read, but ask for no purchase (another task is running)",
     )
     parser.add_argument(
         "--offline", action="store_true", help="skip the network and just re-render"
@@ -1166,11 +1330,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.task == "render" or args.offline:
         render_safely()
         return 0
+    if args.task == "sensor":
+        # Every ten minutes (sensor.yml): two bookmakers read; the competitions that
+        # moved go to the workflow, whose next job buys them (radar --only).
+        report = run_sensor(Settings.from_env(offline=True), hold=args.hold)
+        _github_output("buy", ",".join(report.get("buy", [])))
+        return 0
     if args.task == "radar":
-        # Scheduled (radar.yml): fresh prices for matches about to start, then the last
-        # upload is re-judged and the page shows what the new prices say about it.
+        # After the sensor saw a move (sensor.yml, --only) or by hand: fresh prices, then
+        # the last upload is re-judged and the page shows what the new prices say.
         settings = Settings.from_env(offline=True)
-        reports = run_radar(settings=settings)
+        only = {x.strip() for x in args.only.split(",") if x.strip()} if args.only else None
+        reports = run_radar(settings=settings, only=only)
         bought = sum(r.get("refreshed", 0) for r in reports.values())
         _github_output("refreshed", bought)
         if not bought:
@@ -1208,13 +1379,12 @@ def main(argv: list[str] | None = None) -> int:
     settings = Settings.from_env()
     if args.days is not None:
         settings = replace(settings, fixture_window_days=args.days)
-    markets = (
-        tuple(m.strip() for m in args.markets.split(",")) if args.markets else FOOTBALL_MARKETS
-    )
+    chosen = tuple(m.strip() for m in args.markets.split(",")) if args.markets else None
     if args.task == "football":
-        run_football(settings, today, markets=markets)
+        run_football(settings, today, markets=chosen or FOOTBALL_MARKETS)
     elif args.task == "mlb":
-        run_mlb(datetime.now(LOCAL_TZ).date() if not args.date else today, settings)
+        local_today = datetime.now(LOCAL_TZ).date() if not args.date else today
+        run_mlb(local_today, settings, markets=chosen or MLB_MARKETS)
     render_safely()
     return 0
 

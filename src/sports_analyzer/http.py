@@ -1,4 +1,4 @@
-"""A small HTTP helper that respects the two APIs' rate limits.
+"""A small HTTP helper that respects the APIs' rate limits.
 
 football-data.org tells you, on every response, how many calls you have left in
 the current minute (`X-Requests-Available-Minute`) and when the counter resets
@@ -45,6 +45,7 @@ class Session:
     min_interval: float = 0.0  # seconds between calls to the same host
     sleep: Callable[[float], None] = time.sleep
     quota: QuotaState = field(default_factory=QuotaState)
+    calls: int = 0  # HTTP requests sent, retries included (odds-api.io counts every one)
     _session: requests.Session = field(default_factory=requests.Session, repr=False)
     _last_call: float = field(default=0.0, repr=False)
 
@@ -62,6 +63,7 @@ class Session:
 
         for attempt in range(self.max_retries + 1):
             self._respect_min_interval()
+            self.calls += 1
             response = self._session.get(
                 url, params=params, headers=merged_headers, timeout=self.timeout
             )
@@ -104,6 +106,8 @@ class Session:
         remaining = _int_header(headers, "X-Requests-Available-Minute")
         if remaining is None:
             remaining = _int_header(headers, "x-requests-remaining")
+        if remaining is None:
+            remaining = _int_header(headers, "x-ratelimit-remaining")  # odds-api.io, per hour
         reset = _int_header(headers, "X-RequestCounter-Reset")
         cost = _int_header(headers, "x-requests-last")
         used = _int_header(headers, "x-requests-used")

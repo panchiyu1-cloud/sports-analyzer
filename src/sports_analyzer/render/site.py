@@ -842,7 +842,8 @@ def radar_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
         "cards": cards,
         "plan": view["plan"],
         "last": view["last"],
-        "times": view.get("times", ""),
+        "sensor_minutes": view.get("sensor_minutes", 10),
+        "sensor_move": view.get("sensor_move", 3),
         "history": history[:HISTORY_LIMIT],
         "summary": site.history_summary.get("radar") or {},
         "kpis": {

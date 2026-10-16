@@ -28,6 +28,8 @@ MOVES_DIR = DATA_DIR / "moves"
 # Written by scripts/validate_implied.py; per-market corrections for the implied model.
 IMPLIED_CALIBRATION_PATH = DATA_DIR / "implied_calibration.json"
 DOCS_DIR = ROOT / "docs"
+# The 盯盤 sensor's state (sensor.py); restored from the Actions cache, never committed.
+SENSOR_DIR = ROOT / ".sensor"
 # Where GitHub Pages serves docs/ (notifications open it).
 PAGE_URL = "https://panchiyu1-cloud.github.io/sports-analyzer/"
 
@@ -144,6 +146,9 @@ class Settings:
     # ntfy.sh topic for phone notifications of new value bets (optional). The topic
     # name is the only key to the channel, so it is kept as a secret like the tokens.
     ntfy_topic: str | None = None
+    # odds-api.io (optional): the owner's free key, two bookmakers watched every ten
+    # minutes by the 盯盤 sensor (sensor.py).
+    odds_api_io_key: str | None = None
 
     @classmethod
     def from_env(cls, offline: bool = False) -> Settings:
@@ -155,6 +160,7 @@ class Settings:
             fixture_window_days=int(os.environ.get("FIXTURE_WINDOW_DAYS", "2")),
             offline=offline,
             ntfy_topic=os.environ.get("NTFY_TOPIC") or None,
+            odds_api_io_key=os.environ.get("ODDS_API_IO_KEY") or None,
         )
         if not offline:
             settings.require()
