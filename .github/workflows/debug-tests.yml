@@ -1,0 +1,41 @@
+name: Debug tests (temporary)
+
+# One-off: the CI log cannot be read from the maintenance session, so this runs the
+# same pytest as CI and puts the tail of its output on the side branch debug-tests.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Tests
+        run: |
+          set +e
+          pytest -x -q -p no:cacheprovider > "$RUNNER_TEMP/pytest.txt" 2>&1
+          echo "exit $?" >> "$RUNNER_TEMP/pytest.txt"
+          python -m unittest discover -s tests > "$RUNNER_TEMP/unittest.txt" 2>&1
+          echo "exit $?" >> "$RUNNER_TEMP/unittest.txt"
+          python --version >> "$RUNNER_TEMP/pytest.txt"
+      - name: Push the output to a side branch
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          git checkout -q --orphan debug-tests
+          git rm -rq --cached .
+          mkdir -p debug
+          tail -c 20000 "$RUNNER_TEMP/pytest.txt" > debug/pytest.txt
+          tail -c 20000 "$RUNNER_TEMP/unittest.txt" > debug/unittest.txt
+          git add -f debug/pytest.txt debug/unittest.txt
+          git commit -qm "chore(debug): test output"
+          git push -qf origin debug-tests
