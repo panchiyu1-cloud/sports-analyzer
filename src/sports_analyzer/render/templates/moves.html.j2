@@ -1,0 +1,67 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% block description %}盤口移動：國際大單和運彩自己的大戶動向，每一次之後怎麼走、結果如何{% endblock %}
+{% block main %}
+{% set big = (cfg.big_move_threshold * 100)|round|int %}
+{% set div = (cfg.tw_divergence_threshold * 100)|round|int %}
+{{ ui.hero("盤口移動",
+  "大單：國際盤某一邊的機率，從第一次看到這場比賽起升了 " ~ big ~ "pp 以上——2019–2027 年 22 個聯賽裡，這種移動多半是對的方向。運彩大戶：兩次上傳之間運彩自己把某一邊調低 " ~ div ~ "pp 以上，國際盤沒有一樣的移動。能賺的是運彩還沒跟上的價格。",
+  [
+    {"label": "大單", "value": kpis.big, "tone": "warn" if kpis.big else ""},
+    {"label": "在動的比賽", "value": kpis.moving, "unit": " 場"},
+    {"label": "運彩大戶", "value": kpis.tw_only, "unit": " 次"},
+    {"label": "紀錄", "value": kpis.record, "unit": " 場"},
+  ]) }}
+{{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history|length)]) }}
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">只列國際盤往某一邊升了 {{ (cfg.radar_watch_move * 100)|round|int }}pp 以上、或運彩自己動過的比賽，大單在前。線圖是那一邊每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後）：藍線往上、橘線沒跟，就是運彩還沒反映；「運彩現在 EV」到門檻時，運彩價值頁也會列出來。</p>
+  {% if cards %}
+  <div class="cards">
+  {% for c in cards %}
+    <article class="match" id="{{ c.id }}" data-status="{{ 'big' if c.big else 'moving' }}">
+      {{ ui.head(c) }}
+      <div class="verdict">
+        {% if c.big %}<span class="chip warn">大單</span>{% endif %}
+        {% if c.tw_events %}<span class="chip warn">運彩大戶</span>{% endif %}
+        <b>{{ c.label }}</b>
+      </div>
+      <dl class="facts">
+        {% if c.move %}
+        <dt>國際</dt><dd>{{ '%.0f'|format(c.move.first * 100) }}% → {{ '%.0f'|format(c.move.last * 100) }}% <span class="{{ 'pos' if c.move.move > 0 else 'neg' }}">（{{ '%+.1f'|format(c.move.move * 100) }}pp）</span> <span class="muted">{{ c.move.first_at|tpe }} 起</span></dd>
+        {% if c.move.tw_first_price %}<dt>運彩</dt><dd>{{ '%.2f'|format(c.move.tw_first_price) }} → {{ '%.2f'|format(c.move.tw_last_price) }}{% if c.move.follow is not none %} <span class="muted">（跟了國際移動的 {{ '%.0f'|format(c.move.follow * 100) }}%）</span>{% endif %}</dd>{% endif %}
+        {% endif %}
+        {% for e in c.tw_events %}
+        <dt>運彩大戶</dt><dd>{{ e.label }}：運彩 {{ '%+.1f'|format(e.tw_move * 100) }}pp、國際 {{ '%+.1f'|format(e.intl_move * 100) }}pp <span class="muted">{{ e.from_at|tpe }} → {{ e.to_at|tpe }}</span></dd>
+        {% endfor %}
+        <dt>運彩現在</dt><dd>{% if c.ev is not none %}EV <span class="{{ 'neg' if c.ev < 0 else 'pos' }}">{{ '%+.1f%%'|format(c.ev * 100) }}</span>{% if not c.fresh %} <span class="muted">（價格時間差太大，不判斷）</span>{% endif %}{% else %}<span class="muted">沒有可比的運彩價</span>{% endif %}</dd>
+      </dl>
+      {{ ui.timeline(c, c.label ~ "：隱含機率") }}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("目前沒有明顯的盤口移動", "國際盤沒有哪一邊升到 " ~ (cfg.radar_watch_move * 100)|round|int ~ "pp 以上，運彩也沒有自己大幅調價。") }}
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>每一場抓到的動向 <span class="count">{{ history|length }} 場・新到舊</span></h2>
+  <p class="howto">不管後來有沒有進可下，抓到的每一次都永久記下：當時的價格、之後到開賽前國際盤和運彩怎麼走、比賽結果。<b>做對了</b>：之後國際盤續往同一邊（市場也認同）、運彩後來跟著調。<b>做錯了</b>：國際盤回落。單場輸贏不算數，累積幾十次、命中明顯高於國際盤預期（z &gt; 2）才代表跟著走有用。</p>
+  {% for s in summary %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ s.label }}</b><span>{{ s.events }} 次・{{ s.matches }} 場</span></div>
+    <div class="kpi"><b>{{ s.hits }} / {{ s.expected }}</b><span>這一邊贏 / 國際盤預期（{{ s.settled }} 次有結果）</span></div>
+    <div class="kpi"><b>{{ '%+.1f'|format(s.z) if s.z is not none else '—' }}</b><span>z 值（大於 2 才算有訊號）</span></div>
+    <div class="kpi"><b>{{ s.followed }} / {{ s.with_close }}</b><span>國際盤續往同方向（回落 {{ s.reversed }}）</span></div>
+  </div>
+  {% endfor %}
+  {% if history %}
+  {{ ui.filters([("all", "全部"), ("tw_only", "運彩大戶"), ("intl_big", "國際大單"), ("football", "足球"), ("mlb", "MLB"), ("value", "進了可下")]) }}
+  <div class="cards filtered">{% for m in history %}{{ ui.event_match(m, cfg) }}{% endfor %}</div>
+  {% else %}
+  {{ ui.empty("還沒有打完的紀錄", "抓到動向的比賽打完後，會在這裡看到之後怎麼走、結果如何。") }}
+  {% endif %}
+  <p class="stamp-line">原始資料：data/moves/events.csv（每次抓到的動向）和 data/moves/YYYY-MM.csv（每次看到的國際價和運彩價），都可以用試算表打開。</p>
+</section>
+{% endblock %}

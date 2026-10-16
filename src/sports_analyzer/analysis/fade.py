@@ -161,6 +161,8 @@ def live_candidates(
         names = _names(card)
         base = {
             "sport": "MLB",
+            "sport_key": "mlb",
+            "match_id": str(card.get("game_pk")),
             "kickoff_utc": card.get("kickoff_utc", ""),
             "match": f"{names['away']} @ {names['home']}",
             "fade_label": f"{names[dog]} 不讓分",
@@ -256,6 +258,8 @@ def _against_1x2(
     label = "＋".join(OUTCOME_ZH[o] + (f" {names[o]}" if o != "draw" else "") for o in others)
     return {
         "sport": "足球",
+        "sport_key": "football",
+        "match_id": str(card.get("match_id")),
         "kickoff_utc": card.get("kickoff_utc", ""),
         "match": f"{names['home']} vs {names['away']}",
         "fade_label": label,
@@ -289,6 +293,8 @@ def _against_total(
     names = _names(card)
     return {
         "sport": "足球",
+        "sport_key": "football",
+        "match_id": str(card.get("match_id")),
         "kickoff_utc": card.get("kickoff_utc", ""),
         "match": f"{names['home']} vs {names['away']}",
         "fade_label": f"{'小' if other == 'under' else '大'} {float(line):g}",

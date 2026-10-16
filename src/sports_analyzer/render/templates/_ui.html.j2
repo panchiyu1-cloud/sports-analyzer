@@ -1,0 +1,130 @@
+{# Shared pieces of the method pages. #}
+
+{% macro hero(title, lede, stats=()) %}
+<section class="hero">
+  <h1>{{ title }}</h1>
+  <p class="lede">{{ lede }}</p>
+  {% if stats %}
+  <dl class="bug">
+    {% for s in stats %}<div><dt>{{ s.label }}</dt><dd class="{{ s.tone or '' }}">{{ s.value }}{% if s.unit %}<small>{{ s.unit }}</small>{% endif %}</dd></div>{% endfor %}
+  </dl>
+  {% endif %}
+</section>
+{% endmacro %}
+
+{% macro tabs(items) %}
+<div class="tabs" role="tablist">
+  {% for id, label, n in items %}<a role="tab" href="#{{ id }}" aria-controls="{{ id }}" aria-selected="{{ 'true' if loop.first else 'false' }}">{{ label }}{% if n is not none %}<span class="num">{{ n }}</span>{% endif %}</a>{% endfor %}
+</div>
+{% endmacro %}
+
+{% macro head(c) %}
+<div class="mt"><span class="comp">{{ c.competition }}</span><span class="kick">{{ c.when.date }} {{ c.when.time }}</span><span>{{ c.when.weekday }}</span><span class="eta">{{ c.when.eta }}</span></div>
+<h3 class="teams">{% if c.sport == 'mlb' %}<span>{{ c.away }}</span><i>@</i><span>{{ c.home }}</span>{% else %}<span>{{ c.home }}</span><i>vs</i><span>{{ c.away }}</span>{% endif %}</h3>
+{% if c.home_intl and c.home_intl != c.home %}<div class="intl-names">{% if c.sport == 'mlb' %}{{ c.away_intl }} @ {{ c.home_intl }}{% else %}{{ c.home_intl }} vs {{ c.away_intl }}{% endif %}</div>{% endif %}
+{% endmacro %}
+
+{% macro status_chip(status) %}
+{% set s = {'value': ('good', '可下'), 'pass': ('neutral', '不下'), 'stale': ('warn', '不判斷'), 'none': ('ghost', '還沒有運彩價')}.get(status, ('neutral', status)) %}
+<span class="chip {{ s[0] }}">{{ s[1] }}</span>
+{% endmacro %}
+
+{% macro chart(c, caption, data=none) %}
+{% set g = data if data else c.chart %}
+{% if g %}
+<figure class="spark" tabindex="0" data-tip='{{ g.tips|tojson }}'>
+  <figcaption><span>{{ caption }}</span>{% if g.lines|length > 1 %}<span class="keys">{% for l in g.lines %}<span class="key {{ l.key }}">{{ l.label }}</span>{% endfor %}</span>{% endif %}</figcaption>
+  <svg viewBox="0 0 {{ g.w }} {{ g.h }}" role="img" aria-label="{{ caption }}，{{ g.start }} 到 {{ g.end }}">
+    <g class="grid">{% for t in g.ticks %}<line x1="{{ g.x0 }}" x2="{{ g.x1 }}" y1="{{ t.y }}" y2="{{ t.y }}"/><text x="{{ g.x0 - 6 }}" y="{{ t.y + 3 }}" text-anchor="end">{{ t.label }}</text>{% endfor %}</g>
+    {% for r in g.refs %}<line class="ref" x1="{{ g.x0 }}" x2="{{ g.x1 }}" y1="{{ r.y }}" y2="{{ r.y }}"/><text class="reflabel" x="{{ g.x0 + 3 }}" y="{{ r.y - 3 }}">{{ r.label }}</text>{% endfor %}
+    {% for l in g.lines %}<path class="ln {{ l.key }}" d="{{ l.d }}"/>{% endfor %}
+    {% for l in g.lines %}{% for p in l.dots %}<circle class="dot {{ l.key }}" cx="{{ p.x }}" cy="{{ p.y }}" r="4"/>{% endfor %}{% endfor %}
+    {% for e in g.ends %}<text class="end" x="{{ e.x }}" y="{{ e.y }}">{{ e.text }}</text>{% endfor %}
+    <text x="{{ g.x0 }}" y="{{ g.h - 5 }}">{{ g.start }}</text>
+    <text x="{{ g.x1 }}" y="{{ g.h - 5 }}" text-anchor="end">{{ g.end }}</text>
+    <line class="cross" x1="0" x2="0" y1="{{ g.y0 }}" y2="{{ g.y1 }}" style="display:none"/>
+  </svg>
+</figure>
+{% endif %}
+{% endmacro %}
+
+{% macro timeline(c, caption, data=none) %}
+{{ chart(c, caption, data) }}
+{% if c.timeline %}
+<details class="times">
+  <summary>各時段賠率（{{ c.timeline|length }} 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % {{ c.sides|join('／') }}</th><th class="th">運彩 {{ c.sides|join('／') }}</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    {% for r in c.timeline %}
+    <tr><td class="num">{{ r.at }}</td><td class="num">{% if r.intl|select|list %}{{ r.intl|join(' / ') }}{% endif %}</td><td class="num">{% if r.tw|select|list %}{{ r.tw|join(' / ') }}{% endif %}</td><td class="{{ r.tone }}">{{ r.text }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</details>
+{% endif %}
+{% endmacro %}
+
+{% macro empty(title, text) %}
+<div class="empty"><b>{{ title }}</b>{{ text }}</div>
+{% endmacro %}
+
+{% macro lessons(items) %}
+{% if items %}<ul class="lessons">{% for l in items %}<li class="{{ l.tone }}">{{ l.text }}</li>{% endfor %}</ul>{% endif %}
+{% endmacro %}
+
+{% macro filters(items) %}
+<div class="filters" role="group" aria-label="篩選">
+  {% for key, label in items %}<button type="button" data-f="{{ key }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ label }}</button>{% endfor %}
+</div>
+{% endmacro %}
+
+{# One match of the 大戶 record: each caught move, what came after it, and the result. #}
+{% macro event_match(m, cfg) %}
+<article class="past" data-tone="{{ m.tone }}" data-tags="{{ m.types|join(' ') }} {{ m.sport }}{% if m.bets %} value{% endif %}">
+  <div class="mt"><span class="comp">{{ m.competition or m.sport_label }}</span><span class="kick">{{ m.when.date }} {{ m.when.time }}</span><span>{{ m.when.weekday }}</span><span class="score">{{ m.score_text or '待結果' }}</span></div>
+  <h3 class="teams">{{ m.title }}</h3>
+  <div class="verdict-row">
+    {% if m.bets %}<span class="chip good">進了可下 {{ m.bets|length }} 注</span>{% else %}<span class="chip ghost">沒進可下</span>{% endif %}
+    {% if m.g_last is not none %}<span class="chip">G {{ '%+.1f'|format(m.g_last * 100) }}（{{ m.g_shape }}）</span>{% endif %}
+    {% if m.g_zone %}<span class="chip warn">G 曾到 ±{{ (cfg.g_threshold * 100)|round|int }}（{{ '%+.1f'|format(m.g_peak * 100) }}）</span>{% endif %}
+  </div>
+  <ul class="evs">
+  {% for e in m.events %}
+    <li class="{{ e.type }}">
+      <div class="ev-head"><span class="tag {{ e.type }}">{{ e.type_label }}</span><b>{{ e.label }}</b><span class="muted">{{ e.to_at|tpe }}</span></div>
+      {% if e.type == 'tw_only' %}
+      <div>運彩 {{ '%+.1f'|format(e.tw_move * 100) }}pp、國際 {{ '%+.1f'|format(e.intl_move * 100) }}pp<span class="muted">（{{ e.from_at|tpe }} → {{ e.to_at|tpe }}）</span>{% if e.tw_price %}・運彩 {{ '%.2f'|format(e.tw_price) }}{% endif %}</div>
+      {% elif e.type == 'radar' %}
+      <div>運彩 {{ e.from_at|tpe }} 上傳 {{ '%.2f'|format(e.tw_price) }}；國際 {% if e.intl_move is not none %}{{ '%.0f'|format((e.expected - e.intl_move) * 100) }}% → {% endif %}{{ '%.0f'|format(e.expected * 100) }}%{% if e.ev_at is not none %}，運彩沒變的話 EV <span class="pos">{{ '%+.1f%%'|format(e.ev_at * 100) }}</span>{% endif %}</div>
+      {% else %}
+      <div>國際 {{ '%.0f'|format((e.expected - e.intl_move) * 100) }}% → {{ '%.0f'|format(e.expected * 100) }}% <span class="pos">（{{ '%+.1f'|format(e.intl_move * 100) }}pp）</span><span class="muted">{{ e.from_at|tpe }} 起</span></div>
+      {% endif %}
+      <div class="sub">{% if e.ev_at is not none and e.type != 'radar' %}當時運彩 EV {{ '%+.1f%%'|format(e.ev_at * 100) }}・{% endif %}{% if e.close_intl is not none %}{{ '開賽前' if e.closed else '目前' }}國際 {{ '%.0f%%'|format(e.close_intl * 100) }}{% if e.after is not none %}（{{ '%+.1f'|format(e.after * 100) }}pp {{ e.trend }}）{% endif %}{% endif %}{% if e.close_tw_price %}・運彩 {{ '%.2f'|format(e.close_tw_price) }}{% endif %}</div>
+      {{ lessons(e.lessons) }}
+      <div class="sub">進可下：{{ '是' if e.value_bet else '否' }}・這一邊：<span class="{{ 'pos' if e.result == 'win' else ('neg' if e.result == 'loss' else '') }}">{{ e.result_label }}</span></div>
+    </li>
+  {% endfor %}
+  </ul>
+  {% if m.bets %}
+  <ul class="why">{% for b in m.bets %}<li>可下 {{ b.captured_at|tpe }} {{ b.market }}：<b>{{ b.selection }}</b> @ {{ b.tw_price }}{% if b.ev_pct is not none %}（EV {{ '%+.1f%%'|format(b.ev_pct * 100) }}）{% endif %} → <span class="{{ 'pos' if b.status in ('win', 'half_win') else ('neg' if b.status in ('loss', 'half_loss') else '') }}">{{ b.status_label }}</span></li>{% endfor %}</ul>
+  {% endif %}
+  {% if m.tables %}
+  <details class="more">
+    <summary>價格走勢（到開賽前）</summary>
+    {% for t in m.tables %}
+    <div class="sub tt-title">{{ t.title }}</div>
+    <div class="scroll"><table class="tbl traj">
+      <thead><tr><th>時間</th>{% for s in t.sides %}<th class="r{{ ' ih' if loop.first else '' }}">{{ '國際 ' if loop.first else '' }}{{ s }}</th>{% endfor %}{% for s in t.sides %}<th class="r{{ ' th' if loop.first else '' }}">{{ '運彩 ' if loop.first else '' }}{{ s }}</th>{% endfor %}{% if t.with_g %}<th class="r">G</th>{% endif %}</tr></thead>
+      <tbody>
+      {% for r in t.rows %}
+        <tr{% if r.caught %} class="caught"{% endif %}><td class="num">{{ r.at }}{% if r.caught %} ●{% endif %}</td>{% for v in r.intl %}<td class="num">{{ v }}</td>{% endfor %}{% for v in r.tw %}<td class="num">{{ v }}</td>{% endfor %}{% if t.with_g %}<td class="num">{{ r.g }}</td>{% endif %}</tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+    {% endfor %}
+    <p class="sub">國際是多家莊家去水後的機率（%），運彩是當時上傳的賠率；● 是抓到動向的那一次。{% if m.sport == 'mlb' %}G = 熱門不讓分機率 + 熱門讓 1.5 分過盤機率 − 1。{% endif %}</p>
+  </details>
+  {% endif %}
+</article>
+{% endmacro %}

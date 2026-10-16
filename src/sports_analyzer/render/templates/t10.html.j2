@@ -1,0 +1,92 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% import "_review.html.j2" as rv %}
+{% block description %}MLB T-10 價值版：G 值看比賽型態，運彩四種下法對國際公允價的 EV，以及每場的賽後檢討{% endblock %}
+{% block main %}
+{% set thr = (cfg.mlb_value_threshold * 100)|round|int %}
+{% set gt = (cfg.g_threshold * 100)|round|int %}
+{% set gap_h = (cfg.max_price_gap_minutes / 60)|round|int %}
+{% set hs = history.summary %}
+{{ ui.hero("T-10",
+  "你的棒球方法。G = 熱門不讓分機率 + 熱門讓 1.5 分過盤機率 − 1：G ≥ +" ~ gt ~ " 是強隊大勝型、≤ −" ~ gt ~ " 是一分差型。G 描述比賽會長怎樣；要不要下，看運彩四種下法（強／弱隊不讓分、讓 1.5 分）對國際公允價的 EV，≥ " ~ thr ~ "% 才可下。",
+  [
+    {"label": "現在可下", "value": kpis.value, "tone": "good" if kpis.value else ""},
+    {"label": "即將開賽", "value": kpis.upcoming, "unit": " 場"},
+    {"label": "G 到 ±" ~ gt, "value": kpis.zone, "unit": " 場"},
+    {"label": "型態說對", "value": (hs.shape_right ~ "/" ~ hs.shape_n) if hs.shape_n else "—"},
+  ]) }}
+{{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history.n)]) }}
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">線圖是國際盤的 G 值在每次抓價時的位置（虛線是 ±{{ gt }}）；還沒買到讓分盤時，改畫主隊不讓分的隱含機率（藍＝國際、橘＝運彩）。開賽前 {{ cfg.pregame_window_hours|round|int }} 小時內用捷徑上傳一次運彩，系統會先買最新國際價再比，約 2–3 分鐘後這裡更新。</p>
+  {% if cards %}
+  <div class="cards">
+  {% for c in cards %}
+    {% set t = c.t10v %}
+    <article class="match" id="{{ c.id }}" data-status="{{ c.status }}">
+      {{ ui.head(c) }}
+      <p class="sub probables">先發：客 {{ c.probables[0] }}・主 {{ c.probables[1] }}</p>
+      <div class="verdict">
+        {{ ui.status_chip(c.status) }}
+        {% if c.g is not none %}<span class="gval">G <b>{{ '%+.1f'|format(c.g * 100) }}</b></span><span class="chip {{ 'warn' if c.zone else 'neutral' }}">{{ c.shape }}</span>{% else %}<span class="sub">還沒買到讓分盤，算不出 G</span>{% endif %}
+        {% if t and t.g_tw is not none %}<span class="sub">運彩 G {{ '%+.1f'|format(t.g_tw * 100) }}</span>{% endif %}
+      </div>
+      {% if t and t.bets %}
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>運彩下法</th><th class="r">運彩</th><th class="r">公允</th><th class="r">EV</th></tr></thead>
+        <tbody>
+        {% for b in t.bets %}
+          <tr{% if t.pick and b.key == t.pick.key %} class="on"{% endif %}><td>{{ b.label }}</td><td class="num">{{ '%.2f'|format(b.price) }}</td><td class="num muted">{{ '%.2f'|format(b.fair_odds) if b.fair_odds else '—' }}</td><td class="num {{ 'pos' if b.fresh and b.ev >= t.threshold else ('neg' if b.ev < 0 else '') }}">{{ '%+.1f%%'|format(b.ev * 100) }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% if t.hints %}<ul class="why">{% for h in t.hints %}<li>{{ h }}</li>{% endfor %}</ul>{% endif %}
+      <p class="conclusion"><b>結論</b>{% if t.status == 'value' %}可下 {{ t.pick.label }} @ {{ t.pick.price }}（公允 {{ t.pick.fair_odds }}，EV {{ '%+.1f%%'|format(t.pick.ev * 100) }}）。下注前先確認運彩賠率沒有變低。{% elif t.status == 'pass' %}不下。最接近的是 {{ t.best.label }}（EV {{ '%+.1f%%'|format(t.best.ev * 100) }}），門檻 EV ≥ {{ thr }}%。{% else %}不判斷：國際價（{{ t.fair_at|tpe }}）和運彩價（{{ t.tw_at|tpe }}）相隔超過 {{ gap_h }} 小時，等下一次更新。{% endif %}</p>
+      {% else %}
+      <p class="none">還沒有運彩賠率。開賽前 {{ cfg.pregame_window_hours|round|int }} 小時內上傳一次運彩，就會比這四種下法。</p>
+      {% endif %}
+      {% if c.chart %}
+      {{ ui.timeline(c, "G 值（國際）") }}
+      {% else %}
+      {{ ui.timeline(c, c.home ~ " 不讓分：隱含機率", c.price_chart) }}
+      {% endif %}
+      {% if t %}<p class="stamp-line">運彩 {{ t.tw_at|tpe }}・國際 {{ t.fair_at|tpe }}{% if t.timing == 'pregame' %}・開賽前 {{ t.minutes_before }} 分比價{% endif %}</p>{% endif %}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("今天沒有 MLB 比賽", "季後賽期間場次少；有比賽時，每天早上會自動抓國際價。") }}
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>每場檢討 <span class="count">{{ history.n }} 場・新到舊</span></h2>
+  <p class="howto">每場看兩件事。<b>型態</b>：G 說強隊大勝型（熱門贏 2 分以上）或一分差型（熱門沒有贏 2 分以上），實際是不是。<b>下注</b>：只有「可下」的注才看輸贏和 CLV；「不下」是因為運彩價格比公允價差，不管比分如何都是對的決定。</p>
+  {% if hs.games %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ hs.games }}</b><span>已檢討場次</span></div>
+    <div class="kpi"><b>{{ hs.shape_right }} / {{ hs.shape_n }}</b><span>G 到 ±{{ gt }} 時型態說對</span></div>
+    <div class="kpi"><b>{{ hs.wins }} / {{ hs.bets }}</b><span>可下的注 贏 / 注數</span></div>
+    {% if hs.bets %}<div class="kpi"><b class="{{ 'pos' if hs.units > 0 else ('neg' if hs.units < 0 else '') }}">{{ '%+.2f'|format(hs.units) }}</b><span>損益（每注 1 單位）</span></div>{% endif %}
+  </div>
+  {% endif %}
+  {% if history.games %}
+  <div class="cards">
+  {% for i in history.games %}
+    <article class="past" data-tone="{{ i.tone }}">
+      <div class="mt"><span class="comp">MLB</span><span class="kick">{{ i.when.date }} {{ i.when.time }}</span><span>{{ i.when.weekday }}</span>{% if i.score %}<span class="score" title="客–主">{{ i.score }}</span>{% endif %}</div>
+      <h3 class="teams">{{ i.title }}</h3>
+      <div class="verdict-row"><span class="chip {{ i.tone }}">{{ i.label }}</span></div>
+      {% if i.shape %}{{ ui.lessons([i.shape]) }}{% endif %}
+      {{ rv.picks_block(i.picks) }}
+      <details class="more"><summary>比賽經過</summary><ul class="why">{% for b in i.bullets %}<li>{{ b }}</li>{% endfor %}</ul></details>
+      <p class="conclusion"><b>結論</b>{{ i.conclusion }}</p>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("還沒有打完的比賽", "比賽結束後，下一次更新會把賽前的 G 值、比價和實際比分放在這裡對照。") }}
+  {% endif %}
+  <p class="stamp-line"><a href="t10_backtest.html">T-10 原始規則 2021–2025 回測</a>：G 到 ±{{ gt }} 本身沒有打敗市場，所以現在只拿 G 描述型態，下注看 EV。</p>
+</section>
+{% endblock %}

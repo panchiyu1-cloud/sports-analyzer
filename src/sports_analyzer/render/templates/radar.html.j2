@@ -1,0 +1,71 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% block description %}延遲雷達：國際盤動了、運彩上次的賠率還沒跟上的比賽，以及每次抓到之後的結果{% endblock %}
+{% block main %}
+{% set thr_f = (cfg.value_threshold * 100)|round|int %}
+{% set thr_m = (cfg.mlb_value_threshold * 100)|round|int %}
+{% set nxt = plan|rejectattr('done')|first %}
+{{ ui.hero("延遲雷達",
+  "運彩改價比國際盤慢。你上傳運彩幾個小時後，系統每天 " ~ times ~ "（台北）再替快開賽的比賽買一次國際盤，拿去對照你最後一次上傳的運彩賠率：如果運彩那時的賠率還沒變、就已經有 EV（足球 ≥ " ~ thr_f ~ "%、MLB ≥ " ~ thr_m ~ "%），這裡會列出來。",
+  [
+    {"label": "候選", "value": kpis.candidates, "tone": "good" if kpis.candidates else ""},
+    {"label": "觀察中", "value": kpis.watch},
+    {"label": "累計抓到", "value": kpis.events, "unit": " 次"},
+    {"label": "建議下次上傳", "value": nxt.at_local[6:] if nxt else "—"},
+  ]) }}
+{{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history|length)]) }}
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">看到<b>候選</b>：打開運彩 App，賠率還在卡片上寫的價格以上就可下；或按捷徑上傳一次，系統會用兩邊最新的價格確認、記進帳本。<b>觀察</b>：國際盤在你上傳後往這一邊動了 {{ (cfg.radar_watch_move * 100)|round|int }}pp 以上，但還不夠；運彩一直沒跟、國際盤繼續動，就會變成候選。</p>
+  {% if last %}
+  <p class="stamp-line">最後一次看到　{% for s in last %}{{ s.sport }}：運彩 {{ s.tw|tpe }}・國際 {{ s.intl|tpe }}{% if not loop.last %}　｜　{% endif %}{% endfor %}</p>
+  {% endif %}
+  {% if cards %}
+  <div class="cards">
+  {% for c in cards %}
+    <article class="match" id="{{ c.id }}" data-status="{{ c.kind }}">
+      <div class="mt"><span class="comp">{{ c.competition }}</span><span class="kick">{{ c.when.date }} {{ c.when.time }}</span><span>{{ c.when.weekday }}</span><span class="eta">{{ c.when.eta }}</span></div>
+      <h3 class="teams">{{ c.match }}</h3>
+      <div class="verdict">{% if c.kind == 'candidate' %}<span class="chip good">候選</span>{% else %}<span class="chip warn">觀察</span>{% endif %}<b>{{ c.label }}</b></div>
+      <div class="need"><span>運彩賠率 ≥</span><b class="big-figure">{{ '%.2f'|format(c.need) }}</b><span>就可下</span></div>
+      <dl class="facts">
+        <dt>國際</dt><dd>{% if c.prob_then is not none %}{{ '%.0f'|format(c.prob_then * 100) }}% → {% endif %}{{ '%.0f'|format(c.prob * 100) }}%{% if c.move is not none %} <span class="{{ 'pos' if c.move > 0 else 'neg' }}">（{{ '%+.1f'|format(c.move * 100) }}pp）</span>{% endif %} <span class="muted">{{ c.intl_at|tpe }}</span></dd>
+        <dt>運彩上次</dt><dd>{{ '%.2f'|format(c.tw_price) }} <span class="muted">{{ c.tw_at|tpe }}</span>　沒變的話 EV <span class="{{ 'pos' if c.ev >= c.threshold else '' }}">{{ '%+.1f%%'|format(c.ev * 100) }}</span></dd>
+      </dl>
+      {{ ui.timeline(c, c.label ~ "：隱含機率") }}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("目前沒有運彩落後的盤", "上次上傳之後，國際盤沒有把任何一邊推到讓運彩舊賠率有 EV 的程度。雷達每天 " ~ times ~ " 會再看一次。") }}
+  {% endif %}
+
+  {% if plan %}
+  <h2 class="sect">建議上傳時間 <span class="count">開賽前 1 小時上傳，系統會先買最新國際盤再比</span></h2>
+  <ul class="plan">
+    {% for p in plan %}
+    <li class="{{ 'done' if p.done else ('now' if p.now else '') }}"><b>{{ p.at_local }}</b>　{{ p.sport_label }} {{ p.first_local }}{% if p.last_local != p.first_local %}–{{ p.last_local }}{% endif %} 開賽的 {{ p.games }} 場{% if p.done %} <span class="chip good">已上傳</span>{% elif p.now %} <span class="chip warn">現在上傳</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+  <p class="stamp-line">在 iPhone 捷徑 App 的「自動化」裡，可以照常用的時間多加幾個每天自動上傳。</p>
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>每次抓到的落後 <span class="count">{{ history|length }} 場・新到舊</span></h2>
+  <p class="howto">雷達抓到的每一次都記下來：當時運彩的賠率、國際盤升到多少，之後<b>運彩有沒有跟</b>（調低了，代表抓到的確實是還沒跟上的價格）、國際盤有沒有繼續往同一邊走，以及比賽結果。單場結果大多是運氣，要看累積下來運彩是不是常常跟上、國際盤是不是常常續漲。</p>
+  {% if summary.events %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ summary.events }}</b><span>抓到的次數（{{ summary.matches }} 場）</span></div>
+    <div class="kpi"><b>{{ summary.hits }} / {{ summary.expected }}</b><span>這一邊贏 / 國際盤預期（{{ summary.settled }} 次有結果）</span></div>
+    <div class="kpi"><b>{{ summary.followed }} / {{ summary.with_close }}</b><span>開賽前國際盤續往同方向</span></div>
+    <div class="kpi"><b>{{ summary.value_bets }}</b><span>後來進了可下</span></div>
+  </div>
+  {% endif %}
+  {% if history %}
+  <div class="cards">{% for m in history %}{{ ui.event_match(m, cfg) }}{% endfor %}</div>
+  {% else %}
+  {{ ui.empty("還沒有打完的雷達紀錄", "雷達抓到的比賽打完後，會在這裡看到運彩後來有沒有跟上、國際盤有沒有續漲、結果如何。") }}
+  {% endif %}
+</section>
+{% endblock %}

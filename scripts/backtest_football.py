@@ -28,7 +28,7 @@ import math
 import sys
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -37,12 +37,12 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from jinja2 import Environment, select_autoescape  # noqa: E402
 
 from sports_analyzer.config import DATA_DIR, DOCS_DIR, MODEL, ModelConfig  # noqa: E402
 from sports_analyzer.history import HistoricalMatch, read_csv  # noqa: E402
 from sports_analyzer.models import blend, market  # noqa: E402
 from sports_analyzer.models import dixon_coles as dc  # noqa: E402
+from sports_analyzer.render.site import render_report  # noqa: E402
 
 LEAGUE_NAMES = {"E0": "英超", "SP1": "西甲", "D1": "德甲", "I1": "義甲", "F1": "法甲"}
 OUTCOME = ("home", "draw", "away")
@@ -321,58 +321,6 @@ def summarise(
     }
 
 
-# ------------------------------------------------------------------- report
-TEMPLATE = """<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>回測報告</title>
-<style>
-:root{--bg:#f6f5f1;--card:#fff;--ink:#1d1d1b;--muted:#6b6a66;--line:#e4e2db;--good:#2f6f5e;--bad:#a63d2f;--warn-bg:#fbf3e2;--warn-ink:#6b4b12}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141513;--card:#1d1f1c;--ink:#ecebe6;--muted:#9b9a94;--line:#2c2e2a;--good:#7fc4ad;--bad:#e08a7c;--warn-bg:#3a3120;--warn-ink:#f0d9a8}}
-:root[data-theme="dark"]{--bg:#141513;--card:#1d1f1c;--ink:#ecebe6;--muted:#9b9a94;--line:#2c2e2a;--good:#7fc4ad;--bad:#e08a7c;--warn-bg:#3a3120;--warn-ink:#f0d9a8}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;line-height:1.55}
-.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 64px}h1{font-size:1.4rem}h2{font-size:1.05rem;margin-top:30px}
-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:.86rem}
-th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:500;font-size:.78rem}tr:last-child td{border-bottom:0}
-.pos{color:var(--good)}.neg{color:var(--bad)}.muted{color:var(--muted);font-size:.85rem}.scroll{overflow-x:auto}a{color:var(--good)}
-.verdict{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:12px 16px;font-size:.95rem}
-.verdict.pass{background:#e3f1ea;color:#1d4a3c}
-</style></head><body><div class="wrap">
-<h1>回測報告</h1>
-<p class="muted">產生：{{ s.generated }} · 五大聯賽 · 逐週走勢（嚴格 out-of-sample）· 衰減 xi={{ s.config.xi }} · <a href="index.html">回到分析頁</a></p>
-<div class="verdict {{ 'pass' if s.passed else '' }}"><b>結論</b>　{{ s.verdict }}</div>
-
-<h2>1. 預測品質（log-loss，越低越好）</h2>
-<div class="scroll"><table>
-<tr><th>純模型 (Dixon-Coles)</th><th>賽前市場 (Pinnacle 週五)</th><th>收盤市場</th><th>混合 (模型+市場)</th><th>只校準市場 (無模型)</th><th>場數</th></tr>
-<tr><td>{{ s.logloss.model }}</td><td>{{ s.logloss.market }}</td><td>{{ s.logloss.closing }}</td><td>{{ s.logloss.blend }}</td><td>{{ s.logloss.market_only }}</td><td>{{ s.logloss.n }}</td></tr>
-</table></div>
-<p class="muted">大小 2.5：純模型 {{ s.logloss_ou.model }} · 市場 {{ s.logloss_ou.market }} · 混合 {{ s.logloss_ou.blend }}（{{ s.logloss_ou.n }} 場）。模型能否預測盤口走向（模型偏差 vs 收盤變動的相關係數）：主 {{ s.line_move_corr.home }}、和 {{ s.line_move_corr.draw }}、客 {{ s.line_move_corr.away }}——接近 0 代表模型看不到市場稍後才納入的資訊。</p>
-
-<h2>2. 混合機率的下注表現（每注 1 單位，賽前 Pinnacle 價）</h2>
-<p class="muted"><b>CLV</b> = 以收盤公允機率衡量這張注的期望值。這是判斷有沒有真本事的標準；ROI 只有幾百注時誤差 ±5–10%，看 ROI 會被運氣騙。</p>
-<div class="scroll"><table><tr><th>edge 門檻</th><th>注數</th><th>損益</th><th>ROI（±1se）</th><th>CLV（±1se）</th><th>選項分布</th></tr>
-{% for t, b in s.strategies.blend_pinnacle.items() %}<tr><td>≥ {{ (t|float*100)|int }}pp</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.units > 0 else 'neg' }}">{{ '%+.1f'|format(b.units) }}</td><td>{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }} (±{{ '%.1f%%'|format(b.roi_se*100) if b.roi_se else '—' }})</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }} (±{{ '%.2f%%'|format(b.clv_se*100) if b.clv_se else '—' }})</td><td class="muted">{{ b.sel }}</td></tr>{% endfor %}
-</table></div>
-<p class="muted">同樣的注改用各家最佳賽前價：{% for t, b in s.strategies.blend_best.items() %}≥{{ (t|float*100)|int }}pp ROI {{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }} / CLV {{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}；{% endfor %}</p>
-
-<h2>3. 對照組</h2>
-<div class="scroll"><table><tr><th>策略</th><th>注數</th><th>ROI</th><th>CLV</th></tr>
-{% for t, b in s.strategies.raw_model.items() %}<tr><td>純模型 edge ≥ {{ (t|float*100)|int }}pp（Phase 1 作法）</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.roi and b.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }}</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}</td></tr>{% endfor %}
-{% for t, b in s.strategies.market_only.items() if b.n > 0 %}<tr><td>只校準市場、不用模型 edge ≥ {{ (t|float*100)|int }}pp</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.roi and b.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }}</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}</td></tr>{% endfor %}
-<tr><td>永遠買熱門</td><td>{{ s.baselines.always_favourite.n }}</td><td class="neg">{{ '%+.1f%%'|format(s.baselines.always_favourite.roi*100) }}</td><td class="neg">{{ '%+.2f%%'|format(s.baselines.always_favourite.clv*100) if s.baselines.always_favourite.clv is not none else '—' }}</td></tr>
-{% for t, b in s.strategies.ou_blend.items() %}<tr><td>大小 2.5 混合 edge ≥ {{ (t|float*100)|int }}pp</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.roi and b.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }}</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}</td></tr>{% endfor %}
-</table></div>
-
-<h2>4. 混合權重（走勢末端）</h2>
-<p class="muted">a = 純模型權重，b = 市場權重（1 = 照市場），c = 和局／客勝截距。{{ s.blend_weights_final }}</p>
-
-<h2>5. 各聯賽（混合 edge ≥ 3pp）</h2>
-<div class="scroll"><table><tr><th>聯賽</th><th>場數</th><th>模型 ll</th><th>市場 ll</th><th>混合 ll</th><th>注數</th><th>ROI</th><th>CLV</th></tr>
-{% for code, r in s.by_league.items() %}<tr><td>{{ r.name }}</td><td>{{ r.n }}</td><td>{{ r.logloss_model }}</td><td>{{ r.logloss_market }}</td><td>{{ r.logloss_blend }}</td><td>{{ r['blend_0.03'].n }}</td><td class="{{ 'pos' if r['blend_0.03'].roi and r['blend_0.03'].roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(r['blend_0.03'].roi*100) if r['blend_0.03'].roi is not none else '—' }}</td><td class="{{ 'pos' if r['blend_0.03'].clv and r['blend_0.03'].clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(r['blend_0.03'].clv*100) if r['blend_0.03'].clv is not none else '—' }}</td></tr>{% endfor %}
-</table></div>
-<p class="muted">資料：football-data.co.uk（賽前與收盤賠率，Pinnacle 優先、Bet365 備援）。</p>
-</div></body></html>"""
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("csv", nargs="+", type=Path)
@@ -412,11 +360,7 @@ def main(argv: list[str] | None = None) -> int:
     (DATA_DIR / "backtest_summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8"
     )
-    html = (
-        Environment(autoescape=select_autoescape(["html"])).from_string(TEMPLATE).render(s=summary)
-    )
-    DOCS_DIR.mkdir(exist_ok=True)
-    (DOCS_DIR / "backtest.html").write_text(html, encoding="utf-8")
+    render_report("backtest", summary, DOCS_DIR, datetime.now(UTC))
     print("wrote docs/backtest.html")
     return 0
 

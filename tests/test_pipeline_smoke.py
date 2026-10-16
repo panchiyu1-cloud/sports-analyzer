@@ -395,11 +395,19 @@ class BigHandRecordSmokeTests(unittest.TestCase):
             [(e["type"], e["home_zh"], e["competition"]) for e in saved],
             [("tw_only", "洛杉磯道奇", "MLB")],
         )
-        page = (self.paths["DOCS_DIR"] / "bighand.html").read_text(encoding="utf-8")
-        self.assertIn("密爾瓦基釀酒人 @ 洛杉磯道奇", page)
-        index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
-        self.assertIn('href="bighand.html">大戶紀錄（1 場）', index)
-        self.assertIn("洛杉磯道奇 不讓分", index)  # the 運彩大戶 table uses 運彩's names
+        docs = self.paths["DOCS_DIR"]
+        # Still to play: an analysis card on 盤口移動 with the 運彩-only move, in 運彩's names,
+        # counted on the front page's tile.
+        moves_page = (docs / "moves.html").read_text(encoding="utf-8")
+        self.assertIn('id="m-mlb-813024"', moves_page)
+        self.assertIn("<span>密爾瓦基釀酒人</span><i>@</i><span>洛杉磯道奇</span>", moves_page)
+        self.assertIn("<dt>運彩大戶</dt><dd>洛杉磯道奇 不讓分", moves_page)
+        index = (docs / "index.html").read_text(encoding="utf-8")
+        self.assertIn("有在動的比賽 1 場", index)
+        # The old 大戶紀錄 address sends the owner's bookmark to the new history.
+        self.assertIn("moves.html#history", (docs / "bighand.html").read_text(encoding="utf-8"))
+        for name in ("value", "t10", "radar", "model", "fade", "reviews"):
+            self.assertTrue((docs / f"{name}.html").exists(), name)
 
 
 class FakeRadarOdds(FakeMlbOdds):
@@ -433,16 +441,6 @@ class RadarSmokeTests(unittest.TestCase):
         }
         self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
         self.patches.append(mock.patch.object(pipeline, "OddsClient", FakeRadarOdds))
-        self.sent: list[tuple[str, str, str]] = []
-        self.patches.append(
-            mock.patch.object(
-                pipeline.notify,
-                "send",
-                lambda topic, title, body, session=None, tags=(): (
-                    self.sent.append((topic, title, body)) or True
-                ),
-            )
-        )
         for p in self.patches:
             p.start()
         FakeMlbOdds.calls = []
@@ -490,33 +488,39 @@ class RadarSmokeTests(unittest.TestCase):
             p.stop()
         self.tmp.cleanup()
 
-    def test_scheduled_purchase_finds_the_stale_tw_price_and_tells_the_phone_once(self):
-        env = {"ODDS_API_KEY": "key", "NTFY_TOPIC": "test-topic", "GITHUB_OUTPUT": str(self.output)}
+    def test_scheduled_purchase_finds_the_stale_tw_price(self):
+        env = {"ODDS_API_KEY": "key", "GITHUB_OUTPUT": str(self.output)}
         with mock.patch.dict("os.environ", env):
             self.assertEqual(pipeline.main(["radar"]), 0)
         # Essential markets only: the moneyline and the run line (the two halves of G).
         self.assertEqual(FakeMlbOdds.calls, [("baseball_mlb", ("h2h", "spreads"))])
         self.assertEqual(self.output.read_text(), "refreshed=1\n")
         # 1.75 against a fresh fair ~62%: the upload 7 hours ago is behind the market.
-        self.assertEqual(len(self.sent), 1)
-        topic, title, body = self.sent[0]
-        self.assertEqual(topic, "test-topic")
-        self.assertTrue(title.startswith("延遲雷達 EV +"))
-        self.assertIn("費城費城人 @ 洛杉磯道奇", body)
-        index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
-        self.assertIn("洛杉磯道奇 不讓分：運彩賠率 ≥", index)
+        radar = (self.paths["DOCS_DIR"] / "radar.html").read_text(encoding="utf-8")
+        self.assertIn("費城費城人 @ 洛杉磯道奇", radar)
+        self.assertIn('<span class="chip good">候選</span><b>洛杉磯道奇 不讓分</b>', radar)
         saved = pipeline.moves_mod.read_events(self.paths["MOVES_DIR"] / "events.csv")
         self.assertEqual([(e["type"], e["home_zh"]) for e in saved], [("radar", "洛杉磯道奇")])
-        bighand = (self.paths["DOCS_DIR"] / "bighand.html").read_text(encoding="utf-8")
-        self.assertIn("延遲雷達", bighand)
-        # The next render (any task) does not announce the same finding again, and the
-        # next scheduled run finds the prices recent: nothing bought, nothing rendered.
-        pipeline.render_latest(notify_topic="test-topic")
-        self.assertEqual(len(self.sent), 1)
+        index = (self.paths["DOCS_DIR"] / "index.html").read_text(encoding="utf-8")
+        self.assertIn("雷達有 1 個候選", index)
+        # The next scheduled run finds the prices recent: nothing bought, nothing rendered.
         with mock.patch.dict("os.environ", env):
             pipeline.main(["radar"])
         self.assertEqual(len(FakeMlbOdds.calls), 1)
         self.assertEqual(self.output.read_text(), "refreshed=1\nrefreshed=0\n")
+
+
+class RenderFailureTests(unittest.TestCase):
+    def test_a_broken_page_does_not_fail_the_task(self):
+        # Regression guard (2026-10-16): every task ends with a render after its data is
+        # written; a render error must not stop the workflow from committing that data.
+        def broken():
+            raise RuntimeError("template bug")
+
+        with mock.patch.object(pipeline, "render_latest", broken):
+            with self.assertLogs("sports_analyzer", "ERROR") as logs:
+                self.assertEqual(pipeline.main(["render"]), 0)
+        self.assertIn("render failed", logs.output[0])
 
 
 class FakeResults:

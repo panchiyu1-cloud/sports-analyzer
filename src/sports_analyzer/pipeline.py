@@ -64,13 +64,8 @@ from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
 from .history import find_stats, load_history, load_stats
 from .models import dixon_coles as dc
 from .models.implied import IDENTITY, Calibration
-from .render.cards import (
-    render_bighand_page,
-    render_fade_page,
-    render_index,
-    render_reviews_page,
-    taipei_time,
-)
+from .render.cards import taipei_time
+from .render.site import REPORTS, Site, render_site
 
 log = logging.getLogger("sports_analyzer")
 
@@ -854,80 +849,109 @@ def _kicked_off(card: dict[str, Any], now: datetime, hours: float) -> bool:
 
 
 # -------------------------------------------------------------------- render
-def render_latest(notify_topic: str | None = None) -> Path:
-    """Every page from the latest snapshots, the tape and the CSVs. The 大戶 record is
-    brought up to date first; a new 延遲雷達 finding that can still be acted on goes to
-    the phone when `notify_topic` is set (once: the record keeps it from coming back)."""
+def render_latest() -> Path:
+    """Every page of the site (render/site.py) from the latest snapshots, the tape and the
+    CSVs; returns docs/index.html. The 大戶 record is brought up to date first."""
     now = datetime.now(UTC)
     football = _latest_snapshot("football")
     mlb = _mlb_for_page(now)
-    summary = ledger_mod.summary(ledger_mod.read(LEDGER_PATH))
-    backtest_path = DATA_DIR / "backtest_summary.json"
-    backtest_total = None
-    if backtest_path.exists():
-        try:
-            bt = json.loads(backtest_path.read_text(encoding="utf-8"))
-            key = bt.get("strategies", {}).get("blend_pinnacle", {}).get("0.03", {})
-            backtest_total = {
-                "verdict": bt.get("verdict"),
-                "passed": bt.get("passed", False),
-                "n": key.get("n"),
-                "roi": key.get("roi"),
-                "clv": key.get("clv"),
-                "generated": bt.get("generated"),
-            }
-        except (OSError, ValueError, AttributeError):
-            backtest_total = None
     football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
     mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
     signal_rows = ledger_mod.read(LEDGER_PATH)
     value_rows = tw_ledger.read(TW_LEDGER_PATH)
-    render_reviews_page(
-        football_reviews, mlb_reviews, now, DOCS_DIR / "reviews.html", signal_rows, value_rows
-    )
-    # The whole tape: the 大戶 record draws every recorded match's prices from it.
+    # The whole tape: every page's price history and the 大戶 record draw from it.
     tape = moves_mod.read(MOVES_DIR, months=None)
     scores = {("football", str(r["match_id"])): r for r in football_reviews}
     scores.update({("mlb", str(r["game_pk"])): r for r in mlb_reviews})
-    new_events: list[dict[str, Any]] = []
+    # 運彩's Chinese names and the competition, as the snapshots of the last two weeks knew
+    # them: kept in the 大戶 record and shown on the history of every page.
+    names = _match_names(
+        [s for s in (football, mlb) if s]
+        + _recent_snapshots("football", now.date(), 14)[::-1]
+        + _recent_snapshots("mlb", now.date(), 14)[::-1]
+    )
     history = moves_mod.event_history(
-        _record_bighand(tape, now, football, mlb, added=new_events),
+        _record_bighand(tape, names),
         tape,
         _final_scores(scores),
         value_rows,
         now,
     )
-    if notify_topic and new_events:
-        notify.notify_radar(notify_topic, new_events, now)
-    bighand_summary = moves_mod.history_summary(history)
-    render_bighand_page(history, bighand_summary, now, DOCS_DIR / "bighand.html")
-    _render_fade(football, mlb, football_reviews, mlb_reviews, signal_rows, now)
-    tw_events = sorted(
-        (e for m in history for e in m["events"] if e["type"] == "tw_only"),
-        key=lambda e: str(e["to_at"]),
+    fade_summary, fade_live, fade_record = _fade_data(
+        football, mlb, football_reviews, mlb_reviews, signal_rows, now
     )
-    return render_index(
-        football,
-        mlb,
-        summary,
-        now,
-        DOCS_DIR / "index.html",
-        backtest_exists=(DOCS_DIR / "backtest.html").exists(),
-        backtest_total=backtest_total,
-        tw_summary=tw_ledger.summary(value_rows),
+    site = Site(
+        now=now,
+        football=football,
+        mlb=mlb,
+        tape=tape,
         football_reviews=football_reviews,
         mlb_reviews=mlb_reviews,
-        odds_budget=_budget_view(now.date()),
-        moves=moves_mod.track(tape, MODEL),
-        tw_moves={
-            "events": tw_events,
-            "summary": bighand_summary.get("tw_only") or moves_mod.divergence_summary([]),
-        },
-        bighand_matches=len(history),
         signal_rows=signal_rows,
         value_rows=value_rows,
+        history=history,
+        history_summary=moves_mod.history_summary(history),
         radar=_radar(tape, now, football, mlb),
+        tracked=moves_mod.track(tape, MODEL),
+        fade_summary=fade_summary,
+        fade_live=fade_live,
+        fade_record=fade_record,
+        ledger_summary=ledger_mod.summary(signal_rows),
+        tw_summary=tw_ledger.summary(value_rows),
+        budget=_budget_view(now.date()),
+        backtest_total=_backtest_total(),
+        backtest_exists=(DOCS_DIR / "backtest.html").exists(),
+        names=names,
+        reports=_reports(),
     )
+    return render_site(site, DOCS_DIR)["index"]
+
+
+def _reports() -> dict[str, dict[str, Any]]:
+    """The backtest summaries whose pages the site re-renders (render.site.REPORTS)."""
+    out = {}
+    for name, (file, _, _) in REPORTS.items():
+        try:
+            out[name] = json.loads((DATA_DIR / file).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+    return out
+
+
+def render_safely() -> Path | None:
+    """render_latest for the CLI. Every task ends with a render after its data is written
+    (odds bought, an upload compared, a review made); a page that fails to render must not
+    fail the task, or the workflow never commits that data. The error goes to the log and,
+    as an annotation, to the run's summary in GitHub Actions; the pages keep their last
+    version until the next render."""
+    try:
+        out = render_latest()
+    except Exception:  # any rendering bug: the data step already succeeded
+        log.exception("render failed; the pages keep their previous version")
+        print("::error title=render failed::the pages were not updated; the data was saved")
+        return None
+    log.info("rendered %s", out)
+    return out
+
+
+def _backtest_total() -> dict[str, Any] | None:
+    """The football model's backtest headline (data/backtest_summary.json), if any."""
+    path = DATA_DIR / "backtest_summary.json"
+    if not path.exists():
+        return None
+    try:
+        bt = json.loads(path.read_text(encoding="utf-8"))
+        key = bt.get("strategies", {}).get("blend_pinnacle", {}).get("0.03", {})
+        return {
+            "verdict": bt.get("verdict"),
+            "passed": bt.get("passed", False),
+            "n": key.get("n"),
+            "roi": key.get("roi"),
+            "clv": key.get("clv"),
+            "generated": bt.get("generated"),
+        }
+    except (OSError, ValueError, AttributeError):
+        return None
 
 
 def _radar(
@@ -960,16 +984,16 @@ def _radar(
     return {"found": found, "names": names, "plan": plan}
 
 
-def _render_fade(
+def _fade_data(
     football: dict[str, Any] | None,
     mlb: dict[str, Any] | None,
     football_reviews: list[dict[str, str]],
     mlb_reviews: list[dict[str, str]],
     signal_rows: list[dict[str, str]],
     now: datetime,
-) -> Path:
-    """docs/fade.html (反者道之動): the backtest summary (scripts/backtest_fade.py), today's
-    games where a consistently bad strategy points one way, and the forward record."""
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]], list[dict[str, Any]]]:
+    """反者道之動: the backtest summary (scripts/backtest_fade.py), today's games where a
+    consistently bad strategy points one way, and the forward record of the opposites."""
     summary = None
     try:
         summary = json.loads((DATA_DIR / "fade_summary.json").read_text(encoding="utf-8"))
@@ -988,32 +1012,25 @@ def _render_fade(
         MODEL,
     )
     record = fade_mod.fade_record(football_reviews, mlb_reviews, signal_rows)
-    return render_fade_page(summary, live, record, now, DOCS_DIR / "fade.html")
+    return summary, live, record
 
 
 def _record_bighand(
     tape: list[dict[str, str]],
-    now: datetime,
-    *snapshots: dict[str, Any] | None,
-    added: list[dict[str, Any]] | None = None,
+    names: dict[tuple[str, str], dict[str, str]],
 ) -> list[dict[str, str]]:
     """Every 大戶 move the tape shows (運彩-only moves, international 大單, 延遲雷達
     findings) goes into data/moves/events.csv once, with the competition and 運彩's
     Chinese team names known now, whether or not it ever became a bet; returns the whole
-    record (`added` collects the new ones). Done at render time because every task ends
-    with a render, whatever it added to the tape."""
+    record. Done at render time because every task ends with a render, whatever it added
+    to the tape."""
     detected = (
         moves_mod.tw_divergences(tape, MODEL)
         + moves_mod.intl_big_moves(tape, MODEL)
         + moves_mod.radar_events(tape, MODEL)
     )
     path = MOVES_DIR / moves_mod.EVENTS_FILE
-    names = _match_names(
-        [s for s in snapshots if s]
-        + _recent_snapshots("football", now.date(), 14)[::-1]
-        + _recent_snapshots("mlb", now.date(), 14)[::-1]
-    )
-    n = moves_mod.record_events(path, detected, names, added=added)
+    n = moves_mod.record_events(path, detected, names)
     if n:
         log.info("大戶紀錄: %d new moves recorded", n)
     return moves_mod.read_events(path)
@@ -1146,11 +1163,8 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     today = date.fromisoformat(args.date) if args.date else datetime.now(UTC).date()
-    # Optional everywhere: a new 延遲雷達 finding seen by any render goes to the phone.
-    topic = Settings.from_env(offline=True).ntfy_topic
     if args.task == "render" or args.offline:
-        out = render_latest(topic)
-        log.info("rendered %s", out)
+        render_safely()
         return 0
     if args.task == "radar":
         # Scheduled (radar.yml): fresh prices for matches about to start, then the last
@@ -1163,8 +1177,7 @@ def main(argv: list[str] | None = None) -> int:
             log.info("radar: nothing bought, nothing to compare")
             return 0
         run_tw(settings=settings)
-        out = render_latest(topic)
-        log.info("rendered %s", out)
+        render_safely()
         return 0
     if args.task == "test-notify":
         # One test message, so the owner can check the phone side of NTFY_TOPIC.
@@ -1180,8 +1193,7 @@ def main(argv: list[str] | None = None) -> int:
         # The phone already uploaded the feed. The Odds API key is optional: with it,
         # games about to start get fresh international prices first (budget allowing).
         run_tw(settings=Settings.from_env(offline=True))
-        out = render_latest(topic)
-        log.info("rendered %s", out)
+        render_safely()
         return 0
 
     if args.task == "review":
@@ -1190,8 +1202,7 @@ def main(argv: list[str] | None = None) -> int:
         if not settings.football_data_token:
             raise SystemExit("Missing required environment variable: FOOTBALL_DATA_TOKEN")
         run_review(settings, new_only=args.new_only)
-        out = render_latest(topic)
-        log.info("rendered %s", out)
+        render_safely()
         return 0
 
     settings = Settings.from_env()
@@ -1204,8 +1215,7 @@ def main(argv: list[str] | None = None) -> int:
         run_football(settings, today, markets=markets)
     elif args.task == "mlb":
         run_mlb(datetime.now(LOCAL_TZ).date() if not args.date else today, settings)
-    out = render_latest(topic)
-    log.info("rendered %s", out)
+    render_safely()
     return 0
 
 

@@ -10,7 +10,7 @@ from sports_analyzer.analysis import football as analysis
 from sports_analyzer.config import COMPETITION_BY_CODE, ModelConfig
 from sports_analyzer.fetch import football, odds
 from sports_analyzer.models import dixon_coles as dc
-from sports_analyzer.render.cards import render_index
+from sports_analyzer.render.site import Site, render_page
 from tests import conftest  # noqa: F401
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -263,29 +263,31 @@ class BuildCardsTests(unittest.TestCase):
             ],
         }
         text = json.dumps(snapshot, ensure_ascii=False)
-        with tempfile.TemporaryDirectory() as tmp:
-            out = render_index(
-                json.loads(text),
-                None,
-                {
-                    "pending": 1,
-                    "settled": 0,
-                    "wins": 0,
-                    "losses": 0,
-                    "hit_rate": None,
-                    "units": 0.0,
-                    "roi": None,
-                },
-                datetime.now(UTC),
-                Path(tmp) / "index.html",
-            )
-            html = out.read_text(encoding="utf-8")
-        self.assertIn("Arsenal FC", html)
-        self.assertIn("英超", html)
-        self.assertIn("模型分歧", html)  # signals are labelled as disagreement until validated
-        self.assertIn("不是下注建議", html)
-        self.assertIn("The Odds API 剩餘點數：480", html)
-        self.assertNotIn("{{", html)
+        site = Site(
+            now=datetime(2026, 10, 16, 0, 15, tzinfo=UTC),
+            football=json.loads(text),
+            mlb=None,
+            tape=[],
+            ledger_summary={
+                "pending": 1,
+                "settled": 0,
+                "wins": 0,
+                "losses": 0,
+                "hit_rate": None,
+                "units": 0.0,
+                "roi": None,
+            },
+            budget={"remaining": 480, "daily": 16},
+        )
+        model = render_page(site, "model")
+        self.assertIn("Arsenal FC", model)
+        self.assertIn("英超", model)
+        self.assertIn("不是下注建議", model)  # signals are a disagreement until validated
+        self.assertNotIn("{{", model)
+        index = render_page(site, "index")
+        self.assertIn("<dd>480<small> 剩</small></dd>", index)
+        self.assertIn("Arsenal FC", index)  # on the 48-hour board, no 運彩 names yet
+        self.assertNotIn("{{", index)
 
 
 class LedgerTests(unittest.TestCase):

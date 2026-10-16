@@ -1,76 +1,112 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>反者道之動</title>
-<meta name="description" content="最差的押法是哪些，反著做在國際價和運彩價各會怎樣；今日反指標與真實運彩價的反向紀錄">
-{% include "_style.html.j2" %}
-<style>
-  .quote { margin: 0 0 18px; padding: 10px 16px; border-left: 3px solid var(--market); background: var(--card); border-radius: 0 10px 10px 0; font-size: 1.05rem; letter-spacing: .08em; }
-  .quote span { display: block; margin-top: 2px; color: var(--muted); font-size: .78rem; letter-spacing: 0; }
-  .lead { font-size: .92rem; line-height: 1.75; margin: 6px 0 10px; }
-  .lead b { color: var(--accent); }
-  .gapchart { display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
-  .gap-row { display: grid; grid-template-columns: 14em 1fr 9.5em; align-items: center; gap: 4px 12px; font-size: .84rem; }
-  .gap-row .lab { line-height: 1.3; }
-  .gap-row .lab .sub { display: block; }
-  .gap-row .val { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .78rem; white-space: nowrap; line-height: 1.3; }
-  .gap-row .val .neg { display: block; }
-  .gap-row .val b { color: var(--ink); font-size: .84rem; }
-  .track { position: relative; height: 14px; background: var(--chip); border-radius: 7px; }
-  .track .have { position: absolute; left: 0; top: 3px; bottom: 3px; background: var(--model); border-radius: 0 4px 4px 0; min-width: 2px; }
-  .track .need { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--muted); border-radius: 1px; }
-  .track .need.tw { background: var(--bad); width: 3px; }
-  .track .need.off { background: transparent; border-right: 3px dashed var(--bad); width: 0; }
-  .axis { display: grid; grid-template-columns: 14em 1fr 9.5em; gap: 12px; font-size: .72rem; color: var(--muted); }
-  .axis .ticks { display: flex; justify-content: space-between; }
-  .legend-row { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .78rem; color: var(--muted); }
-  .legend-row i { display: inline-block; vertical-align: -2px; margin-right: 5px; }
-  .legend-row .l-have { width: 14px; height: 9px; background: var(--model); border-radius: 2px; }
-  .legend-row .l-intl { width: 2px; height: 13px; background: var(--muted); }
-  .legend-row .l-tw { width: 3px; height: 13px; background: var(--bad); }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .items .bet { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
-  .items .bet .chip { margin-left: 0; }
-  td .sub { display: block; }
-  @media (max-width: 640px) {
-    .gap-row, .axis { grid-template-columns: 1fr; }
-    .axis > span:first-child, .axis > span:last-child { display: none; }
-  }
-</style>
-</head>
-<body>
-<div class="wrap">
-<header>
-  <h1>反者道之動</h1>
-  <span class="meta">更新：{{ generated_local }}（台北時間）</span>
-  <a class="meta" href="index.html">回到每日分析</a>
-</header>
-
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% block description %}反者道之動：最差的押法是哪些，反著做在國際價和運彩價各會怎樣；今日反指標與真實運彩價的反向紀錄{% endblock %}
+{% block main %}
+{% macro strategy_table(rows) %}
+<div class="scroll"><table class="tbl">
+  <thead><tr><th>押法</th><th class="r">差距（z）</th><th class="r">反著做：運彩價</th><th class="r">國際價</th><th class="r">理論</th><th class="r">命中 vs 市場</th><th class="r">前段／後段</th><th class="r">場數</th></tr></thead>
+  <tbody>
+  {% for r in rows %}
+  <tr>
+    <td class="wrap-cell">{{ r.name }}<span class="sub">{{ r.sport }}{% if r.span %}・{{ r.span }}{% endif %}</span></td>
+    <td class="num {{ 'neg' if r.self.gap_pp < 0 else 'pos' }}">{{ '%+.2f'|format(r.self.gap_pp) }}<span class="sub">z {{ '%+.1f'|format(r.self.z) if r.self.z is not none else '—' }}</span></td>
+    <td class="num {{ 'pos' if r.fade.roi_tw > 0 else 'neg' }}">{{ '%+.1f%%'|format(r.fade.roi_tw) }}</td>
+    <td class="num {{ 'pos' if r.fade.roi_intl > 0 else 'neg' }}">{{ '%+.1f%%'|format(r.fade.roi_intl) }}<span class="sub">最佳 {{ '%+.1f'|format(r.fade.roi_best) }}</span></td>
+    <td class="num {{ 'pos' if r.fade.roi_fair > 0 else 'neg' }}">{{ '%+.1f%%'|format(r.fade.roi_fair) }}</td>
+    <td class="num">{{ r.self.hit }}% / {{ r.self.fair }}%</td>
+    <td class="num">{% if r.early and r.early.n %}{{ '%+.1f'|format(r.early.gap_pp) }} / {{ '%+.1f'|format(r.late.gap_pp) }}{% else %}—{% endif %}</td>
+    <td class="num">{{ '{:,}'.format(r.self.n) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% endmacro %}
+{{ ui.hero("反者道之動",
+  "你的想法：找出最常失敗的押法，反過來做。這裡的「差」不是輸得多（冷門本來就常輸），而是押中的比例比市場自己算的機率還低。下面是回測找出來最差的幾種、反著做在運彩值不值得，以及每天符合條件的比賽。",
+  [
+    {"label": "測試的押法", "value": s.tested if s else "—"},
+    {"label": "兩段時間都差", "value": s.consistent|length if s else "—"},
+    {"label": "反著做在運彩賺錢", "value": s.profitable_tw if s else "—", "tone": ("good" if s.profitable_tw else "bad") if s else ""},
+    {"label": "今日反指標", "value": live|length},
+  ]) }}
 <blockquote class="quote">反者道之動，弱者道之用。<span>《道德經》第四十章</span></blockquote>
+{{ ui.tabs([("upcoming", "今日反指標", live|length), ("history", "反向紀錄", record_n), ("backtest", "回測", none)]) }}
 
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是<b>反過來那一邊</b>在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 {{ (cfg.value_threshold * 100)|round|int }}%、MLB {{ (cfg.mlb_value_threshold * 100)|round|int }}%）才值得下，那時它也會出現在運彩價值頁。多數會是負的：反指標也要看價格。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
+  {% if live %}
+  <div class="cards">
+  {% for r in live %}
+    <article class="match" id="{{ r.id }}" data-status="{{ r.status }}">
+      <div class="mt"><span class="comp">{{ r.sport }}</span><span class="kick">{{ r.when.date }} {{ r.when.time }}</span><span>{{ r.when.weekday }}</span><span class="eta">{{ r.when.eta }}</span></div>
+      <h3 class="teams">{{ r.match }}</h3>
+      <div class="verdict">{{ ui.status_chip(r.status) }}<span>反著押 <b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}</span>{% if r.ev is not none %}<span class="{{ 'pos' if r.ev >= r.threshold else ('neg' if r.ev < 0 else '') }}">EV {{ '%+.1f%%'|format(r.ev * 100) }}</span>{% endif %}</div>
+      {% if r.tw_price and r.tw_price < 1 %}<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>{% endif %}
+      <dl class="facts">
+        <dt>反指標</dt><dd>{{ r.names|join('、') }}</dd>
+        <dt>這一邊</dt><dd>公允機率 {{ '%.0f%%'|format(r.fair_prob * 100) }}</dd>
+      </dl>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  <p class="none">目前沒有符合的比賽。</p>
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>反向紀錄 <span class="count">真實運彩價・{{ record_n }} 注</span></h2>
+  <p class="howto">從開始記錄起，每場打完的比賽裡，上面幾種押法賽前會押的那一邊，反過來押的結果。運彩價是開賽前最後一次上傳的價格（足球反押一個結果＝另外兩個結果按比例分注）；沒有運彩價的只算命中，不算損益。<b>做對了</b>：反著押贏得比市場預期多，而且用運彩價還有賺；<b>做錯了</b>：贏得比預期少，或贏了也被水錢吃掉。</p>
+  {% if record_summary %}
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>反指標</th><th class="r">運彩損益</th><th class="r">報酬率</th><th class="r">反著押贏 / 市場預期</th><th class="r">注數</th></tr></thead>
+    <tbody>
+    {% for t in record_summary %}
+    <tr>
+      <td class="wrap-cell">{{ t.name }}<span class="sub">{{ t.sport }}・反著{{ t.fade }}</span></td>
+      <td class="num {{ 'pos' if t.units > 0 else ('neg' if t.units < 0 else '') }}">{{ '%+.2f'|format(t.units) if t.priced else '—' }}<span class="sub">{{ t.priced }} 注有運彩價</span></td>
+      <td class="num">{{ '%+.1f%%'|format(t.roi) if t.roi is not none else '—' }}</td>
+      <td class="num">{{ '%g'|format(t.wins) }} / {{ t.expected }}</td>
+      <td class="num">{{ t.n }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% endif %}
+  {% if record %}
+  <h2 class="sect">每一注 <span class="count">最近 {{ record|length }} 注</span></h2>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>開賽</th><th>比賽</th><th>反著押</th><th class="r">結果</th><th class="r">損益</th></tr></thead>
+    <tbody>
+    {% for r in record %}
+    <tr>
+      <td class="num">{{ r.kickoff_utc|tpe }}</td>
+      <td class="wrap-cell">{{ r.match }}<span class="sub">{{ r.sport }}・{{ r.strategy_name }}{% if r.score %}・{{ r.score }}{% endif %}</span></td>
+      <td class="wrap-cell"><b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}</td>
+      <td class="num {{ 'good' if r.result in ('win', 'half_win') else ('bad' if r.result in ('loss', 'half_loss') else '') }}">{{ r.result_label }}</td>
+      <td class="num">{% if r.units is not none %}<span class="{{ 'pos' if r.units >= 0.005 else ('neg' if r.units <= -0.005 else '') }}">{{ '%+.2f'|format(r.units) if r.units|abs >= 0.005 else '0.00' }}</span>{% else %}<span class="muted">沒有運彩價</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}
+  {{ ui.empty("還沒有反向紀錄", "符合反指標的比賽打完後，反著押的結果會記在這裡。") }}
+  {% endif %}
+</section>
+
+<section id="backtest" class="tabpanel" role="tabpanel">
 {% if s %}
-<section>
   <h2>結論</h2>
   <p class="lead">
     測了 <b>{{ s.tested }}</b> 種押法（MLB {{ '{:,}'.format(s.data.mlb_games) }} 場、足球 {{ s.data.football_leagues }} 個聯賽 {{ '{:,}'.format(s.data.football_matches) }} 場）。
     兩段時間都比市場差的有 <b>{{ s.consistent|length }}</b> 種，最差的是「{{ s.worst.name }}」：實際命中 {{ s.worst.self.hit }}%，市場自己算的是 {{ s.worst.self.fair }}%。
     反著做，不算水錢時多半是正的；但用運彩的價格<b>沒有一種賺錢</b>，最好的「{{ s.best_tw.name }}」反著做也是 {{ '%+.1f'|format(s.best_tw.roi) }}%。
-    原因是水錢：最差的押法也只比市場差 1–3 個百分點，運彩的水錢 MLB 約 {{ (s.margins.mlb*100)|round|int }}%、足球不讓分約 {{ (s.margins['1x2']*100)|round|int }}%，而且冷門抽得最重（約 40%）。
-    真正能「反」的是<b>運彩自己的價格</b>：運彩的投注者把某一邊壓得太低時，另一邊就比國際公允價便宜，那就是首頁的「運彩價值注」。
+    原因是水錢：最差的押法也只比市場差 1–3 個百分點，運彩的水錢 MLB 約 {{ (s.margins.mlb * 100)|round|int }}%、足球不讓分約 {{ (s.margins['1x2'] * 100)|round|int }}%，而且冷門抽得最重（約 40%）。
+    真正能「反」的是<b>運彩自己的價格</b>：運彩的投注者把某一邊壓得太低時，另一邊就比國際公允價便宜，那就是<a href="value.html">運彩價值</a>。
   </p>
-  <div class="kpis">
-    <div class="kpi"><b>{{ s.tested }}</b><span>測試的押法</span></div>
-    <div class="kpi"><b>{{ s.consistent|length }}</b><span>兩段時間都比市場差</span></div>
-    <div class="kpi"><b class="{{ 'pos' if s.profitable_tw else 'neg' }}">{{ s.profitable_tw }}</b><span>反著做在運彩賺錢</span></div>
-    <div class="kpi"><b>{{ (s.margins.mlb*100)|round|int }}% / {{ (s.margins['1x2']*100)|round|int }}%</b><span>運彩水錢 MLB / 足球不讓分</span></div>
-  </div>
-</section>
 
-<section>
-  <h2>差多少 vs 要差多少才夠反 <span class="count">百分點（pp）</span></h2>
-  <p class="howto">綠色是反著做實際比市場多贏多少；灰線是用國際莊家價打平要多贏的，紅線是用運彩價打平要多贏的。綠色要越過紅線，反著押運彩才會賺。</p>
+  <h2 class="sect">差多少 vs 要差多少才夠反 <span class="count">百分點（pp）</span></h2>
+  <p class="howto">白條是反著做實際比市場多贏多少；藍線是用國際莊家價打平要多贏的，橘線是用運彩價打平要多贏的。白條要越過橘線，反著押運彩才會賺。</p>
   <div class="gapchart" role="img" aria-label="各押法反著做的實際優勢與打平門檻">
     <div class="legend-row"><span><i class="l-have"></i>反著做實際多贏</span><span><i class="l-intl"></i>國際價打平線</span><span><i class="l-tw"></i>運彩價打平線</span></div>
     {% for c in s.chart %}
@@ -87,110 +123,22 @@
     <div class="axis"><span></span><span class="ticks"><span>0</span><span>5</span><span>10</span><span>{{ s.chart_max|int }}pp</span></span><span></span></div>
   </div>
   <p class="sub">「不可能」：反向那一邊的公允機率加上運彩要的差距超過 100%，就算每場都贏也賠錢（例如反押大冷門＝押另外兩個結果，公允機率約 93%）。</p>
-</section>
 
-{% macro strategy_table(rows) %}
-<div class="scroll"><table>
-  <tr><th>押法</th><th class="num">差距（z）</th><th class="num">反著做：運彩價</th><th class="num">國際價</th><th class="num">理論</th><th class="num">命中 vs 市場</th><th class="num">前段／後段</th><th class="num">場數</th></tr>
-  {% for r in rows %}
-  <tr>
-    <td>{{ r.name }}<span class="sub">{{ r.sport }}{% if r.span %} · {{ r.span }}{% endif %}</span></td>
-    <td class="num {{ 'neg' if r.self.gap_pp < 0 else 'pos' }}">{{ '%+.2f'|format(r.self.gap_pp) }}<span class="sub">z {{ '%+.1f'|format(r.self.z) if r.self.z is not none else '—' }}</span></td>
-    <td class="num {{ 'pos' if r.fade.roi_tw > 0 else 'neg' }}">{{ '%+.1f%%'|format(r.fade.roi_tw) }}</td>
-    <td class="num {{ 'pos' if r.fade.roi_intl > 0 else 'neg' }}">{{ '%+.1f%%'|format(r.fade.roi_intl) }}<span class="sub">最佳 {{ '%+.1f'|format(r.fade.roi_best) }}</span></td>
-    <td class="num {{ 'pos' if r.fade.roi_fair > 0 else 'neg' }}">{{ '%+.1f%%'|format(r.fade.roi_fair) }}</td>
-    <td class="num">{{ r.self.hit }}% / {{ r.self.fair }}%</td>
-    <td class="num">{% if r.early and r.early.n %}{{ '%+.1f'|format(r.early.gap_pp) }} / {{ '%+.1f'|format(r.late.gap_pp) }}{% else %}—{% endif %}</td>
-    <td class="num">{{ '{:,}'.format(r.self.n) }}</td>
-  </tr>
-  {% endfor %}
-</table></div>
-{% endmacro %}
-
-<section>
-  <h2>穩定比市場差的押法 <span class="count">{{ s.consistent|length }} 種 · 兩段時間都差</span></h2>
+  <h2 class="sect">穩定比市場差的押法 <span class="count">{{ s.consistent|length }} 種・兩段時間都差</span></h2>
   <p class="howto">「命中 vs 市場」：實際命中率對市場收盤去水後的機率（市場自己算的）。差距為負、z 小於 −1.8，而且前段（MLB {{ s.data.halves.mlb[0] }}、足球 {{ s.data.halves.football[0] }}）和後段（{{ s.data.halves.mlb[1] }}、{{ s.data.halves.football[1] }}）都為負，才列在這裡。「反著做」三欄是反過來押的報酬率：運彩價、國際價（MLB 美國莊家收盤價、足球各家平均收盤價；小字是各家最好的價）、理論（不算水錢）。</p>
   {{ strategy_table(s.consistent) }}
-</section>
 
-<section>
-  <h2>你和系統自己的方法 <span class="count">{{ s.mine|length }} 種</span></h2>
+  <h2 class="sect">你和系統自己的方法 <span class="count">{{ s.mine|length }} 種</span></h2>
   <p class="howto">T-10 原始規則、模型分歧、追大單。模型分歧只有 2024–2026 的五大聯賽資料，分不出前後段。</p>
   {{ strategy_table(s.mine) }}
-</section>
-{% else %}
-<section><p class="none">回測結果還沒產生（data/fade_summary.json）。</p></section>
-{% endif %}
 
-<section>
-  <h2>今日反指標 <span class="count">{{ live|length }} 個 · 反著押的運彩價</span></h2>
-  <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是反過來那一邊在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 {{ (cfg.value_threshold*100)|round|int }}%、MLB {{ (cfg.mlb_value_threshold*100)|round|int }}%）才值得下，那時它也會出現在首頁的價值注。多數會是負的：反指標也要看價格。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
-  {% if live %}
-  <ul class="items">
-    {% for r in live %}
-    <li>
-      <div class="sub">{{ r.kickoff_utc|tpe }} · {{ r.sport }}</div>
-      <div>{{ r.match }}</div>
-      <div class="bet">反著押 <b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}
-        {% if r.ev is not none %}<span class="{{ 'pos' if r.ev >= r.threshold else ('neg' if r.ev < 0 else '') }}">EV {{ '%+.1f%%'|format(r.ev*100) }}</span>{% endif %}
-        {% if r.status == 'value' %}<span class="chip good">可下</span>{% elif r.status == 'pass' %}<span class="chip">不下</span>{% elif r.status == 'stale' %}<span class="chip">價格時間差太大</span>{% else %}<span class="chip">運彩沒有這場</span>{% endif %}
-      </div>
-      {% if r.tw_price and r.tw_price < 1 %}<div class="sub neg">合起來的賠率低於 1：不管結果都賠</div>{% endif %}
-      <div class="sub">反指標：{{ r.names|join('、') }} · 這一邊公允機率 {{ '%.0f%%'|format(r.fair_prob*100) }}</div>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p class="none">目前沒有符合的比賽。</p>
-  {% endif %}
-</section>
-
-<section>
-  <h2>反向紀錄 <span class="count">真實運彩價 · {{ record_n }} 注</span></h2>
-  <p class="howto">從開始記錄起，每場打完的比賽裡，上面幾種押法賽前會押的那一邊，反過來押的結果。運彩價是開賽前最後一次上傳的價格（足球反押一個結果＝另外兩個結果按比例分注）；沒有運彩價的只算命中，不算損益。</p>
-  <div class="scroll"><table>
-    <tr><th>反指標</th><th class="num">運彩損益</th><th class="num">報酬率</th><th class="num">反著押贏 / 市場預期</th><th class="num">注數</th></tr>
-    {% for t in record_summary %}
-    <tr>
-      <td>{{ t.name }}<span class="sub">{{ t.sport }} · 反著{{ t.fade }}</span></td>
-      <td class="num {{ 'pos' if t.units > 0 else ('neg' if t.units < 0 else '') }}">{{ '%+.2f'|format(t.units) if t.priced else '—' }}<span class="sub">{{ t.priced }} 注有運彩價</span></td>
-      <td class="num">{{ '%+.1f%%'|format(t.roi) if t.roi is not none else '—' }}</td>
-      <td class="num">{{ '%g'|format(t.wins) }} / {{ t.expected }}</td>
-      <td class="num">{{ t.n }}</td>
-    </tr>
-    {% endfor %}
-  </table></div>
-  {% if record %}
   <details class="more">
-    <summary>每一注（最近 {{ record|length }} 注）</summary>
-    <ul class="items" style="margin-top:8px">
-      {% for r in record %}
-      <li>
-        <div class="sub">{{ r.kickoff_utc|tpe }} · {{ r.sport }} · {{ r.strategy_name }}</div>
-        <div>{{ r.match }}{% if r.score %} <span class="sub">{{ r.score }}</span>{% endif %}</div>
-        <div class="bet">反著押 <b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}
-          → <b class="{{ 'pos' if r.result in ('win', 'half_win') else ('neg' if r.result in ('loss', 'half_loss') else '') }}">{{ r.result_label }}</b>
-          {% if r.units is not none %}<span class="{{ 'pos' if r.units >= 0.005 else ('neg' if r.units <= -0.005 else '') }}">{{ '%+.2f'|format(r.units) if r.units|abs >= 0.005 else '0.00' }} 單位</span>{% else %}<span class="sub">（沒有運彩價）</span>{% endif %}
-        </div>
-      </li>
-      {% endfor %}
-    </ul>
+    <summary>其他 {{ s.rest|length }} 種押法（全部結果，最差的在前）</summary>
+    {{ strategy_table(s.rest) }}
   </details>
-  {% endif %}
-</section>
-
-{% if s %}
-<details class="more">
-  <summary>其他 {{ s.rest|length }} 種押法（全部結果，最差的在前）</summary>
-  <div style="margin-top:10px">{{ strategy_table(s.rest) }}</div>
-</details>
+  <p class="stamp-line">回測（{{ s.generated }}）：MLB {{ s.data.mlb_seasons }} 共 {{ '{:,}'.format(s.data.mlb_games) }} 場（六家美國莊家，排除混入的盤中價），足球 {{ s.data.football_seasons }} {{ s.data.football_leagues }} 個聯賽 {{ '{:,}'.format(s.data.football_matches) }} 場（football-data.co.uk）。市場機率是收盤價去水後的機率（足球用 Pinnacle）。運彩價依它實際的水錢換算：足球的水錢多抽在冷門上（熱門約 13%、最冷的一邊約 40%），對 191 個真實盤口的誤差約 4%；MLB 兩邊差不多，平均分配。一次測幾十種押法，就算全部沒有規律，也會有一兩種看起來 z 小於 −2，所以只看兩段時間都差的。</p>
+{% else %}
+  {{ ui.empty("回測結果還沒產生", "執行 scripts/backtest_fade.py 之後會出現在這裡（data/fade_summary.json）。") }}
 {% endif %}
-
-<footer>
-  {% if s %}回測（{{ s.generated }}）：MLB {{ s.data.mlb_seasons }} 共 {{ '{:,}'.format(s.data.mlb_games) }} 場（六家美國莊家，排除混入的盤中價），足球 {{ s.data.football_seasons }} {{ s.data.football_leagues }} 個聯賽 {{ '{:,}'.format(s.data.football_matches) }} 場（football-data.co.uk）。{% endif %}
-  市場機率是收盤價去水後的機率（足球用 Pinnacle）。反著做：兩邊盤就押另一邊；不讓分押另外兩個結果、按比例分注。運彩價依它實際的水錢換算：足球的水錢多抽在冷門上（熱門約 13%、最冷的一邊約 40%），所以用「冪次」方式分配，對 191 個真實盤口的誤差約 4%；MLB 兩邊差不多，平均分配。
-  一次測幾十種押法，就算全部沒有規律，也會有一兩種看起來 z 小於 −2，所以只看兩段時間都差的。重跑：python scripts/backtest_fade.py。
-</footer>
-</div>
-</body>
-</html>
+</section>
+{% endblock %}

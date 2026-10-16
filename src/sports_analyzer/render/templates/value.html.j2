@@ -1,0 +1,115 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% block description %}運彩賠率對國際公允價：每場比賽的 EV、賠率怎麼走，以及每一注的檢討{% endblock %}
+{% block main %}
+{% set thr_f = (cfg.value_threshold * 100)|round|int %}
+{% set thr_m = (cfg.mlb_value_threshold * 100)|round|int %}
+{% set gap_h = (cfg.max_price_gap_minutes / 60)|round|int %}
+{{ ui.hero("運彩價值",
+  "把運彩的賠率和國際莊家去水後的公允賠率比。運彩給得比公允價高（EV 為正）才值得下：EV = 公允機率 × 運彩賠率 − 1，足球要 ≥ " ~ thr_f ~ "%、MLB 要 ≥ " ~ thr_m ~ "%。",
+  [
+    {"label": "現在可下", "value": kpis.value, "tone": "good" if kpis.value else ""},
+    {"label": "有運彩價的比賽", "value": kpis.upcoming},
+    {"label": "價值注 已結算", "value": kpis.settled or 0, "unit": " 注"},
+    {"label": "平均 CLV", "value": ('%+.1f'|format(kpis.avg_clv * 100)) if kpis.avg_clv is not none else "—", "unit": "%" if kpis.avg_clv is not none else "", "tone": ("good" if kpis.avg_clv > 0 else "bad") if kpis.avg_clv is not none else ""},
+  ]) }}
+{{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history.n + history.passed|length)]) }}
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">每張卡是一場還沒開賽、運彩有開盤的比賽：上面是現在的比價，下面的線圖是同一個選項在每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後；橘線在藍線下面，運彩的賠率就比公允價高）。國際價和運彩價相隔超過 {{ gap_h }} 小時就不判斷。可下的排最前面。</p>
+  {% if reports %}
+  <p class="stamp-line">{% for r in reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場、對上 {{ r.matched }} 場{% if r.avg_overround is not none %}，不讓分平均水錢 {{ '%.0f'|format(r.avg_overround * 100) }}%{% endif %}{% if r.unknown_teams %}，{{ r.unknown_teams|length }} 個隊名還沒對照{% endif %}{% if not loop.last %}　｜　{% endif %}{% endfor %}</p>
+  {% endif %}
+  {% if cards %}
+  <div class="cards">
+  {% for c in cards %}
+    <article class="match" id="{{ c.id }}" data-status="{{ c.status }}">
+      {{ ui.head(c) }}
+      <div class="verdict">
+        {{ ui.status_chip(c.status) }}
+        {% if c.status == 'value' %}
+          {% for v in c.values %}<span><b>{{ v.selection }}</b> @ {{ v.tw_price }} <span class="pos">EV {{ '%+.1f%%'|format(v.ev * 100) }}</span>{% if v.derived %} <span class="chip ghost">推算</span>{% endif %}</span>{% endfor %}
+        {% elif c.status == 'stale' %}
+          <span class="sub">國際價 {{ c.fair_at }}、運彩價 {{ c.captured }} 相隔超過 {{ gap_h }} 小時</span>
+        {% elif c.best %}
+          <span class="sub">最接近：{{ c.best.label }} EV <b class="{{ 'neg' if c.best.ev is not none and c.best.ev < 0 else '' }}">{{ '%+.1f%%'|format(c.best.ev * 100) if c.best.ev is not none else '—' }}</b></span>
+        {% endif %}
+      </div>
+      {% if c.bets %}
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>運彩下法</th><th class="r">運彩</th><th class="r">公允</th><th class="r">EV</th></tr></thead>
+        <tbody>
+        {% for b in c.bets %}
+          <tr{% if b.value %} class="on"{% endif %}><td>{{ b.label }}</td><td class="num">{{ '%.2f'|format(b.price) }}</td><td class="num muted">{{ '%.2f'|format(b.fair_odds) if b.fair_odds else '—' }}</td><td class="num {{ 'pos' if b.value else ('neg' if b.ev is not none and b.ev < 0 else '') }}">{{ '%+.1f%%'|format(b.ev * 100) if b.ev is not none else '—' }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      {% endif %}
+      {% if c.derived %}
+      <details class="more">
+        <summary>其他玩法（用國際盤推算公允價，門檻 {{ (cfg.derived_value_threshold * 100)|round|int }}%）</summary>
+        <div class="scroll"><table class="tbl">
+          <tbody>
+          {% for d in c.derived %}
+            <tr><td class="wrap-cell">{{ d.selection }}</td><td class="num">{{ '%.2f'|format(d.tw_price) }}</td><td class="num muted">{{ '%.2f'|format(d.fair_odds) if d.fair_odds else '—' }}</td><td class="num {{ 'pos' if d.ev >= cfg.derived_value_threshold else ('neg' if d.ev < 0 else '') }}">{{ '%+.1f%%'|format(d.ev * 100) }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table></div>
+      </details>
+      {% endif %}
+      {{ ui.timeline(c, c.focus_label ~ "：隱含機率") }}
+      <p class="stamp-line">運彩 {{ c.captured }}・國際 {{ c.fair_at }}</p>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("還沒有運彩價", "手機捷徑上傳運彩賠率後，有對上國際盤的比賽會出現在這裡。") }}
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>每一注價值注 <span class="count">{{ history.n }} 注・新到舊</span></h2>
+  <p class="howto">每注分開看兩件事。<b>結果</b>：贏或輸，單場大多是運氣。<b>判斷</b>：CLV＝收盤時的國際公允機率 × 你買到的運彩賠率 − 1。CLV 為正，代表市場後來也認同這個價格，就算這場輸了，判斷也是對的；CLV 為負，贏了也只是運氣好。</p>
+  {% if kpis.settled %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ '%g'|format(kpis.wins) }} / {{ kpis.settled }}</b><span>贏 / 已結算</span></div>
+    <div class="kpi"><b class="{{ 'pos' if kpis.units > 0 else ('neg' if kpis.units < 0 else '') }}">{{ '%+.2f'|format(kpis.units) }}</b><span>損益（每注 1 單位）</span></div>
+    <div class="kpi"><b class="{{ 'pos' if kpis.avg_clv and kpis.avg_clv > 0 else ('neg' if kpis.avg_clv and kpis.avg_clv < 0 else '') }}">{{ '%+.1f%%'|format(kpis.avg_clv * 100) if kpis.avg_clv is not none else '—' }}</b><span>平均 CLV（{{ kpis.n_clv }} 注）</span></div>
+    {% if kpis.pending %}<div class="kpi"><b>{{ kpis.pending }}</b><span>待結算</span></div>{% endif %}
+  </div>
+  {% endif %}
+  {% if history.bets %}
+  <div class="cards">
+  {% for b in history.bets %}
+    <article class="past" data-tone="{{ b.tone }}">
+      <div class="mt"><span class="comp">{{ b.competition }}</span><span class="kick">{{ b.when.date }} {{ b.when.time }}</span><span>{{ b.when.weekday }}</span>{% if b.score %}<span class="score">{{ b.score }}</span>{% endif %}</div>
+      <h3 class="teams">{{ b.title }}</h3>
+      <p class="call"><b>{{ b.selection }}</b> @ {{ b.price }}{% if b.ev is not none %} <span class="muted">（當時 EV {{ '%+.1f%%'|format(b.ev * 100) }}）</span>{% endif %} → <b class="{{ 'pos' if b.result in ('win', 'half_win') else ('neg' if b.result in ('loss', 'half_loss') else '') }}">{{ b.result_text }}</b>{{ b.margin }}</p>
+      <div class="verdict-row"><span class="chip {{ b.tone }}">{{ b.verdict_label }}</span></div>
+      <ul class="why">{% for l in b.lines %}<li>{{ l }}</li>{% endfor %}</ul>
+      <p class="conclusion"><b>結論</b>{{ b.conclusion }}</p>
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("還沒有價值注", "運彩賠率高於公允價、EV 過門檻時，系統會記下這一注，比賽結束後在這裡檢討。多數日子沒有價值注，這是正常的。") }}
+  {% endif %}
+
+  <h2 class="sect">有比價、沒下的比賽 <span class="count">{{ history.passed|length }} 場</span></h2>
+  <p class="howto">運彩有開盤、但沒有一個下法到門檻的比賽。這裡用<b>收盤時</b>的國際公允價重算每個運彩賠率的 EV：最好的一個也沒到門檻，「不下」就是對的；如果到了，代表運彩賠率在收盤時其實有價值（多半是開賽前才出現的移動），值得在開賽前多上傳一次。</p>
+  {% if history.passed %}
+  <ul class="passed">
+    {% for p in history.passed %}
+    <li class="{{ 'good' if p.right else 'bad' }}">
+      <div class="mt"><span class="comp">{{ p.competition }}</span><span class="kick">{{ p.when.date }} {{ p.when.time }}</span>{% if p.score %}<span class="score">{{ p.score }}</span>{% endif %}</div>
+      <div class="p-title">{{ p.title }}</div>
+      <div class="p-line">收盤看最好的運彩價：{{ p.best.label }} {{ '%.2f'|format(p.best.price) }}，EV <span class="{{ 'pos' if p.best.ev >= 0 else 'neg' }}">{{ '%+.1f%%'|format(p.best.ev * 100) }}</span>{% if p.best.won %}（這邊贏）{% endif %}</div>
+      <div class="p-verdict">{{ '不下是對的' if p.right else '收盤時其實有價值' }}</div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="none">還沒有檢討過、有運彩價的比賽。</p>
+  {% endif %}
+</section>
+{% endblock %}

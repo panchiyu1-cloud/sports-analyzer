@@ -33,7 +33,6 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape  # noqa: E402
 
 from sports_analyzer.analysis.t10_backtest import (  # noqa: E402
     american_to_decimal,
@@ -43,6 +42,7 @@ from sports_analyzer.analysis.t10_backtest import (  # noqa: E402
     trusted_books,
 )
 from sports_analyzer.models.market import devig  # noqa: E402
+from sports_analyzer.render.site import render_report  # noqa: E402
 
 BOOK_ORDER = ("draftkings", "fanduel", "caesars", "bet365", "betmgm", "bet_rivers_ny")
 GAME_TYPES = {"R": "例行賽", "F": "季後賽", "D": "季後賽", "L": "季後賽", "W": "季後賽"}
@@ -401,14 +401,7 @@ def main(path: Path) -> dict[str, Any]:
     (ROOT / "data" / "t10_backtest_summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=1) + "\n", encoding="utf-8"
     )
-    env = Environment(
-        loader=FileSystemLoader(str(ROOT / "src" / "sports_analyzer" / "render" / "templates")),
-        autoescape=select_autoescape(["html", "j2"]),
-        trim_blocks=True,
-        lstrip_blocks=True,
-    )
-    html = env.get_template("t10_backtest.html.j2").render(s=summary)
-    (ROOT / "docs" / "t10_backtest.html").write_text(html, encoding="utf-8")
+    render_report("t10_backtest", summary, ROOT / "docs", datetime.now(UTC))
     m = summary["main"]
     print(f"{summary['games']} games {summary['first']}..{summary['last']}; data quality {quality}")
     print("FAV ML  (G>=+6pp):", m["fav"])

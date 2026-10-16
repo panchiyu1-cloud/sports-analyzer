@@ -1,25 +1,22 @@
 """Phone notifications through ntfy.sh (free: the ntfy app subscribes to a topic).
 
-Only new 運彩 value bets and new 延遲雷達 findings (the market moved after the last
-upload; 運彩's price then, if unchanged, would be one) are sent. Both are rare and do not
-last (運彩 follows the international market within hours), so they are worth an
-interruption. Without a topic
-(NTFY_TOPIC) nothing is sent. The topic name is the only key to the channel: it is
-never logged or written anywhere.
+Only new 運彩 value bets are sent: they are rare and do not last (運彩 follows the
+international market within hours), so they are worth an interruption. Without a topic
+(NTFY_TOPIC) nothing is sent. The topic name is the only key to the channel: it is never
+logged or written anywhere. 延遲雷達 findings are not pushed (owner's choice, 2026-10-16):
+they stay on radar.html.
 """
 
 from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Mapping
-from datetime import datetime
 from typing import Any
 
 import requests
 
-from .config import LOCAL_TZ, MODEL, PAGE_URL
-from .moves import parse_time, price_needed, value_threshold
-from .render.cards import match_title, side_label
+from .config import LOCAL_TZ, PAGE_URL
+from .moves import parse_time
 
 log = logging.getLogger(__name__)
 
@@ -51,41 +48,6 @@ def value_bet_message(
             lines.append(text)
     lines.append("下注前先確認運彩賠率沒有變低。")
     return f"運彩價值注 EV {ev * 100:+.1f}%", "\n".join(lines)
-
-
-def radar_message(event: Mapping[str, Any]) -> tuple[str, str]:
-    """Title and body for one new 延遲雷達 finding (a radar event of moves.radar_events,
-    with the competition and 運彩's names): the market moved after the last upload, and
-    運彩's price then, if unchanged, is a value bet."""
-    sport = str(event.get("sport"))
-    home = str(event.get("home_zh") or event.get("home", ""))
-    away = str(event.get("away_zh") or event.get("away", ""))
-    prob, price = float(event["expected"]), float(event["tw_price"])
-    threshold = value_threshold(sport, MODEL)
-    ev = prob * price - 1
-    kickoff = parse_time(event.get("kickoff_utc"))
-    uploaded = parse_time(event.get("from_at"))
-    label = side_label(
-        sport, str(event["market"]), str(event["side"]), str(event["line"]), home, away
-    )
-    move = event.get("intl_move")
-    then = (
-        f"國際 {(prob - float(move)) * 100:.0f}% → {prob * 100:.0f}%（你上次上傳後 {float(move) * 100:+.1f}pp）"
-        if move not in (None, "")
-        else f"國際現在 {prob * 100:.0f}%"
-    )
-    lines = [
-        f"{event.get('competition') or ''} "
-        f"{kickoff.astimezone(LOCAL_TZ).strftime('%m/%d %H:%M') if kickoff else ''} 開賽".strip(),
-        match_title(sport, home, away),
-        f"{label}：{then}",
-        f"運彩上次 {price:g}"
-        f"（{uploaded.astimezone(LOCAL_TZ).strftime('%H:%M') if uploaded else ''}）"
-        f"若還沒變，EV {ev * 100:+.1f}%",
-        f"打開運彩：賠率 ≥ {price_needed(prob, threshold):.2f} 就可下。"
-        "按捷徑上傳一次，系統會用最新價格確認並記帳。",
-    ]
-    return f"延遲雷達 EV {ev * 100:+.1f}%", "\n".join(lines)
 
 
 def send(
@@ -131,24 +93,4 @@ def notify_value_bets(
         sent += send(topic, title, body, session=session)
     if sent:
         log.info("notifications sent: %d", sent)
-    return sent
-
-
-def notify_radar(
-    topic: str | None,
-    events: Iterable[Mapping[str, Any]],
-    now: datetime,
-    session: Any = None,
-) -> int:
-    """One notification per new radar finding that can still be acted on: the match has
-    not started and no newer 運彩 price has answered the question (`current`)."""
-    sent = 0
-    for e in events:
-        kickoff = parse_time(e.get("kickoff_utc"))
-        if e.get("type") != "radar" or not e.get("current") or kickoff is None or kickoff <= now:
-            continue
-        title, body = radar_message(e)
-        sent += send(topic, title, body, session=session, tags=("satellite",))
-    if sent:
-        log.info("radar notifications sent: %d", sent)
     return sent

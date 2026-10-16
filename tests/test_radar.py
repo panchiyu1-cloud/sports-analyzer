@@ -5,10 +5,10 @@ import unittest
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from sports_analyzer import moves, notify
+from sports_analyzer import moves
 from sports_analyzer.analysis import pregame
 from sports_analyzer.config import ModelConfig
-from sports_analyzer.render.cards import render_index
+from sports_analyzer.render.site import Site, render_page
 from tests import conftest  # noqa: F401
 
 CFG = ModelConfig()
@@ -184,32 +184,6 @@ class RadarPurchaseTests(unittest.TestCase):
         self.assertTrue(pregame.upload_plan({"mlb": mlb}, {"mlb": None}, later, CFG)[0]["now"])
 
 
-class RadarNotifyTests(unittest.TestCase):
-    def test_message_and_only_open_findings_are_sent(self):
-        event = {**moves.radar_events(tape(), CFG)[0], "competition": "MLB",
-                 "home_zh": "洛杉磯道奇", "away_zh": "密爾瓦基釀酒人"}  # fmt: skip
-        title, body = notify.radar_message(event)
-        self.assertEqual(title, "延遲雷達 EV +8.0%")
-        self.assertIn("密爾瓦基釀酒人 @ 洛杉磯道奇", body)
-        self.assertIn("洛杉磯道奇 不讓分：國際 52% → 60%（你上次上傳後 +8.0pp）", body)
-        self.assertIn("運彩上次 1.8（20:00）若還沒變，EV +8.0%", body)
-        self.assertIn("賠率 ≥ 1.72 就可下", body)
-        sent = []
-
-        class Session:
-            def post(self, url, json, timeout):
-                sent.append(json)
-                return type("R", (), {"ok": True})()
-
-        closed = {**event, "current": False}
-        n = notify.notify_radar("topic", [event, closed, {"type": "tw_only"}], NOW, Session())
-        self.assertEqual(n, 1)
-        self.assertEqual((sent[0]["title"], sent[0]["tags"]), ("延遲雷達 EV +8.0%", ["satellite"]))
-        self.assertEqual(
-            notify.notify_radar("topic", [event], datetime(2026, 10, 17, tzinfo=UTC), Session()), 0
-        )
-
-
 class RadarPageTests(unittest.TestCase):
     def test_front_page_section(self):
         radar = {
@@ -224,18 +198,24 @@ class RadarPageTests(unittest.TestCase):
                 CFG,
             ),
         }
-        with tempfile.TemporaryDirectory() as tmp:
-            html = render_index(
-                None, None, None, NOW, Path(tmp) / "index.html", radar=radar
-            ).read_text(encoding="utf-8")
-        self.assertIn("延遲雷達", html)
+        html = render_page(
+            Site(now=NOW, football=None, mlb=None, tape=tape(), radar=radar), "radar"
+        )
+        self.assertIn("<title>延遲雷達｜比賽分析</title>", html)
         self.assertIn("釀酒人 @ 道奇", html)
-        self.assertIn("道奇 不讓分：運彩賠率 ≥ <b>1.72</b> 就可下", html)
+        self.assertIn("<b>道奇 不讓分</b>", html)
+        self.assertIn(
+            '<span>運彩賠率 ≥</span><b class="big-figure">1.72</b><span>就可下</span>', html
+        )
         self.assertIn("還有 2 小時 15 分", html)
-        self.assertIn("國際 52% → 60%（+8.0pp）", html)
+        self.assertIn("52% → 60%", html)
+        self.assertIn("（+8.0pp）", html)
         self.assertIn('沒變的話 EV <span class="pos">+8.0%</span>', html)
         self.assertIn("MLB：運彩 10/16 20:00・國際 10/17 05:40", html)
         self.assertIn("<b>10/17 07:00</b>", html)  # an hour before the 08:00 first pitch
+        # The chart and the table under it read the tape: 運彩 1.80 at the upload, then the
+        # market's later price and what it means for that unchanged price.
+        self.assertIn("若運彩沒變：EV +8.0%", html)
         # 05:45 in Taipei: the slot has not opened, and the last upload (20:00) is not in it.
         self.assertNotIn("現在上傳", html)
         self.assertNotIn("已上傳", html)

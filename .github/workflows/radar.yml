@@ -4,8 +4,8 @@ name: 延遲雷達 (radar)
 # 20:00 uploads, the matches with a 運彩 price that start within 4 hours get freshly
 # bought international prices (h2h; MLB also the run line), within the odds budget
 # plus the pre-game extra. The render then sets them against the last uploaded 運彩
-# prices: a price that, unchanged, would now be a value bet shows under 延遲雷達 on
-# the page, goes into the 大戶紀錄 and, when NTFY_TOPIC is set, to the phone.
+# prices: a price that, unchanged, would now be a value bet shows on radar.html (延遲雷達)
+# and goes into the 大戶紀錄 (data/moves/events.csv). No phone notification (owner's choice).
 # Nothing due or no budget: nothing bought, nothing committed.
 
 on:
@@ -25,7 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}  # optional: phone notifications
       PYTHONPATH: src
     steps:
       - uses: actions/checkout@v4
@@ -43,4 +42,4 @@ jobs:
       - name: Commit
         if: steps.radar.outputs.refreshed != '0'
         run: |
-          bash scripts/commit_generated.sh "chore(radar): $(date -u +%Y-%m-%dT%H:%M) prices near kickoff vs 運彩" data/snapshots data/tw_ledger.csv data/moves data/odds_budget.json data/tw docs/index.html docs/reviews.html docs/bighand.html docs/fade.html
+          bash scripts/commit_generated.sh "chore(radar): $(date -u +%Y-%m-%dT%H:%M) prices near kickoff vs 運彩" data/snapshots data/tw_ledger.csv data/moves data/odds_budget.json data/tw docs

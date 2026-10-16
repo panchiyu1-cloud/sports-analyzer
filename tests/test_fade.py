@@ -1,12 +1,10 @@
 import math
-import tempfile
 import unittest
 from datetime import UTC, datetime
-from pathlib import Path
 
 from sports_analyzer.analysis import fade
 from sports_analyzer.config import ModelConfig
-from sports_analyzer.render.cards import render_fade_page
+from sports_analyzer.render.site import Site, render_page
 from tests import conftest  # noqa: F401
 
 
@@ -228,11 +226,15 @@ class PageTests(unittest.TestCase):
             "margins": {"mlb": 0.16, "1x2": 0.20, "totals": 0.171},
             "strategies": {"t10_g6": row, "longshot8": longshot},
         }  # fmt: skip
-        with tempfile.TemporaryDirectory() as tmp:
-            html = render_fade_page(
-                summary, [], [], datetime(2026, 10, 15, 9, tzinfo=UTC), Path(tmp) / "fade.html"
-            ).read_text(encoding="utf-8")
-        self.assertIn("<title>反者道之動</title>", html)
+        site = Site(
+            now=datetime(2026, 10, 15, 9, tzinfo=UTC),
+            football=None,
+            mlb=None,
+            tape=[],
+            fade_summary=summary,
+        )
+        html = render_page(site, "fade")
+        self.assertIn("<title>反者道之動｜比賽分析</title>", html)
         self.assertIn("反者道之動，弱者道之用。", html)
         self.assertIn("沒有一種賺錢", html)
         self.assertIn("+1.8</b> ／ 需 2.6・5.4", html)

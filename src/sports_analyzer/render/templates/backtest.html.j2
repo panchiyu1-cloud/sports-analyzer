@@ -1,0 +1,41 @@
+{% extends "base.html.j2" %}
+{% block description %}足球模型（Dixon-Coles + 市場混合）的走勢回測：log-loss、CLV 與各聯賽結果{% endblock %}
+{% block main %}
+<section class="hero">
+  <h1>足球模型回測</h1>
+  <p class="lede">產生：{{ s.generated }}・五大聯賽・逐週走勢（嚴格 out-of-sample）・衰減 xi={{ s.config.xi }}。<a href="model.html">回到模型分歧</a></p>
+</section>
+<div class="report-verdict {{ 'pass' if s.passed else 'fail' }}"><b>結論</b>　{{ s.verdict }}</div>
+
+<h2 class="sect">1. 預測品質（log-loss，越低越好）</h2>
+<div class="scroll"><table class="tbl">
+<tr><th>純模型 (Dixon-Coles)</th><th>賽前市場 (Pinnacle 週五)</th><th>收盤市場</th><th>混合 (模型+市場)</th><th>只校準市場 (無模型)</th><th>場數</th></tr>
+<tr><td>{{ s.logloss.model }}</td><td>{{ s.logloss.market }}</td><td>{{ s.logloss.closing }}</td><td>{{ s.logloss.blend }}</td><td>{{ s.logloss.market_only }}</td><td>{{ s.logloss.n }}</td></tr>
+</table></div>
+<p class="stamp-line">大小 2.5：純模型 {{ s.logloss_ou.model }} · 市場 {{ s.logloss_ou.market }} · 混合 {{ s.logloss_ou.blend }}（{{ s.logloss_ou.n }} 場）。模型能否預測盤口走向（模型偏差 vs 收盤變動的相關係數）：主 {{ s.line_move_corr.home }}、和 {{ s.line_move_corr.draw }}、客 {{ s.line_move_corr.away }}——接近 0 代表模型看不到市場稍後才納入的資訊。</p>
+
+<h2 class="sect">2. 混合機率的下注表現（每注 1 單位，賽前 Pinnacle 價）</h2>
+<p class="stamp-line"><b>CLV</b> = 以收盤公允機率衡量這張注的期望值。這是判斷有沒有真本事的標準；ROI 只有幾百注時誤差 ±5–10%，看 ROI 會被運氣騙。</p>
+<div class="scroll"><table class="tbl"><tr><th>edge 門檻</th><th>注數</th><th>損益</th><th>ROI（±1se）</th><th>CLV（±1se）</th><th>選項分布</th></tr>
+{% for t, b in s.strategies.blend_pinnacle.items() %}<tr><td>≥ {{ (t|float*100)|int }}pp</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.units > 0 else 'neg' }}">{{ '%+.1f'|format(b.units) }}</td><td>{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }} (±{{ '%.1f%%'|format(b.roi_se*100) if b.roi_se else '—' }})</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }} (±{{ '%.2f%%'|format(b.clv_se*100) if b.clv_se else '—' }})</td><td class="muted">{{ b.sel }}</td></tr>{% endfor %}
+</table></div>
+<p class="stamp-line">同樣的注改用各家最佳賽前價：{% for t, b in s.strategies.blend_best.items() %}≥{{ (t|float*100)|int }}pp ROI {{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }} / CLV {{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}；{% endfor %}</p>
+
+<h2 class="sect">3. 對照組</h2>
+<div class="scroll"><table class="tbl"><tr><th>策略</th><th>注數</th><th>ROI</th><th>CLV</th></tr>
+{% for t, b in s.strategies.raw_model.items() %}<tr><td>純模型 edge ≥ {{ (t|float*100)|int }}pp（Phase 1 作法）</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.roi and b.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }}</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}</td></tr>{% endfor %}
+{% for t, b in s.strategies.market_only.items() if b.n > 0 %}<tr><td>只校準市場、不用模型 edge ≥ {{ (t|float*100)|int }}pp</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.roi and b.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }}</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}</td></tr>{% endfor %}
+<tr><td>永遠買熱門</td><td>{{ s.baselines.always_favourite.n }}</td><td class="neg">{{ '%+.1f%%'|format(s.baselines.always_favourite.roi*100) }}</td><td class="neg">{{ '%+.2f%%'|format(s.baselines.always_favourite.clv*100) if s.baselines.always_favourite.clv is not none else '—' }}</td></tr>
+{% for t, b in s.strategies.ou_blend.items() %}<tr><td>大小 2.5 混合 edge ≥ {{ (t|float*100)|int }}pp</td><td>{{ b.n }}</td><td class="{{ 'pos' if b.roi and b.roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(b.roi*100) if b.roi is not none else '—' }}</td><td class="{{ 'pos' if b.clv and b.clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(b.clv*100) if b.clv is not none else '—' }}</td></tr>{% endfor %}
+</table></div>
+
+<h2 class="sect">4. 混合權重（走勢末端）</h2>
+<p class="stamp-line">a = 純模型權重，b = 市場權重（1 = 照市場），c = 和局／客勝截距。{{ s.blend_weights_final }}</p>
+
+<h2 class="sect">5. 各聯賽（混合 edge ≥ 3pp）</h2>
+<div class="scroll"><table class="tbl"><tr><th>聯賽</th><th>場數</th><th>模型 ll</th><th>市場 ll</th><th>混合 ll</th><th>注數</th><th>ROI</th><th>CLV</th></tr>
+{% for code, r in s.by_league.items() %}<tr><td>{{ r.name }}</td><td>{{ r.n }}</td><td>{{ r.logloss_model }}</td><td>{{ r.logloss_market }}</td><td>{{ r.logloss_blend }}</td><td>{{ r['blend_0.03'].n }}</td><td class="{{ 'pos' if r['blend_0.03'].roi and r['blend_0.03'].roi > 0 else 'neg' }}">{{ '%+.1f%%'|format(r['blend_0.03'].roi*100) if r['blend_0.03'].roi is not none else '—' }}</td><td class="{{ 'pos' if r['blend_0.03'].clv and r['blend_0.03'].clv > 0 else 'neg' }}">{{ '%+.2f%%'|format(r['blend_0.03'].clv*100) if r['blend_0.03'].clv is not none else '—' }}</td></tr>{% endfor %}
+</table></div>
+<p class="stamp-line">資料：football-data.co.uk（賽前與收盤賠率，Pinnacle 優先、Bet365 備援）。</p>
+{% endblock %}
+{% block foot %}回測只用過去的資料，不代表未來；看的是方法有沒有打敗市場（CLV），不是單季的輸贏。{% endblock %}

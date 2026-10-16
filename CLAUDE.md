@@ -11,7 +11,7 @@ A daily pipeline that
 2. fits a model per competition (football: Dixon-Coles; MLB: log5 + starting pitcher),
 3. compares model probabilities with de-vigged market probabilities,
 4. writes a JSON snapshot + appends signals to `data/ledger.csv`,
-5. renders `docs/index.html` (served by GitHub Pages).
+5. renders the site in `docs/`: a front page and one page per analysis method (GitHub Pages).
 
 It runs on GitHub Actions (`.github/workflows/daily.yml`). The owner is not a
 professional developer: keep code plain, well-named, and commented where a
@@ -36,8 +36,9 @@ formula is not obvious.
   Only request odds for competitions that have fixtures inside the window.
   Log `x-requests-remaining` after every call.
 - Every odds purchase goes through `budget.plan_markets()` (data/odds_budget.json):
-  an even daily share of the credits left (x1.6 burst, 25 kept in reserve) over an
-  assumed 30-day period; short of it a run buys h2h only, or nothing (prices carried
+  an even daily share of the credits left (x1.6 burst, 25 kept in reserve) over the days
+  to the next 1st of the month (The Odds API resets every plan's credits on the 1st, UTC;
+  nothing carries over); short of it a run buys h2h only, or nothing (prices carried
   over, marked stale). Football buys h2h,totals only (運彩 football handicaps are
   three-way, so Asian handicap prices compare with nothing); MLB keeps the run line.
 - Pre-game refreshes (`pipeline tw` after a recent upload, see "T-10 價值版") and the
@@ -61,8 +62,8 @@ formula is not obvious.
 
 ### Git workflow
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
-- Generated files that ARE committed: `docs/index.html`, `docs/reviews.html`,
-  `docs/bighand.html`, `docs/fade.html`, `data/snapshots/**`, `data/ledger.csv`,
+- Generated files that ARE committed: `docs/*.html` (every task renders every page),
+  `data/snapshots/**`, `data/ledger.csv`,
   `data/tw_ledger.csv`, `data/reviews/*.csv`, `data/history/*.csv`, `data/moves/*.csv`,
   `data/fade_summary.json`, `data/combo_summary.json`. Raw dumps under `data/raw/` are not.
 - Workflows commit through `scripts/commit_generated.sh` (handles two runs racing).
@@ -98,7 +99,9 @@ src/sports_analyzer/
   ledger.py        append / settle signals in data/ledger.csv
   moves.py         line-move tape data/moves/YYYY-MM.csv + 大戶 record data/moves/events.csv
                    + 延遲雷達 (radar, radar_events)
-  render/          cards.py + templates/*.html.j2 -> docs/index.html, reviews.html, bighand.html
+  render/          site.py — Site (everything a render needs) -> one view per page -> docs/*.html
+                   cards.py — shared helpers (names, times, labels, 大戶 record, review cards)
+                   templates/ base + _style (look), _ui (macros), one .html.j2 per page
   pipeline.py      CLI entry point
 scripts/backtest_football.py   rolling backtest on football-data.co.uk CSVs
 scripts/backtest_fade.py       65 strategies vs the market (反者道之動) -> data/fade_summary.json
@@ -263,13 +266,15 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   detection (`event_id`: a 運彩 move per match/market/upload whatever side tops later; a
   大單 per side); never edited or pruned, a header change rewrites the file whole.
   `moves.event_history` joins it with the whole tape (prices up to kickoff, MLB G from
-  ML + ±1.5 bought together), tw_ledger value bets and results -> docs/bighand.html
-  (`render_bighand_page`). "鎖定區" is shown both ways: 可下 (a tw_ledger row) and
-  MLB G reaching ±6 (the old T-10 trigger).
+  ML + ±1.5 bought together), tw_ledger value bets and results -> 盤口移動's 歷史數據
+  (moves.html#history; radar events on radar.html; docs/bighand.html redirects there).
+  "鎖定區" is shown both ways: 可下 (a tw_ledger row) and MLB G reaching ±6 (the old T-10
+  trigger).
 - Freshness (`analysis/taiwan.is_fresh`) goes by a block's own `odds_at`, also for
   carried-over "stale" blocks; only an unstamped carried block is never fresh.
 - `notify.py`: new 運彩 value bets go to the phone through ntfy.sh when the NTFY_TOPIC
   secret is set (JSON API; the topic is a secret: never log it). One message per bet id.
+  Nothing else is pushed (owner, 2026-10-16: no push for the radar).
 
 ## 反者道之動 (2026-10-15) — betting against the worst strategies
 - Owner's idea: find the strategy that fails most and do the opposite. A high failure rate
@@ -286,7 +291,7 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - 運彩's price model (`analysis/fade.tw_prices`): football spreads its margin by a power law
   (13% on favourites, 40% on the longest outcome; within 4% on 191 real 1X2 markets, an
   even spread was 21% off); MLB fits an even 16%. A dutch of two 運彩 prices can be < 1.
-- docs/fade.html (`render_fade_page`, every render): the summary, today's games where a
+- docs/fade.html (`site.fade_page`, every render): the summary, today's games where a
   consistently bad strategy points one way (`fade.live_candidates`: T-10 G >= +6, MLB home
   favourite >= 55%, football longest outcome at fair odds >= 8, home underdog, 模型分歧)
   with the opposite bet's 運彩 price and EV, and `fade.fade_record` - the same opposite
@@ -335,7 +340,7 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   MLB also spreads) within the allowance plus PREGAME_EXTRA; pending 運彩 bets get CLV from
   them; then `run_tw` re-judges the last upload (stale: "不判斷") and the render follows.
   Nothing bought: no run_tw, no render, no commit (step output `refreshed`).
-- `moves.radar` (front page section 延遲雷達): for each side of a match not started, the
+- `moves.radar` (radar.html): for each side of a match not started, the
   last 運彩 price against the newest international price bought more than
   `max_price_gap_minutes` after it (a nearer one is the regular comparison, 可下).
   Candidates: that price, unchanged, has the value-bet EV (`value_threshold`: football 2%,
@@ -343,10 +348,34 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   to check in the 運彩 app or confirm by uploading. Watch: the market moved toward the side
   by `radar_watch_move` (4pp) since the upload, not enough yet.
 - `moves.radar_events` -> events.csv type "radar", one per side and 運彩 upload (event_id uses
-  from_at = the upload; to_at = the first international price that showed it); bighand.html
-  shows it with ev_at = the stale EV and close_tw_price = whether 運彩 followed. A new
-  finding still open (`current`: no newer 運彩 price; before kickoff) goes to the phone
-  (`notify.notify_radar`); every render gets NTFY_TOPIC (`render_latest(notify_topic)`).
+  from_at = the upload; to_at = the first international price that showed it); radar.html's
+  歷史數據 shows it with ev_at = the stale EV and close_tw_price = whether 運彩 followed.
+  Findings are not pushed to the phone (owner's choice).
 - `pregame.upload_plan` (建議上傳時間): an upload `UPLOAD_LEAD` (60 min) before the first
   game not yet covered, on the half hour, covers the games of the next
   `pregame_window_hours`; marked done when the sport's last upload falls in the slot.
+
+## 網站 (2026-10-16) — one page per analysis method
+- Owner's request: the old single page was too busy. `render/site.py` builds every page from
+  one `Site` (pipeline.render_latest gathers snapshots, the whole tape, CSVs, the 大戶 record,
+  radar, fade data, budget, backtest summaries and 運彩's names from 14 days of snapshots).
+  Pages (`PAGES`): index 總覽, value 運彩價值, t10 T-10, radar 延遲雷達, moves 盤口移動,
+  model 模型分歧, fade 反者道之動, reviews 全部檢討; backtest.html and t10_backtest.html are
+  re-rendered from data/*_summary.json (`REPORTS`, `render_report`, also used by the scripts).
+- Every method page: hero (what the method does, the numbers that matter), tabs 即將開賽 /
+  歷史數據 (fade: 今日反指標 / 反向紀錄 / 回測). 即將開賽 = an analysis card per match not
+  started; each card carries the tape for its market (`observations`): a chart (`spark`,
+  blue = international de-vigged probability, amber = 運彩's own de-vigged probability, one
+  axis, crosshair tooltip) and a table, newest first, where each time is read the method's
+  way (`ev_reader`, G, move since first seen, model gap). 歷史數據 = finished matches only
+  (the ones still to play are cards), each with what went right or wrong: value bets by
+  CLV, passed matches by the closing EV (`_passed`), T-10 by G's shape (`shape_check`),
+  caught moves by what came after (`_event_lessons`).
+- 模型分歧 cards chart the signal's own market (1X2 / 大小 / 讓球) with the model as a line;
+  `signal_allowed` applies today's signal rules to older snapshots.
+- Front page: headline (可下 / 雷達候選 / none), next upload (`upload_plan`), method tiles,
+  48-hour board with flags linking to the cards (`anchor`: m-<sport>-<id>); 反指標 only when
+  its price pays, 模型分歧 as a quiet chip (most games carry one).
+- Look (`_style.html.j2`, "夜場轉播"): floodlit night sky, pitch and diamond line art, turf
+  stripes; Barlow Condensed for numbers. Status chips always carry an icon and a word.
+

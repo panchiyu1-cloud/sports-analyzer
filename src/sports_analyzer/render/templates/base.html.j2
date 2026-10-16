@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1630">
+<title>{{ title }}｜比賽分析</title>
+<meta name="description" content="{% block description %}運彩賠率 vs 國際市場：每種分析方法的賽前分析卡與歷史紀錄{% endblock %}">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+{% include "_style.html.j2" %}
+{% block head %}{% endblock %}
+</head>
+<body data-page="{{ page }}">
+<div class="masthead">
+  <div class="bar">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
+    <span class="stamp">更新 <b>{{ updated }}</b></span>
+  </div>
+  <nav class="nav" aria-label="分析方法">
+    {% for key, label, file in pages %}<a href="{{ file }}"{% if key == page %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+</div>
+<main class="wrap">
+{% block main %}{% endblock %}
+</main>
+<footer class="foot wrap">{% block foot %}國際價是多家國際莊家去水後的中位數；「公允賠率」= 1 ÷ 國際去水機率。運彩賠率高於公允賠率才有價值，低於它就是在付水錢。數字是機率估計，不是保證；請自行判斷並控制風險。{% endblock %}</footer>
+<script>
+(function () {
+  // Tabs: 即將開賽 / 歷史數據 (and more). Without script every panel shows.
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function select(id, push) {
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      var panel = document.getElementById(t.getAttribute('aria-controls'));
+      if (panel) panel.classList.toggle('active', on);
+    });
+    if (push && history.replaceState) history.replaceState(null, '', id === tabs[0].getAttribute('aria-controls') ? location.pathname : '#' + id);
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function (e) { e.preventDefault(); select(t.getAttribute('aria-controls'), true); });
+  });
+  if (tabs.length) {
+    var h = location.hash.slice(1), wanted = tabs[0].getAttribute('aria-controls');
+    tabs.forEach(function (t) { if (t.getAttribute('aria-controls') === h) wanted = h; });
+    var target = h && document.getElementById(h);
+    if (target && !target.classList.contains('tabpanel')) {
+      var panel = target.closest('.tabpanel');
+      if (panel) wanted = panel.id;
+    }
+    select(wanted, false);
+    // A match card is scrolled to; a tab name only switches the tab (the hero stays in view).
+    if (target && !target.classList.contains('tabpanel')) target.scrollIntoView();
+  }
+
+  // History filters: a row of buttons shows only the records tagged with the choice.
+  Array.prototype.forEach.call(document.querySelectorAll('.filters'), function (group) {
+    var scope = group.closest('.tabpanel') || document;
+    var buttons = group.querySelectorAll('button');
+    var items = scope.querySelectorAll('[data-tags]');
+    Array.prototype.forEach.call(buttons, function (b) {
+      b.addEventListener('click', function () {
+        var f = b.getAttribute('data-f');
+        Array.prototype.forEach.call(buttons, function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        Array.prototype.forEach.call(items, function (it) {
+          it.hidden = !(f === 'all' || (it.getAttribute('data-tags') || '').split(' ').indexOf(f) !== -1);
+        });
+      });
+    });
+  });
+
+  // Price charts: a crosshair and one tooltip with every series at the nearest time.
+  Array.prototype.forEach.call(document.querySelectorAll('figure.spark'), function (fig) {
+    var svg = fig.querySelector('svg'), cross = svg && svg.querySelector('.cross');
+    var tips = [];
+    try { tips = JSON.parse(fig.getAttribute('data-tip') || '[]'); } catch (e) { tips = []; }
+    if (!svg || !cross || !tips.length) return;
+    var box = document.createElement('div');
+    box.className = 'tip'; box.hidden = true; fig.appendChild(box);
+    var width = svg.viewBox.baseVal.width, at = tips.length - 1;
+    function show(i) {
+      at = Math.max(0, Math.min(tips.length - 1, i));
+      var t = tips[at];
+      cross.setAttribute('x1', t.x); cross.setAttribute('x2', t.x); cross.style.display = '';
+      box.textContent = '';
+      var head = document.createElement('div'); head.className = 'tt'; head.textContent = t.t; box.appendChild(head);
+      t.v.forEach(function (v) {
+        var row = document.createElement('div'); row.className = 'tr';
+        var k = document.createElement('i'); k.className = 'k ' + v[0];
+        var b = document.createElement('b'); b.textContent = v[2];
+        var s = document.createElement('span'); s.textContent = v[1];
+        row.appendChild(k); row.appendChild(b); row.appendChild(s); box.appendChild(row);
+      });
+      box.hidden = false;
+      var r = svg.getBoundingClientRect(), px = t.x / width * r.width;
+      box.style.left = Math.max(0, Math.min(px - 64, r.width - box.offsetWidth)) + 'px';
+    }
+    function hide() { box.hidden = true; cross.style.display = 'none'; }
+    function nearest(clientX) {
+      var r = svg.getBoundingClientRect(), x = (clientX - r.left) / r.width * width, best = 0;
+      tips.forEach(function (t, i) { if (Math.abs(t.x - x) < Math.abs(tips[best].x - x)) best = i; });
+      return best;
+    }
+    svg.addEventListener('pointermove', function (e) { show(nearest(e.clientX)); });
+    svg.addEventListener('pointerdown', function (e) { show(nearest(e.clientX)); });
+    svg.addEventListener('pointerleave', hide);
+    fig.addEventListener('focus', function () { show(at); });
+    fig.addEventListener('blur', hide);
+    fig.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { show(at - 1); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { show(at + 1); e.preventDefault(); }
+    });
+  });
+})();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

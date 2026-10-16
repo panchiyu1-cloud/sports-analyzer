@@ -1,74 +1,83 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>賽後檢討</title>
-<meta name="description" content="每場已完賽比賽的賽前分析 vs 實際結果，以及模型的累計偏差">
-{% include "_style.html.j2" %}
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
 {% import "_review.html.j2" as rv %}
-</head>
-<body>
-<div class="wrap">
-<header>
-  <h1>賽後檢討</h1>
-  <span class="meta">更新：{{ generated_local }}（台北時間）</span>
-  <a class="meta" href="index.html">回到每日分析</a>
-</header>
+{% block description %}每場已完賽比賽的賽前分析 vs 實際結果，以及累計的偏差{% endblock %}
+{% block main %}
+{% set fs = reviews.summary %}
+{% set ms = reviews.mlb_summary %}
+{{ ui.hero("全部檢討",
+  "每一場打完的比賽：賽前每個方法怎麼看、實際發生什麼、哪裡做對哪裡做錯。各方法自己的頁面也有「歷史數據」；這裡是全部放在一起，加上累計的偏差。",
+  [
+    {"label": "已檢討", "value": reviews.total, "unit": " 場"},
+    {"label": "足球", "value": reviews.football|length, "unit": " 場"},
+    {"label": "MLB", "value": reviews.mlb|length, "unit": " 場"},
+    {"label": "推薦已結算", "value": (reviews.picks.wins|int ~ "/" ~ reviews.picks.settled) if reviews.picks.settled else "—"},
+  ]) }}
+{% if waiting %}
+<p class="stamp-line">已開賽、等待賽果：{% for c in waiting %}{% if c.recommended %}<b>{{ c.title }}（有推薦）</b>{% else %}{{ c.title }}{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}。比賽結束約 2 小時後，下一次更新（每次上傳運彩，或台北 08:15／20:25）就會產生賽後檢討。</p>
+{% endif %}
+{{ ui.tabs([("football", "足球", reviews.football|length), ("mlb", "MLB", reviews.mlb|length), ("summary", "累計", none)]) }}
 
-{{ rv.howto() }}
+<section id="football" class="tabpanel active" role="tabpanel">
+  {{ rv.howto() }}
+  {% if reviews.football %}
+  <div class="grid">{% for r in reviews.football %}{{ rv.football_card(r) }}{% endfor %}</div>
+  {% else %}
+  {{ ui.empty("還沒有已完賽的足球比賽", "比賽結束約 2 小時後，下一次更新（每次上傳運彩，或台北 08:15／20:25）就會產生檢討。") }}
+  {% endif %}
+</section>
 
-<section>
-  <h2>足球累計 <span class="count">{{ reviews.summary.matches }} 場</span></h2>
-  {% if reviews.summary.matches %}
-  {{ rv.football_summary(reviews.summary) }}
-  {% if reviews.summary.by_comp %}
-  <div class="scroll" style="margin-top:10px"><table>
-    <tr><th>聯賽</th><th>場次</th><th>模型 log-loss</th><th>市場 log-loss</th><th>單場較準 模型:市場</th><th>模型偏向命中</th><th>市場預期</th></tr>
-    {% for c in reviews.summary.by_comp %}
+<section id="mlb" class="tabpanel" role="tabpanel">
+  <p class="howto">MLB 只有「可下」的注看輸贏；「不下」是因為運彩價格比公允價差，不管比分如何都是對的決定。G 值只描述比賽型態。</p>
+  {% if reviews.mlb %}
+  <div class="grid">{% for r in reviews.mlb %}{{ rv.mlb_card(r) }}{% endfor %}</div>
+  {% else %}
+  {{ ui.empty("還沒有已完賽的 MLB 比賽", "比賽結束後，下一次更新會產生檢討。") }}
+  {% endif %}
+</section>
+
+<section id="summary" class="tabpanel" role="tabpanel">
+  <h2>足球累計 <span class="count">{{ fs.matches }} 場</span></h2>
+  {% if fs.matches %}
+  {{ rv.football_summary(fs) }}
+  {% if fs.by_comp %}
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>聯賽</th><th class="r">場次</th><th class="r">模型 log-loss</th><th class="r">市場 log-loss</th><th class="r">單場較準 模型:市場</th><th class="r">模型偏向命中</th><th class="r">市場預期</th></tr></thead>
+    <tbody>
+    {% for c in fs.by_comp %}
     <tr>
-      <td>{{ c.name }}</td><td>{{ c.matches }}</td>
-      <td class="model-val">{{ c.ll_model_ll if c.ll_model_ll is not none else '—' }}</td>
-      <td class="market-val">{{ c.ll_market_ll if c.ll_market_ll is not none else '—' }}</td>
-      <td>{{ c.ll_model_closer }} : {{ c.ll_market_closer }}</td>
-      <td>{{ '%g'|format(c.lean_hits) }} / {{ '%g'|format(c.lean_decided) }}</td>
-      <td>{{ '%g'|format(c.lean_expected) }}</td>
+      <td>{{ c.name }}</td><td class="num">{{ c.matches }}</td>
+      <td class="num">{{ c.ll_model_ll if c.ll_model_ll is not none else '—' }}</td>
+      <td class="num">{{ c.ll_market_ll if c.ll_market_ll is not none else '—' }}</td>
+      <td class="num">{{ c.ll_model_closer }} : {{ c.ll_market_closer }}</td>
+      <td class="num">{{ '%g'|format(c.lean_hits) }} / {{ '%g'|format(c.lean_decided) }}</td>
+      <td class="num">{{ '%g'|format(c.lean_expected) }}</td>
     </tr>
     {% endfor %}
+    </tbody>
   </table></div>
   {% endif %}
-  {% if reviews.summary.n_goals %}
-  <p class="sub">模型預期進球減實際進球（正 = 高估）：主隊 {{ '%+.2f'|format(reviews.summary.goal_bias_h) }}、客隊 {{ '%+.2f'|format(reviews.summary.goal_bias_a) }}（{{ reviews.summary.n_goals }} 場）{% if reviews.summary.n_xg %} · 減實際 xG：主隊 {{ '%+.2f'|format(reviews.summary.xg_bias_h) }}、客隊 {{ '%+.2f'|format(reviews.summary.xg_bias_a) }}（{{ reviews.summary.n_xg }} 場）{% endif %}</p>
+  {% if fs.n_goals %}
+  <p class="stamp-line">模型預期進球減實際進球（正 = 高估）：主隊 {{ '%+.2f'|format(fs.goal_bias_h) }}、客隊 {{ '%+.2f'|format(fs.goal_bias_a) }}（{{ fs.n_goals }} 場）{% if fs.n_xg %}；減實際 xG：主隊 {{ '%+.2f'|format(fs.xg_bias_h) }}、客隊 {{ '%+.2f'|format(fs.xg_bias_a) }}（{{ fs.n_xg }} 場）{% endif %}</p>
   {% endif %}
-  {% else %}<p class="none">還沒有已完賽的足球比賽。</p>{% endif %}
-</section>
+  {% else %}
+  <p class="none">還沒有已完賽的足球比賽。</p>
+  {% endif %}
 
-{% if reviews.mlb_summary.games %}
-<section>
-  <h2>MLB 累計 <span class="count">{{ reviews.mlb_summary.games }} 場</span></h2>
+  <h2 class="sect">MLB 累計 <span class="count">{{ ms.games }} 場</span></h2>
+  {% if ms.games %}
   <div class="kpis">
-    <div class="kpi"><b>{{ reviews.mlb_summary.fav_wins }} / {{ reviews.mlb_summary.fav_n }}</b><span>熱門 ML 勝（市場預期 {{ reviews.mlb_summary.fav_expected }}）</span></div>
-    <div class="kpi"><b>{{ reviews.mlb_summary.fav_covers }} / {{ reviews.mlb_summary.fav_n }}</b><span>熱門 −1.5 過盤</span></div>
-    <div class="kpi"><b>{{ reviews.mlb_summary.t10_bets }} / {{ reviews.mlb_summary.t10_judged }}</b><span>T-10 價值注 / 有判斷的場次</span></div>
-    {% if reviews.mlb_summary.t10_bets %}
-    <div class="kpi"><b>{{ reviews.mlb_summary.t10_wins }} / {{ reviews.mlb_summary.t10_bets }}</b><span>價值注贏（平均 EV {{ '%+.1f%%'|format(reviews.mlb_summary.t10_avg_ev*100) if reviews.mlb_summary.t10_avg_ev is not none else '—' }}）</span></div>
-    <div class="kpi"><b class="{{ 'pos' if reviews.mlb_summary.t10_units > 0 else ('neg' if reviews.mlb_summary.t10_units < 0 else '') }}">{{ '%+.2f'|format(reviews.mlb_summary.t10_units) }}</b><span>價值注損益（每注 1 單位）</span></div>
+    <div class="kpi"><b>{{ ms.fav_wins }} / {{ ms.fav_n }}</b><span>熱門不讓分贏（市場預期 {{ ms.fav_expected }}）</span></div>
+    <div class="kpi"><b>{{ ms.fav_covers }} / {{ ms.fav_n }}</b><span>熱門 −1.5 過盤</span></div>
+    <div class="kpi"><b>{{ ms.t10_bets }} / {{ ms.t10_judged }}</b><span>T-10 可下 / 有判斷的場次</span></div>
+    {% if ms.t10_bets %}
+    <div class="kpi"><b>{{ ms.t10_wins }} / {{ ms.t10_bets }}</b><span>可下的注贏（平均 EV {{ '%+.1f%%'|format(ms.t10_avg_ev * 100) if ms.t10_avg_ev is not none else '—' }}）</span></div>
+    <div class="kpi"><b class="{{ 'pos' if ms.t10_units > 0 else ('neg' if ms.t10_units < 0 else '') }}">{{ '%+.2f'|format(ms.t10_units) }}</b><span>損益（每注 1 單位）</span></div>
     {% endif %}
   </div>
+  {% else %}
+  <p class="none">還沒有已完賽的 MLB 比賽。</p>
+  {% endif %}
+  <p class="stamp-line">log-loss = −ln(給實際結果的機率)，越低代表賽前越看好真正發生的結果；市場是多家國際莊家去水後的中位數。比賽數據（xG、射門、紅牌）來自 football-data.co.uk，五大聯賽通常 2–3 天後補上，歐冠沒有免費來源。原始資料：data/reviews/football.csv、mlb.csv（可用試算表打開）。</p>
 </section>
-{% endif %}
-
-<section>
-  <h2>每場檢討 <span class="count">新到舊</span></h2>
-  <div class="grid">
-    {% for r in reviews.football %}{{ rv.football_card(r) }}{% endfor %}
-    {% for r in reviews.mlb %}{{ rv.mlb_card(r) }}{% endfor %}
-  </div>
-</section>
-
-<footer>
-  log-loss = −ln(給實際結果的機率)，越低代表賽前越看好真正發生的結果；市場是多家國際莊家去水後的中位數。比賽數據（xG、射門、紅牌）來自 football-data.co.uk，五大聯賽通常 2–3 天後補上，歐冠沒有免費來源。
-</footer>
-</div>
-</body>
-</html>
+{% endblock %}

@@ -1,33 +1,21 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>T-10 回測</title>
-<meta name="description" content="T-10 G 值規則在 2021–2025 年 MLB 收盤賠率上的回測">
-{% include "_style.html.j2" %}
+{% extends "base.html.j2" %}
+{% block description %}T-10 G 值規則在 2021–2025 年 MLB 收盤賠率上的回測{% endblock %}
+{% block head %}
 <style>
-  .chart svg { width: 100%; max-width: 520px; height: auto; display: block; }
-  .chart .grid { stroke: var(--line); stroke-width: 1; }
-  .chart .zero { stroke: var(--muted); stroke-width: 1.5; }
-  .chart .whisker { stroke: var(--model); stroke-width: 2; stroke-linecap: round; }
-  .chart .dot { fill: var(--model); stroke: var(--card); stroke-width: 2; }
-  .chart text { fill: var(--muted); font-size: 11px; font-family: inherit; }
-  .verdict { padding: 10px 14px; border-radius: 10px; font-size: .95rem; margin: 10px 0 14px; }
-  .verdict.fail { background: var(--warn-bg); color: var(--warn-ink); }
-  .verdict.pass { background: var(--chip); }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .chart svg { width: 100%; max-width: 520px; height: auto; display: block; overflow: visible; }
+  .chart .grid { stroke: rgba(150, 185, 230, .14); stroke-width: 1; }
+  .chart .zero { stroke: rgba(234, 243, 255, .5); stroke-width: 1.5; }
+  .chart .whisker { stroke: var(--intl); stroke-width: 2; stroke-linecap: round; }
+  .chart .dot { fill: var(--intl); stroke: var(--panel-solid); stroke-width: 2; }
+  .chart text { fill: var(--ink-3); font: 500 11px var(--num); }
 </style>
-</head>
-<body>
-<div class="wrap">
-<header>
+{% endblock %}
+{% block main %}
+<section class="hero">
   <h1>T-10 回測</h1>
-  <span class="meta">{{ s.first }} ～ {{ s.last }} · {{ '{:,}'.format(s.games) }} 場 MLB · 更新 {{ s.generated }}</span>
-  <a class="meta" href="index.html">回到每日分析</a>
-</header>
-
-<div class="verdict {{ 'pass' if s.passed else 'fail' }}"><b>{{ '通過' if s.passed else '結論' }}：</b>{{ s.verdict }}</div>
+  <p class="lede">{{ s.first }} ～ {{ s.last }}・{{ '{:,}'.format(s.games) }} 場 MLB・更新 {{ s.generated }}。<a href="t10.html">回到 T-10</a></p>
+</section>
+<div class="report-verdict {{ 'pass' if s.passed else 'fail' }}"><b>{{ '通過' if s.passed else '結論' }}：</b>{{ s.verdict }}</div>
 
 <p class="howto">
   T-10 規則：用同一家莊家的收盤賠率，去水後得到強隊不讓分勝率 p、強隊讓 1.5 分過盤率 c，G = p + c − 1。
@@ -89,7 +77,7 @@
     {{ dots(s.chart_fav, "強隊不讓分：實際勝率 − 市場機率（pp）") }}
     {{ dots(s.chart_dog, "弱隊 +1.5：實際過盤率 − 市場機率（pp）") }}
   </div>
-  <div class="scroll" style="margin-top:10px"><table>
+  <div class="scroll" style="margin-top:10px"><table class="tbl">
     <tr><th>G 範圍（pp）</th><th class="num">場數</th><th class="num">強隊勝率 vs 市場</th><th class="num">弱隊 +1.5 vs 市場</th></tr>
     {% for d in s.deciles %}
     <tr><td>{{ '%+.1f'|format(d.g_lo) }} ～ {{ '%+.1f'|format(d.g_hi) }}</td><td class="num">{{ d.n }}</td>
@@ -113,14 +101,14 @@
 <section>
   <h2>換門檻</h2>
   <p class="howto">這是事後試很多組，只能看趨勢；任何一組看起來好，都要再用新資料驗證。報酬率用莊家收盤價。</p>
-  <div class="scroll"><table>{{ head("門檻") }}
+  <div class="scroll"><table class="tbl">{{ head("門檻") }}
     {% for g in s.grid %}{{ row("±" ~ (g.thr_pp|int) ~ "pp", g.fav, g.dog) }}{% endfor %}
   </table></div>
 </section>
 
 <section>
   <h2>逐年與賽段</h2>
-  <div class="scroll"><table>{{ head("") }}
+  <div class="scroll"><table class="tbl">{{ head("") }}
     {% for x in s.seasons_table %}{{ row(x.season, x.fav, x.dog) }}{% endfor %}
     {% for x in s.stages %}{{ row(x.stage, x.fav, x.dog) }}{% endfor %}
   </table></div>
@@ -128,7 +116,7 @@
 
 <section>
   <h2>各家莊家（用該家自己的 G 和價格）</h2>
-  <div class="scroll"><table>{{ head("莊家") }}
+  <div class="scroll"><table class="tbl">{{ head("莊家") }}
     {% for x in s.books_table %}{{ row(x.book, x.fav, x.dog) }}{% endfor %}
   </table></div>
 </section>
@@ -136,7 +124,7 @@
 <section>
   <h2>其他下注時機</h2>
   <p class="howto">CLV（收盤線價值）＝收盤時的市場機率 × 你拿到的賠率 − 1。CLV 為正才代表下注時的價格比後來的市場好，是判斷方法有沒有真實優勢最可靠的指標。</p>
-  <div class="scroll"><table>
+  <div class="scroll"><table class="tbl">
     <tr><th>做法</th><th class="num">強隊 ML 場數</th><th class="num">報酬率</th><th class="num">CLV</th><th class="num">弱隊 +1.5 場數</th><th class="num">報酬率</th><th class="num">CLV</th></tr>
     {% for v in s.variants %}
     <tr><td>{{ v.name }}</td>
@@ -146,13 +134,10 @@
   </table></div>
 </section>
 
-<footer>
-  資料：SportsBookReview 歷史賠率（DraftKings、FanDuel、Caesars、bet365、BetMGM、BetRivers 的開盤與收盤不讓分、讓分、大小），由
+<p class="stamp-line">資料：SportsBookReview 歷史賠率（DraftKings、FanDuel、Caesars、bet365、BetMGM、BetRivers 的開盤與收盤不讓分、讓分、大小），由
   <a href="https://github.com/ArnavSaraogi/mlb-odds-scraper">ArnavSaraogi/mlb-odds-scraper</a> 整理；只用例行賽與季後賽、讓分為 ±1.5 且由不讓分強隊讓分的比賽。
   每場用一家莊家（DraftKings 優先）。表格裡少於 {{ s.min_n }} 場的組別只列場數，不算比率（樣本太少）。
   原始資料約 3% 的「收盤」報價其實是開賽後的即時賠率（會偷看到比賽進行中的狀況），已剔除：只用和其他莊家收盤價相差 4pp 以內、且離開盤共識不超過 10pp 的報價
-  {%- if s.quality %}（剔除 {{ '{:,}'.format(s.quality.books_dropped) }} 筆報價；另有 {{ '{:,}'.format(s.quality.unverified) }} 場無法確認，不計）{% endif %}。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。
-</footer>
-</div>
-</body>
-</html>
+  {%- if s.quality %}（剔除 {{ '{:,}'.format(s.quality.books_dropped) }} 筆報價；另有 {{ '{:,}'.format(s.quality.unverified) }} 場無法確認，不計）{% endif %}。T-10 的 Switch 區、價格防護與 Integrity／Market Heat／Dog Resistance 疊加規則沒有納入，因為規則細節不在這裡；提供規則後可以加測。</p>
+{% endblock %}
+{% block foot %}回測只用過去的資料，不代表未來；看的是方法有沒有打敗市場，不是單季的輸贏。{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% import "_review.html.j2" as rv %}
+{% block description %}模型分歧：足球 Dixon-Coles 模型和國際市場看法差很多的比賽（觀察用），以及每場的賽後檢討{% endblock %}
+{% block main %}
+{% set edge = (cfg.edge_threshold * 100)|round|int %}
+{% set fs = reviews.summary %}
+{{ ui.hero("模型分歧",
+  "Dixon-Coles 進球模型（各隊攻守強度、主場優勢、越近的比賽越重要）和國際市場看法差 " ~ edge ~ "pp 以上的足球比賽。回測裡模型沒有打敗收盤市場，所以這裡是觀察用，不是下注建議：模型看好、市場後來也往那邊動，才有參考價值。",
+  [
+    {"label": "分歧", "value": kpis.signals, "unit": " 場"},
+    {"label": "足球即將開賽", "value": kpis.upcoming, "unit": " 場"},
+    {"label": "已檢討", "value": kpis.reviewed, "unit": " 場"},
+    {"label": "分歧帳面損益", "value": ('%+.1f'|format(ledger.units)) if ledger and ledger.settled else "—", "tone": ("good" if ledger.units > 0 else "bad") if ledger and ledger.settled and ledger.units else ""},
+  ]) }}
+{% if not cfg.signals_validated %}
+<div class="note">回測{% if backtest_total and backtest_total.generated %}（{{ backtest_total.generated }}）{% endif %}：{% if backtest_total and backtest_total.clv is not none %}模型對收盤線的 CLV {{ '%+.1f%%'|format(backtest_total.clv * 100) }}，{% endif %}模型沒有市場以外的資訊。要找價值，請看<a href="value.html">運彩價值</a>。{% if backtest_exists %}<a href="backtest.html">看回測報告</a>{% endif %}</div>
+{% endif %}
+{{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", reviews.football|length)]) }}
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">藍條是國際市場去水後的機率、白色刻度是模型。有「模型分歧」的比賽排最前面。線圖是模型偏向那一邊每次抓價時的機率（藍＝國際、橘＝運彩去水後），橫線是模型：藍線往模型靠，代表市場後來也往模型的方向走。</p>
+  {% if cards %}
+  <div class="cards">
+  {% for c in cards %}
+    <article class="match" id="{{ c.id }}" data-status="{{ 'signal' if c.signal else 'calm' }}">
+      {{ ui.head(c) }}
+      <div class="verdict">
+        {% set f = c.focus %}
+        {% if c.signal %}<span class="chip warn">模型分歧</span><b>{{ f.label }}</b><span class="sub">模型 {{ '%.0f%%'|format(f.model * 100) }}、市場 {{ '%.0f%%'|format(f.market_p * 100) }}（{{ '%+.1f'|format(f.gap * 100) }}pp）・信心{{ c.signal.confidence }}</span>
+        {% elif not c.fitted %}<span class="chip ghost">還沒有模型</span>
+        {% else %}<span class="chip ghost">看法接近</span>{% if c.lean %}<span class="sub">差最多的是{{ c.lean.label }} {{ '%+.1f'|format(c.lean.gap * 100) }}pp</span>{% endif %}{% endif %}
+      </div>
+      {% if c.fitted %}
+      <div class="mbars" role="img" aria-label="勝平負：模型與市場的機率">
+        {% for o in c.outcomes %}
+        <span>{{ o.label }}</span>
+        <span class="mbar">{% if o.market is not none %}<i style="width: {{ (o.market * 100)|round(1) }}%"></i>{% endif %}<s style="left: {{ (o.model * 100)|round(1) }}%"></s></span>
+        <span class="v">{{ '%.0f'|format(o.model * 100) }}<span class="muted"> / {{ '%.0f'|format(o.market * 100) if o.market is not none else '—' }}%</span></span>
+        {% endfor %}
+      </div>
+      <div class="keys"><span class="key intl">市場</span><span class="key model">模型</span></div>
+      <dl class="facts">
+        <dt>預期進球</dt><dd>{{ c.model.lambda_home }} – {{ c.model.mu_away }}，最可能 {{ c.model.most_likely }}</dd>
+        <dt>攻／守排名</dt><dd>{{ c.model.home_attack_rank }}/{{ c.model.home_defence_rank }} vs {{ c.model.away_attack_rank }}/{{ c.model.away_defence_rank }} <span class="muted">（共 {{ c.model.n_teams }} 隊）</span></dd>
+        <dt>公允賠率</dt><dd>{% for o in c.outcomes %}{{ {'home': '主', 'draw': '和', 'away': '客'}[o.side] }} {{ '%.2f'|format(o.fair_odds) if o.fair_odds else '—' }}{% if not loop.last %}・{% endif %}{% endfor %}</dd>
+      </dl>
+      {% endif %}
+      {% for n in c.notes %}<div class="note">{{ n }}</div>{% endfor %}
+      {{ ui.timeline(c, (c.focus_label or "主勝") ~ "：隱含機率") }}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("視窗內沒有足球比賽", "每天 08:15 和 20:25（台北）會抓接下來兩天的比賽。") }}
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>每場檢討 <span class="count">{{ reviews.football|length }} 場・新到舊</span></h2>
+  {{ rv.howto() }}
+  {% if fs.matches %}{{ rv.football_summary(fs) }}{% endif %}
+  {% if ledger and (ledger.settled or ledger.pending) %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ ledger.settled }}</b><span>分歧已結算（待結算 {{ ledger.pending }}）</span></div>
+    <div class="kpi"><b>{{ '%.0f%%'|format(ledger.hit_rate * 100) if ledger.hit_rate is not none else '—' }}</b><span>命中率</span></div>
+    <div class="kpi"><b class="{{ 'pos' if ledger.units and ledger.units > 0 else ('neg' if ledger.units and ledger.units < 0 else '') }}">{{ '%+.2f'|format(ledger.units) if ledger.settled else '—' }}</b><span>帳面損益（每注 1 單位）</span></div>
+  </div>
+  {% endif %}
+  {% if reviews.football %}
+  <div class="grid">{% for r in reviews.football %}{{ rv.football_card(r) }}{% endfor %}</div>
+  {% else %}
+  {{ ui.empty("還沒有打完的比賽", "比賽結束後，下一次更新會把賽前的模型、市場和實際結果放在這裡對照。") }}
+  {% endif %}
+</section>
+{% endblock %}

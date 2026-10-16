@@ -11,7 +11,7 @@ from sports_analyzer.config import ModelConfig
 from sports_analyzer.fetch.football import Match, parse_matches
 from sports_analyzer.fetch.mlb import MlbGame, PitcherLine, parse_box
 from sports_analyzer.history import find_stats, read_stats
-from sports_analyzer.render.cards import render_index, render_reviews_page
+from sports_analyzer.render.site import Site, render_page
 from tests import conftest  # noqa: F401
 
 NOW = datetime(2026, 10, 15, 0, 30, tzinfo=UTC)
@@ -651,11 +651,11 @@ class RecommendationReviewTests(unittest.TestCase):
         self.assertNotIn("可下 客隊 +1.5", " ".join(ex["bullets"]))
         self.assertIn("可下 客隊 +1.5", " ".join(review.explain_mlb(row)["bullets"]))
 
-    def test_recommended_matches_lead_the_front_page_and_are_never_dropped(self):
+    def test_every_review_is_kept_newest_first_with_its_picks_counted(self):
         from sports_analyzer.render.cards import review_views
 
         rows = []
-        for i in range(14):  # a busy weekend: 14 reviews in the last three days
+        for i in range(14):  # a busy weekend: every review stays on the page
             r = self.football(1, 0)
             r.update(match_id=str(100 + i), kickoff_utc=f"2026-10-14T{10 + i % 9:02d}:00:00+00:00")
             rows.append({k: review_store._cell(v) for k, v in r.items()})
@@ -670,14 +670,15 @@ class RecommendationReviewTests(unittest.TestCase):
             "ev": "0.1",
             "status": "win",
         }
-        views = review_views(rows, [], NOW, value_rows=[value])
-        self.assertEqual(len(views["football"]), 12)
-        self.assertEqual(views["football"][0]["row"]["match_id"], "100")
+        views = review_views(rows, [], value_rows=[value])
+        self.assertEqual(len(views["football"]), 14)
+        kickoffs = [v["row"]["kickoff_utc"] for v in views["football"]]
+        self.assertEqual(kickoffs, sorted(kickoffs, reverse=True))
         self.assertEqual(views["picks"], {"n": 1, "settled": 1, "wins": 1})
 
 
 class RenderTests(unittest.TestCase):
-    def test_page_moves_finished_matches_into_the_review(self):
+    def test_finished_matches_move_from_the_cards_to_the_history(self):
         e = entry_for({"h2h": h2h(0.45, 0.28, 0.27)}, {"h2h": h2h(0.45, 0.28, 0.27)})
         row = review.football_row(e, finished(2, 0, (1, 0)), None, None, NOW)
         rows = [{k: review_store._cell(v) for k, v in row.items()}]
@@ -698,27 +699,17 @@ class RenderTests(unittest.TestCase):
                 }
             ]
         }
-        with tempfile.TemporaryDirectory() as tmp:
-            out = render_index(
-                football,
-                None,
-                None,
-                NOW,
-                Path(tmp) / "index.html",
-                football_reviews=rows,
-                mlb_reviews=[],
-            )
-            html = out.read_text(encoding="utf-8")
-            page = render_reviews_page(rows, [], NOW, Path(tmp) / "reviews.html").read_text(
-                encoding="utf-8"
-            )
-        self.assertIn("賽後檢討", html)
-        self.assertIn("半場 1–0", html)
-        self.assertIn("Chelsea FC", html)
-        # The finished match shows once, as a review card, not again as an upcoming card.
-        self.assertEqual(html.count('<article class="card review">'), 1)
-        self.assertEqual(html.count('<div class="name">Arsenal FC</div>'), 1)
-        self.assertIn("足球累計", page)
+        site = Site(now=NOW, football=football, mlb=None, tape=[], football_reviews=rows)
+        model = render_page(site, "model")
+        # The finished match shows once, as a review card under 歷史數據; only the match
+        # still to play is an analysis card.
+        self.assertEqual(model.count('<article class="match"'), 1)
+        self.assertIn("Chelsea FC", model)
+        self.assertEqual(model.count('<article class="card review">'), 1)
+        self.assertIn("半場 1–0", model)
+        reviews = render_page(site, "reviews")
+        self.assertIn("半場 1–0", reviews)
+        self.assertIn("足球累計", reviews)
 
     def test_a_started_match_with_a_recommendation_is_flagged_while_waiting(self):
         started = card(market={"h2h": h2h(0.45, 0.28, 0.27)})  # kicked off before NOW
@@ -736,10 +727,8 @@ class RenderTests(unittest.TestCase):
             "ev": "0.08",
             "status": "pending",
         }
-        with tempfile.TemporaryDirectory() as tmp:
-            html = render_index(
-                football, None, None, NOW, Path(tmp) / "index.html", value_rows=[value]
-            ).read_text(encoding="utf-8")
+        site = Site(now=NOW, football=football, mlb=None, tape=[], value_rows=[value])
+        html = render_page(site, "reviews")
         self.assertIn("<b>Arsenal FC vs Lille OSC（有推薦）</b>", html)
         self.assertIn("下一次更新（每次上傳運彩，或台北 08:15／20:25）就會產生賽後檢討", html)
 

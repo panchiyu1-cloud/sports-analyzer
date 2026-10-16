@@ -302,34 +302,38 @@ class BigHandRecordTests(unittest.TestCase):
         s = moves.history_summary(self.history(now="2026-10-14T13:00+00:00"))["tw_only"]
         self.assertEqual((s["with_close"], s["followed"]), (0, 0))
 
-    def test_page(self):
-        from sports_analyzer.render.cards import render_bighand_page
+    def test_history_page(self):
+        from sports_analyzer.render.site import Site, render_page
 
         history = self.history()
         history[0]["home_zh"], history[0]["away_zh"] = "洛杉磯道奇", "密爾瓦基釀酒人"
-        out = render_bighand_page(
-            history,
-            moves.history_summary(history),
-            moves.parse_time("2026-10-15T05:00+00:00"),
-            self.dir / "bighand.html",
+        site = Site(
+            now=moves.parse_time("2026-10-15T05:00+00:00"),
+            football=None,
+            mlb=None,
+            tape=[],
+            history=history,
+            history_summary=moves.history_summary(history),
         )
-        html = out.read_text(encoding="utf-8")
-        self.assertIn("<title>大戶紀錄</title>", html)
+        html = render_page(site, "moves")
+        self.assertIn("<title>盤口移動｜比賽分析</title>", html)
         self.assertIn("密爾瓦基釀酒人 @ 洛杉磯道奇", html)
+        self.assertIn('<span class="score">2–5</span>', html)  # away first, like the title
         self.assertIn("洛杉磯道奇 不讓分", html)
-        self.assertIn("運彩 @ 1.40", html)
+        self.assertIn("・運彩 1.40", html)
         self.assertIn("進了可下 1 注", html)
         self.assertIn("G +4.1（中性）", html)
         self.assertIn("20:00 ●", html)  # the upload the move was caught at
-        self.assertIn('結果：<span class="pos">贏</span>', html)
+        self.assertIn("之後國際盤續往同一邊 +2.4pp：這個動向是對的方向。", html)
+        self.assertIn('這一邊：<span class="pos">贏</span>', html)
 
-    def test_page_without_records(self):
-        from sports_analyzer.render.cards import render_bighand_page
+    def test_history_page_without_records(self):
+        from sports_analyzer.render.site import Site, render_page
 
-        out = render_bighand_page(
-            [], {}, moves.parse_time("2026-10-15T05:00+00:00"), self.dir / "b.html"
+        site = Site(
+            now=moves.parse_time("2026-10-15T05:00+00:00"), football=None, mlb=None, tape=[]
         )
-        self.assertIn("還沒有抓到大戶動向", out.read_text(encoding="utf-8"))
+        self.assertIn("還沒有打完的紀錄", render_page(site, "moves"))
 
 
 class NotifyTests(unittest.TestCase):
