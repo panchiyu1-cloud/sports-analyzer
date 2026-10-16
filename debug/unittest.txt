@@ -1,0 +1,11 @@
+3:ERROR: test_analysis_and_render (unittest.loader._FailedTest.test_analysis_and_render)
+5:ImportError: Failed to import test module: test_analysis_and_render
+6:Traceback (most recent call last):
+7:  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/unittest/loader.py", line 396, in _find_test_path
+10:  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/unittest/loader.py", line 339, in _get_module_from_name
+12:  File "/home/runner/work/sports-analyzer/sports-analyzer/tests/test_analysis_and_render.py", line 8, in <module>
+14:ModuleNotFoundError: No module named 'sports_analyzer'
+18:Ran 236 tests in 4.436s
+20:FAILED (errors=1)
+21:::error title=render failed::the pages were not updated; the data was saved
+22:exit 1
