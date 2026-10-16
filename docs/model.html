@@ -302,6 +302,8 @@
   .hub h1.good { color: var(--good); text-shadow: 0 0 30px rgba(61, 220, 132, .35); }
   .fx.flagged { background: linear-gradient(90deg, rgba(42, 147, 216, .12), transparent 60%); }
   .fx-flags .chip { font-size: .74rem; }
+  .fx.started .fx-time, .fx.started .fx-teams { color: var(--ink-3); }
+  .chip.final { background: transparent; border: 1px solid var(--line-2); color: var(--ink-2); font-family: var(--num); text-decoration: none; }
 
   /* 反者道之動 */
   .quote { margin: 18px 0 0; padding: 10px 16px; border-left: 3px solid var(--tw); background: rgba(6, 14, 30, .5); border-radius: 0 10px 10px 0; font-size: 1.05rem; letter-spacing: .08em; }
@@ -339,7 +341,7 @@
 <div class="masthead">
   <div class="bar">
     <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
-    <span class="stamp">更新 <b>10/16 10:11</b></span>
+    <span class="stamp">更新 <b>10/16 13:37</b> 台灣時間</span>
   </div>
   <nav class="nav" aria-label="分析方法">
 <a href="index.html">總覽</a><a href="value.html">運彩價值</a><a href="t10.html">T-10</a><a href="radar.html">延遲雷達</a><a href="moves.html">盤口移動</a><a href="model.html" aria-current="page">模型分歧</a><a href="fade.html">反者道之動</a><a href="reviews.html">全部檢討</a>  </nav>
@@ -352,7 +354,7 @@
 <div><dt>分歧</dt><dd class="">17<small> 場</small></dd></div><div><dt>足球即將開賽</dt><dd class="">44<small> 場</small></dd></div><div><dt>已檢討</dt><dd class="">18<small> 場</small></dd></div><div><dt>分歧帳面損益</dt><dd class="bad">-6.0</dd></div>  </dl>
 </section>
 
-<div class="note">回測（2026-10-14）：模型對收盤線的 CLV -2.3%，模型沒有市場以外的資訊。要找價值，請看<a href="value.html">運彩價值</a>。<a href="backtest.html">看回測報告</a></div>
+<div class="note">回測（2026/10/14 15:43）：模型對收盤線的 CLV -2.3%，模型沒有市場以外的資訊。要找價值，請看<a href="value.html">運彩價值</a>。<a href="backtest.html">看回測報告</a></div>
 <div class="tabs" role="tablist">
 <a role="tab" href="#upcoming" aria-controls="upcoming" aria-selected="true">即將開賽<span class="num">44</span></a><a role="tab" href="#history" aria-controls="history" aria-selected="false">歷史數據<span class="num">18</span></a></div>
 
@@ -361,7 +363,7 @@
   <p class="howto">藍條是國際市場去水後的機率、白色刻度是模型。有「模型分歧」的比賽排最前面。線圖是模型偏向那一邊每次抓價時的機率（藍＝國際、橘＝運彩去水後），橫線是模型：藍線往模型靠，代表市場後來也往模型的方向走。</p>
   <div class="cards">
     <article class="match" id="m-football-560603" data-status="signal">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 19:30</span><span>週六</span><span class="eta">還有 33 小時 18 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 19:30</span><span>週六</span><span class="eta">還有 29 小時 52 分</span></div>
 <h3 class="teams"><span>艾佛頓</span><i>vs</i><span>切爾西</span></h3>
 <div class="intl-names">Everton FC vs Chelsea FC</div>
       <div class="verdict">
@@ -413,7 +415,7 @@
 
     </article>
     <article class="match" id="m-football-558575" data-status="signal">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/17 21:00</span><span>週六</span><span class="eta">還有 34 小時 48 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/17 21:00</span><span>週六</span><span class="eta">還有 31 小時 22 分</span></div>
 <h3 class="teams"><span>威尼斯</span><i>vs</i><span>拿坡里</span></h3>
 <div class="intl-names">Venezia FC vs SSC Napoli</div>
       <div class="verdict">
@@ -465,7 +467,7 @@
 
     </article>
     <article class="match" id="m-football-560610" data-status="signal">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 35 小時 48 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 32 小時 22 分</span></div>
 <h3 class="teams"><span>曼城</span><i>vs</i><span>伊普斯維奇</span></h3>
 <div class="intl-names">Manchester City FC vs Ipswich Town FC</div>
       <div class="verdict">
@@ -517,7 +519,7 @@
 
     </article>
     <article class="match" id="m-football-560607" data-status="signal">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 38 小時 18 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 34 小時 52 分</span></div>
 <h3 class="teams"><span>Newcastle United FC</span><i>vs</i><span>Aston Villa FC</span></h3>
 
       <div class="verdict">
@@ -563,7 +565,7 @@
 
     </article>
     <article class="match" id="m-football-564713" data-status="signal">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 38 小時 18 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 34 小時 52 分</span></div>
 <h3 class="teams"><span>皇家貝提斯</span><i>vs</i><span>巴塞隆納</span></h3>
 <div class="intl-names">Real Betis Balompié vs FC Barcelona</div>
       <div class="verdict">
@@ -615,7 +617,7 @@
 
     </article>
     <article class="match" id="m-football-558572" data-status="signal">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 40 小時 33 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 37 小時 7 分</span></div>
 <h3 class="teams"><span>羅馬</span><i>vs</i><span>熱那亞</span></h3>
 <div class="intl-names">AS Roma vs Genoa CFC</div>
       <div class="verdict">
@@ -667,7 +669,7 @@
 
     </article>
     <article class="match" id="m-football-559660" data-status="signal">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 40 小時 33 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 37 小時 7 分</span></div>
 <h3 class="teams"><span>里爾</span><i>vs</i><span>布雷斯特</span></h3>
 <div class="intl-names">Lille OSC vs Stade Brestois 29</div>
       <div class="verdict">
@@ -719,7 +721,7 @@
 
     </article>
     <article class="match" id="m-football-560605" data-status="signal">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 55 小時 22 分</span></div>
 <h3 class="teams"><span>里茲聯</span><i>vs</i><span>曼聯</span></h3>
 <div class="intl-names">Leeds United FC vs Manchester United FC</div>
       <div class="verdict">
@@ -765,7 +767,7 @@
 
     </article>
     <article class="match" id="m-football-560609" data-status="signal">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 55 小時 22 分</span></div>
 <h3 class="teams"><span>布萊頓</span><i>vs</i><span>水晶宮</span></h3>
 <div class="intl-names">Brighton &amp; Hove Albion FC vs Crystal Palace FC</div>
       <div class="verdict">
@@ -811,7 +813,7 @@
 
     </article>
     <article class="match" id="m-football-558577" data-status="signal">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 55 小時 22 分</span></div>
 <h3 class="teams"><span>ACF Fiorentina</span><i>vs</i><span>Como 1907</span></h3>
 
       <div class="verdict">
@@ -847,7 +849,7 @@
 
     </article>
     <article class="match" id="m-football-559664" data-status="signal">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 55 小時 22 分</span></div>
 <h3 class="teams"><span>Angers SCO</span><i>vs</i><span>Olympique de Marseille</span></h3>
 
       <div class="verdict">
@@ -883,7 +885,7 @@
 
     </article>
     <article class="match" id="m-football-559663" data-status="signal">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 61 小時 3 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 57 小時 37 分</span></div>
 <h3 class="teams"><span>勒哈佛爾</span><i>vs</i><span>歐塞爾</span></h3>
 <div class="intl-names">Le Havre AC vs AJ Auxerre</div>
       <div class="verdict">
@@ -929,7 +931,7 @@
 
     </article>
     <article class="match" id="m-football-560608" data-status="signal">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 61 小時 18 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 57 小時 52 分</span></div>
 <h3 class="teams"><span>諾丁漢森林</span><i>vs</i><span>兵工廠</span></h3>
 <div class="intl-names">Nottingham Forest FC vs Arsenal FC</div>
       <div class="verdict">
@@ -975,7 +977,7 @@
 
     </article>
     <article class="match" id="m-football-565826" data-status="signal">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 61 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 57 小時 52 分</span></div>
 <h3 class="teams"><span>門興格拉德巴赫</span><i>vs</i><span>霍芬海姆</span></h3>
 <div class="intl-names">Borussia Mönchengladbach vs TSG 1899 Hoffenheim</div>
       <div class="verdict">
@@ -1021,7 +1023,7 @@
 
     </article>
     <article class="match" id="m-football-558569" data-status="signal">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/19 00:00</span><span>週一</span><span class="eta">還有 61 小時 48 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/19 00:00</span><span>週一</span><span class="eta">還有 58 小時 22 分</span></div>
 <h3 class="teams"><span>AC米蘭</span><i>vs</i><span>亞特蘭大</span></h3>
 <div class="intl-names">AC Milan vs Atalanta BC</div>
       <div class="verdict">
@@ -1067,7 +1069,7 @@
 
     </article>
     <article class="match" id="m-football-558570" data-status="signal">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/19 02:45</span><span>週一</span><span class="eta">還有 64 小時 33 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/19 02:45</span><span>週一</span><span class="eta">還有 61 小時 7 分</span></div>
 <h3 class="teams"><span>Juventus FC</span><i>vs</i><span>SS Lazio</span></h3>
 
       <div class="verdict">
@@ -1103,7 +1105,7 @@
 
     </article>
     <article class="match" id="m-football-559665" data-status="signal">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/19 02:45</span><span>週一</span><span class="eta">還有 64 小時 33 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/19 02:45</span><span>週一</span><span class="eta">還有 61 小時 7 分</span></div>
 <h3 class="teams"><span>里昂</span><i>vs</i><span>尼斯</span></h3>
 <div class="intl-names">Olympique Lyonnais vs OGC Nice</div>
       <div class="verdict">
@@ -1149,7 +1151,7 @@
 
     </article>
     <article class="match" id="m-football-565828" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 02:30</span><span>週六</span><span class="eta">還有 16 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 02:30</span><span>週六</span><span class="eta">還有 12 小時 52 分</span></div>
 <h3 class="teams"><span>法蘭克福</span><i>vs</i><span>科隆</span></h3>
 <div class="intl-names">Eintracht Frankfurt vs 1. FC Köln</div>
       <div class="verdict">
@@ -1204,7 +1206,7 @@
 
     </article>
     <article class="match" id="m-football-558573" data-status="calm">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/17 02:45</span><span>週六</span><span class="eta">還有 16 小時 33 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/17 02:45</span><span>週六</span><span class="eta">還有 13 小時 7 分</span></div>
 <h3 class="teams"><span>弗羅西諾內</span><i>vs</i><span>薩索羅</span></h3>
 <div class="intl-names">Frosinone Calcio vs US Sassuolo Calcio</div>
       <div class="verdict">
@@ -1259,7 +1261,7 @@
 
     </article>
     <article class="match" id="m-football-559661" data-status="calm">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/17 02:45</span><span>週六</span><span class="eta">還有 16 小時 33 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/17 02:45</span><span>週六</span><span class="eta">還有 13 小時 7 分</span></div>
 <h3 class="teams"><span>勒芒</span><i>vs</i><span>圖盧茲</span></h3>
 <div class="intl-names">Le Mans FC vs Toulouse FC</div>
       <div class="verdict">
@@ -1314,7 +1316,7 @@
 
     </article>
     <article class="match" id="m-football-564716" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/17 03:00</span><span>週六</span><span class="eta">還有 16 小時 48 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/17 03:00</span><span>週六</span><span class="eta">還有 13 小時 22 分</span></div>
 <h3 class="teams"><span>拉科魯尼亞</span><i>vs</i><span>萊萬特</span></h3>
 <div class="intl-names">RC Deportivo La Coruña vs Levante UD</div>
       <div class="verdict">
@@ -1369,7 +1371,7 @@
 
     </article>
     <article class="match" id="m-football-564710" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/17 20:00</span><span>週六</span><span class="eta">還有 33 小時 48 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/17 20:00</span><span>週六</span><span class="eta">還有 30 小時 22 分</span></div>
 <h3 class="teams"><span>西班牙人</span><i>vs</i><span>馬德里競技</span></h3>
 <div class="intl-names">RCD Espanyol de Barcelona vs Club Atlético de Madrid</div>
       <div class="verdict">
@@ -1420,7 +1422,7 @@
 
     </article>
     <article class="match" id="m-football-565821" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 31 小時 52 分</span></div>
 <h3 class="teams"><span>柏林聯</span><i>vs</i><span>多特蒙德</span></h3>
 <div class="intl-names">1. FC Union Berlin vs Borussia Dortmund</div>
       <div class="verdict">
@@ -1471,7 +1473,7 @@
 
     </article>
     <article class="match" id="m-football-565822" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 31 小時 52 分</span></div>
 <h3 class="teams"><span>漢堡</span><i>vs</i><span>斯圖加特</span></h3>
 <div class="intl-names">Hamburger SV vs VfB Stuttgart</div>
       <div class="verdict">
@@ -1522,7 +1524,7 @@
 
     </article>
     <article class="match" id="m-football-565823" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 31 小時 52 分</span></div>
 <h3 class="teams"><span>SV Werder Bremen</span><i>vs</i><span>SC Paderborn 07</span></h3>
 
       <div class="verdict">
@@ -1567,7 +1569,7 @@
 
     </article>
     <article class="match" id="m-football-565824" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 31 小時 52 分</span></div>
 <h3 class="teams"><span>SV 07 Elversberg</span><i>vs</i><span>FC Augsburg</span></h3>
 
       <div class="verdict">
@@ -1612,7 +1614,7 @@
 
     </article>
     <article class="match" id="m-football-565829" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 31 小時 52 分</span></div>
 <h3 class="teams"><span>FC Schalke 04</span><i>vs</i><span>1. FSV Mainz 05</span></h3>
 
       <div class="verdict">
@@ -1657,7 +1659,7 @@
 
     </article>
     <article class="match" id="m-football-560602" data-status="calm">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 35 小時 48 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 32 小時 22 分</span></div>
 <h3 class="teams"><span>富勒姆</span><i>vs</i><span>赫爾城</span></h3>
 <div class="intl-names">Fulham FC vs Hull City AFC</div>
       <div class="verdict">
@@ -1708,7 +1710,7 @@
 
     </article>
     <article class="match" id="m-football-560611" data-status="calm">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 35 小時 48 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 32 小時 22 分</span></div>
 <h3 class="teams"><span>布倫特福德</span><i>vs</i><span>利物浦</span></h3>
 <div class="intl-names">Brentford FC vs Liverpool FC</div>
       <div class="verdict">
@@ -1759,7 +1761,7 @@
 
     </article>
     <article class="match" id="m-football-564708" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/17 22:15</span><span>週六</span><span class="eta">還有 36 小時 3 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/17 22:15</span><span>週六</span><span class="eta">還有 32 小時 37 分</span></div>
 <h3 class="teams"><span>比亞雷亞爾</span><i>vs</i><span>埃爾切</span></h3>
 <div class="intl-names">Villarreal CF vs Elche CF</div>
       <div class="verdict">
@@ -1810,7 +1812,7 @@
 
     </article>
     <article class="match" id="m-football-559662" data-status="calm">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/17 23:15</span><span>週六</span><span class="eta">還有 37 小時 3 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/17 23:15</span><span>週六</span><span class="eta">還有 33 小時 37 分</span></div>
 <h3 class="teams"><span>史特拉斯堡</span><i>vs</i><span>巴黎聖日耳曼</span></h3>
 <div class="intl-names">RC Strasbourg Alsace vs Paris Saint-Germain FC</div>
       <div class="verdict">
@@ -1861,7 +1863,7 @@
 
     </article>
     <article class="match" id="m-football-558571" data-status="calm">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 00:00</span><span>週日</span><span class="eta">還有 37 小時 48 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 00:00</span><span>週日</span><span class="eta">還有 34 小時 22 分</span></div>
 <h3 class="teams"><span>波隆那</span><i>vs</i><span>國際米蘭</span></h3>
 <div class="intl-names">Bologna FC 1909 vs FC Internazionale Milano</div>
       <div class="verdict">
@@ -1912,7 +1914,7 @@
 
     </article>
     <article class="match" id="m-football-565825" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 38 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 34 小時 52 分</span></div>
 <h3 class="teams"><span>拜仁慕尼黑</span><i>vs</i><span>RB萊比錫</span></h3>
 <div class="intl-names">FC Bayern München vs RB Leipzig</div>
       <div class="verdict">
@@ -1963,7 +1965,7 @@
 
     </article>
     <article class="match" id="m-football-559659" data-status="calm">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 40 小時 33 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 37 小時 7 分</span></div>
 <h3 class="teams"><span>ES Troyes AC</span><i>vs</i><span>Racing Club de Lens</span></h3>
 
       <div class="verdict">
@@ -2008,7 +2010,7 @@
 
     </article>
     <article class="match" id="m-football-564711" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 03:00</span><span>週日</span><span class="eta">還有 40 小時 48 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 03:00</span><span>週日</span><span class="eta">還有 37 小時 22 分</span></div>
 <h3 class="teams"><span>瓦倫西亞</span><i>vs</i><span>畢爾包</span></h3>
 <div class="intl-names">Valencia CF vs Athletic Club</div>
       <div class="verdict">
@@ -2059,7 +2061,7 @@
 
     </article>
     <article class="match" id="m-football-558574" data-status="calm">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 18:30</span><span>週日</span><span class="eta">還有 56 小時 18 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/18 18:30</span><span>週日</span><span class="eta">還有 52 小時 52 分</span></div>
 <h3 class="teams"><span>烏迪內斯</span><i>vs</i><span>萊切</span></h3>
 <div class="intl-names">Udinese Calcio vs US Lecce</div>
       <div class="verdict">
@@ -2104,7 +2106,7 @@
 
     </article>
     <article class="match" id="m-football-564715" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 20:00</span><span>週日</span><span class="eta">還有 57 小時 48 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 20:00</span><span>週日</span><span class="eta">還有 54 小時 22 分</span></div>
 <h3 class="teams"><span>CA Osasuna</span><i>vs</i><span>Real Racing Club de Santander</span></h3>
 
       <div class="verdict">
@@ -2139,7 +2141,7 @@
 
     </article>
     <article class="match" id="m-football-560604" data-status="calm">
-      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <div class="mt"><span class="comp">英超</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 55 小時 22 分</span></div>
 <h3 class="teams"><span>伯恩茅斯</span><i>vs</i><span>桑德蘭</span></h3>
 <div class="intl-names">AFC Bournemouth vs Sunderland AFC</div>
       <div class="verdict">
@@ -2184,7 +2186,7 @@
 
     </article>
     <article class="match" id="m-football-565827" data-status="calm">
-      <div class="mt"><span class="comp">德甲</span><span class="kick">10/18 21:30</span><span>週日</span><span class="eta">還有 59 小時 18 分</span></div>
+      <div class="mt"><span class="comp">德甲</span><span class="kick">10/18 21:30</span><span>週日</span><span class="eta">還有 55 小時 52 分</span></div>
 <h3 class="teams"><span>勒沃庫森</span><i>vs</i><span>弗萊堡</span></h3>
 <div class="intl-names">Bayer 04 Leverkusen vs SC Freiburg</div>
       <div class="verdict">
@@ -2229,7 +2231,7 @@
 
     </article>
     <article class="match" id="m-football-564712" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 22:15</span><span>週日</span><span class="eta">還有 60 小時 3 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/18 22:15</span><span>週日</span><span class="eta">還有 56 小時 37 分</span></div>
 <h3 class="teams"><span>塞爾塔維戈</span><i>vs</i><span>阿拉維斯</span></h3>
 <div class="intl-names">RC Celta de Vigo vs Deportivo Alavés</div>
       <div class="verdict">
@@ -2274,7 +2276,7 @@
 
     </article>
     <article class="match" id="m-football-559657" data-status="calm">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 61 小時 3 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 57 小時 37 分</span></div>
 <h3 class="teams"><span>洛里昂</span><i>vs</i><span>摩納哥</span></h3>
 <div class="intl-names">FC Lorient vs AS Monaco FC</div>
       <div class="verdict">
@@ -2319,7 +2321,7 @@
 
     </article>
     <article class="match" id="m-football-559658" data-status="calm">
-      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 61 小時 3 分</span></div>
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 57 小時 37 分</span></div>
 <h3 class="teams"><span>巴黎FC</span><i>vs</i><span>雷恩</span></h3>
 <div class="intl-names">Paris FC vs Stade Rennais FC 1901</div>
       <div class="verdict">
@@ -2364,7 +2366,7 @@
 
     </article>
     <article class="match" id="m-football-564714" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/19 00:30</span><span>週一</span><span class="eta">還有 62 小時 18 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/19 00:30</span><span>週一</span><span class="eta">還有 58 小時 52 分</span></div>
 <h3 class="teams"><span>馬拉加</span><i>vs</i><span>皇家社會</span></h3>
 <div class="intl-names">Málaga CF vs Real Sociedad de Fútbol</div>
       <div class="verdict">
@@ -2409,7 +2411,7 @@
 
     </article>
     <article class="match" id="m-football-564709" data-status="calm">
-      <div class="mt"><span class="comp">西甲</span><span class="kick">10/19 03:00</span><span>週一</span><span class="eta">還有 64 小時 48 分</span></div>
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/19 03:00</span><span>週一</span><span class="eta">還有 61 小時 22 分</span></div>
 <h3 class="teams"><span>皇家馬德里</span><i>vs</i><span>塞維亞</span></h3>
 <div class="intl-names">Real Madrid CF vs Sevilla FC</div>
       <div class="verdict">
@@ -2475,7 +2477,7 @@
     <div class="kpi"><b>0%</b><span>命中率</span></div>
     <div class="kpi"><b class="neg">-6.00</b><span>帳面損益（每注 1 單位）</span></div>
   </div>
-  <div class="grid"><article class="card review">
+  <div class="grid"><article class="card review" id="m-football-575352">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">AS Roma</div></div>
@@ -2520,7 +2522,7 @@
 <li>實際客勝：市場賽前給 51%（符合預期），模型給 39% → 這場市場比模型準</li><li>模型預期進球 1.1 : 1.3，實際 3 : 4 —— 勝負差距在模型預期範圍內；總進球 7，比預期開放。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，下半場 2 : 3，勝負在下半場決定。</li><li>運彩賠率 主 3.05 · 和 3.35 · 客 1.75（10/15 01:16 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
   <p class="conclusion"><b>結論</b>這個方向市場只給 50%、模型給 75%，結果站在市場那邊：模型高估了 AS Roma。沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575353">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Manchester City FC</div></div>
@@ -2565,7 +2567,7 @@
 <li>實際客勝：市場賽前給 29%（偏冷），模型給 5% → 這場市場比模型準</li><li>模型預期進球 2.9 : 0.7，實際 2 : 4 —— Paris Saint-Germain FC 的表現比模型預期好很多（淨勝差多 4.2 球）；總進球 6，比預期開放。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.8 · 和 3.5 · 客 2.8（10/15 01:16 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
   <p class="conclusion"><b>結論</b>這個方向市場只給 44%、模型給 60%，結果站在市場那邊：模型高估了 Manchester City FC。沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575354">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">FK Bodø/Glimt</div></div>
@@ -2599,7 +2601,7 @@
 <li>實際主勝：市場賽前給 32%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，下半場 1 : 0，勝負在下半場決定。</li><li>運彩賠率 主 2.45 · 和 3.35 · 客 2（10/15 01:16 擷取）</li><li>資料不足：FK Bodø/Glimt 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575355">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Aston Villa FC</div></div>
@@ -2633,7 +2635,7 @@
 <li>實際主勝：市場賽前給 58%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.55 · 和 3.4 · 客 3.9（10/15 01:16 擷取）</li><li>資料不足：Fenerbahçe SK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575356">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Real Betis Balompié</div></div>
@@ -2667,7 +2669,7 @@
 <li>實際主勝：市場賽前給 46%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，下半場 3 : 2，勝負在下半場決定。</li><li>運彩賠率 主 1.9 · 和 3.15 · 客 2.85（10/15 01:16 擷取）</li><li>資料不足：FC Porto 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575357">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">FK Shakhtar Donetsk</div></div>
@@ -2701,7 +2703,7 @@
 <li>實際主勝：市場賽前給 36%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，下半場 2 : 0，勝負在下半場決定。</li><li>運彩賠率 主 2.35 · 和 2.9 · 客 2.35（10/15 01:16 擷取）</li><li>資料不足：FK Shakhtar Donetsk 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575358">
   <div class="top"><span>10/15 (週四) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">ŠK Slovan Bratislava</div></div>
@@ -2735,7 +2737,7 @@
 <li>實際客勝：市場賽前給 71%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 5.1 · 和 4.4 · 客 1.29（10/15 01:16 擷取）</li><li>資料不足：ŠK Slovan Bratislava 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575350">
   <div class="top"><span>10/15 (週四) 00:45</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">LASK Linz</div></div>
@@ -2780,7 +2782,7 @@
 <li>實際客勝：市場賽前給 69%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 5.65 · 和 3.9 · 客 1.3（10/15 00:23 擷取）</li><li>資料不足：LASK Linz 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575351">
   <div class="top"><span>10/15 (週四) 00:45</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Feyenoord Rotterdam</div></div>
@@ -2814,7 +2816,7 @@
 <li>實際主勝：市場賽前給 32%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，下半場 2 : 1，勝負在下半場決定。</li><li>運彩賠率 主 2.6 · 和 3.15 · 客 2.05（10/15 00:23 擷取）</li><li>資料不足：Feyenoord Rotterdam 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575343">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">FC Internazionale Milano</div></div>
@@ -2848,7 +2850,7 @@
 <li>實際客勝：市場賽前給 7%（大冷門）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，下半場 2 : 3，勝負在下半場決定。</li><li>運彩賠率 主 1.15 · 和 5.15 · 客 7.5（10/14 01:17 擷取）</li><li>資料不足：Club Brugge KV 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果大冷門。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575344">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Galatasaray SK</div></div>
@@ -2882,7 +2884,7 @@
 <li>實際客勝：市場賽前給 77%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 1–1 平手，下半場 0 : 3，勝負在下半場決定。</li><li>運彩賠率 主 6 · 和 5.05 · 客 1.2（10/14 01:17 擷取）</li><li>資料不足：Galatasaray SK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575345">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Club Atlético de Madrid</div></div>
@@ -2916,7 +2918,7 @@
 <li>實際主勝：市場賽前給 51%（符合預期），模型給 46% → 這場市場比模型準</li><li>模型預期進球 1.8 : 1.4，實際 2 : 0 —— Club Atlético de Madrid 的表現比模型預期好很多（淨勝差多 1.6 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.7 · 和 3.2 · 客 3.3（10/14 01:17 擷取）</li>  </ul>
   <p class="conclusion"><b>結論</b>模型和市場看法一致，結果符合預期。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575346">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Arsenal FC</div></div>
@@ -2957,7 +2959,7 @@
 <li>實際主勝：市場賽前給 81%（符合預期），模型給 63% → 這場市場比模型準</li><li>賽前只抓到一次盤口，看不出市場後來往哪邊移動。</li><li>模型預期進球 1.6 : 0.5，實際 3 : 0 —— Arsenal FC 的表現比模型預期好很多（淨勝差多 1.9 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，下半場 3 : 0，勝負在下半場決定。</li><li>運彩賠率 主 1.12 · 和 4.95 · 客 9.5（10/14 01:17 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
   <p class="conclusion"><b>結論</b>這個方向市場只給 41%、模型給 64%，結果站在市場那邊：模型高估了 Lille OSC。沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575347">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Viking FK</div></div>
@@ -2991,7 +2993,7 @@
 <li>實際和局：市場賽前給 6%（大冷門）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 2–0 由 Viking FK 領先，下半場被扳平。</li><li>運彩賠率 主 10 · 和 6.5 · 客 1.06（10/14 01:17 擷取）</li><li>資料不足：Viking FK 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果大冷門。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575348">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">RB Leipzig</div></div>
@@ -3025,7 +3027,7 @@
 <li>實際主勝：市場賽前給 56%（符合預期）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>半場 0–0 平手，下半場 1 : 0，勝負在下半場決定。</li><li>運彩賠率 主 1.4 · 和 4.15 · 客 4（10/14 01:17 擷取）</li><li>資料不足：PSV 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果符合預期。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575349">
   <div class="top"><span>10/14 (週三) 03:00</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Villarreal CF</div></div>
@@ -3066,7 +3068,7 @@
 <li>實際主勝：市場賽前給 45%（正常範圍），模型給 36% → 這場市場比模型準</li><li>賽前只抓到一次盤口，看不出市場後來往哪邊移動。</li><li>模型預期進球 1.4 : 1.4，實際 3 : 1 —— Villarreal CF 的表現比模型預期好很多（淨勝差多 2.0 球）。</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>運彩賠率 主 1.9 · 和 3.1 · 客 2.85（10/14 01:17 擷取）</li><li>歐冠用的是跨聯賽合併模型：各聯賽球隊的強弱只靠少數歐戰比賽互相連結，所以歐冠的分歧常常來自模型本身的限制，不代表市場看錯。</li>  </ul>
   <p class="conclusion"><b>結論</b>這個方向市場只給 48%、模型給 59%，結果站在市場那邊：模型高估了 SSC Napoli。沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575341">
   <div class="top"><span>10/14 (週三) 00:45</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Racing Club de Lens</div></div>
@@ -3100,7 +3102,7 @@
 <li>實際客勝：市場賽前給 37%（正常範圍）</li><li>歐冠沒有免費的比賽數據（xG、射門），無法拆開「判讀錯」和「運氣差」。</li><li>資料不足：Sporting Clube de Portugal 僅 1 場（建議 ≥ 6）：這場的模型數字僅供參考，不算模型判斷。</li>  </ul>
   <p class="conclusion"><b>結論</b>模型資料不足，這場只看市場：結果正常範圍。</p>
 </article>
-<article class="card review">
+<article class="card review" id="m-football-575342">
   <div class="top"><span>10/14 (週三) 00:45</span><span>歐冠</span></div>
   <div class="teams">
     <div><div class="name">Sabah FK</div></div>

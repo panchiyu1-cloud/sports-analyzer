@@ -302,6 +302,8 @@
   .hub h1.good { color: var(--good); text-shadow: 0 0 30px rgba(61, 220, 132, .35); }
   .fx.flagged { background: linear-gradient(90deg, rgba(42, 147, 216, .12), transparent 60%); }
   .fx-flags .chip { font-size: .74rem; }
+  .fx.started .fx-time, .fx.started .fx-teams { color: var(--ink-3); }
+  .chip.final { background: transparent; border: 1px solid var(--line-2); color: var(--ink-2); font-family: var(--num); text-decoration: none; }
 
   /* 反者道之動 */
   .quote { margin: 18px 0 0; padding: 10px 16px; border-left: 3px solid var(--tw); background: rgba(6, 14, 30, .5); border-radius: 0 10px 10px 0; font-size: 1.05rem; letter-spacing: .08em; }
@@ -347,7 +349,7 @@
 <div class="masthead">
   <div class="bar">
     <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
-    <span class="stamp">更新 <b>10/16 10:11</b></span>
+    <span class="stamp">更新 <b>10/16 13:37</b> 台灣時間</span>
   </div>
   <nav class="nav" aria-label="分析方法">
 <a href="index.html">總覽</a><a href="value.html">運彩價值</a><a href="t10.html" aria-current="page">T-10</a><a href="radar.html">延遲雷達</a><a href="moves.html">盤口移動</a><a href="model.html">模型分歧</a><a href="fade.html">反者道之動</a><a href="reviews.html">全部檢討</a>  </nav>
@@ -355,7 +357,7 @@
 <main class="wrap">
 <section class="hero">
   <h1>T-10 回測</h1>
-  <p class="lede">2021-04-01 ～ 2025-08-16・10,522 場 MLB・更新 2026-10-14。<a href="t10.html">回到 T-10</a></p>
+  <p class="lede">2021 年 4 月 ～ 2025 年 8 月・10,522 場 MLB・更新 2026/10/14 19:04。<a href="t10.html">回到 T-10</a></p>
 </section>
 <div class="report-verdict fail"><b>結論：</b>未通過：G ≥ +6pp 的強隊 ML 和 G ≤ −6pp 的弱隊 +1.5，實際勝率都沒有顯著高於收盤市場自己的機率，在收盤價下注都是負報酬——T-10 的 G 值目前看不出市場沒算到的資訊。</div>
 
