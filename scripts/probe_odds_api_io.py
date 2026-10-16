@@ -1,8 +1,9 @@
 """One-off check of the owner's odds-api.io key (manual workflow probe-odds-api-io.yml).
 
-What does the free key give: which two bookmakers are selected, the league slugs of the
-competitions we follow, and one league's upcoming events with their odds (football and
-MLB), plus whatever quota headers come back. About seven requests of the free 100 an hour.
+What does the free key give: which two bookmakers are selected and, for every competition
+we follow (五大聯賽, 歐冠, MLB), the upcoming events and the main odds of up to ten of them,
+with each price's update time and the quota headers. About 15 of the free 100 requests an
+hour.
 
 The key comes only from ODDS_API_IO_KEY and is scrubbed from everything written; errors
 are recorded by type, never with the request URL (it carries the key).
@@ -21,17 +22,19 @@ from typing import Any
 import requests
 
 BASE = "https://api.odds-api.io/v3"
-# Words that pick out the competitions we follow from the league lists.
-FOOTBALL_WANTED = {
-    "PL": ("england", "premier"),
-    "PD": ("spain", "liga"),
-    "BL1": ("germany", "bundesliga"),
-    "SA": ("italy", "serie-a"),
-    "FL1": ("france", "ligue-1"),
-    "CL": ("champions-league",),
+# The competitions we follow, by their odds-api.io slugs (found by the first probe run).
+LEAGUES = {
+    "PL": ("football", "england-premier-league"),
+    "PD": ("football", "spain-laliga"),
+    "BL1": ("football", "germany-bundesliga"),
+    "SA": ("football", "italy-serie-a"),
+    "FL1": ("football", "france-ligue-1"),
+    "CL": ("football", "international-clubs-uefa-champions-league"),
+    "MLB": ("baseball", "usa-mlb-playoffs"),
 }
+# The markets we compare with 運彩 (moneyline / 1X2, main totals, main handicap).
+MARKETS = ("ML", "Totals", "Goals Over/Under", "Spread")
 QUOTA_WORDS = ("limit", "remain", "quota", "reset", "request", "used")
-SAMPLE_CHARS = 6000
 
 
 def call(path: str, key: str, log: list[dict[str, Any]], **params: Any) -> Any:
@@ -60,17 +63,6 @@ def call(path: str, key: str, log: list[dict[str, Any]], **params: Any) -> Any:
     return body
 
 
-def league_slugs(leagues: Any, wanted: dict[str, tuple[str, ...]]) -> dict[str, list[str]]:
-    """Slugs whose name or slug holds every word of a competition's key words."""
-    out: dict[str, list[str]] = {code: [] for code in wanted}
-    for item in leagues if isinstance(leagues, list) else []:
-        text = f"{item.get('slug', '')} {item.get('name', '')}".lower().replace(" ", "-")
-        for code, words in wanted.items():
-            if all(w in text for w in words):
-                out[code].append(str(item.get("slug") or item.get("name")))
-    return out
-
-
 def selected_books(raw: Any) -> list[str]:
     """The selected bookmakers, whatever shape the endpoint answers in."""
     if isinstance(raw, list):
@@ -83,30 +75,35 @@ def selected_books(raw: Any) -> list[str]:
     return []
 
 
-def sample(value: Any) -> Any:
-    """A readable slice of a large answer."""
-    text = json.dumps(value, ensure_ascii=False)
-    return value if len(text) <= SAMPLE_CHARS else text[:SAMPLE_CHARS] + " ...(cut)"
-
-
-def probe_sport(sport: str, slug: str | None, books: list[str], key: str, log: list) -> dict:
-    if not slug:
-        return {"skipped": "no league slug found"}
-    events = call("/events", key, log, sport=sport, league=slug, status="pending", limit=10)
-    rows = events if isinstance(events, list) else []
-    out: dict[str, Any] = {
-        "league": slug,
-        "events": [
-            {k: e.get(k) for k in ("id", "home", "away", "date", "status") if k in e} for e in rows
-        ],
-        "event_keys": sorted(rows[0].keys()) if rows else [],
+def compact(event: dict[str, Any]) -> dict[str, Any]:
+    """One event's main markets per bookmaker: the first line of each, with its time."""
+    books = {}
+    for book, markets in (event.get("bookmakers") or {}).items():
+        books[book] = {
+            m.get("name"): {"at": m.get("updatedAt"), "odds": (m.get("odds") or [None])[0]}
+            for m in markets
+            if m.get("name") in MARKETS
+        }
+    return {
+        "id": event.get("id"),
+        "home": event.get("home"),
+        "away": event.get("away"),
+        "date": event.get("date"),
+        "books": books,
     }
+
+
+def probe_league(sport: str, slug: str, books: list[str], key: str, log: list) -> dict:
+    """Upcoming events of one league and the main odds of the first ten."""
+    events = call("/events", key, log, sport=sport, league=slug, status="pending", limit=20)
+    rows = events if isinstance(events, list) else []
     ids = [str(e.get("id")) for e in rows if e.get("id") is not None][:10]
+    out: dict[str, Any] = {"pending": len(rows), "asked": len(ids)}
     if ids and books:
         odds = call("/odds/multi", key, log, eventIds=",".join(ids), bookmakers=",".join(books))
-        first = odds[0] if isinstance(odds, list) and odds else odds
-        out["odds_events"] = len(odds) if isinstance(odds, list) else None
-        out["odds_first"] = sample(first)
+        found = odds if isinstance(odds, list) else []
+        out["with_odds"] = len(found)
+        out["events"] = [compact(e) for e in found]
     return out
 
 
@@ -141,15 +138,10 @@ def main(out_path: Path) -> int:
     else:
         books = selected_books(call("/bookmakers/selected", key, log))
         result["selected_bookmakers"] = books
-        football = league_slugs(call("/leagues", key, log, sport="football"), FOOTBALL_WANTED)
-        baseball = league_slugs(call("/leagues", key, log, sport="baseball"), {"MLB": ("mlb",)})
-        result["league_slugs"] = {**football, **baseball}
-        result["football"] = probe_sport(
-            "football", (football.get("PL") or [None])[0], books, key, log
-        )
-        result["baseball"] = probe_sport(
-            "baseball", (baseball.get("MLB") or [None])[0], books, key, log
-        )
+        result["leagues"] = {
+            code: {"slug": slug, **probe_league(sport, slug, books, key, log)}
+            for code, (sport, slug) in LEAGUES.items()
+        }
     result["requests"] = log
     text = json.dumps(result, ensure_ascii=False, indent=1)
     for secret in (key, os.environ.get("THE_ODDS_API_KEY", "").strip()):
