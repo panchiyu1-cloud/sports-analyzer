@@ -1,14 +1,15 @@
 """The Odds API credit budget: spend evenly so the page never goes dark mid-month.
 
-The free plan gives 500 credits per quota period. Every run that buys odds asks
-`allowance_today()` how many credits it may spend today and buys less (h2h only)
-or nothing (the previous prices are kept, marked stale) when the allowance is short.
+The free plan gives 500 credits a month, and The Odds API resets every plan's credits on
+the 1st of each month (UTC); what is left does not carry over. Every run that buys odds
+asks `allowance_today()` how many credits it may spend today and buys less (h2h only) or
+nothing (the previous prices are kept, marked stale) when the allowance is short. The
+credits left are spread evenly over the days to the next 1st, so the month's last days
+are not starved and nothing expires unused.
 
-The quota period is not documented for the free plan (calendar month or 30 days
-from sign-up), so the budget assumes the longer one: 30 days from the first day
-it saw this period's counter. A drop in `x-requests-used` means a new period began;
-the budget notices that and starts over. Assuming the longer period only ever
-makes it spend more slowly, never run out early.
+Counters saved in an earlier month mean the quota has reset since, but only a purchase
+reveals the new counters: that run is let through and `record` sees `x-requests-used`
+drop.
 """
 
 from __future__ import annotations
@@ -16,12 +17,11 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import asdict, dataclass
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-PERIOD_DAYS = 30
 # Kept back for the evening refresh after a heavy day and for manual runs.
 RESERVE = 25
 # A day may spend up to this multiple of its even share: weekends need more than
@@ -58,16 +58,16 @@ def save(path: Path, state: BudgetState) -> None:
 def allowance_today(state: BudgetState, today: date, extra: float = 0.0) -> float | None:
     """Credits this run may still spend today; None = no limit known.
 
-    Past the assumed end of the period the quota must have reset (the real period
-    is never longer), but only a purchase reveals the new counters. So the run is
-    let through (None) and `record` then sees `used` drop. Without this, a budget
-    that ended near the reserve would buy nothing ever again.
+    In a month after the one the counters were saved in, the quota has reset, but only
+    a purchase reveals the new counters. So the run is let through (None) and `record`
+    then sees `used` drop. Without this, a budget that ended a month near the reserve
+    would buy nothing ever again.
 
     `extra` raises today's ceiling (pre-game refreshes) but never past the reserve.
     """
     if state.remaining is None:
         return None
-    if today >= date.fromisoformat(state.period_start) + timedelta(days=PERIOD_DAYS):
+    if _reset_since(state, today):
         return None
     spent_today = 0
     if (
@@ -86,10 +86,20 @@ def daily_share(state: BudgetState, today: date, spent_today: int = 0) -> float:
     """An even split of the credits left (above the reserve) over the days left."""
     if state.remaining is None:
         return 0.0
-    end = date.fromisoformat(state.period_start) + timedelta(days=PERIOD_DAYS)
-    days_left = max(1, (end - today).days)
+    days_left = max(1, (period_end(today) - today).days)
     # Counted from the start of today, so a run late in the day sees the same share.
     return max(0.0, (state.remaining + spent_today - RESERVE) / days_left)
+
+
+def period_end(today: date) -> date:
+    """The next 1st of a month: when the quota resets."""
+    return date(today.year + today.month // 12, today.month % 12 + 1, 1)
+
+
+def _reset_since(state: BudgetState, today: date) -> bool:
+    """The counters were saved in an earlier month: the quota has reset since."""
+    seen = date.fromisoformat(state.day or state.period_start)
+    return (seen.year, seen.month) < (today.year, today.month)
 
 
 def record(state: BudgetState, used: int | None, remaining: int | None, today: date) -> BudgetState:
