@@ -19,7 +19,7 @@
 {{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", reviews.football|length)]) }}
 
 <section id="upcoming" class="tabpanel active" role="tabpanel">
-  <p class="howto">藍條是國際市場去水後的機率、白色刻度是模型。有「模型分歧」的比賽排最前面。線圖是模型偏向那一邊每次抓價時的機率（藍＝國際、橘＝運彩去水後），橫線是模型：藍線往模型靠，代表市場後來也往模型的方向走。</p>
+  <p class="howto">藍條是國際市場去水後的機率、白色刻度是模型。卡片依開賽時間排，有「模型分歧」的會標出來。線圖是模型偏向那一邊每次抓價時的機率（藍＝國際、橘＝運彩去水後），橫線是模型：藍線往模型靠，代表市場後來也往模型的方向走。</p>
   {% if cards %}
   <div class="cards">
   {% for c in cards %}

@@ -153,8 +153,10 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - `fetch/taiwan.py` parses (price = 1 + pu/pd), `analysis/taiwan.py` compares
   with the consensus (EV = fair_prob x price - 1), `tw_ledger.py` records value
   bets, CLV (from a later consensus; stale carried-over blocks never count) and
-  settlement. Unknown Chinese names land in the snapshot's `tw_report.unknown_teams`:
-  add them to `TW_ALIASES`, do not fuzzy-match Chinese.
+  settlement. Unknown Chinese names land in the snapshot's `tw_report.unknown_teams` (the
+  value page lists them: "那些比賽暫時不能比價"): add them to `TW_ALIASES`, do not
+  fuzzy-match Chinese. 運彩 spells some teams its own way (紐卡索聯, 文達不來梅, 沙爾克04,
+  佛倫提那, 昂傑 ...); check the latest upload's report after each matchday.
 - Workflows: `tw.yml` on push to data/tw/** (has ODDS_API_KEY for the pre-game
   refresh); `evening.yml` 12:25 UTC refresh for CLV; `daily.yml` runs the tw step too.
 - A value bet needs a fair price bought within `max_price_gap_minutes` (180) of the
@@ -381,10 +383,16 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   de-vigged average sat 0.6pp median, 1.6pp worst from it on 36 matches): they say WHEN,
   the consensus says HOW MUCH. A move is measured on the two books' own readings, never
   against the consensus (that would read the gap between sources as a move).
-- sensor.yml, cron every five minutes (1-59/5; GitHub ran the ten-minute schedule 25-32 minutes
-  apart), concurrency group sensor; readings still go by `TIERS` and the quota is planned on
-  `RUN_MINUTES` (10), so extra runs read nothing early. Job `watch`:
-  restores .sensor/ from the Actions cache, runs `pipeline sensor` (`--hold` when a
+- sensor.yml, cron every five minutes (1-59/5), concurrency group sensor. GitHub started the
+  scheduled runs 25-47 minutes apart whether asked for every ten or every five minutes, so a
+  run does rounds: after each, `pipeline sensor` outputs `next` (minutes to the next reading,
+  `sensor.next_due`, or review time, `pipeline.review_next`) and the job sleeps that long and
+  goes again, up to about 40 minutes (`timeout-minutes` 55); it stops at once when a round
+  has `buy` or `review`, or when nothing is due within 15 minutes. Each round first takes
+  data/snapshots, data/reviews and data/odds_budget.json from the newest main (a long run
+  must not judge moves against an old purchase time). Readings still go by `TIERS` and the
+  quota is planned on `RUN_MINUTES` (10). Job `watch`:
+  restores .sensor/ from the Actions cache, runs the rounds (`--hold` when a
   daily-group run is queued, waiting or running: a purchase queued then could cancel a
   waiting upload's run), saves the cache, pushes a counts-only status.json to the orphan
   branch sensor-status. Job `act` (job concurrency group daily), when `buy` or `review` is

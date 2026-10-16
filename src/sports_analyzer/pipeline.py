@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import os
 import sys
 from dataclasses import replace
@@ -653,6 +654,7 @@ def run_sensor(
     client = client or OddsIoClient(settings.odds_api_io_key)
     budget = sensor_mod.allowance(state["usage"], now)
     mapped: dict[str, str] = {}
+    readable: list[sensor_mod.Watch] = []
     readings = extra = 0
     try:
         if watch and budget and sensor_mod.books_due(state, now):
@@ -697,6 +699,8 @@ def run_sensor(
         report["error"] = type(exc).__name__
     state["usage"] = sensor_mod.record_usage(state["usage"], client.requests, now)
     sensor_mod.prune(state, now)
+    upcoming_read = sensor_mod.next_due(readable, sensor_mod.last_readings(state), now)
+    report["next_due_at"] = upcoming_read.isoformat(timespec="seconds") if upcoming_read else None
     moving = sensor_mod.moved(watch, state["readings"], now, state["triggers"])
     buy = sensor_mod.purchases(moving)
     if buy and hold:
@@ -847,11 +851,11 @@ MLB_REVIEW_AFTER_HOURS = 2.5
 QUICK_REVIEW_HOURS = {"football": 6.0, "mlb": 9.0}
 
 
-def review_due(now: datetime) -> list[str]:
-    """Matches that should have finished and have no review yet, kicked off at most
-    QUICK_REVIEW_HOURS ago: what a 盯盤 round hands to `review --new-only` (sensor.yml),
-    so a review follows a match within minutes, not at the next routine run. Read from
-    the checkout only (snapshots and review CSVs): no request."""
+def _review_times(now: datetime) -> list[tuple[str, datetime, datetime]]:
+    """Matches without a review that kicked off at most QUICK_REVIEW_HOURS ago or are
+    still to come: (key, when to look the result up, when to stop asking). The same
+    pre-kickoff cards run_review reviews, or a match it can never review (first seen
+    after kickoff) would be asked for every round. Read from the checkout only."""
     done = {
         "football": {r["match_id"] for r in review_store.read(FOOTBALL_REVIEWS_PATH)},
         "mlb": {r["game_pk"] for r in review_store.read(MLB_REVIEWS_PATH)},
@@ -861,18 +865,32 @@ def review_due(now: datetime) -> list[str]:
         "football": lambda s: [c for comp in s.get("competitions", []) for c in comp["cards"]],
         "mlb": lambda s: list(s.get("games", [])),
     }
-    out = set()
+    out = []
     for sport, key in (("football", "match_id"), ("mlb", "game_pk")):
-        # The same pre-kickoff cards run_review reviews, or a match it can never review
-        # (first seen after kickoff) would be asked for every round.
         pre = review.collect_prematch(_recent_snapshots(sport, now.date(), 2), cards_of[sport], key)
         for mid, entry in pre.items():
-            card = entry["card"]
-            if mid in done[sport] or not _kicked_off(card, now, after[sport]):
+            try:
+                kickoff = _dt_utc(entry["card"]["kickoff_utc"])
+            except (KeyError, ValueError):
                 continue
-            if not _kicked_off(card, now, QUICK_REVIEW_HOURS[sport]):
-                out.add(f"{sport}:{mid}")
-    return sorted(out)
+            stop = kickoff + timedelta(hours=QUICK_REVIEW_HOURS[sport])
+            if mid in done[sport] or stop <= now:
+                continue
+            out.append((f"{sport}:{mid}", kickoff + timedelta(hours=after[sport]), stop))
+    return out
+
+
+def review_due(now: datetime) -> list[str]:
+    """Matches that should have finished and have no review yet, kicked off at most
+    QUICK_REVIEW_HOURS ago: what a 盯盤 round hands to `review --new-only` (sensor.yml),
+    so a review follows a match within minutes, not at the next routine run. Read from
+    the checkout only (snapshots and review CSVs): no request."""
+    return sorted(key for key, at, _ in _review_times(now) if at <= now)
+
+
+def review_next(now: datetime) -> datetime | None:
+    """When the next match reaches its review time, if one is still to come."""
+    return min((at for _, at, _ in _review_times(now) if at > now), default=None)
 
 
 def run_review(
@@ -1028,6 +1046,13 @@ def _recent_snapshots(sport: str, today: date, days: int) -> list[dict[str, Any]
         if today - timedelta(days=days) <= day <= today + timedelta(days=1):
             out.append(json.loads(path.read_text(encoding="utf-8")))
     return out
+
+
+def _parse_utc(value: Any) -> datetime | None:
+    try:
+        return _dt_utc(str(value))
+    except ValueError:
+        return None
 
 
 def _dt_utc(value: str) -> datetime:
@@ -1401,9 +1426,15 @@ def main(argv: list[str] | None = None) -> int:
         # job buys them (radar --only) and reviews (review --new-only).
         report = run_sensor(Settings.from_env(offline=True), hold=args.hold)
         _github_output("buy", ",".join(report.get("buy", [])))
-        finished = [] if args.hold else review_due(datetime.now(UTC))
+        now = datetime.now(UTC)
+        finished = [] if args.hold else review_due(now)
         log.info("盯盤: %d finished match(es) waiting for a review", len(finished))
         _github_output("review", len(finished) or "")
+        # Minutes to the next useful round (a reading or a review falling due): the job
+        # waits for it rather than for GitHub's next scheduled start.
+        soon = [t for t in (_parse_utc(report.get("next_due_at")), review_next(now)) if t]
+        wait = math.ceil((min(soon) - now).total_seconds() / 60) if soon else None
+        _github_output("next", max(1, wait) if wait is not None else "")
         return 0
     if args.task == "radar":
         # After the sensor saw a move (sensor.yml, --only) or by hand: fresh prices, then

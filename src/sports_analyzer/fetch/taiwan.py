@@ -798,5 +798,16 @@ TW_ALIASES.update(
         "波圖": "porto",
         "塞爾塔維戈": "celta vigo",
         "雅典AEK": "aek athens",
+        # 運彩's own spellings, from the 2026-10-16 08:01 upload (tw_report.unknown_teams):
+        # nine matches of our competitions were offered but not compared.
+        "紐卡索聯": "newcastle",
+        "文達不來梅": "werder bremen",
+        "沙爾克04": "schalke",
+        "艾佛斯堡": "elversberg",
+        "佛倫提那": "fiorentina",
+        "拉齊歐": "lazio",
+        "桑坦德競賽": "santander",
+        "特魯瓦": "troyes",
+        "昂傑": "angers",
     }
 )

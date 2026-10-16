@@ -15,7 +15,7 @@
 {{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history|length)]) }}
 
 <section id="upcoming" class="tabpanel active" role="tabpanel">
-  <p class="howto">只列國際盤往某一邊升了 {{ (cfg.radar_watch_move * 100)|round|int }}pp 以上、或運彩自己動過的比賽，大單在前。線圖是那一邊每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後）：藍線往上、橘線沒跟，就是運彩還沒反映；「運彩現在 EV」到門檻時，運彩價值頁也會列出來。</p>
+  <p class="howto">只列國際盤往某一邊升了 {{ (cfg.radar_watch_move * 100)|round|int }}pp 以上、或運彩自己動過的比賽，依開賽時間排。線圖是那一邊每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後）：藍線往上、橘線沒跟，就是運彩還沒反映；「運彩現在 EV」到門檻時，運彩價值頁也會列出來。</p>
   {% if cards %}
   <div class="cards">
   {% for c in cards %}

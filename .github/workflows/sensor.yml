@@ -11,9 +11,11 @@ name: 盯盤 (sensor)
 #   budget plus the pre-game extra) and judges the last 運彩 upload against it (延遲雷達);
 # - reviews the matches that have just finished (review --new-only: football 2 h, MLB
 #   2.5 h after kickoff, asked again each round until the result is in);
-# then renders and commits. GitHub starts scheduled runs late and skips some (here
-# often 20-40 minutes apart on a ten-minute schedule), so the schedule asks for every
-# five minutes.
+# then renders and commits. GitHub starts scheduled runs late and skips some: here they
+# came 25-47 minutes apart whether asked for every ten or every five minutes. So a run
+# keeps going: after each round it waits for the next reading or review to fall due
+# (`next`, usually ten minutes) and goes again, for up to about 40 minutes, and stops at
+# once when a round has something to buy or review (the act job runs after it).
 #
 # odds-api.io's data never reaches the repo or the page (its terms): the sensor's state
 # stays in the Actions cache, and only a counts-only status goes to the side branch
@@ -35,6 +37,7 @@ permissions:
 jobs:
   watch:
     runs-on: ubuntu-latest
+    timeout-minutes: 55
     outputs:
       buy: ${{ steps.sensor.outputs.buy }}
       review: ${{ steps.sensor.outputs.review }}
@@ -56,28 +59,38 @@ jobs:
           path: .sensor
           key: sensor-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: sensor-
-      # The act job waits for the daily group. If a task of that group is running or
-      # waiting, a job queued now could cancel a waiting upload's run (a group keeps one
-      # waiting run), so this round reads but asks for nothing.
-      - name: Is a daily-group task running or waiting?
-        id: idle
+      # Rounds until something is to be done or the run has gone on long enough. Before
+      # each: is a daily-group task running or waiting? The act job waits for that
+      # group, and a job queued then could cancel a waiting upload's run (a group keeps
+      # one waiting run), so such a round reads but asks for nothing (--hold). Each
+      # round reads the newest snapshots, reviews and budget from main first.
+      - name: Read the two bookmakers, round after round
+        id: sensor
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=60" --jq '
-            [.workflow_runs[] | select(.status != "completed")
-             | select(.path | test("/(daily|evening|tw|radar|review|backtest)\\.yml$"))]
-            | length') || busy=1
-          echo "busy=$busy" >> "$GITHUB_OUTPUT"
-          echo "daily-group runs not finished: $busy"
-      - name: Read the two bookmakers
-        id: sensor
-        run: |
-          if [ "${{ steps.idle.outputs.busy }}" = "0" ]; then
-            python -m sports_analyzer.pipeline sensor
-          else
-            python -m sports_analyzer.pipeline sensor --hold
-          fi
+          started=$(date +%s)
+          buy=""; review=""
+          for round in 1 2 3 4 5 6; do
+            git fetch -q --depth=1 origin main && git checkout -q FETCH_HEAD -- data/snapshots data/reviews data/odds_budget.json || true
+            busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=60" --jq '
+              [.workflow_runs[] | select(.status != "completed")
+               | select(.path | test("/(daily|evening|tw|radar|review|backtest)\\.yml$"))]
+              | length') || busy=1
+            hold=""; [ "$busy" = "0" ] || hold="--hold"
+            : > "$RUNNER_TEMP/round"
+            GITHUB_OUTPUT="$RUNNER_TEMP/round" python -m sports_analyzer.pipeline sensor $hold
+            buy=$(sed -n 's/^buy=//p' "$RUNNER_TEMP/round" | tail -1)
+            review=$(sed -n 's/^review=//p' "$RUNNER_TEMP/round" | tail -1)
+            next=$(sed -n 's/^next=//p' "$RUNNER_TEMP/round" | tail -1)
+            elapsed=$(( ($(date +%s) - started) / 60 ))
+            echo "round $round: busy=$busy buy=${buy:-none} review=${review:-none} next=${next:-none} min, ${elapsed} min in"
+            if [ -n "$buy" ] || [ -n "$review" ]; then break; fi
+            if [ -z "$next" ] || [ "$next" -gt 15 ] || [ $((elapsed + next)) -gt 40 ]; then break; fi
+            sleep $((next * 60))
+          done
+          echo "buy=$buy" >> "$GITHUB_OUTPUT"
+          echo "review=$review" >> "$GITHUB_OUTPUT"
       - name: Keep the sensor's state
         if: always()
         uses: actions/cache/save@v4

@@ -127,6 +127,15 @@ class ScheduleTests(unittest.TestCase):
         last[far[0].key] = NOW - timedelta(minutes=5)
         self.assertNotIn(far[0], sensor.reads(due_now + far, last, NOW, 5, 1)[0])
 
+    def test_the_next_reading_falls_due(self):
+        near, far = w("football:1", hours=3), w("football:2", hours=30)
+        last = {"football:1": NOW - timedelta(minutes=3), "football:2": NOW - timedelta(minutes=10)}
+        # near: 10 - 1 - 3 = 6 minutes; far: 30 - 1 - 10 = 19 minutes
+        self.assertEqual(sensor.next_due([near, far], last, NOW), NOW + timedelta(minutes=6))
+        self.assertEqual(sensor.next_due([far], last, NOW), NOW + timedelta(minutes=19))
+        self.assertEqual(sensor.next_due([near], {}, NOW), NOW)  # never read: due now
+        self.assertIsNone(sensor.next_due([w(hours=60)], {}, NOW))  # not watched yet
+
     def test_due_matches_beyond_the_budget_wait_soonest_first(self):
         due_now = [w(f"football:{i}", hours=1 + i / 10) for i in range(25)]
         chunks = sensor.reads(due_now, {}, NOW, budget=2, spare=3)
@@ -455,12 +464,33 @@ class ReviewDueTests(unittest.TestCase):
             mock.patch.dict("os.environ", {"GITHUB_OUTPUT": str(out)}),
             mock.patch.object(pipeline, "run_sensor", return_value={"buy": ["PL"]}),
             mock.patch.object(pipeline, "review_due", return_value=["mlb:10", "mlb:12"]),
+            mock.patch.object(pipeline, "review_next", return_value=None),
         ):
             pipeline.main(["sensor"])
-            self.assertEqual(out.read_text(encoding="utf-8"), "buy=PL\nreview=2\n")
+            self.assertEqual(out.read_text(encoding="utf-8"), "buy=PL\nreview=2\nnext=\n")
             out.unlink()
             pipeline.main(["sensor", "--hold"])
-            self.assertEqual(out.read_text(encoding="utf-8"), "buy=PL\nreview=\n")
+            self.assertEqual(out.read_text(encoding="utf-8"), "buy=PL\nreview=\nnext=\n")
+
+    def test_the_round_says_when_the_next_one_is_due(self):
+        """The job waits for the sooner of the next reading and the next review time."""
+        out = Path(self.tmp.name) / "github_output"
+        soon = (datetime.now(UTC) + timedelta(minutes=7)).isoformat()
+        later = datetime.now(UTC) + timedelta(minutes=40)
+        with (
+            mock.patch.dict("os.environ", {"GITHUB_OUTPUT": str(out)}),
+            mock.patch.object(
+                pipeline, "run_sensor", return_value={"buy": [], "next_due_at": soon}
+            ),
+            mock.patch.object(pipeline, "review_due", return_value=[]),
+            mock.patch.object(pipeline, "review_next", return_value=later),
+        ):
+            pipeline.main(["sensor"])
+        self.assertEqual(out.read_text(encoding="utf-8"), "buy=\nreview=\nnext=7\n")
+
+    def test_the_next_review_time(self):
+        # match 2 kicked off 1.5 h ago (review at +0.5 h); MLB 11 2.2 h ago (+0.3 h = 18 min)
+        self.assertEqual(pipeline.review_next(NOW), NOW + timedelta(minutes=18))
 
 
 if __name__ == "__main__":

@@ -50,9 +50,10 @@ from .teams import canonical
 # 2026-10-16).
 TIERS = ((24.0, 10), (48.0, 30))
 WINDOW_HOURS = TIERS[-1][0]
-# The planning step: the quota is shared out as if a run came every ten minutes. The
-# schedule asks for one every five (GitHub starts them late or skips some); readings go
-# by the time since the last one, so extra runs read nothing early.
+# The planning step: the quota is shared out as if a round came every ten minutes. A
+# run does rounds back to back until the next reading falls due (`next_due`, sensor.yml),
+# because GitHub starts scheduled runs 25-45 minutes apart; readings go by the time since
+# the last one, so an extra round reads nothing early.
 RUN_MINUTES = 10
 RUNS_PER_DAY = 24 * 60 // RUN_MINUTES
 DAY = timedelta(hours=24)
@@ -241,6 +242,24 @@ def due(watch: Iterable[Watch], last: Mapping[str, datetime], now: datetime) -> 
         if minutes is not None and (seen is None or now - seen >= timedelta(minutes=minutes - 1)):
             out.append(w)
     return sorted(out, key=lambda w: w.kickoff)
+
+
+def next_due(
+    watch: Iterable[Watch], last: Mapping[str, datetime], now: datetime
+) -> datetime | None:
+    """When the next reading falls due: each match's last reading plus its tier's
+    interval (less the minute of slack), the earliest of them, not before now. None when
+    nothing is watched. A run keeps going until then (sensor.yml) instead of waiting for
+    GitHub's next scheduled start, which here comes 25-45 minutes late."""
+    times = []
+    for w in watch:
+        minutes = interval_minutes((w.kickoff - now).total_seconds() / 3600)
+        if minutes is None:
+            continue
+        seen = last.get(w.key)
+        at = now if seen is None else seen + timedelta(minutes=minutes - 1)
+        times.append(max(at, now))
+    return min(times, default=None)
 
 
 def reads(

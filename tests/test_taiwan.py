@@ -104,6 +104,14 @@ class TaiwanFeedTests(unittest.TestCase):
         self.assertEqual(taiwan.tw_canonical("頓涅茨克礦工"), "shakhtar")
         self.assertEqual(taiwan.tw_canonical("AEK雅典"), "aek athens")
 
+    def test_names_from_the_2026_10_16_upload(self):
+        """Nine matches of our competitions were offered by 運彩 but left uncompared."""
+        names = {"紐卡索聯": "newcastle", "文達不來梅": "werder bremen", "沙爾克04": "schalke",
+                 "艾佛斯堡": "elversberg", "佛倫提那": "fiorentina", "拉齊歐": "lazio",
+                 "桑坦德競賽": "santander", "特魯瓦": "troyes", "昂傑": "angers"}  # fmt: skip
+        for zh, key in names.items():
+            self.assertEqual(taiwan.tw_canonical(zh), key, zh)
+
     def test_unknown_team_keeps_raw_name(self):
         self.assertEqual(taiwan.tw_canonical("神秘隊"), "神秘隊")
         self.assertEqual(taiwan.tw_canonical("曼聯"), "manchester united")

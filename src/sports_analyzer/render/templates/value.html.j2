@@ -16,9 +16,9 @@
 {{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history.n + history.passed|length)]) }}
 
 <section id="upcoming" class="tabpanel active" role="tabpanel">
-  <p class="howto">每張卡是一場還沒開賽、運彩有開盤的比賽：上面是現在的比價，下面的線圖是同一個選項在每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後；橘線在藍線下面，運彩的賠率就比公允價高）。國際價和運彩價相隔超過 {{ gap_h }} 小時就不判斷。可下的排最前面。</p>
+  <p class="howto">每張卡是一場還沒開賽、運彩有開盤的比賽：上面是現在的比價，下面的線圖是同一個選項在每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後；橘線在藍線下面，運彩的賠率就比公允價高）。國際價和運彩價相隔超過 {{ gap_h }} 小時就不判斷。卡片依開賽時間排，可下的會標綠色「可下」。</p>
   {% if reports %}
-  <p class="stamp-line">{% for r in reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場、對上 {{ r.matched }} 場{% if r.avg_overround is not none %}，不讓分平均水錢 {{ '%.0f'|format(r.avg_overround * 100) }}%{% endif %}{% if r.unknown_teams %}，{{ r.unknown_teams|length }} 個隊名還沒對照{% endif %}{% if not loop.last %}　｜　{% endif %}{% endfor %}</p>
+  <p class="stamp-line">{% for r in reports %}{{ r.sport }}：運彩 {{ r.tw_games }} 場、對上 {{ r.matched }} 場{% if r.avg_overround is not none %}，不讓分平均水錢 {{ '%.0f'|format(r.avg_overround * 100) }}%{% endif %}{% if r.unknown_teams %}，有 {{ r.unknown_teams|length }} 個運彩隊名還沒對照（{{ r.unknown_teams|join('、') }}），那些比賽暫時不能比價{% endif %}{% if not loop.last %}　｜　{% endif %}{% endfor %}</p>
   {% endif %}
   {% if cards %}
   <div class="cards">
