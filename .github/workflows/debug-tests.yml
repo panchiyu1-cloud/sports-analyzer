@@ -22,7 +22,7 @@ jobs:
       - name: Tests
         run: |
           set +e
-          pytest -x -q -p no:cacheprovider > "$RUNNER_TEMP/pytest.txt" 2>&1
+          pytest -q -p no:cacheprovider --tb=short > "$RUNNER_TEMP/pytest.txt" 2>&1
           echo "exit $?" >> "$RUNNER_TEMP/pytest.txt"
           python -m unittest discover -s tests > "$RUNNER_TEMP/unittest.txt" 2>&1
           echo "exit $?" >> "$RUNNER_TEMP/unittest.txt"
@@ -34,8 +34,12 @@ jobs:
           git checkout -q --orphan debug-tests
           git rm -rq --cached .
           mkdir -p debug
-          tail -c 20000 "$RUNNER_TEMP/pytest.txt" > debug/pytest.txt
-          tail -c 20000 "$RUNNER_TEMP/unittest.txt" > debug/unittest.txt
+          # Failure headers and traceback lines only, each cut short (a failed assertion
+          # can print a whole page of HTML).
+          for f in pytest unittest; do
+            grep -nE "^(ERROR|FAIL|FAILED|E  |Ran |OK|exit )|Error|Traceback|File \"|^tests/|::" "$RUNNER_TEMP/$f.txt" \
+              | cut -c1-400 | head -300 > "debug/$f.txt"
+          done
           git add -f debug/pytest.txt debug/unittest.txt
           git commit -qm "chore(debug): test output"
           git push -qf origin debug-tests
