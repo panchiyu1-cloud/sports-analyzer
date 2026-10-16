@@ -70,8 +70,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           started=$(date +%s)
-          buy=""; review=""
-          for round in 1 2 3 4 5 6; do
+          buy=""; review=""; round=0
+          # Bounded by time (about 40 minutes), not by a count: a reading due in two
+          # minutes is a round of its own.
+          while :; do
+            round=$((round + 1))
             git fetch -q --depth=1 origin main && git checkout -q FETCH_HEAD -- data/snapshots data/reviews data/odds_budget.json || true
             busy=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?per_page=60" --jq '
               [.workflow_runs[] | select(.status != "completed")
@@ -86,7 +89,7 @@ jobs:
             elapsed=$(( ($(date +%s) - started) / 60 ))
             echo "round $round: busy=$busy buy=${buy:-none} review=${review:-none} next=${next:-none} min, ${elapsed} min in"
             if [ -n "$buy" ] || [ -n "$review" ]; then break; fi
-            if [ -z "$next" ] || [ "$next" -gt 15 ] || [ $((elapsed + next)) -gt 40 ]; then break; fi
+            if [ -z "$next" ] || [ "$next" -gt 15 ] || [ $((elapsed + next)) -gt 40 ] || [ "$round" -ge 15 ]; then break; fi
             sleep $((next * 60))
           done
           echo "buy=$buy" >> "$GITHUB_OUTPUT"
