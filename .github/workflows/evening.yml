@@ -1,9 +1,11 @@
 name: Evening football odds
 
-# 12:25 UTC = 20:25 台北: a second international snapshot (h2h + totals, or h2h
-# only when the credit budget is short) a few hours before European
-# kick-offs and before the next MLB first pitches. It gives the 運彩 bets taken in the morning their closing-line
-# value, and the 20:00 phone upload a fresh fair price to compare against.
+# 12:25 UTC = 20:25 台北: a second international snapshot a few hours before European
+# kick-offs and before the next MLB first pitches. It gives the 運彩 bets taken in the
+# morning their closing-line value, and the 20:00 phone upload a fresh fair price to
+# compare against. Match-winner prices only (不讓分): football h2h (1 credit a
+# competition), MLB h2h + run line (the run line is half of T-10's G); the morning's
+# totals stay, marked stale. The 盯盤 sensor buys more when something moves.
 
 on:
   schedule:
@@ -35,14 +37,12 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      # h2h + totals when the credit budget allows (budget.py decides; h2h only when
-      # short): fresh totals are needed for the CLV of totals-type 運彩 bets.
-      - name: Football — fresh consensus (fills CLV for morning 運彩 bets)
-        run: python -m sports_analyzer.pipeline football --days 1
+      - name: Football — fresh match-winner consensus (fills CLV for morning 運彩 bets)
+        run: python -m sports_analyzer.pipeline football --days 1 --markets h2h
       # Tomorrow-morning (Taipei) MLB games: lines are posted by now, and this
-      # is what the 20:00 baseball upload is compared against. ~3 credits.
+      # is what the 20:00 baseball upload is compared against. 2 credits.
       - name: MLB — refresh odds for the next Taipei morning
-        run: python -m sports_analyzer.pipeline mlb
+        run: python -m sports_analyzer.pipeline mlb --markets h2h,spreads
       - name: Compare the latest 運彩 upload against it
         run: python -m sports_analyzer.pipeline tw
       # The morning's MLB game is final by now; afternoon football too on weekends.

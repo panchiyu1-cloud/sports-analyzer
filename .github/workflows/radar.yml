@@ -1,16 +1,14 @@
 name: 延遲雷達 (radar)
 
-# 15:40, 18:40, 21:40 UTC = 23:40, 02:40, 05:40 台北: hours after the phone's 08:00 /
-# 20:00 uploads, the matches with a 運彩 price that start within 4 hours get freshly
-# bought international prices (h2h; MLB also the run line), within the odds budget
-# plus the pre-game extra. The render then sets them against the last uploaded 運彩
-# prices: a price that, unchanged, would now be a value bet shows on radar.html (延遲雷達)
-# and goes into the 大戶紀錄 (data/moves/events.csv). No phone notification (owner's choice).
-# Nothing due or no budget: nothing bought, nothing committed.
+# By hand only. The radar's purchases now follow the 盯盤 sensor (sensor.yml): a
+# competition is bought when its prices move, instead of at fixed times. This run buys
+# for the matches with a 運彩 price that start within 4 hours and whose price is two hours
+# old (h2h; MLB also the run line), within the odds budget plus the pre-game extra. The
+# render then sets them against the last uploaded 運彩 prices: a price that, unchanged,
+# would now be a value bet shows on radar.html (延遲雷達) and goes into the 大戶紀錄
+# (data/moves/events.csv). Nothing due or no budget: nothing bought, nothing committed.
 
 on:
-  schedule:
-    - cron: "40 15,18,21 * * *"
   workflow_dispatch:
 
 concurrency:

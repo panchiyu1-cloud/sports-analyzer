@@ -9,6 +9,7 @@ name: 運彩 compare
 
 on:
   push:
+    branches: [main]
     paths:
       - "data/tw/**"
   workflow_dispatch:
