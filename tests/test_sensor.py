@@ -398,5 +398,70 @@ class RadarOnlyTests(unittest.TestCase):
         self.assertEqual(seen, [("football", [1, 2], True)])
 
 
+class ReviewDueTests(unittest.TestCase):
+    """A sensor round hands just-finished matches to `review --new-only`."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        root = Path(self.tmp.name)
+        self.paths = {
+            "SNAPSHOT_DIR": root / "snapshots",
+            "FOOTBALL_REVIEWS_PATH": root / "reviews" / "football.csv",
+            "MLB_REVIEWS_PATH": root / "reviews" / "mlb.csv",
+        }
+        self.patches = [mock.patch.object(pipeline, k, v) for k, v in self.paths.items()]
+        for p in self.patches:
+            p.start()
+        made = (NOW - timedelta(hours=10)).isoformat()  # every card made before kickoff
+
+        def kick(hours_ago: float) -> str:
+            return (NOW - timedelta(hours=hours_ago)).isoformat()
+
+        football = [
+            {"match_id": 1, "kickoff_utc": kick(2.2)},  # finished: due
+            {"match_id": 2, "kickoff_utc": kick(1.5)},  # still playing
+            {"match_id": 3, "kickoff_utc": kick(7)},  # left to the routine reviews
+            {"match_id": 4, "kickoff_utc": kick(3)},  # already reviewed
+        ]
+        mlb = [
+            {"game_pk": 10, "kickoff_utc": kick(2.6)},  # due (2.5 h)
+            {"game_pk": 11, "kickoff_utc": kick(2.2)},  # still playing
+            {"game_pk": 12, "kickoff_utc": kick(8.5)},  # rain delays: still asked (9 h)
+        ]
+        folder = self.paths["SNAPSHOT_DIR"] / NOW.date().isoformat()
+        folder.mkdir(parents=True)
+        (folder / "football.json").write_text(
+            json.dumps({"generated_at": made, "competitions": [{"cards": football}]}),
+            encoding="utf-8",
+        )
+        (folder / "mlb.json").write_text(
+            json.dumps({"generated_at": made, "games": mlb}), encoding="utf-8"
+        )
+        reviewed = self.paths["FOOTBALL_REVIEWS_PATH"]
+        reviewed.parent.mkdir(parents=True)
+        reviewed.write_text("match_id,kickoff_utc\n4,x\n", encoding="utf-8")
+
+    def tearDown(self) -> None:
+        for p in self.patches:
+            p.stop()
+        self.tmp.cleanup()
+
+    def test_finished_and_not_reviewed(self):
+        self.assertEqual(pipeline.review_due(NOW), ["football:1", "mlb:10", "mlb:12"])
+
+    def test_the_round_passes_it_on_unless_holding(self):
+        out = Path(self.tmp.name) / "github_output"
+        with (
+            mock.patch.dict("os.environ", {"GITHUB_OUTPUT": str(out)}),
+            mock.patch.object(pipeline, "run_sensor", return_value={"buy": ["PL"]}),
+            mock.patch.object(pipeline, "review_due", return_value=["mlb:10", "mlb:12"]),
+        ):
+            pipeline.main(["sensor"])
+            self.assertEqual(out.read_text(encoding="utf-8"), "buy=PL\nreview=2\n")
+            out.unlink()
+            pipeline.main(["sensor", "--hold"])
+            self.assertEqual(out.read_text(encoding="utf-8"), "buy=PL\nreview=\n")
+
+
 if __name__ == "__main__":
     unittest.main()

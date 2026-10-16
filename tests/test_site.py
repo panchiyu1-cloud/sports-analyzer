@@ -277,6 +277,40 @@ class StampTests(unittest.TestCase):
         self.assertEqual(month_label("2025-08-16"), "2025 年 8 月")
 
 
+class OrderTests(unittest.TestCase):
+    """Cards follow their matches' kickoff (owner, 2026-10-16), whatever their status."""
+
+    def test_cards_soonest_first_history_newest_first(self):
+        rows = [
+            {"kickoff_utc": "2026-10-18T13:00:00+00:00", "id": "c"},
+            {"kickoff_utc": "2026-10-17T11:30:00+00:00", "id": "a"},
+            {"kickoff_utc": None, "id": "unknown"},
+            {"kickoff_utc": "2026-10-17T11:30:00+00:00", "id": "b"},  # same match time
+        ]
+        self.assertEqual([r["id"] for r in site.by_kickoff(rows)], ["a", "b", "c", "unknown"])
+        self.assertEqual(
+            [r["id"] for r in site.by_kickoff(rows, newest_first=True)],
+            ["unknown", "c", "a", "b"],
+        )
+
+    def test_a_signal_no_longer_jumps_the_queue(self):
+        later = card(match_id=2, kickoff_utc="2026-10-18T13:00:00+00:00")
+        sooner = card(match_id=1, kickoff_utc="2026-10-17T11:30:00+00:00")
+        signal = {"match_id": 2, "market": "1X2", "selection_key": "home", "model_p": 0.6,
+                  "market_p": 0.48, "edge": 0.12}  # fmt: skip
+        football = {"competitions": [{"code": "PL", "name": "英超", "cards": [later, sooner],
+                                      "signals": [signal]}]}  # fmt: skip
+        pages = site.build_pages(site.Site(now=NOW, football=football, mlb=None, tape=[]))
+        self.assertEqual([c["id"] for c in pages["model"]["cards"]],
+                         ["m-football-1", "m-football-2"])  # fmt: skip
+        self.assertTrue(pages["model"]["cards"][1]["signal"])
+
+    def test_both_radar_sides_of_a_match_share_one_anchor(self):
+        cards = [{"id": "m-mlb-9", "kickoff_utc": "2026-10-17T01:00:00+00:00"},
+                 {"id": "m-mlb-9", "kickoff_utc": "2026-10-17T01:00:00+00:00"}]  # fmt: skip
+        self.assertEqual([c["id"] for c in site.unique_anchors(cards)], ["m-mlb-9", ""])
+
+
 class AnchorTests(unittest.TestCase):
     def test_no_page_repeats_an_anchor(self):
         """Two strategies pointing at one match give two fade cards, one anchor."""

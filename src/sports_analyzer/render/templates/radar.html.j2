@@ -23,7 +23,7 @@
   {% if cards %}
   <div class="cards">
   {% for c in cards %}
-    <article class="match" id="{{ c.id }}" data-status="{{ c.kind }}">
+    <article class="match"{% if c.id %} id="{{ c.id }}"{% endif %} data-status="{{ c.kind }}">
       <div class="mt"><span class="comp">{{ c.competition }}</span><span class="kick">{{ c.when.date }} {{ c.when.time }}</span><span>{{ c.when.weekday }}</span><span class="eta">{{ c.when.eta }}</span></div>
       <h3 class="teams">{{ c.match }}</h3>
       <div class="verdict">{% if c.kind == 'candidate' %}<span class="chip good">候選</span>{% else %}<span class="chip warn">觀察</span>{% endif %}<b>{{ c.label }}</b></div>

@@ -165,7 +165,10 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   handicap is read from its name ("道奇 -1.5" / "釀酒人 +1.5").
 
 ## 賽後檢討 (post-match review)
-- `pipeline review` (daily + evening + manual `review.yml`) joins the last pre-kickoff
+- `pipeline review` (daily + evening + manual `review.yml`, and `--new-only` from sensor.yml's
+  act job as soon as a match should have finished: `review_due`, football 2 h / MLB 2.5 h after
+  kickoff, asked each round until the result is in, at most 6 h / 9 h after kickoff; owner,
+  2026-10-16: "比賽結束就立刻檢討") joins the last pre-kickoff
   card from the snapshots of the last 14 days with the result (football-data.org /
   MLB Stats API box score) and football-data.co.uk statistics (HxG/AxG, shots, cards;
   domestic leagues only, 2-3 days late; `scripts/refresh_history.sh` refreshes them daily).
@@ -378,12 +381,14 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   de-vigged average sat 0.6pp median, 1.6pp worst from it on 36 matches): they say WHEN,
   the consensus says HOW MUCH. A move is measured on the two books' own readings, never
   against the consensus (that would read the gap between sources as a move).
-- sensor.yml, every ten minutes (cron 2-59/10, concurrency group sensor). Job `watch`:
+- sensor.yml, cron every five minutes (1-59/5; GitHub ran the ten-minute schedule 25-32 minutes
+  apart), concurrency group sensor; readings still go by `TIERS` and the quota is planned on
+  `RUN_MINUTES` (10), so extra runs read nothing early. Job `watch`:
   restores .sensor/ from the Actions cache, runs `pipeline sensor` (`--hold` when a
   daily-group run is queued, waiting or running: a purchase queued then could cancel a
   waiting upload's run), saves the cache, pushes a counts-only status.json to the orphan
-  branch sensor-status. Job `buy` (job concurrency group daily), when `buy` is not empty:
-  `pipeline radar --only <competitions>`, commit.
+  branch sensor-status. Job `act` (job concurrency group daily), when `buy` or `review` is
+  not empty: `pipeline radar --only <competitions>`, `pipeline review --new-only`, commit.
 - `sensor.watched`: matches with a 運彩 price (`tw`) within `WINDOW_HOURS` (48) in a
   competition of `fetch/oddsio.LEAGUES` (MLB: regular-season and playoff slugs). Matched to
   odds-api.io events by competition, kickoff within 2 h and both names (`teams.canonical`,
@@ -436,6 +441,11 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - Front page: headline (可下 / 雷達候選 / none), next upload (`upload_plan`), method tiles,
   48-hour board with flags linking to the cards (`anchor`: m-<sport>-<id>); 反指標 only when
   its price pays, 模型分歧 as a quiet chip (most games carry one).
+- Every page's cards follow their matches' kickoff (owner, 2026-10-16: easier to read;
+  `by_kickoff`): soonest first for the matches to come, newest first for the history,
+  whatever their status (可下 / 大單 / 分歧 used to jump the queue; the hero counts and the
+  front page flags still point them out). Two cards of one match keep one anchor
+  (`unique_anchors`).
 - Look (`_style.html.j2`, "夜場轉播"): floodlit night sky, pitch and diamond line art, turf
   stripes; Barlow Condensed for numbers. Status chips always carry an icon and a word.
 - Every date and time on the site is Taipei time (owner, 2026-10-16; the masthead says so):

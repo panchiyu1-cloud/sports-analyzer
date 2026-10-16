@@ -836,6 +836,45 @@ def _backfill_odds_at(snapshot: dict[str, Any]) -> None:
 
 
 # --------------------------------------------------------------------- review
+# A match is looked up for its review this long after kickoff: a football match ends
+# about 1 h 55 min after kickoff, an MLB game 2 h 40 min to 3 h 15 min after first
+# pitch (the result services mark it finished minutes later; a game not final yet is
+# simply asked again next time).
+FOOTBALL_REVIEW_AFTER_HOURS = 2.0
+MLB_REVIEW_AFTER_HOURS = 2.5
+# The 盯盤 rounds ask for a review only this long after kickoff: a postponed or abandoned
+# match must not start a run every few minutes. Later ones wait for the routine reviews.
+QUICK_REVIEW_HOURS = {"football": 6.0, "mlb": 9.0}
+
+
+def review_due(now: datetime) -> list[str]:
+    """Matches that should have finished and have no review yet, kicked off at most
+    QUICK_REVIEW_HOURS ago: what a 盯盤 round hands to `review --new-only` (sensor.yml),
+    so a review follows a match within minutes, not at the next routine run. Read from
+    the checkout only (snapshots and review CSVs): no request."""
+    done = {
+        "football": {r["match_id"] for r in review_store.read(FOOTBALL_REVIEWS_PATH)},
+        "mlb": {r["game_pk"] for r in review_store.read(MLB_REVIEWS_PATH)},
+    }
+    after = {"football": FOOTBALL_REVIEW_AFTER_HOURS, "mlb": MLB_REVIEW_AFTER_HOURS}
+    cards_of = {
+        "football": lambda s: [c for comp in s.get("competitions", []) for c in comp["cards"]],
+        "mlb": lambda s: list(s.get("games", [])),
+    }
+    out = set()
+    for sport, key in (("football", "match_id"), ("mlb", "game_pk")):
+        # The same pre-kickoff cards run_review reviews, or a match it can never review
+        # (first seen after kickoff) would be asked for every round.
+        pre = review.collect_prematch(_recent_snapshots(sport, now.date(), 2), cards_of[sport], key)
+        for mid, entry in pre.items():
+            card = entry["card"]
+            if mid in done[sport] or not _kicked_off(card, now, after[sport]):
+                continue
+            if not _kicked_off(card, now, QUICK_REVIEW_HOURS[sport]):
+                out.add(f"{sport}:{mid}")
+    return sorted(out)
+
+
 def run_review(
     settings: Settings | None,
     now: datetime | None = None,
@@ -861,7 +900,7 @@ def run_review(
         lambda s: [c for comp in s.get("competitions", []) for c in comp.get("cards", [])],
         "match_id",
     )
-    due = {k: e for k, e in pre.items() if _kicked_off(e["card"], now, hours=2)}
+    due = {k: e for k, e in pre.items() if _kicked_off(e["card"], now, FOOTBALL_REVIEW_AFTER_HOURS)}
     if new_only:
         have = {r["match_id"] for r in review_store.read(FOOTBALL_REVIEWS_PATH)}
         due = {k: e for k, e in due.items() if k not in have}
@@ -914,7 +953,11 @@ def run_review(
     msnaps = _recent_snapshots("mlb", now.date(), days)
     mpre = review.collect_prematch(msnaps, lambda s: s.get("games", []), "game_pk")
     done = {r["game_pk"] for r in review_store.read(MLB_REVIEWS_PATH)}
-    mdue = {k: e for k, e in mpre.items() if k not in done and _kicked_off(e["card"], now, hours=4)}
+    mdue = {
+        k: e
+        for k, e in mpre.items()
+        if k not in done and _kicked_off(e["card"], now, MLB_REVIEW_AFTER_HOURS)
+    }
     mrows: list[dict[str, Any]] = []
     if mdue:
         client = MlbClient()
@@ -1353,10 +1396,14 @@ def main(argv: list[str] | None = None) -> int:
         render_safely()
         return 0
     if args.task == "sensor":
-        # Every ten minutes (sensor.yml): two bookmakers read; the competitions that
-        # moved go to the workflow, whose next job buys them (radar --only).
+        # Every few minutes (sensor.yml): two bookmakers read; the competitions that
+        # moved, and whether a match has just finished, go to the workflow, whose next
+        # job buys them (radar --only) and reviews (review --new-only).
         report = run_sensor(Settings.from_env(offline=True), hold=args.hold)
         _github_output("buy", ",".join(report.get("buy", [])))
+        finished = [] if args.hold else review_due(datetime.now(UTC))
+        log.info("盯盤: %d finished match(es) waiting for a review", len(finished))
+        _github_output("review", len(finished) or "")
         return 0
     if args.task == "radar":
         # After the sensor saw a move (sensor.yml, --only) or by hand: fresh prices, then

@@ -14,7 +14,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -157,6 +157,29 @@ def mlb_cards(site: Site) -> list[dict[str, Any]]:
 def upcoming(cards: Iterable[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
     out = [c for c in cards if (parse_time(c.get("kickoff_utc")) or now) > now]
     return sorted(out, key=lambda c: str(c.get("kickoff_utc")))
+
+
+def by_kickoff(items: Iterable[dict[str, Any]], newest_first: bool = False) -> list[dict[str, Any]]:
+    """Cards in the order of their matches (owner, 2026-10-16: easier to read): soonest
+    first for the matches to come, newest first for the history. The sort is stable, so
+    the cards of one match stay together in the order they were made."""
+    never = datetime.max.replace(tzinfo=UTC)
+    return sorted(
+        items,
+        key=lambda c: parse_time(c.get("kickoff_utc")) or never,
+        reverse=newest_first,
+    )
+
+
+def unique_anchors(cards: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Only a match's first card keeps its anchor (two cards of one match, e.g. both
+    sides on the radar, must not repeat an id; a link lands on the first)."""
+    seen: set[str] = set()
+    for c in cards:
+        if c.get("id") in seen:
+            c["id"] = ""
+        seen.add(c.get("id", ""))
+    return cards
 
 
 def start_of_day(now: datetime) -> datetime:
@@ -488,6 +511,7 @@ def _card_head(card: Mapping[str, Any], site: Site) -> dict[str, Any]:
         "sport": sport,
         "sport_label": SPORT_LABELS[sport],
         "competition": card.get("competition_name") or SPORT_LABELS[sport],
+        "kickoff_utc": card.get("kickoff_utc"),
         "when": when(card.get("kickoff_utc"), site.now),
         "home": home,
         "away": away,
@@ -535,8 +559,7 @@ def value_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
         for c in upcoming(football_cards(site) + mlb_cards(site), site.now)
         if c.get("tw")
     ]
-    order = {"value": 0, "pass": 1, "stale": 2}
-    cards.sort(key=lambda c: (order.get(c["status"], 3), c["when"]["date"], c["when"]["time"]))
+    cards = by_kickoff(cards)
     history = value_history(site)
     reports = [
         {"sport": SPORT_LABELS[sport], **snap["tw_report"]}
@@ -572,7 +595,8 @@ def value_history(site: Site) -> dict[str, Any]:
     from the result; then the matches it looked at and passed on, priced at the close."""
     reviews = _review_rows(site)
     bets = []
-    for r in sorted(site.value_rows, key=lambda r: str(r.get("captured_at")), reverse=True):
+    newest = sorted(site.value_rows, key=lambda r: str(r.get("captured_at")), reverse=True)
+    for r in by_kickoff(newest, newest_first=True):
         sport = str(r.get("sport"))
         row = reviews.get((sport, str(r.get("match_id")))) or {}
         pick = review.explain_pick(review.pick_from_value(r), row, sport)
@@ -862,6 +886,8 @@ def radar_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
                     "timeline": timeline_rows(obs, sides, read),
                 }
             )
+    # Both sides of a match can be on the radar: the match's first card keeps the anchor.
+    cards = unique_anchors(by_kickoff(cards))
     events = [
         m
         for m in site.history
@@ -1015,7 +1041,7 @@ def moves_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
                 "timeline": timeline_rows(obs, sides, read),
             }
         )
-    cards.sort(key=lambda c: (not c["big"], -(c["move"]["move"] if c["move"] else 0)))
+    cards = by_kickoff(cards)
     kinds = ("tw_only", "intl_big")
     history = [
         _event_match(m, kinds, site)
@@ -1145,7 +1171,7 @@ def model_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
         model_card(c, by_match.get(("football", _id(c)), []), signals.get(_id(c), []), site)
         for c in upcoming(football_cards(site), site.now)
     ]
-    cards.sort(key=lambda c: (c["signal"] is None, c["when"]["date"], c["when"]["time"]))
+    cards = by_kickoff(cards)
     reviews = review_views(site.football_reviews, [], site.signal_rows, site.value_rows)
     return {
         **_base(site, "model", "模型分歧"),
@@ -1186,12 +1212,8 @@ def fade_page(site: Site) -> dict[str, Any]:
         }
         for r in site.fade_live
     ]
-    # One anchor per match: a match two strategies point at has two cards.
-    seen: set[str] = set()
-    for r in live:
-        if r["id"] in seen:
-            r["id"] = ""
-        seen.add(r["id"])
+    # A match two strategies point at has two cards: one anchor.
+    live = unique_anchors(by_kickoff(live))
     record = [
         {
             **r,

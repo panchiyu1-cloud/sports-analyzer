@@ -1,13 +1,19 @@
 name: 盯盤 (sensor)
 
-# Every ten minutes the owner's free odds-api.io key (two bookmakers; 100 requests an
+# Every few minutes the owner's free odds-api.io key (two bookmakers; 100 requests an
 # hour, 500 a day) reads the match-winner prices of the matches with a 運彩 price that
 # start within 48 hours: every ten minutes within 24 hours, every 30 beyond, and more
 # often whenever a request has free places or the day has requests to spare
-# (src/sports_analyzer/sensor.py). When a side has moved 3 percentage points or more
-# since The Odds API's consensus was last bought, the buy job buys that competition's
-# consensus (h2h; MLB also the run line: 1-2 credits, within the budget plus the
-# pre-game extra), judges the last 運彩 upload against it (延遲雷達), renders and commits.
+# (src/sports_analyzer/sensor.py; it goes by the time since each reading, so runs that
+# come early or late change nothing). The act job then
+# - buys the consensus of a competition where a side has moved 3 percentage points or
+#   more since it was last bought (h2h; MLB also the run line: 1-2 credits, within the
+#   budget plus the pre-game extra) and judges the last 運彩 upload against it (延遲雷達);
+# - reviews the matches that have just finished (review --new-only: football 2 h, MLB
+#   2.5 h after kickoff, asked again each round until the result is in);
+# then renders and commits. GitHub starts scheduled runs late and skips some (here
+# often 20-40 minutes apart on a ten-minute schedule), so the schedule asks for every
+# five minutes.
 #
 # odds-api.io's data never reaches the repo or the page (its terms): the sensor's state
 # stays in the Actions cache, and only a counts-only status goes to the side branch
@@ -15,7 +21,7 @@ name: 盯盤 (sensor)
 
 on:
   schedule:
-    - cron: "2-59/10 * * * *"
+    - cron: "1-59/5 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -31,6 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       buy: ${{ steps.sensor.outputs.buy }}
+      review: ${{ steps.sensor.outputs.review }}
     env:
       ODDS_API_IO_KEY: ${{ secrets.ODDS_API_IO_KEY }}
       PYTHONPATH: src
@@ -49,9 +56,9 @@ jobs:
           path: .sensor
           key: sensor-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: sensor-
-      # A purchase waits for the daily group. If a task of that group is running or
-      # waiting, a purchase queued now could cancel a waiting upload's run (a group
-      # keeps one waiting run), so this round reads but asks for nothing.
+      # The act job waits for the daily group. If a task of that group is running or
+      # waiting, a job queued now could cancel a waiting upload's run (a group keeps one
+      # waiting run), so this round reads but asks for nothing.
       - name: Is a daily-group task running or waiting?
         id: idle
         env:
@@ -91,9 +98,9 @@ jobs:
           git commit -qm "chore(sensor): status"
           git push -qf origin sensor-status
 
-  buy:
+  act:
     needs: watch
-    if: needs.watch.outputs.buy != ''
+    if: needs.watch.outputs.buy != '' || needs.watch.outputs.review != ''
     runs-on: ubuntu-latest
     # The same group as every task that writes the snapshots, so none of them race.
     concurrency:
@@ -101,7 +108,9 @@ jobs:
       cancel-in-progress: false
     env:
       ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+      FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}  # results for the review
       BUY: ${{ needs.watch.outputs.buy }}
+      REVIEW: ${{ needs.watch.outputs.review }}
       PYTHONPATH: src
     steps:
       - uses: actions/checkout@v4
@@ -114,9 +123,13 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt
       - name: Buy the consensus for the competitions that moved, against the last 運彩 upload
-        id: radar
+        if: env.BUY != ''
         run: python -m sports_analyzer.pipeline radar --only "$BUY"
+      - name: Review the matches that have just finished
+        if: env.REVIEW != ''
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline review --new-only
       - name: Commit
-        if: steps.radar.outputs.refreshed != '0'
         run: |
-          bash scripts/commit_generated.sh "chore(radar): $(date -u +%Y-%m-%dT%H:%M) $BUY moved, consensus vs 運彩" data/snapshots data/tw_ledger.csv data/moves data/odds_budget.json data/tw docs
+          what="${BUY:+consensus for $BUY moved}${BUY:+${REVIEW:+, }}${REVIEW:+post-match reviews}"
+          bash scripts/commit_generated.sh "chore(sensor): $(date -u +%Y-%m-%dT%H:%M) $what" data/snapshots data/ledger.csv data/tw_ledger.csv data/reviews data/moves data/odds_budget.json data/tw docs

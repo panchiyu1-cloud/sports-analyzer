@@ -46,10 +46,13 @@ from .models.market import devig
 from .teams import canonical
 
 # How often a watched match is read, by hours to kickoff: (up to hours, every minutes).
-# Ten minutes is the schedule's own step; a whole Saturday of the five leagues comes to
-# about 475 requests (scratch simulation, 2026-10-16).
+# A whole Saturday of the five leagues comes to about 475 requests (scratch simulation,
+# 2026-10-16).
 TIERS = ((24.0, 10), (48.0, 30))
 WINDOW_HOURS = TIERS[-1][0]
+# The planning step: the quota is shared out as if a run came every ten minutes. The
+# schedule asks for one every five (GitHub starts them late or skips some); readings go
+# by the time since the last one, so extra runs read nothing early.
 RUN_MINUTES = 10
 RUNS_PER_DAY = 24 * 60 // RUN_MINUTES
 DAY = timedelta(hours=24)

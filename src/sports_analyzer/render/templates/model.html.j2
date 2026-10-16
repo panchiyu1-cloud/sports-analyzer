@@ -70,7 +70,7 @@
   {% if reviews.football %}
   <div class="grid">{% for r in reviews.football %}{{ rv.football_card(r) }}{% endfor %}</div>
   {% else %}
-  {{ ui.empty("還沒有打完的比賽", "比賽結束後，下一次更新會把賽前的模型、市場和實際結果放在這裡對照。") }}
+  {{ ui.empty("還沒有打完的比賽", "比賽一結束，賽前的模型、市場和實際結果就會放在這裡對照。") }}
   {% endif %}
 </section>
 {% endblock %}
