@@ -15,7 +15,10 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     env:
-      ODDS_API_IO_KEY: ${{ secrets.ODDS_API_IO_KEY }}
+      # A key saved by mistake under Variables instead of Secrets is still found (and
+      # reported as such, so it can be moved); the value itself is never written out.
+      ODDS_API_IO_KEY: ${{ secrets.ODDS_API_IO_KEY || vars.ODDS_API_IO_KEY }}
+      KEY_SOURCE: ${{ secrets.ODDS_API_IO_KEY != '' && 'secret' || vars.ODDS_API_IO_KEY != '' && 'variable' || 'none' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

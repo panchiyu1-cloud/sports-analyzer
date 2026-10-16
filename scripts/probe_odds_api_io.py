@@ -112,7 +112,7 @@ def probe_sport(sport: str, slug: str | None, books: list[str], key: str, log: l
 
 def main(out_path: Path) -> int:
     key = os.environ.get("ODDS_API_IO_KEY", "").strip()
-    result: dict[str, Any] = {}
+    result: dict[str, Any] = {"key_source": os.environ.get("KEY_SOURCE", "")}
     log: list[dict[str, Any]] = []
     if not key:
         result["error"] = "ODDS_API_IO_KEY is not set (GitHub: Settings > Secrets > Actions)"
