@@ -37,7 +37,7 @@
   {% if live %}
   <div class="cards">
   {% for r in live %}
-    <article class="match" id="{{ r.id }}" data-status="{{ r.status }}">
+    <article class="match"{% if r.id %} id="{{ r.id }}"{% endif %} data-status="{{ r.status }}">
       <div class="mt"><span class="comp">{{ r.sport }}</span><span class="kick">{{ r.when.date }} {{ r.when.time }}</span><span>{{ r.when.weekday }}</span><span class="eta">{{ r.when.eta }}</span></div>
       <h3 class="teams">{{ r.match }}</h3>
       <div class="verdict">{{ ui.status_chip(r.status) }}<span>反著押 <b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}</span>{% if r.ev is not none %}<span class="{{ 'pos' if r.ev >= r.threshold else ('neg' if r.ev < 0 else '') }}">EV {{ '%+.1f%%'|format(r.ev * 100) }}</span>{% endif %}</div>
@@ -136,7 +136,7 @@
     <summary>其他 {{ s.rest|length }} 種押法（全部結果，最差的在前）</summary>
     {{ strategy_table(s.rest) }}
   </details>
-  <p class="stamp-line">回測（{{ s.generated }}）：MLB {{ s.data.mlb_seasons }} 共 {{ '{:,}'.format(s.data.mlb_games) }} 場（六家美國莊家，排除混入的盤中價），足球 {{ s.data.football_seasons }} {{ s.data.football_leagues }} 個聯賽 {{ '{:,}'.format(s.data.football_matches) }} 場（football-data.co.uk）。市場機率是收盤價去水後的機率（足球用 Pinnacle）。運彩價依它實際的水錢換算：足球的水錢多抽在冷門上（熱門約 13%、最冷的一邊約 40%），對 191 個真實盤口的誤差約 4%；MLB 兩邊差不多，平均分配。一次測幾十種押法，就算全部沒有規律，也會有一兩種看起來 z 小於 −2，所以只看兩段時間都差的。</p>
+  <p class="stamp-line">回測（{{ s.generated|stamp }}）：MLB {{ s.data.mlb_seasons }} 共 {{ '{:,}'.format(s.data.mlb_games) }} 場（六家美國莊家，排除混入的盤中價），足球 {{ s.data.football_seasons }} {{ s.data.football_leagues }} 個聯賽 {{ '{:,}'.format(s.data.football_matches) }} 場（football-data.co.uk）。市場機率是收盤價去水後的機率（足球用 Pinnacle）。運彩價依它實際的水錢換算：足球的水錢多抽在冷門上（熱門約 13%、最冷的一邊約 40%），對 191 個真實盤口的誤差約 4%；MLB 兩邊差不多，平均分配。一次測幾十種押法，就算全部沒有規律，也會有一兩種看起來 z 小於 −2，所以只看兩段時間都差的。</p>
 {% else %}
   {{ ui.empty("回測結果還沒產生", "執行 scripts/backtest_fade.py 之後會出現在這裡（data/fade_summary.json）。") }}
 {% endif %}

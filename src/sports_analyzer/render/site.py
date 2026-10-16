@@ -89,6 +89,9 @@ class Site:
     names: dict[tuple[str, str], dict[str, str]] = field(default_factory=dict)
     # Backtest summaries by report page (REPORTS), re-rendered in the site's frame.
     reports: dict[str, dict[str, Any]] = field(default_factory=dict)
+    # Cards of the matches that kicked off since midnight in Taipei, from the recent
+    # snapshots (a started MLB game of the previous US date is in neither `mlb` list).
+    started: list[dict[str, Any]] = field(default_factory=list)
     cfg: ModelConfig = MODEL
 
 
@@ -154,6 +157,34 @@ def mlb_cards(site: Site) -> list[dict[str, Any]]:
 def upcoming(cards: Iterable[dict[str, Any]], now: datetime) -> list[dict[str, Any]]:
     out = [c for c in cards if (parse_time(c.get("kickoff_utc")) or now) > now]
     return sorted(out, key=lambda c: str(c.get("kickoff_utc")))
+
+
+def start_of_day(now: datetime) -> datetime:
+    """Midnight of the current day in Taipei (the page's day)."""
+    local = now.astimezone(LOCAL_TZ)
+    return local.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
+def started_today(site: Site) -> list[dict[str, Any]]:
+    """The matches that kicked off since midnight in Taipei, once each, by kickoff: the
+    day's schedule stays whole after a match leaves the upcoming lists."""
+    since = start_of_day(site.now)
+    out: dict[tuple[str, str], dict[str, Any]] = {}
+    for c in site.started + football_cards(site) + mlb_cards(site):
+        start = parse_time(c.get("kickoff_utc"))
+        if start is not None and since <= start <= site.now:
+            out[(_sport(c), _id(c))] = c
+    return sorted(out.values(), key=lambda c: str(c.get("kickoff_utc")))
+
+
+def final_score(sport: str, row: Mapping[str, Any]) -> str:
+    """A reviewed match's score in its title's order: football home–away, MLB away–home
+    (the title reads away @ home)."""
+    if sport == "mlb":
+        a, b = row.get("final_a"), row.get("final_h")
+    else:
+        a, b = row.get("ft_h"), row.get("ft_a")
+    return f"{a}–{b}" if a not in (None, "") and b not in (None, "") else ""
 
 
 def tape_by_match(
@@ -1155,6 +1186,12 @@ def fade_page(site: Site) -> dict[str, Any]:
         }
         for r in site.fade_live
     ]
+    # One anchor per match: a match two strategies point at has two cards.
+    seen: set[str] = set()
+    for r in live:
+        if r["id"] in seen:
+            r["id"] = ""
+        seen.add(r["id"])
     record = [
         {
             **r,
@@ -1215,6 +1252,22 @@ def hub_page(site: Site, pages: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
 
     horizon = site.now + timedelta(hours=BOARD_HOURS)
     board: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    # Today's matches that have kicked off stay on the board, with the score once reviewed.
+    reviewed = {("football", str(r.get("match_id"))): r for r in site.football_reviews}
+    reviewed.update({("mlb", str(r.get("game_pk"))): r for r in site.mlb_reviews})
+    for c in started_today(site):
+        head = _card_head(c, site)
+        row = reviewed.get((head["sport"], _id(c)))
+        board[f"{head['when']['date']} {head['when']['weekday']}"].append(
+            {
+                **head,
+                "flags": [],
+                "on_tw": bool(c.get("tw")),
+                "started": True,
+                "score": final_score(head["sport"], row) if row else "",
+                "href": f"reviews.html#{head['id']}" if row else "",
+            }
+        )
     for c in upcoming(football_cards(site) + mlb_cards(site), site.now):
         start = parse_time(c.get("kickoff_utc"))
         if start is None or start > horizon:
@@ -1260,7 +1313,7 @@ def hub_page(site: Site, pages: Mapping[str, dict[str, Any]]) -> dict[str, Any]:
             "value": v["value"],
             "radar": r["candidates"],
             "big": m["big"],
-            "matches": sum(len(ms) for ms in board.values()),
+            "matches": sum(1 for ms in board.values() for x in ms if not x.get("started")),
         },
         "board": [{"day": d, "matches": ms} for d, ms in board.items()],
         "tiles": tiles,
@@ -1279,12 +1332,13 @@ def waiting(site: Site) -> list[dict[str, Any]]:
     reviewed = {("football", str(r.get("match_id"))) for r in site.football_reviews}
     reviewed |= {("mlb", str(r.get("game_pk"))) for r in site.mlb_reviews}
     picks = match_picks(site.signal_rows, site.value_rows)
-    out = []
-    for c in football_cards(site) + mlb_cards(site):
+    out, seen = [], set()
+    for c in football_cards(site) + mlb_cards(site) + site.started:
         start = parse_time(c.get("kickoff_utc"))
         key = (_sport(c), _id(c))
-        if start is None or start > site.now or key in reviewed:
+        if start is None or start > site.now or key in reviewed or key in seen:
             continue
+        seen.add(key)
         home, away = names(c)
         out.append({"title": match_title(key[0], home, away), "recommended": key in picks})
     return out

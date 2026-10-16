@@ -302,7 +302,7 @@ def summarise(
         verdict += f" 混合模型給純模型的權重 a={final_w.get('a_model')}（≤ 0 表示模型相對市場沒有額外資訊）。"
 
     return {
-        "generated": date.today().isoformat(),
+        "generated": datetime.now(UTC).isoformat(timespec="minutes"),
         "config": {
             "xi": cfg.dc_xi,
             "min_model_prob": cfg.min_model_prob,

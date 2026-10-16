@@ -13,7 +13,7 @@
 {% block main %}
 <section class="hero">
   <h1>T-10 回測</h1>
-  <p class="lede">{{ s.first }} ～ {{ s.last }}・{{ '{:,}'.format(s.games) }} 場 MLB・更新 {{ s.generated }}。<a href="t10.html">回到 T-10</a></p>
+  <p class="lede">{{ s.first|month }} ～ {{ s.last|month }}・{{ '{:,}'.format(s.games) }} 場 MLB・更新 {{ s.generated|stamp }}。<a href="t10.html">回到 T-10</a></p>
 </section>
 <div class="report-verdict {{ 'pass' if s.passed else 'fail' }}"><b>{{ '通過' if s.passed else '結論' }}：</b>{{ s.verdict }}</div>
 

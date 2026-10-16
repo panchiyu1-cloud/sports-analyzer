@@ -14,7 +14,7 @@
     {"label": "分歧帳面損益", "value": ('%+.1f'|format(ledger.units)) if ledger and ledger.settled else "—", "tone": ("good" if ledger.units > 0 else "bad") if ledger and ledger.settled and ledger.units else ""},
   ]) }}
 {% if not cfg.signals_validated %}
-<div class="note">回測{% if backtest_total and backtest_total.generated %}（{{ backtest_total.generated }}）{% endif %}：{% if backtest_total and backtest_total.clv is not none %}模型對收盤線的 CLV {{ '%+.1f%%'|format(backtest_total.clv * 100) }}，{% endif %}模型沒有市場以外的資訊。要找價值，請看<a href="value.html">運彩價值</a>。{% if backtest_exists %}<a href="backtest.html">看回測報告</a>{% endif %}</div>
+<div class="note">回測{% if backtest_total and backtest_total.generated %}（{{ backtest_total.generated|stamp }}）{% endif %}：{% if backtest_total and backtest_total.clv is not none %}模型對收盤線的 CLV {{ '%+.1f%%'|format(backtest_total.clv * 100) }}，{% endif %}模型沒有市場以外的資訊。要找價值，請看<a href="value.html">運彩價值</a>。{% if backtest_exists %}<a href="backtest.html">看回測報告</a>{% endif %}</div>
 {% endif %}
 {{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", reviews.football|length)]) }}
 

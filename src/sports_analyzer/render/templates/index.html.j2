@@ -30,23 +30,23 @@
   {% endfor %}
 </div>
 
-<h2 class="sect">接下來 48 小時 <span class="count">標籤是哪個方法對這場有話說，點標籤直接看那張卡</span></h2>
+<h2 class="sect">賽程 <span class="count">台灣時間。今天已開賽的也留著；標籤是哪個方法對這場有話說，點標籤直接看那張卡</span></h2>
 {% if board %}
 {% for d in board %}
 <div class="day-h">{{ d.day }}</div>
 <ul class="fixtures">
   {% for m in d.matches %}
-  <li class="fx{% if m.flags %} flagged{% endif %}">
+  <li class="fx{% if m.flags %} flagged{% endif %}{% if m.started %} started{% endif %}">
     <span class="fx-time">{{ m.when.time }}</span>
-    <span class="fx-comp">{{ m.competition }}{% if not m.on_tw %}・運彩未開盤{% endif %}</span>
+    <span class="fx-comp">{{ m.competition }}{% if not m.on_tw and not m.started %}・運彩未開盤{% endif %}</span>
     <span class="fx-teams">{{ m.title }}</span>
-    <span class="fx-flags">{% for f in m.flags %}<a class="chip {{ f.tone }}" href="{{ f.href }}">{{ f.label }}</a>{% endfor %}</span>
+    <span class="fx-flags">{% if m.started %}{% if m.score %}<a class="chip final" href="{{ m.href }}">{{ m.score }}・看檢討</a>{% else %}<span class="chip ghost">已開賽・等賽果</span>{% endif %}{% endif %}{% for f in m.flags %}<a class="chip {{ f.tone }}" href="{{ f.href }}">{{ f.label }}</a>{% endfor %}</span>
   </li>
   {% endfor %}
 </ul>
 {% endfor %}
 {% else %}
-{{ ui.empty("48 小時內沒有比賽", "每天 08:15、20:25（台北）會抓新的賽程和國際賠率。") }}
+{{ ui.empty("今天起 48 小時內沒有比賽", "每天 08:15、20:25（台灣時間）會抓新的賽程和國際賠率。") }}
 {% endif %}
 
 {% if last %}

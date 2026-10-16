@@ -1,5 +1,6 @@
 """The site's view builders (render/site.py): charts, readings and history verdicts."""
 
+import re
 import unittest
 from datetime import UTC, datetime
 
@@ -217,6 +218,83 @@ class FrontPageTests(unittest.TestCase):
             site.when("2026-10-17T14:00:00+00:00", NOW),
             {"date": "10/17", "time": "22:00", "weekday": "週六", "eta": "還有 37 小時 45 分"},
         )
+
+
+def mlb_game(pk: int, kickoff: str, **kw) -> dict:
+    return {"game_pk": pk, "kickoff_utc": kickoff, "home": "Los Angeles Dodgers",
+            "away": "Milwaukee Brewers", "market": {}, **kw}  # fmt: skip
+
+
+class TodayTests(unittest.TestCase):
+    """The day is Taipei's: 10/16 runs from 10/15 16:00 to 10/16 16:00 UTC."""
+
+    NOW = datetime(2026, 10, 16, 5, 30, tzinfo=UTC)  # 13:30 Taipei
+
+    def test_todays_started_matches_stay_on_the_board(self):
+        reviewed = mlb_game(1, "2026-10-15T17:00:00+00:00")  # 10/16 01:00 Taipei
+        playing = mlb_game(2, "2026-10-16T00:00:00+00:00")  # 10/16 08:00 Taipei
+        yesterday = mlb_game(3, "2026-10-15T15:00:00+00:00")  # 10/15 23:00 Taipei
+        later = mlb_game(4, "2026-10-16T22:00:00+00:00")  # 10/17 06:00 Taipei
+        s = site.Site(
+            now=self.NOW,
+            football=None,
+            mlb={"games": [later]},
+            tape=[],
+            mlb_reviews=[{"game_pk": "1", "final_a": "2", "final_h": "3"}],
+            started=[reviewed, playing, yesterday],
+        )
+        pages = site.build_pages(s)
+        board = pages["index"]["board"]
+        self.assertEqual([d["day"] for d in board], ["10/16 週五", "10/17 週六"])
+        today = board[0]["matches"]
+        self.assertEqual([m["when"]["time"] for m in today], ["01:00", "08:00"])
+        self.assertEqual((today[0]["score"], today[0]["href"]), ("2–3", "reviews.html#m-mlb-1"))
+        self.assertEqual((today[1]["score"], today[1]["started"]), ("", True))
+        self.assertEqual(pages["index"]["counts"]["matches"], 1)  # only the one to come
+        html = site.render_page(s, "index")
+        self.assertIn("2–3・看檢討", html)
+        self.assertIn("已開賽・等賽果", html)
+        # The one still playing waits for its review on the reviews page too.
+        self.assertEqual([w["title"] for w in pages["reviews"]["waiting"]][-1],
+                         "Milwaukee Brewers @ Los Angeles Dodgers")  # fmt: skip
+
+    def test_start_of_day_is_midnight_in_taipei(self):
+        self.assertEqual(
+            site.start_of_day(self.NOW).astimezone(UTC),
+            datetime(2026, 10, 15, 16, 0, tzinfo=UTC),
+        )
+
+
+class StampTests(unittest.TestCase):
+    def test_report_stamps_in_taipei_time(self):
+        from sports_analyzer.render.cards import month_label, taipei_stamp
+
+        self.assertEqual(taipei_stamp("2026-10-14T07:43+00:00"), "2026/10/14 15:43")
+        self.assertEqual(taipei_stamp("2026-10-15T16:30+00:00"), "2026/10/16 00:30")  # next day
+        self.assertEqual(taipei_stamp("2026-10-14"), "2026/10/14")  # a bare date stays one
+        self.assertEqual(taipei_stamp("2026-10-14T07:43"), "—")  # no zone: unknown
+        self.assertEqual(taipei_stamp(None), "—")
+        self.assertEqual(month_label("2025-08-16"), "2025 年 8 月")
+
+
+class AnchorTests(unittest.TestCase):
+    def test_no_page_repeats_an_anchor(self):
+        """Two strategies pointing at one match give two fade cards, one anchor."""
+        football = {
+            "competitions": [{"code": "PL", "name": "英超", "cards": [card()], "signals": []}]
+        }
+        fades = [
+            {"sport_key": "football", "sport": "足球", "match_id": "1", "status": "value",
+             "strategies": [k], "kickoff_utc": "2026-10-17T14:00:00+00:00", "match": "A vs B",
+             "fade_label": label, "tw_price": 2.0, "ev": 0.05, "threshold": 0.02,
+             "fair_prob": 0.525}
+            for k, label in (("home_dog", "客勝或和局"), ("longshot8", "主勝或和局"))
+        ]  # fmt: skip
+        s = site.Site(now=NOW, football=football, mlb=None, tape=[], fade_live=fades)
+        for key, _, _ in site.PAGES:
+            html = site.render_page(s, key)
+            ids = re.findall(r'\bid="([^"]+)"', html)
+            self.assertEqual(len(ids), len(set(ids)), key)
 
 
 if __name__ == "__main__":

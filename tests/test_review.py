@@ -705,7 +705,7 @@ class RenderTests(unittest.TestCase):
         # still to play is an analysis card.
         self.assertEqual(model.count('<article class="match"'), 1)
         self.assertIn("Chelsea FC", model)
-        self.assertEqual(model.count('<article class="card review">'), 1)
+        self.assertEqual(model.count('class="card review"'), 1)
         self.assertIn("半場 1–0", model)
         reviews = render_page(site, "reviews")
         self.assertIn("半場 1–0", reviews)

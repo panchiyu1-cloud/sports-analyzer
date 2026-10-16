@@ -530,7 +530,7 @@ def run(sport: str) -> dict[str, Any]:
 
 def main() -> int:
     summary = {
-        "generated": datetime.now(UTC).date().isoformat(),
+        "generated": datetime.now(UTC).isoformat(timespec="minutes"),
         "split": {"mlb": ["2021–2023", "2024–2025"],
                   "football": ["2019/20–2022/23", "2023/24–2026/27"]},
         "min_train": MIN_TRAIN,

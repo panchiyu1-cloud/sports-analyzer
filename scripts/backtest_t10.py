@@ -225,7 +225,7 @@ def analyse(games: list[dict[str, Any]]) -> dict[str, Any]:
     fav = [x for x in games if x["g"].g >= THRESHOLD]
     dog = [x for x in games if x["g"].g <= -THRESHOLD]
     s: dict[str, Any] = {
-        "generated": datetime.now(UTC).strftime("%Y-%m-%d"),
+        "generated": datetime.now(UTC).isoformat(timespec="minutes"),
         "games": len(games),
         "seasons": sorted({x["season"] for x in games}),
         "first": min(x["date"] for x in games),

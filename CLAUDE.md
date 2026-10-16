@@ -438,4 +438,13 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   its price pays, 模型分歧 as a quiet chip (most games carry one).
 - Look (`_style.html.j2`, "夜場轉播"): floodlit night sky, pitch and diamond line art, turf
   stripes; Barlow Condensed for numbers. Status chips always carry an icon and a word.
+- Every date and time on the site is Taipei time (owner, 2026-10-16; the masthead says so):
+  `when`, `|tpe`, `|stamp` (report stamps: summaries store `generated` as a UTC ISO time;
+  a bare date from an older summary is only reformatted), `|month` for data spans (a game
+  date is the venue's own, a month needs no zone). The day is Taipei's: Friday-evening
+  European matches are Saturday 02:30-03:00; the newest MLB snapshot holds the next US date.
+- The front board keeps today's matches (since 00:00 Taipei) after kickoff (`Site.started`
+  from the last two days of snapshots, `started_today`): the score and a link to the review
+  once reviewed, else "已開賽・等賽果"; the reviews page's waiting list uses them too. Review
+  cards carry the match anchor (`m-<sport>-<id>`); no page may repeat an anchor.
 

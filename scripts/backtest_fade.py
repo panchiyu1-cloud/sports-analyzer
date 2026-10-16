@@ -827,7 +827,7 @@ def main(argv: list[str] | None = None) -> int:
 
     strategies = {**mlb, **football, **model}
     summary = {
-        "generated": datetime.now(UTC).date().isoformat(),
+        "generated": datetime.now(UTC).isoformat(timespec="minutes"),
         "data": {
             "mlb_games": len(games),
             "mlb_seasons": f"{games[0]['season']}–{games[-1]['season']}",

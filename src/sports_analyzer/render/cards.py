@@ -28,6 +28,8 @@ def _env() -> Environment:
         lstrip_blocks=True,
     )
     env.filters["tpe"] = taipei_time
+    env.filters["stamp"] = taipei_stamp
+    env.filters["month"] = month_label
     return env
 
 
@@ -40,6 +42,31 @@ def taipei_time(value: Any) -> str:
     if dt.tzinfo is None:
         return "—"
     return dt.astimezone(LOCAL_TZ).strftime("%m/%d %H:%M")
+
+
+def taipei_stamp(value: Any) -> str:
+    """When a report was made: an ISO time -> '2026/10/14 15:43' in Taipei. A bare date
+    (no time to convert) is only reformatted; '—' when unknown."""
+    text = str(value or "").strip()
+    try:
+        dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return "—"
+    if len(text) == 10:  # YYYY-MM-DD
+        return dt.strftime("%Y/%m/%d")
+    if dt.tzinfo is None:
+        return "—"
+    return dt.astimezone(LOCAL_TZ).strftime("%Y/%m/%d %H:%M")
+
+
+def month_label(value: Any) -> str:
+    """A data span's end: '2025-08-16' -> '2025 年 8 月'. Game dates in the data are the
+    venue's own (an MLB evening is the next morning in Taipei); a month needs no zone."""
+    try:
+        d = datetime.fromisoformat(str(value)[:10])
+    except ValueError:
+        return str(value or "—")
+    return f"{d.year} 年 {d.month} 月"
 
 
 SPORT_LABELS = {"football": "足球", "mlb": "MLB"}

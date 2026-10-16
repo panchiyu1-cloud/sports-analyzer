@@ -3,7 +3,7 @@
 {% block main %}
 <section class="hero">
   <h1>足球模型回測</h1>
-  <p class="lede">產生：{{ s.generated }}・五大聯賽・逐週走勢（嚴格 out-of-sample）・衰減 xi={{ s.config.xi }}。<a href="model.html">回到模型分歧</a></p>
+  <p class="lede">產生：{{ s.generated|stamp }}・五大聯賽・逐週走勢（嚴格 out-of-sample）・衰減 xi={{ s.config.xi }}。<a href="model.html">回到模型分歧</a></p>
 </section>
 <div class="report-verdict {{ 'pass' if s.passed else 'fail' }}"><b>結論</b>　{{ s.verdict }}</div>
 
@@ -30,7 +30,8 @@
 </table></div>
 
 <h2 class="sect">4. 混合權重（走勢末端）</h2>
-<p class="stamp-line">a = 純模型權重，b = 市場權重（1 = 照市場），c = 和局／客勝截距。{{ s.blend_weights_final }}</p>
+{% set w = s.blend_weights_final %}
+<p class="stamp-line">a = 純模型權重，b = 市場權重（1 = 照市場），c = 和局／客勝截距。{% if w %}最後一次重估（{{ w.week|replace('-', '/') }} 那一週，用 {{ '{:,}'.format(w.n_train) }} 場訓練）：a = {{ '%+.3f'|format(w.a_model) }}、b = {{ '%.3f'|format(w.b_market) }}、c 和局 = {{ '%+.3f'|format(w.c_draw) }}、c 客勝 = {{ '%+.3f'|format(w.c_away) }}。{% if w.a_model < 0 %}a 小於 0：模型的意見不但沒幫上忙，還要反過來扣掉，等於照市場。{% endif %}{% endif %}</p>
 
 <h2 class="sect">5. 各聯賽（混合 edge ≥ 3pp）</h2>
 <div class="scroll"><table class="tbl"><tr><th>聯賽</th><th>場數</th><th>模型 ll</th><th>市場 ll</th><th>混合 ll</th><th>注數</th><th>ROI</th><th>CLV</th></tr>

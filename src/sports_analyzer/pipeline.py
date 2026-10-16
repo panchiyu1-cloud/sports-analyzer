@@ -1054,8 +1054,30 @@ def render_latest() -> Path:
         backtest_exists=(DOCS_DIR / "backtest.html").exists(),
         names=names,
         reports=_reports(),
+        started=_started_today(now),
     )
     return render_site(site, DOCS_DIR)["index"]
+
+
+def _started_today(now: datetime) -> list[dict[str, Any]]:
+    """Cards of the matches that kicked off since midnight in Taipei, from the snapshots
+    of the last two days (the newest copy wins). A started MLB game of the previous US
+    date is in no list the page otherwise reads, and its review comes hours later: the
+    front page and the reviews page keep the day's schedule whole with these."""
+    since = now.astimezone(LOCAL_TZ).replace(hour=0, minute=0, second=0, microsecond=0)
+    out: dict[tuple[str, str], dict[str, Any]] = {}
+    for sport in ("football", "mlb"):
+        for snap in _recent_snapshots(sport, now.date(), 2):  # oldest first
+            if sport == "mlb":
+                cards = list(snap.get("games", []))
+            else:
+                cards = [c for comp in snap.get("competitions", []) for c in comp["cards"]]
+            for card in cards:
+                start = pregame.kickoff(card)
+                if start is not None and since <= start <= now:
+                    mid = card.get("game_pk") if sport == "mlb" else card.get("match_id")
+                    out[(sport, str(mid))] = card
+    return sorted(out.values(), key=lambda c: str(c.get("kickoff_utc")))
 
 
 def _reports() -> dict[str, dict[str, Any]]:
