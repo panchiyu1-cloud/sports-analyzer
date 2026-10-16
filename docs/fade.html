@@ -2,187 +2,900 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>反者道之動</title>
-<meta name="description" content="最差的押法是哪些，反著做在國際價和運彩價各會怎樣；今日反指標與真實運彩價的反向紀錄">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0A1630">
+<title>反者道之動｜比賽分析</title>
+<meta name="description" content="反者道之動：最差的押法是哪些，反著做在國際價和運彩價各會怎樣；今日反指標與真實運彩價的反向紀錄">
+<script>document.documentElement.classList.add('js')</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* 夜場轉播: a floodlit stadium at night behind broadcast panels. Blue = the
+     international market, amber = 運彩; green / amber / red only for verdicts. */
   :root {
-    --bg: #f6f5f1; --card: #ffffff; --ink: #1d1d1b; --muted: #6b6a66; --line: #e4e2db;
-    --model: #2f6f5e; --market: #b0693a; --accent: #2f6f5e; --good: #2f6f5e; --bad: #a63d2f;
-    --chip: #ecebe5; --warn-bg: #fbf3e2; --warn-ink: #6b4b12;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
-      --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
-      --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
-    }
-  }
-  :root[data-theme="dark"] {
-    --bg: #141513; --card: #1d1f1c; --ink: #ecebe6; --muted: #9b9a94; --line: #2c2e2a;
-    --model: #7fc4ad; --market: #e0a070; --accent: #7fc4ad; --good: #7fc4ad; --bad: #e08a7c;
-    --chip: #2a2c28; --warn-bg: #3a3120; --warn-ink: #f0d9a8;
+    color-scheme: dark;
+    --sky: #0A1630; --sky-2: #0D2140; --turf: #0B2A28;
+    --panel-solid: #0F1E38;
+    --line: rgba(150, 185, 230, .15); --line-2: rgba(150, 185, 230, .3);
+    --ink: #EAF3FF; --ink-2: #B7C6DB; --ink-3: #8195B0;
+    --intl: #2A93D8; --tw: #CC7F1A;
+    --good: #3DDC84; --good-fill: #177A47;
+    --warn: #F2B95A; --warn-fill: #8A5A12;
+    --bad: #FF7A7A; --bad-fill: #B23A3A;
+    --neutral-fill: #2B3B57;
+    --num: "Barlow Condensed", "PingFang TC", "Noto Sans TC", sans-serif;
+    --sans: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink);
-         font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-         line-height: 1.5; font-size: 15px; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 64px; }
-  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 20px; margin-bottom: 20px; }
-  h1 { font-size: 1.5rem; margin: 0; letter-spacing: .02em; }
-  .meta { color: var(--muted); font-size: .9rem; }
-  h2 { font-size: 1.1rem; margin: 28px 0 10px; display: flex; align-items: center; gap: 10px; }
-  h2 .count { color: var(--muted); font-weight: 400; font-size: .9rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .card .top { display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; }
-  .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
-  .teams .name { font-weight: 600; font-size: 1.02rem; line-height: 1.25; }
-  .teams .away { text-align: right; }
-  .teams .vs { color: var(--muted); font-size: .8rem; }
-  .sub { color: var(--muted); font-size: .8rem; }
-  .bars { display: grid; grid-template-columns: 2.6em 1fr 3.2em 3.2em; gap: 4px 8px; align-items: center; font-size: .85rem; font-variant-numeric: tabular-nums; }
-  .bars .lab { color: var(--muted); }
-  .bar { position: relative; height: 10px; background: var(--chip); border-radius: 5px; overflow: hidden; }
-  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
-  .bar .m { background: var(--model); }
-  .bar .k { background: var(--market); opacity: .55; }
-  .legend { display: flex; gap: 14px; font-size: .75rem; color: var(--muted); }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
-  .model-val { color: var(--model); font-weight: 600; }
-  .market-val { color: var(--market); }
-  .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: .82rem; }
-  .facts div { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed var(--line); padding: 2px 0; }
-  .facts span:first-child { color: var(--muted); }
-  .rec { border-top: 1px solid var(--line); padding-top: 10px; font-size: .9rem; }
-  .rec b { color: var(--accent); }
-  .chip { display: inline-block; background: var(--chip); border-radius: 999px; padding: 1px 9px; font-size: .75rem; margin-left: 6px; }
-  .chip.high { background: var(--good); color: #fff; }
-  .chip.mid { background: var(--market); color: #fff; }
-  .note { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 6px 10px; font-size: .78rem; }
-  .none { color: var(--muted); font-size: .85rem; }
-  table { width: 100%; border-collapse: collapse; font-size: .85rem; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  th { color: var(--muted); font-weight: 500; font-size: .78rem; }
-  tr:last-child td { border-bottom: 0; }
-  .scroll { overflow-x: auto; }
-  .kpis { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0 4px; }
-  .kpi { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 120px; flex: 1 1 140px; }
-  .kpi b { display: block; font-size: 1.2rem; }
-  .kpi span { color: var(--muted); font-size: .78rem; }
-  .pos { color: var(--good); } .neg { color: var(--bad); }
-  footer { margin-top: 40px; color: var(--muted); font-size: .78rem; border-top: 1px solid var(--line); padding-top: 14px; }
-  a { color: var(--accent); }
+  html { background: var(--sky); -webkit-text-size-adjust: 100%; }
+  body { margin: 0; min-height: 100vh; color: var(--ink); font: 15px/1.6 var(--sans); isolation: isolate; }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background:
+      radial-gradient(70vmax 40vmax at 4% -8%, rgba(165, 214, 255, .26), transparent 60%),
+      radial-gradient(60vmax 36vmax at 99% -12%, rgba(165, 214, 255, .18), transparent 58%),
+      linear-gradient(104deg, transparent 16%, rgba(190, 225, 255, .05) 23%, transparent 30%),
+      linear-gradient(78deg, transparent 63%, rgba(190, 225, 255, .045) 69%, transparent 76%),
+      linear-gradient(180deg, var(--sky) 0%, var(--sky-2) 44%, var(--turf) 100%);
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1060 690' fill='none' stroke='rgba(255,255,255,0.10)' stroke-width='3'%3E %3Crect x='5' y='5' width='1050' height='680'/%3E %3Cline x1='530' y1='5' x2='530' y2='685'/%3E %3Ccircle cx='530' cy='345' r='92'/%3E %3Ccircle cx='530' cy='345' r='4' fill='rgba(255,255,255,0.10)'/%3E %3Crect x='5' y='143' width='165' height='404'/%3E%3Crect x='5' y='253' width='55' height='184'/%3E %3Crect x='890' y='143' width='165' height='404'/%3E%3Crect x='1000' y='253' width='55' height='184'/%3E %3Cpath d='M170 272 A92 92 0 0 1 170 418'/%3E%3Cpath d='M890 272 A92 92 0 0 0 890 418'/%3E %3Ccircle cx='115' cy='345' r='4' fill='rgba(255,255,255,0.10)'/%3E%3Ccircle cx='945' cy='345' r='4' fill='rgba(255,255,255,0.10)'/%3E %3Cpath d='M5 15 A10 10 0 0 0 15 5'/%3E%3Cpath d='M1045 5 A10 10 0 0 0 1055 15'/%3E%3Cpath d='M5 675 A10 10 0 0 1 15 685'/%3E%3Cpath d='M1055 675 A10 10 0 0 0 1045 685'/%3E %3C/svg%3E") right -220px bottom -170px / 920px auto no-repeat,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600' fill='none' stroke='rgba(255,255,255,0.10)' stroke-width='3'%3E %3Cpath d='M300 540 L60 300 A339 339 0 0 1 540 300 Z'/%3E %3Cpath d='M300 540 L390 450 L300 360 L210 450 Z'/%3E %3Ccircle cx='300' cy='462' r='12'/%3E %3C/svg%3E") left -150px bottom -210px / 560px auto no-repeat,
+      repeating-linear-gradient(90deg, rgba(130, 220, 170, .05) 0 72px, transparent 72px 144px);
+    -webkit-mask-image: linear-gradient(180deg, transparent 28%, #000 88%);
+    mask-image: linear-gradient(180deg, transparent 28%, #000 88%);
+  }
+  a { color: #7CC4F2; }
+  .num { font-family: var(--num); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 
-  /* post-match review */
-  .score { text-align: center; font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
-  .score .sub { font-size: .72rem; font-weight: 400; }
-  .chip.good { background: var(--good); color: #fff; }
-  .chip.bad { background: var(--bad); color: #fff; }
-  .chip.warn { background: var(--market); color: #fff; }
+  /* top: brand bar + method strip, one sticky block */
+  .masthead { position: sticky; top: 0; z-index: 10; background: rgba(7, 16, 34, .78);
+         -webkit-backdrop-filter: blur(14px) saturate(1.3); backdrop-filter: blur(14px) saturate(1.3);
+         border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px 4px; max-width: 1180px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.05rem; letter-spacing: .06em; }
+  .brand svg { width: 26px; height: 26px; flex: none; }
+  .stamp { color: var(--ink-3); font-size: .78rem; white-space: nowrap; }
+  .stamp b { color: var(--ink-2); font-family: var(--num); font-weight: 600; font-size: .95rem; }
+  .nav { display: flex; gap: 6px; overflow-x: auto; padding: 6px 16px 10px; max-width: 1180px; margin: 0 auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav a { flex: none; color: var(--ink-2); text-decoration: none; font-size: .88rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, .02); }
+  .nav a[aria-current="page"] { color: #fff; background: rgba(42, 147, 216, .28); border-color: rgba(42, 147, 216, .7); }
+
+  /* method header: name, what it does, the score bug */
+  .hero { padding: 26px 0 6px; }
+  .hero h1 { font-size: clamp(1.75rem, 7vw, 2.6rem); line-height: 1.12; margin: 0 0 8px; font-weight: 800; letter-spacing: .03em;
+             text-shadow: 0 0 28px rgba(120, 190, 255, .35); }
+  .lede { color: var(--ink-2); max-width: 44em; margin: 0 0 16px; font-size: .94rem; }
+  .bug { display: flex; flex-wrap: wrap; margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-2);
+         background: linear-gradient(180deg, rgba(34, 62, 108, .92), rgba(13, 27, 52, .92)); box-shadow: 0 10px 28px rgba(2, 8, 20, .4); }
+  .bug > div { flex: 1 1 22%; min-width: 0; padding: 8px 12px 7px; border-left: 1px solid var(--line); }
+  .bug > div:first-child { border-left: 0; box-shadow: inset 3px 0 0 var(--intl); }
+  .bug dt { color: var(--ink-3); font-size: .74rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bug dd { margin: 0; font-family: var(--num); font-weight: 700; font-size: 1.75rem; line-height: 1.1; white-space: nowrap; }
+  .bug dd small { font-size: .9rem; font-weight: 600; color: var(--ink-2); margin-left: 2px; }
+  .bug dd.good { color: var(--good); } .bug dd.bad { color: var(--bad); } .bug dd.warn { color: var(--warn); }
+  @media (max-width: 560px) { .bug > div { flex-basis: 50%; } .bug > div:nth-child(odd) { border-left: 0; } .bug > div:nth-child(n+3) { border-top: 1px solid var(--line); } }
+
+  /* tabs */
+  .tabs { display: flex; margin: 20px 0 14px; border: 1px solid var(--line-2); border-radius: 12px; overflow: hidden; background: rgba(6, 14, 30, .55); }
+  .tabs a { flex: 1; text-align: center; padding: 10px 8px; color: var(--ink-2); text-decoration: none; font-weight: 700; border-left: 1px solid var(--line); }
+  .tabs a:first-child { border-left: 0; }
+  .tabs a[aria-selected="true"] { color: #fff; background: linear-gradient(180deg, rgba(42, 147, 216, .5), rgba(42, 147, 216, .16)); box-shadow: inset 0 -3px 0 var(--intl); }
+  .tabs .num { margin-left: 4px; font-size: 1.05rem; opacity: .85; }
+  .js .tabpanel:not(.active) { display: none; }
+  .tabpanel > h2, .sect { font-size: 1.05rem; margin: 22px 0 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .tabpanel > h2:first-child { margin-top: 4px; }
+  .count { color: var(--ink-3); font-weight: 400; font-size: .84rem; }
+
+  /* cards */
+  .cards { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 760px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1180px) { .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .match, .past, .panel, .card {
+    background: linear-gradient(180deg, rgba(24, 45, 82, .9), rgba(11, 23, 45, .92));
+    border: 1px solid var(--line); border-radius: 16px; padding: 14px 14px 12px; min-width: 0;
+    box-shadow: 0 14px 34px rgba(2, 8, 20, .38);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .match { border-top: 3px solid var(--edge, var(--line-2)); scroll-margin-top: 110px; }
+  .match[data-status="value"], .match[data-status="candidate"] { --edge: var(--good); }
+  .match[data-status="stale"], .match[data-status="watch"], .match[data-status="big"] { --edge: var(--warn); }
+  .mt { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; color: var(--ink-3); font-size: .8rem; }
+  .mt .comp { color: var(--ink-2); font-weight: 700; }
+  .mt .kick { font-family: var(--num); font-size: 1.02rem; color: var(--ink); font-weight: 600; }
+  .mt .eta { margin-left: auto; }
+  .match .teams { margin: 6px 0 8px; font-size: 1.16rem; line-height: 1.3; font-weight: 800; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+  .match .teams i { font-style: normal; color: var(--ink-3); font-weight: 500; font-size: .85rem; }
+  .match .intl-names { color: var(--ink-3); font-size: .75rem; margin: -6px 0 8px; }
+  .verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-bottom: 8px; font-size: .92rem; }
+  .verdict b { font-family: var(--num); font-size: 1.1rem; }
+  .big-figure { font-family: var(--num); font-weight: 700; font-size: 2.2rem; line-height: 1; }
+  .sub { color: var(--ink-3); font-size: .8rem; }
+  .stamp-line { color: var(--ink-3); font-size: .74rem; margin: 6px 0 0; }
+
+  /* chips: status always carries an icon and a word, never colour alone */
+  .chip { display: inline-flex; align-items: center; gap: 3px; padding: 2px 10px; border-radius: 999px; font-size: .78rem; font-weight: 700;
+          background: var(--neutral-fill); color: #fff; white-space: nowrap; text-decoration: none; line-height: 1.6; }
+  .chip.good { background: var(--good-fill); } .chip.good::before { content: "✓"; }
+  .chip.warn { background: var(--warn-fill); } .chip.warn::before { content: "!"; }
+  .chip.bad { background: var(--bad-fill); } .chip.bad::before { content: "✕"; }
+  .chip.ghost { background: transparent; border: 1px solid var(--line-2); color: var(--ink-3); font-weight: 500; }
+  .pos { color: var(--good); } .neg { color: var(--bad); } .muted { color: var(--ink-3); }
+
+  /* tables */
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: .86rem; }
+  .tbl th { color: var(--ink-3); font-weight: 500; font-size: .74rem; text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line-2); white-space: nowrap; }
+  .tbl td { padding: 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; vertical-align: top; }
+  .tbl tr:last-child td { border-bottom: 0; }
+  .tbl .num, .tbl td.r { text-align: right; }
+  .tbl td.num { font-size: 1rem; }
+  .tbl tr.on td { background: rgba(61, 220, 132, .1); }
+  .tbl td.wrap-cell { white-space: normal; }
+  .tbl th.ih::before, .tbl th.th::before { content: ""; display: inline-block; width: 10px; height: 2px; margin-right: 4px; vertical-align: middle; }
+  .tbl th.ih::before { background: var(--intl); } .tbl th.th::before { background: var(--tw); }
+  .tbl td.good { color: var(--good); } .tbl td.warn { color: var(--warn); } .tbl td.bad { color: var(--bad); } .tbl td.neutral { color: var(--ink-3); }
+
+  /* the prices over time */
+  .spark { margin: 10px 0 2px; position: relative; outline: none; }
+  .spark figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; font-size: .78rem; color: var(--ink-2); margin-bottom: 2px; }
+  .keys { display: inline-flex; gap: 10px; color: var(--ink-3); }
+  .key::before { content: ""; display: inline-block; width: 14px; height: 2px; border-radius: 1px; vertical-align: middle; margin-right: 4px; background: var(--ink-3); }
+  .key.intl::before { background: var(--intl); } .key.tw::before { background: var(--tw); }
+  .spark svg { display: block; width: 100%; height: auto; overflow: visible; touch-action: pan-y; }
+  .spark .grid line { stroke: rgba(150, 185, 230, .14); stroke-width: 1; }
+  .spark text { fill: var(--ink-3); font: 500 10px var(--num); }
+  .spark .end { fill: var(--ink-2); font-weight: 700; font-size: 11px; }
+  .spark .ref { stroke: rgba(234, 243, 255, .32); stroke-width: 1; }
+  .spark .reflabel { fill: var(--ink-2); }
+  .spark .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .spark .ln.intl, .spark .ln.g { stroke: var(--intl); } .spark .ln.tw { stroke: var(--tw); }
+  .spark .dot { stroke: var(--panel-solid); stroke-width: 2; }
+  .spark .dot.intl, .spark .dot.g { fill: var(--intl); } .spark .dot.tw { fill: var(--tw); }
+  .spark .cross { stroke: rgba(234, 243, 255, .55); stroke-width: 1; }
+  .spark:focus-visible { outline: 2px solid var(--intl); outline-offset: 4px; border-radius: 8px; }
+  .tip { position: absolute; top: 22px; min-width: 128px; background: rgba(5, 12, 26, .96); border: 1px solid var(--line-2); border-radius: 8px;
+         padding: 6px 9px; font-size: .78rem; pointer-events: none; z-index: 3; box-shadow: 0 8px 20px rgba(0, 0, 0, .4); }
+  .tip .tt { color: var(--ink-3); margin-bottom: 2px; }
+  .tip .tr { display: flex; align-items: center; gap: 6px; }
+  .tip .tr b { font-family: var(--num); font-size: 1.02rem; color: var(--ink); }
+  .tip .tr span { color: var(--ink-3); }
+  .tip i.k { display: inline-block; width: 12px; height: 2px; background: var(--ink-3); }
+  .tip i.k.intl, .tip i.k.g { background: var(--intl); } .tip i.k.tw { background: var(--tw); }
+  details.times, details.more { margin-top: 6px; }
+  details.times > summary, details.more > summary { cursor: pointer; color: var(--ink-2); font-size: .84rem; padding: 4px 0; list-style: none; }
+  details.times > summary::-webkit-details-marker, details.more > summary::-webkit-details-marker { display: none; }
+  details.times > summary::before, details.more > summary::before { content: "▸"; color: var(--intl); margin-right: 6px; }
+  details[open].times > summary::before, details[open].more > summary::before { content: "▾"; }
+
+  /* history */
+  .past { border-left: 3px solid var(--edge, var(--line-2)); }
+  .past[data-tone="good"] { --edge: var(--good); } .past[data-tone="bad"] { --edge: var(--bad); } .past[data-tone="warn"] { --edge: var(--warn); }
+  .past .call { margin: 4px 0; font-size: .92rem; }
+  .past .score { font-family: var(--num); font-weight: 700; font-size: 1.35rem; margin-left: auto; color: var(--ink); }
+  .lessons { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: .86rem; }
+  .lessons li { display: grid; grid-template-columns: 16px 1fr; gap: 4px; }
+  .lessons li::before { content: "•"; color: var(--ink-3); }
+  .lessons li.good::before { content: "✓"; color: var(--good); }
+  .lessons li.bad::before { content: "✕"; color: var(--bad); }
+  .lessons li.warn::before { content: "!"; color: var(--warn); font-weight: 700; }
+
+  /* front page */
+  .tiles { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 760px) { .tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .tile { display: grid; align-content: start; gap: 3px; padding: 12px 12px 11px; border-radius: 14px; text-decoration: none; color: var(--ink);
+          background: linear-gradient(160deg, rgba(36, 66, 116, .9), rgba(12, 25, 48, .92)); border: 1px solid var(--line); }
+  .tile b { font-size: 1rem; }
+  .tile .now { font-family: var(--num); font-size: 1.6rem; font-weight: 700; line-height: 1.05; }
+  .tile .what { color: var(--ink-2); font-size: .8rem; line-height: 1.45; }
+  .tile .tsub { color: var(--ink-3); font-size: .74rem; }
+  .day-h { font-size: .9rem; color: var(--ink-2); margin: 16px 0 4px; font-weight: 700; }
+  .fixtures { list-style: none; margin: 0; padding: 0; border-radius: 14px; overflow: hidden; border: 1px solid var(--line);
+              background: linear-gradient(180deg, rgba(20, 38, 70, .88), rgba(10, 22, 42, .9)); }
+  .fx { display: grid; grid-template-columns: 3.3em minmax(0, 1fr); gap: 1px 10px; padding: 9px 12px; border-top: 1px solid var(--line); }
+  .fx:first-child { border-top: 0; }
+  .fx-time { grid-row: span 3; font-family: var(--num); font-size: 1.2rem; font-weight: 600; line-height: 1.3; }
+  .fx-comp { font-size: .74rem; color: var(--ink-3); }
+  .fx-teams { font-weight: 700; font-size: .95rem; min-width: 0; }
+  .fx-flags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+  .fx-flags:empty { display: none; }
+  .plan { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .88rem; }
+  .plan li { border-left: 3px solid var(--line-2); padding: 2px 0 2px 10px; }
+  .plan li.now { border-color: var(--warn); }
+  .plan li.done { color: var(--ink-3); }
+  .plan b { font-family: var(--num); font-size: 1.05rem; }
+
+  /* shared bits from the review pages */
+  .grid { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1180px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  .card { display: flex; flex-direction: column; gap: 8px; }
+  .card .top { display: flex; justify-content: space-between; color: var(--ink-3); font-size: .8rem; }
+  .card.review .teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+  .card.review .name { font-weight: 800; font-size: 1rem; line-height: 1.25; }
+  .card.review .away { text-align: right; }
+  .score { text-align: center; font-family: var(--num); font-size: 1.7rem; font-weight: 700; line-height: 1.05; }
+  .score .sub { font-family: var(--sans); font-size: .7rem; font-weight: 400; }
   .verdict-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-  .verdict-row .chip { margin-left: 0; font-size: .8rem; padding: 2px 10px; }
-  table.mini { border: 0; border-radius: 0; background: transparent; font-size: .82rem; font-variant-numeric: tabular-nums; }
-  table.mini th, table.mini td { padding: 3px 6px; border-bottom: 1px dashed var(--line); }
-  table.mini tr.hit td { font-weight: 700; }
+  .kpis { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+  .kpi { background: rgba(10, 22, 44, .7); border: 1px solid var(--line); border-radius: 10px; padding: 7px 12px; min-width: 110px; flex: 1 1 130px; }
+  .kpi b { display: block; font-family: var(--num); font-size: 1.35rem; line-height: 1.15; }
+  .kpi span { color: var(--ink-3); font-size: .76rem; }
+  table.mini { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
+  table.mini th, table.mini td { padding: 3px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+  table.mini th { color: var(--ink-3); font-weight: 500; font-size: .74rem; }
+  table.mini tr.hit td { font-weight: 800; }
   table.mini tr.hit td:first-child::after { content: " ✓"; color: var(--good); }
-  ul.why { margin: 0; padding-left: 1.1em; font-size: .84rem; display: flex; flex-direction: column; gap: 4px; }
-  .conclusion { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; font-size: .86rem; }
-  .conclusion b { color: var(--accent); margin-right: 4px; }
-  .howto { font-size: .82rem; color: var(--muted); margin: 6px 0 12px; }
-  .picks { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 10px; }
-  .picks-head { font-size: .85rem; font-weight: 600; }
-  .pick { border-left: 3px solid var(--market); padding: 1px 0 1px 10px; display: flex; flex-direction: column; gap: 3px; font-size: .86rem; }
-  .pick.signal { border-color: var(--model); }
-  .pick .chip { margin-left: 0; }
-  .pick .verdict-row .chip { font-size: .75rem; padding: 1px 9px; }
-  details.more { margin-top: 10px; }
-  details.more summary { cursor: pointer; color: var(--accent); font-size: .85rem; }
-
-  /* card lists (反者道之動, 延遲雷達) */
-  .items { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 10px; }
-  .items li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; font-size: .88rem; }
-  .items .head { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: .8rem; }
-  .items.radar li { border-left: 3px solid var(--good); }
-  .items .need b { color: var(--accent); font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-  .plan-head { font-weight: 600; font-size: .92rem; margin: 16px 0 6px; }
-  .plan-head .count { color: var(--muted); font-weight: 400; font-size: .8rem; }
-  ul.plan { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: .86rem; }
-  ul.plan li { border-left: 3px solid var(--line); padding-left: 10px; }
-  ul.plan li.now { border-color: var(--market); }
-  ul.plan li.done { color: var(--muted); }
-  ul.plan .chip { font-size: .72rem; }
-
-  /* T-10 value block on MLB cards */
-  .t10 { border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 5px; }
-  .t10-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: .9rem; }
-  .t10-head .chip { margin-left: 0; }
-  table.mini tr.pick td { font-weight: 700; }
+  table.mini tr.pick td { font-weight: 800; }
   table.mini tr.pick td:first-child::after { content: " ←"; color: var(--good); }
-</style><style>
-  .quote { margin: 0 0 18px; padding: 10px 16px; border-left: 3px solid var(--market); background: var(--card); border-radius: 0 10px 10px 0; font-size: 1.05rem; letter-spacing: .08em; }
-  .quote span { display: block; margin-top: 2px; color: var(--muted); font-size: .78rem; letter-spacing: 0; }
-  .lead { font-size: .92rem; line-height: 1.75; margin: 6px 0 10px; }
-  .lead b { color: var(--accent); }
-  .gapchart { display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
-  .gap-row { display: grid; grid-template-columns: 14em 1fr 9.5em; align-items: center; gap: 4px 12px; font-size: .84rem; }
+  .model-val { color: #8FD0FF; font-weight: 700; } .market-val { color: var(--ink-2); }
+  ul.why { margin: 0; padding-left: 1.1em; font-size: .86rem; display: grid; gap: 4px; color: var(--ink-2); }
+  .conclusion { border-top: 1px solid var(--line); padding-top: 8px; margin: 0; font-size: .88rem; }
+  .conclusion b { color: #8FD0FF; margin-right: 6px; }
+  .picks { border-top: 1px solid var(--line); padding-top: 8px; display: grid; gap: 10px; }
+  .picks-head { font-size: .86rem; font-weight: 700; }
+  .pick { border-left: 3px solid var(--tw); padding: 1px 0 1px 10px; display: grid; gap: 3px; font-size: .86rem; }
+  .pick.signal { border-color: var(--intl); }
+  .note { background: rgba(138, 90, 18, .28); border: 1px solid rgba(242, 185, 90, .35); color: #F6D9A8; border-radius: 10px; padding: 8px 11px; font-size: .82rem; }
+  .howto { font-size: .84rem; color: var(--ink-2); margin: 4px 0 12px; max-width: 52em; }
+  .empty { border: 1px dashed var(--line-2); border-radius: 14px; padding: 18px 16px; color: var(--ink-2); background: rgba(6, 14, 30, .45); }
+  .empty b { display: block; color: var(--ink); margin-bottom: 4px; }
+  .none { color: var(--ink-3); font-size: .86rem; }
+
+  /* model bars: market fill in blue, the model as a tick */
+  .mbars { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; font-size: .84rem; margin: 6px 0; }
+  .mbar { position: relative; height: 10px; border-radius: 5px; background: rgba(150, 185, 230, .12); }
+  .mbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--intl); }
+  .mbar s { position: absolute; top: -4px; bottom: -4px; width: 3px; margin-left: -1px; border-radius: 2px; background: var(--ink); }
+  .mbars .v { font-family: var(--num); font-size: .98rem; white-space: nowrap; }
+
+  /* page parts */
+  main h2 { font-size: 1.1rem; margin: 26px 0 10px; }
+  .facts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; margin: 8px 0; font-size: .88rem; }
+  .facts dt, .facts span:first-child { color: var(--ink-3); white-space: nowrap; }
+  .facts dd { margin: 0; min-width: 0; }
+  div.facts > div { display: contents; }
+  .probables { margin: -4px 0 8px; }
+  .gval { font-size: .9rem; color: var(--ink-2); }
+  .gval b { font-family: var(--num); font-size: 1.45rem; color: var(--ink); margin-left: 2px; }
+  .match .need { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin: 4px 0 2px; padding: 8px 12px; border-radius: 10px;
+                 background: linear-gradient(90deg, rgba(23, 122, 71, .35), rgba(23, 122, 71, .08)); border: 1px solid rgba(61, 220, 132, .3); }
+  .match[data-status="watch"] .need { background: linear-gradient(90deg, rgba(138, 90, 18, .35), rgba(138, 90, 18, .08)); border-color: rgba(242, 185, 90, .3); }
+  .match .need .big-figure { color: #fff; }
+  .match[data-status="signal"], .match[data-status="moving"] { --edge: var(--warn); }
+  .key.model::before { width: 3px; height: 11px; background: var(--ink); }
+  .evs { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 12px; font-size: .86rem; }
+  .evs > li { border-left: 3px solid var(--line-2); padding: 1px 0 1px 10px; display: grid; gap: 3px; }
+  .evs > li.tw_only { border-color: var(--tw); } .evs > li.intl_big { border-color: var(--intl); } .evs > li.radar { border-color: var(--good); }
+  .ev-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+  .tag { font-size: .74rem; font-weight: 700; padding: 0 8px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--ink-2); }
+  .tag.tw_only { border-color: rgba(204, 127, 26, .7); } .tag.intl_big { border-color: rgba(42, 147, 216, .8); } .tag.radar { border-color: rgba(61, 220, 132, .6); }
+  .tt-title { margin-top: 10px; }
+  .tbl.traj tr.caught td { background: rgba(242, 185, 90, .12); }
+  .filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; }
+  .filters button { font: inherit; font-size: .82rem; color: var(--ink-2); background: rgba(255, 255, 255, .03); border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+  .filters button[aria-pressed="true"] { color: #fff; background: rgba(42, 147, 216, .32); border-color: rgba(42, 147, 216, .8); }
+  [data-tags][hidden] { display: none; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .88rem; margin: 18px 0 0; }
+  .report-verdict { border-radius: 12px; padding: 12px 14px; margin: 4px 0 14px; font-size: .95rem; }
+  .report-verdict.fail { background: rgba(138, 90, 18, .3); border: 1px solid rgba(242, 185, 90, .4); color: #F6D9A8; }
+  .report-verdict.pass { background: rgba(23, 122, 71, .3); border: 1px solid rgba(61, 220, 132, .4); }
+  .tbl .sub, td .sub { display: block; }
+  .passed { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  @media (min-width: 760px) { .passed { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .passed li { border-left: 3px solid var(--line-2); border-radius: 0 12px 12px 0; padding: 8px 12px; background: rgba(10, 22, 44, .62); font-size: .86rem; }
+  .passed li.good { border-color: var(--good); } .passed li.bad { border-color: var(--bad); }
+  .passed .score { margin-left: auto; font-family: var(--num); font-weight: 700; font-size: 1.1rem; color: var(--ink); }
+  .p-title { font-weight: 700; margin: 2px 0; }
+  .p-line { color: var(--ink-2); }
+  .p-verdict { font-weight: 700; margin-top: 2px; }
+  .passed li.good .p-verdict::before { content: "✓ "; color: var(--good); }
+  .passed li.bad .p-verdict::before { content: "✕ "; color: var(--bad); }
+
+  /* front page */
+  .hub .kicker { margin: 0 0 4px; color: var(--ink-3); font-size: .84rem; }
+  .hub h1.good { color: var(--good); text-shadow: 0 0 30px rgba(61, 220, 132, .35); }
+  .fx.flagged { background: linear-gradient(90deg, rgba(42, 147, 216, .12), transparent 60%); }
+  .fx-flags .chip { font-size: .74rem; }
+
+  /* 反者道之動 */
+  .quote { margin: 18px 0 0; padding: 10px 16px; border-left: 3px solid var(--tw); background: rgba(6, 14, 30, .5); border-radius: 0 10px 10px 0; font-size: 1.05rem; letter-spacing: .08em; }
+  .quote span { display: block; margin-top: 2px; color: var(--ink-3); font-size: .78rem; letter-spacing: 0; }
+  .lead { font-size: .92rem; line-height: 1.8; margin: 6px 0 10px; max-width: 52em; }
+  .gapchart { display: grid; gap: 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid var(--line);
+              background: linear-gradient(180deg, rgba(24, 45, 82, .9), rgba(11, 23, 45, .92)); }
+  .gap-row { display: grid; grid-template-columns: 14em minmax(0, 1fr) 9.5em; align-items: center; gap: 4px 12px; font-size: .84rem; }
   .gap-row .lab { line-height: 1.3; }
   .gap-row .lab .sub { display: block; }
-  .gap-row .val { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .78rem; white-space: nowrap; line-height: 1.3; }
-  .gap-row .val .neg { display: block; }
-  .gap-row .val b { color: var(--ink); font-size: .84rem; }
-  .track { position: relative; height: 14px; background: var(--chip); border-radius: 7px; }
-  .track .have { position: absolute; left: 0; top: 3px; bottom: 3px; background: var(--model); border-radius: 0 4px 4px 0; min-width: 2px; }
-  .track .need { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--muted); border-radius: 1px; }
-  .track .need.tw { background: var(--bad); width: 3px; }
-  .track .need.off { background: transparent; border-right: 3px dashed var(--bad); width: 0; }
-  .axis { display: grid; grid-template-columns: 14em 1fr 9.5em; gap: 12px; font-size: .72rem; color: var(--muted); }
+  .gap-row .val { color: var(--ink-3); font-size: .78rem; white-space: nowrap; }
+  .gap-row .val b { color: var(--ink); font-family: var(--num); font-size: 1rem; }
+  .track { position: relative; height: 14px; border-radius: 7px; background: rgba(150, 185, 230, .12); }
+  .track .have { position: absolute; left: 0; top: 3px; bottom: 3px; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--ink-2); }
+  .track .need { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--intl); }
+  .track .need.tw { width: 3px; background: var(--tw); }
+  .track .need.off { width: 0; background: transparent; border-right: 3px dashed var(--tw); }
+  .axis { display: grid; grid-template-columns: 14em minmax(0, 1fr) 9.5em; gap: 12px; font: 500 .72rem var(--num); color: var(--ink-3); }
   .axis .ticks { display: flex; justify-content: space-between; }
-  .legend-row { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .78rem; color: var(--muted); }
+  .legend-row { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .78rem; color: var(--ink-3); }
   .legend-row i { display: inline-block; vertical-align: -2px; margin-right: 5px; }
-  .legend-row .l-have { width: 14px; height: 9px; background: var(--model); border-radius: 2px; }
-  .legend-row .l-intl { width: 2px; height: 13px; background: var(--muted); }
-  .legend-row .l-tw { width: 3px; height: 13px; background: var(--bad); }
-  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
-  .items .bet { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
-  .items .bet .chip { margin-left: 0; }
-  td .sub { display: block; }
+  .legend-row .l-have { width: 14px; height: 9px; border-radius: 2px; background: var(--ink-2); }
+  .legend-row .l-intl { width: 2px; height: 13px; background: var(--intl); }
+  .legend-row .l-tw { width: 3px; height: 13px; background: var(--tw); }
   @media (max-width: 640px) {
-    .gap-row, .axis { grid-template-columns: 1fr; }
+    .gap-row, .axis { grid-template-columns: minmax(0, 1fr); }
     .axis > span:first-child, .axis > span:last-child { display: none; }
   }
-</style>
-</head>
-<body>
-<div class="wrap">
-<header>
+
+  .foot { margin-top: 44px; padding-top: 14px; padding-bottom: calc(40px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); color: var(--ink-3); font-size: .76rem; }
+  :focus-visible { outline: 2px solid var(--intl); outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style></head>
+<body data-page="fade">
+<div class="masthead">
+  <div class="bar">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
+    <span class="stamp">更新 <b>10/16 10:11</b></span>
+  </div>
+  <nav class="nav" aria-label="分析方法">
+<a href="index.html">總覽</a><a href="value.html">運彩價值</a><a href="t10.html">T-10</a><a href="radar.html">延遲雷達</a><a href="moves.html">盤口移動</a><a href="model.html">模型分歧</a><a href="fade.html" aria-current="page">反者道之動</a><a href="reviews.html">全部檢討</a>  </nav>
+</div>
+<main class="wrap">
+<section class="hero">
   <h1>反者道之動</h1>
-  <span class="meta">更新：2026-10-16 08:49（台北時間）</span>
-  <a class="meta" href="index.html">回到每日分析</a>
-</header>
+  <p class="lede">你的想法：找出最常失敗的押法，反過來做。這裡的「差」不是輸得多（冷門本來就常輸），而是押中的比例比市場自己算的機率還低。下面是回測找出來最差的幾種、反著做在運彩值不值得，以及每天符合條件的比賽。</p>
+  <dl class="bug">
+<div><dt>測試的押法</dt><dd class="">65</dd></div><div><dt>兩段時間都差</dt><dd class="">10</dd></div><div><dt>反著做在運彩賺錢</dt><dd class="bad">0</dd></div><div><dt>今日反指標</dt><dd class="">33</dd></div>  </dl>
+</section>
 
 <blockquote class="quote">反者道之動，弱者道之用。<span>《道德經》第四十章</span></blockquote>
+<div class="tabs" role="tablist">
+<a role="tab" href="#upcoming" aria-controls="upcoming" aria-selected="true">今日反指標<span class="num">33</span></a><a role="tab" href="#history" aria-controls="history" aria-selected="false">反向紀錄<span class="num">20</span></a><a role="tab" href="#backtest" aria-controls="backtest" aria-selected="false">回測</a></div>
 
-<section>
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是<b>反過來那一邊</b>在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 2%、MLB 3%）才值得下，那時它也會出現在運彩價值頁。多數會是負的：反指標也要看價格。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
+  <div class="cards">
+    <article class="match" id="m-football-564713" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 38 小時 18 分</span></div>
+      <h3 class="teams">皇家貝提斯 vs 巴塞隆納</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 3.5</b> @ 1.53</span><span class="neg">EV -12.3%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 57%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560605" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <h3 class="teams">里茲聯 vs 曼聯</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.50</span><span class="neg">EV -12.3%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 58%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-565825" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 38 小時 18 分</span></div>
+      <h3 class="teams">拜仁慕尼黑 vs RB萊比錫</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>主勝 拜仁慕尼黑＋和局</b> @ 0.95</span><span class="neg">EV -12.4%</span></div>
+<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
+        <dt>反指標</dt><dd>押大冷門（賠率≥8）</dd>
+        <dt>這一邊</dt><dd>公允機率 92%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558569" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/19 00:00</span><span>週一</span><span class="eta">還有 61 小時 48 分</span></div>
+      <h3 class="teams">AC米蘭 vs 亞特蘭大</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.58</span><span class="neg">EV -12.7%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 55%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559660" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 40 小時 33 分</span></div>
+      <h3 class="teams">里爾 vs 布雷斯特</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.53</span><span class="neg">EV -12.8%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 57%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560610" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 35 小時 48 分</span></div>
+      <h3 class="teams">曼城 vs 伊普斯維奇</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>主勝 曼城＋和局</b> @ 0.94</span><span class="neg">EV -12.8%</span></div>
+<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
+        <dt>反指標</dt><dd>押大冷門（賠率≥8）</dd>
+        <dt>這一邊</dt><dd>公允機率 92%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-564709" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/19 03:00</span><span>週一</span><span class="eta">還有 64 小時 48 分</span></div>
+      <h3 class="teams">皇家馬德里 vs 塞維亞</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>主勝 皇家馬德里＋和局</b> @ 0.94</span><span class="neg">EV -13.1%</span></div>
+<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
+        <dt>反指標</dt><dd>押大冷門（賠率≥8）</dd>
+        <dt>這一邊</dt><dd>公允機率 92%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560608" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 61 小時 18 分</span></div>
+      <h3 class="teams">諾丁漢森林 vs 兵工廠</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 兵工廠</b> @ 1.03</span><span class="neg">EV -13.4%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 84%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559665" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/19 02:45</span><span>週一</span><span class="eta">還有 64 小時 33 分</span></div>
+      <h3 class="teams">里昂 vs 尼斯</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.50</span><span class="neg">EV -13.5%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 58%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559663" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 61 小時 3 分</span></div>
+      <h3 class="teams">勒哈佛爾 vs 歐塞爾</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.70</span><span class="neg">EV -13.7%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 51%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559662" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 23:15</span><span>週六</span><span class="eta">還有 37 小時 3 分</span></div>
+      <h3 class="teams">史特拉斯堡 vs 巴黎聖日耳曼</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 巴黎聖日耳曼</b> @ 1.00</span><span class="neg">EV -13.8%</span></div>
+<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 86%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-564713" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 00:30</span><span>週日</span><span class="eta">還有 38 小時 18 分</span></div>
+      <h3 class="teams">皇家貝提斯 vs 巴塞隆納</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 巴塞隆納</b> @ 1.01</span><span class="neg">EV -13.9%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 86%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-565821" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <h3 class="teams">柏林聯 vs 多特蒙德</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 多特蒙德</b> @ 1.04</span><span class="neg">EV -14.3%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 83%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560608" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 61 小時 18 分</span></div>
+      <h3 class="teams">諾丁漢森林 vs 兵工廠</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.73</span><span class="neg">EV -14.3%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 50%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-565822" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <h3 class="teams">漢堡 vs 斯圖加特</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 斯圖加特</b> @ 1.12</span><span class="neg">EV -14.4%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 77%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558571" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 00:00</span><span>週日</span><span class="eta">還有 37 小時 48 分</span></div>
+      <h3 class="teams">波隆那 vs 國際米蘭</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 國際米蘭</b> @ 1.02</span><span class="neg">EV -14.6%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 84%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558575" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 21:00</span><span>週六</span><span class="eta">還有 34 小時 48 分</span></div>
+      <h3 class="teams">威尼斯 vs 拿坡里</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 拿坡里</b> @ 1.06</span><span class="neg">EV -15.0%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 80%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560603" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 19:30</span><span>週六</span><span class="eta">還有 33 小時 18 分</span></div>
+      <h3 class="teams">艾佛頓 vs 切爾西</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 切爾西</b> @ 1.20</span><span class="neg">EV -15.0%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門、系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 71%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559657" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 23:15</span><span>週日</span><span class="eta">還有 61 小時 3 分</span></div>
+      <h3 class="teams">洛里昂 vs 摩納哥</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 摩納哥</b> @ 1.14</span><span class="neg">EV -15.2%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 75%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-565826" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 23:30</span><span>週日</span><span class="eta">還有 61 小時 18 分</span></div>
+      <h3 class="teams">門興格拉德巴赫 vs 霍芬海姆</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 霍芬海姆</b> @ 1.22</span><span class="neg">EV -15.2%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門、系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 70%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-564710" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 20:00</span><span>週六</span><span class="eta">還有 33 小時 48 分</span></div>
+      <h3 class="teams">西班牙人 vs 馬德里競技</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 馬德里競技</b> @ 1.05</span><span class="neg">EV -15.3%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 81%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559661" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 02:45</span><span>週六</span><span class="eta">還有 16 小時 33 分</span></div>
+      <h3 class="teams">勒芒 vs 圖盧茲</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 圖盧茲</b> @ 1.24</span><span class="neg">EV -15.3%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 68%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560610" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 22:00</span><span>週六</span><span class="eta">還有 35 小時 48 分</span></div>
+      <h3 class="teams">曼城 vs 伊普斯維奇</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>小 3.5</b> @ 1.65</span><span class="neg">EV -15.4%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 51%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-564711" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 03:00</span><span>週日</span><span class="eta">還有 40 小時 48 分</span></div>
+      <h3 class="teams">瓦倫西亞 vs 畢爾包</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 畢爾包</b> @ 1.18</span><span class="neg">EV -15.8%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 72%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-564714" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/19 00:30</span><span>週一</span><span class="eta">還有 62 小時 18 分</span></div>
+      <h3 class="teams">馬拉加 vs 皇家社會</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 皇家社會</b> @ 1.18</span><span class="neg">EV -16.1%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 71%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558575" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 21:00</span><span>週六</span><span class="eta">還有 34 小時 48 分</span></div>
+      <h3 class="teams">威尼斯 vs 拿坡里</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>主勝 威尼斯＋和局</b> @ 1.78</span><span class="neg">EV -24.2%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 43%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-560609" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <h3 class="teams">布萊頓 vs 水晶宮</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 水晶宮</b> @ 2.03</span><span class="neg">EV -25.2%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 37%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558572" data-status="pass">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 40 小時 33 分</span></div>
+      <h3 class="teams">羅馬 vs 熱那亞</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 熱那亞</b> @ 2.17</span><span class="neg">EV -29.5%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 32%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-565829" data-status="none">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/17 21:30</span><span>週六</span><span class="eta">還有 35 小時 18 分</span></div>
+      <h3 class="teams">FC Schalke 04 vs 1. FSV Mainz 05</h3>
+      <div class="verdict"><span class="chip ghost">還沒有運彩價</span>
+<span>反著押 <b>和局＋客勝 1. FSV Mainz 05</b></span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 69%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559659" data-status="none">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 02:45</span><span>週日</span><span class="eta">還有 40 小時 33 分</span></div>
+      <h3 class="teams">ES Troyes AC vs Racing Club de Lens</h3>
+      <div class="verdict"><span class="chip ghost">還沒有運彩價</span>
+<span>反著押 <b>和局＋客勝 Racing Club de Lens</b></span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 77%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558577" data-status="none">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <h3 class="teams">ACF Fiorentina vs Como 1907</h3>
+      <div class="verdict"><span class="chip ghost">還沒有運彩價</span>
+<span>反著押 <b>和局＋客勝 Como 1907</b></span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 72%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-559664" data-status="none">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <h3 class="teams">Angers SCO vs Olympique de Marseille</h3>
+      <div class="verdict"><span class="chip ghost">還沒有運彩價</span>
+<span>反著押 <b>和局＋客勝 Olympique de Marseille</b></span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 71%</dd>
+      </dl>
+    </article>
+    <article class="match" id="m-football-558577" data-status="none">
+      <div class="mt"><span class="comp">足球</span><span class="kick">10/18 21:00</span><span>週日</span><span class="eta">還有 58 小時 48 分</span></div>
+      <h3 class="teams">ACF Fiorentina vs Como 1907</h3>
+      <div class="verdict"><span class="chip ghost">還沒有運彩價</span>
+<span>反著押 <b>主勝 ACF Fiorentina＋和局</b></span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 53%</dd>
+      </dl>
+    </article>
+  </div>
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>反向紀錄 <span class="count">真實運彩價・20 注</span></h2>
+  <p class="howto">從開始記錄起，每場打完的比賽裡，上面幾種押法賽前會押的那一邊，反過來押的結果。運彩價是開賽前最後一次上傳的價格（足球反押一個結果＝另外兩個結果按比例分注）；沒有運彩價的只算命中，不算損益。<b>做對了</b>：反著押贏得比市場預期多，而且用運彩價還有賺；<b>做錯了</b>：贏得比預期少，或贏了也被水錢吃掉。</p>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>反指標</th><th class="r">運彩損益</th><th class="r">報酬率</th><th class="r">反著押贏 / 市場預期</th><th class="r">注數</th></tr></thead>
+    <tbody>
+    <tr>
+      <td class="wrap-cell">T-10：G≥+6 押強隊不讓分<span class="sub">MLB・反著押弱隊不讓分</span></td>
+      <td class="num ">—<span class="sub">0 注有運彩價</span></td>
+      <td class="num">—</td>
+      <td class="num">0 / 0</td>
+      <td class="num">0</td>
+    </tr>
+    <tr>
+      <td class="wrap-cell">押主場熱門（勝率≥55%）<span class="sub">MLB・反著押客隊不讓分</span></td>
+      <td class="num pos">+1.26<span class="sub">1 注有運彩價</span></td>
+      <td class="num">+126.0%</td>
+      <td class="num">1 / 0.4</td>
+      <td class="num">1</td>
+    </tr>
+    <tr>
+      <td class="wrap-cell">押大冷門（賠率≥8）<span class="sub">足球・反著押另外兩個結果</span></td>
+      <td class="num neg">-1.23<span class="sub">5 注有運彩價</span></td>
+      <td class="num">-24.6%</td>
+      <td class="num">4 / 4.6</td>
+      <td class="num">5</td>
+    </tr>
+    <tr>
+      <td class="wrap-cell">押主場冷門<span class="sub">足球・反著押和局＋客勝</span></td>
+      <td class="num neg">-2.00<span class="sub">7 注有運彩價</span></td>
+      <td class="num">-28.5%</td>
+      <td class="num">5 / 6.5</td>
+      <td class="num">8</td>
+    </tr>
+    <tr>
+      <td class="wrap-cell">系統的模型分歧<span class="sub">足球・反著押反方向</span></td>
+      <td class="num pos">+0.56<span class="sub">1 注有運彩價</span></td>
+      <td class="num">+55.6%</td>
+      <td class="num">6 / 3.1</td>
+      <td class="num">6</td>
+    </tr>
+    </tbody>
+  </table></div>
+  <h2 class="sect">每一注 <span class="count">最近 20 注</span></h2>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>開賽</th><th>比賽</th><th>反著押</th><th class="r">結果</th><th class="r">損益</th></tr></thead>
+    <tbody>
+    <tr>
+      <td class="num">10/15 08:00</td>
+      <td class="wrap-cell">Milwaukee Brewers @ Los Angeles Dodgers<span class="sub">MLB・押主場熱門（勝率≥55%）・6-2</span></td>
+      <td class="wrap-cell"><b>Milwaukee Brewers 不讓分</b> @ 2.26</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="pos">+1.26</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">AS Roma vs Real Madrid CF<span class="sub">足球・押主場冷門・3-4</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 Real Madrid CF</b> @ 1.15</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="pos">+0.15</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">FK Bodø/Glimt vs Borussia Dortmund<span class="sub">足球・押主場冷門・1-0</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 Borussia Dortmund</b> @ 1.25</td>
+      <td class="num bad">輸</td>
+      <td class="num"><span class="neg">-1.00</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">ŠK Slovan Bratislava vs VfB Stuttgart<span class="sub">足球・押主場冷門・0-3</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 VfB Stuttgart</b> @ 1.00</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="">0.00</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">AS Roma vs Real Madrid CF<span class="sub">足球・系統的模型分歧・3-4</span></td>
+      <td class="wrap-cell"><b>反押 AS Roma +0.5</b></td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="muted">沒有運彩價</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">Manchester City FC vs Paris Saint-Germain FC<span class="sub">足球・系統的模型分歧・2-4</span></td>
+      <td class="wrap-cell"><b>反押 Manchester City FC -0.5</b></td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="muted">沒有運彩價</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">AS Roma vs Real Madrid CF<span class="sub">足球・系統的模型分歧・3-4</span></td>
+      <td class="wrap-cell"><b>反押 小分 3.5</b></td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="muted">沒有運彩價</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 03:00</td>
+      <td class="wrap-cell">Manchester City FC vs Paris Saint-Germain FC<span class="sub">足球・系統的模型分歧・2-4</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 Paris Saint-Germain FC</b> @ 1.56</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="pos">+0.56</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 00:45</td>
+      <td class="wrap-cell">LASK Linz vs Liverpool FC<span class="sub">足球・押大冷門（賠率≥8）・3-6</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 Liverpool FC</b> @ 0.97</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.03</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 00:45</td>
+      <td class="wrap-cell">LASK Linz vs Liverpool FC<span class="sub">足球・押主場冷門・3-6</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 Liverpool FC</b> @ 0.97</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.03</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/15 00:45</td>
+      <td class="wrap-cell">Feyenoord Rotterdam vs Como 1907<span class="sub">足球・押主場冷門・3-2</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 Como 1907</b> @ 1.24</td>
+      <td class="num bad">輸</td>
+      <td class="num"><span class="neg">-1.00</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">FC Internazionale Milano vs Club Brugge KV<span class="sub">足球・押大冷門（賠率≥8）・3-4</span></td>
+      <td class="wrap-cell"><b>主勝 FC Internazionale Milano＋和局</b> @ 0.94</td>
+      <td class="num bad">輸</td>
+      <td class="num"><span class="neg">-1.00</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Galatasaray SK vs FC Barcelona<span class="sub">足球・押大冷門（賠率≥8）・1-4</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 FC Barcelona</b> @ 0.97</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.03</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Galatasaray SK vs FC Barcelona<span class="sub">足球・押主場冷門・1-4</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 FC Barcelona</b> @ 0.97</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.03</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Arsenal FC vs Lille OSC<span class="sub">足球・押大冷門（賠率≥8）・3-0</span></td>
+      <td class="wrap-cell"><b>主勝 Arsenal FC＋和局</b> @ 0.91</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.09</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Viking FK vs FC Bayern München<span class="sub">足球・押大冷門（賠率≥8）・3-3</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 FC Bayern München</b> @ 0.91</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.09</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Viking FK vs FC Bayern München<span class="sub">足球・押主場冷門・3-3</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 FC Bayern München</b> @ 0.91</td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="neg">-0.09</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Arsenal FC vs Lille OSC<span class="sub">足球・系統的模型分歧・3-0</span></td>
+      <td class="wrap-cell"><b>反押 Lille OSC +1.5</b></td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="muted">沒有運彩價</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 03:00</td>
+      <td class="wrap-cell">Villarreal CF vs SSC Napoli<span class="sub">足球・系統的模型分歧・3-1</span></td>
+      <td class="wrap-cell"><b>反押 SSC Napoli +0.25</b></td>
+      <td class="num good">贏</td>
+      <td class="num"><span class="muted">沒有運彩價</span></td>
+    </tr>
+    <tr>
+      <td class="num">10/14 00:45</td>
+      <td class="wrap-cell">Sabah FK vs SK Slavia Praha<span class="sub">足球・押主場冷門・2-0</span></td>
+      <td class="wrap-cell"><b>和局＋客勝 SK Slavia Praha</b></td>
+      <td class="num bad">輸</td>
+      <td class="num"><span class="muted">沒有運彩價</span></td>
+    </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="backtest" class="tabpanel" role="tabpanel">
   <h2>結論</h2>
   <p class="lead">
     測了 <b>65</b> 種押法（MLB 10,522 場、足球 22 個聯賽 54,880 場）。
     兩段時間都比市場差的有 <b>10</b> 種，最差的是「押大冷門（賠率≥8）」：實際命中 6.0%，市場自己算的是 7.2%。
     反著做，不算水錢時多半是正的；但用運彩的價格<b>沒有一種賺錢</b>，最好的「季後賽押熱門」反著做也是 -5.6%。
     原因是水錢：最差的押法也只比市場差 1–3 個百分點，運彩的水錢 MLB 約 16%、足球不讓分約 20%，而且冷門抽得最重（約 40%）。
-    真正能「反」的是<b>運彩自己的價格</b>：運彩的投注者把某一邊壓得太低時，另一邊就比國際公允價便宜，那就是首頁的「運彩價值注」。
+    真正能「反」的是<b>運彩自己的價格</b>：運彩的投注者把某一邊壓得太低時，另一邊就比國際公允價便宜，那就是<a href="value.html">運彩價值</a>。
   </p>
-  <div class="kpis">
-    <div class="kpi"><b>65</b><span>測試的押法</span></div>
-    <div class="kpi"><b>10</b><span>兩段時間都比市場差</span></div>
-    <div class="kpi"><b class="neg">0</b><span>反著做在運彩賺錢</span></div>
-    <div class="kpi"><b>16% / 20%</b><span>運彩水錢 MLB / 足球不讓分</span></div>
-  </div>
-</section>
 
-<section>
-  <h2>差多少 vs 要差多少才夠反 <span class="count">百分點（pp）</span></h2>
-  <p class="howto">綠色是反著做實際比市場多贏多少；灰線是用國際莊家價打平要多贏的，紅線是用運彩價打平要多贏的。綠色要越過紅線，反著押運彩才會賺。</p>
+  <h2 class="sect">差多少 vs 要差多少才夠反 <span class="count">百分點（pp）</span></h2>
+  <p class="howto">白條是反著做實際比市場多贏多少；藍線是用國際莊家價打平要多贏的，橘線是用運彩價打平要多贏的。白條要越過橘線，反著押運彩才會賺。</p>
   <div class="gapchart" role="img" aria-label="各押法反著做的實際優勢與打平門檻">
     <div class="legend-row"><span><i class="l-have"></i>反著做實際多贏</span><span><i class="l-intl"></i>國際價打平線</span><span><i class="l-tw"></i>運彩價打平線</span></div>
     <div class="gap-row">
@@ -305,16 +1018,14 @@
     <div class="axis"><span></span><span class="ticks"><span>0</span><span>5</span><span>10</span><span>15pp</span></span><span></span></div>
   </div>
   <p class="sub">「不可能」：反向那一邊的公允機率加上運彩要的差距超過 100%，就算每場都贏也賠錢（例如反押大冷門＝押另外兩個結果，公允機率約 93%）。</p>
-</section>
 
-
-<section>
-  <h2>穩定比市場差的押法 <span class="count">10 種 · 兩段時間都差</span></h2>
+  <h2 class="sect">穩定比市場差的押法 <span class="count">10 種・兩段時間都差</span></h2>
   <p class="howto">「命中 vs 市場」：實際命中率對市場收盤去水後的機率（市場自己算的）。差距為負、z 小於 −1.8，而且前段（MLB 2021–2023、足球 2019/20–2022/23）和後段（2024–2025、2023/24–2026/27）都為負，才列在這裡。「反著做」三欄是反過來押的報酬率：運彩價、國際價（MLB 美國莊家收盤價、足球各家平均收盤價；小字是各家最好的價）、理論（不算水錢）。</p>
-  <div class="scroll"><table>
-  <tr><th>押法</th><th class="num">差距（z）</th><th class="num">反著做：運彩價</th><th class="num">國際價</th><th class="num">理論</th><th class="num">命中 vs 市場</th><th class="num">前段／後段</th><th class="num">場數</th></tr>
+  <div class="scroll"><table class="tbl">
+  <thead><tr><th>押法</th><th class="r">差距（z）</th><th class="r">反著做：運彩價</th><th class="r">國際價</th><th class="r">理論</th><th class="r">命中 vs 市場</th><th class="r">前段／後段</th><th class="r">場數</th></tr></thead>
+  <tbody>
   <tr>
-    <td>押大冷門（賠率≥8）<span class="sub">足球</span></td>
+    <td class="wrap-cell">押大冷門（賠率≥8）<span class="sub">足球</span></td>
     <td class="num neg">-1.24<span class="sub">z -3.1</span></td>
     <td class="num neg">-11.5%</td>
     <td class="num neg">-2.8%<span class="sub">最佳 +1.4</span></td>
@@ -324,7 +1035,7 @@
     <td class="num">4,284</td>
   </tr>
   <tr>
-    <td>押主場冷門<span class="sub">足球</span></td>
+    <td class="wrap-cell">押主場冷門<span class="sub">足球</span></td>
     <td class="num neg">-0.84<span class="sub">z -2.6</span></td>
     <td class="num neg">-14.3%</td>
     <td class="num neg">-4.2%<span class="sub">最佳 +0.5</span></td>
@@ -334,7 +1045,7 @@
     <td class="num">17,659</td>
   </tr>
   <tr>
-    <td>押三連勝的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押三連勝的球隊<span class="sub">足球</span></td>
     <td class="num neg">-1.42<span class="sub">z -2.4</span></td>
     <td class="num neg">-22.9%</td>
     <td class="num neg">-6.9%<span class="sub">最佳 +0.5</span></td>
@@ -344,7 +1055,7 @@
     <td class="num">6,012</td>
   </tr>
   <tr>
-    <td>T-10：G≥+6 押強隊不讓分（你的原始規則）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">T-10：G≥+6 押強隊不讓分（你的原始規則）<span class="sub">MLB</span></td>
     <td class="num neg">-1.80<span class="sub">z -2.3</span></td>
     <td class="num neg">-9.2%</td>
     <td class="num neg">-2.4%<span class="sub">最佳 +0.5</span></td>
@@ -354,7 +1065,7 @@
     <td class="num">3,554</td>
   </tr>
   <tr>
-    <td>每場都押熱門不讓分<span class="sub">MLB</span></td>
+    <td class="wrap-cell">每場都押熱門不讓分<span class="sub">MLB</span></td>
     <td class="num neg">-1.05<span class="sub">z -2.2</span></td>
     <td class="num neg">-11.3%</td>
     <td class="num neg">-3.3%<span class="sub">最佳 -0.8</span></td>
@@ -364,7 +1075,7 @@
     <td class="num">10,522</td>
   </tr>
   <tr>
-    <td>每場都押大分<span class="sub">MLB</span></td>
+    <td class="wrap-cell">每場都押大分<span class="sub">MLB</span></td>
     <td class="num neg">-1.00<span class="sub">z -2.0</span></td>
     <td class="num neg">-12.0%</td>
     <td class="num neg">-3.1%<span class="sub">最佳 -1.5</span></td>
@@ -374,7 +1085,7 @@
     <td class="num">10,159</td>
   </tr>
   <tr>
-    <td>兩隊上一場都 4 球↑：押大 2.5<span class="sub">足球</span></td>
+    <td class="wrap-cell">兩隊上一場都 4 球↑：押大 2.5<span class="sub">足球</span></td>
     <td class="num neg">-1.48<span class="sub">z -2.0</span></td>
     <td class="num neg">-14.6%</td>
     <td class="num neg">-3.6%<span class="sub">最佳 +1.5</span></td>
@@ -384,7 +1095,7 @@
     <td class="num">4,350</td>
   </tr>
   <tr>
-    <td>每場都押主隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">每場都押主隊<span class="sub">足球</span></td>
     <td class="num neg">-0.38<span class="sub">z -1.9</span></td>
     <td class="num neg">-20.6%</td>
     <td class="num neg">-7.4%<span class="sub">最佳 -1.3</span></td>
@@ -394,7 +1105,7 @@
     <td class="num">54,880</td>
   </tr>
   <tr>
-    <td>押主場熱門（勝率≥55%）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押主場熱門（勝率≥55%）<span class="sub">MLB</span></td>
     <td class="num neg">-1.29<span class="sub">z -1.9</span></td>
     <td class="num neg">-10.8%</td>
     <td class="num neg">-3.4%<span class="sub">最佳 -0.8</span></td>
@@ -404,7 +1115,7 @@
     <td class="num">4,965</td>
   </tr>
   <tr>
-    <td>押上一場大勝（贏3球↑）的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押上一場大勝（贏3球↑）的球隊<span class="sub">足球</span></td>
     <td class="num neg">-1.02<span class="sub">z -1.9</span></td>
     <td class="num neg">-21.4%</td>
     <td class="num neg">-6.8%<span class="sub">最佳 -0.2</span></td>
@@ -413,17 +1124,17 @@
     <td class="num">-0.8 / -1.2</td>
     <td class="num">7,077</td>
   </tr>
+  </tbody>
 </table></div>
 
-</section>
 
-<section>
-  <h2>你和系統自己的方法 <span class="count">8 種</span></h2>
+  <h2 class="sect">你和系統自己的方法 <span class="count">8 種</span></h2>
   <p class="howto">T-10 原始規則、模型分歧、追大單。模型分歧只有 2024–2026 的五大聯賽資料，分不出前後段。</p>
-  <div class="scroll"><table>
-  <tr><th>押法</th><th class="num">差距（z）</th><th class="num">反著做：運彩價</th><th class="num">國際價</th><th class="num">理論</th><th class="num">命中 vs 市場</th><th class="num">前段／後段</th><th class="num">場數</th></tr>
+  <div class="scroll"><table class="tbl">
+  <thead><tr><th>押法</th><th class="r">差距（z）</th><th class="r">反著做：運彩價</th><th class="r">國際價</th><th class="r">理論</th><th class="r">命中 vs 市場</th><th class="r">前段／後段</th><th class="r">場數</th></tr></thead>
+  <tbody>
   <tr>
-    <td>T-10：G≥+6 押強隊不讓分（你的原始規則）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">T-10：G≥+6 押強隊不讓分（你的原始規則）<span class="sub">MLB</span></td>
     <td class="num neg">-1.80<span class="sub">z -2.3</span></td>
     <td class="num neg">-9.2%</td>
     <td class="num neg">-2.4%<span class="sub">最佳 +0.5</span></td>
@@ -433,7 +1144,7 @@
     <td class="num">3,554</td>
   </tr>
   <tr>
-    <td>系統的模型分歧（模型比市場高 4pp↑）<span class="sub">足球 · 2024-11 – 2026-10</span></td>
+    <td class="wrap-cell">系統的模型分歧（模型比市場高 4pp↑）<span class="sub">足球・2024-11 – 2026-10</span></td>
     <td class="num neg">-1.76<span class="sub">z -1.7</span></td>
     <td class="num neg">-16.1%</td>
     <td class="num pos">+0.3%<span class="sub">最佳 +1.4</span></td>
@@ -443,7 +1154,7 @@
     <td class="num">1,934</td>
   </tr>
   <tr>
-    <td>熱門被國際盤買進 4pp↑ 還去追（大單）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">熱門被國際盤買進 4pp↑ 還去追（大單）<span class="sub">MLB</span></td>
     <td class="num neg">-2.41<span class="sub">z -1.5</span></td>
     <td class="num neg">-7.6%</td>
     <td class="num neg">-0.4%<span class="sub">最佳 +1.3</span></td>
@@ -453,7 +1164,7 @@
     <td class="num">844</td>
   </tr>
   <tr>
-    <td>系統的模型分歧（模型比市場高 10pp↑）<span class="sub">足球 · 2024-11 – 2026-10</span></td>
+    <td class="wrap-cell">系統的模型分歧（模型比市場高 10pp↑）<span class="sub">足球・2024-11 – 2026-10</span></td>
     <td class="num neg">-2.41<span class="sub">z -1.4</span></td>
     <td class="num neg">-15.5%</td>
     <td class="num pos">+0.1%<span class="sub">最佳 +1.5</span></td>
@@ -463,7 +1174,7 @@
     <td class="num">730</td>
   </tr>
   <tr>
-    <td>冷門被國際盤買進 4pp↑ 還去追（大單）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">冷門被國際盤買進 4pp↑ 還去追（大單）<span class="sub">MLB</span></td>
     <td class="num neg">-1.01<span class="sub">z -0.4</span></td>
     <td class="num neg">-11.9%</td>
     <td class="num neg">-2.0%<span class="sub">最佳 -1.0</span></td>
@@ -473,7 +1184,7 @@
     <td class="num">454</td>
   </tr>
   <tr>
-    <td>追盤口移動（早盤→收盤 +4pp↑）<span class="sub">足球</span></td>
+    <td class="wrap-cell">追盤口移動（早盤→收盤 +4pp↑）<span class="sub">足球</span></td>
     <td class="num neg">-0.21<span class="sub">z -0.4</span></td>
     <td class="num neg">-21.7%</td>
     <td class="num neg">-8.7%<span class="sub">最佳 -2.1</span></td>
@@ -483,7 +1194,7 @@
     <td class="num">10,392</td>
   </tr>
   <tr>
-    <td>追大單（早盤→收盤 +8pp↑）<span class="sub">足球</span></td>
+    <td class="wrap-cell">追大單（早盤→收盤 +8pp↑）<span class="sub">足球</span></td>
     <td class="num pos">+0.18<span class="sub">z +0.1</span></td>
     <td class="num neg">-24.3%</td>
     <td class="num neg">-11.7%<span class="sub">最佳 -4.3</span></td>
@@ -493,7 +1204,7 @@
     <td class="num">1,403</td>
   </tr>
   <tr>
-    <td>T-10：G≤−6 押弱隊 +1.5（你的原始規則）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">T-10：G≤−6 押弱隊 +1.5（你的原始規則）<span class="sub">MLB</span></td>
     <td class="num pos">+0.65<span class="sub">z +0.8</span></td>
     <td class="num neg">-15.4%</td>
     <td class="num neg">-8.3%<span class="sub">最佳 -6.6</span></td>
@@ -502,389 +1213,17 @@
     <td class="num">+1.6 / -0.5</td>
     <td class="num">3,259</td>
   </tr>
+  </tbody>
 </table></div>
 
-</section>
 
-<section>
-  <h2>今日反指標 <span class="count">33 個 · 反著押的運彩價</span></h2>
-  <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是反過來那一邊在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 2%、MLB 3%）才值得下，那時它也會出現在首頁的價值注。多數會是負的：反指標也要看價格。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
-  <ul class="items">
-    <li>
-      <div class="sub">10/18 00:30 · 足球</div>
-      <div>皇家貝提斯 vs 巴塞隆納</div>
-      <div class="bet">反著押 <b>大 3.5</b> @ 1.53<span class="neg">EV -12.3%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 57%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 21:00 · 足球</div>
-      <div>里茲聯 vs 曼聯</div>
-      <div class="bet">反著押 <b>大 2.5</b> @ 1.50<span class="neg">EV -12.3%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 58%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 00:30 · 足球</div>
-      <div>拜仁慕尼黑 vs RB萊比錫</div>
-      <div class="bet">反著押 <b>主勝 拜仁慕尼黑＋和局</b> @ 0.95<span class="neg">EV -12.4%</span><span class="chip">不下</span>      </div>
-<div class="sub neg">合起來的賠率低於 1：不管結果都賠</div>      <div class="sub">反指標：押大冷門（賠率≥8） · 這一邊公允機率 92%</div>
-    </li>
-    <li>
-      <div class="sub">10/19 00:00 · 足球</div>
-      <div>AC米蘭 vs 亞特蘭大</div>
-      <div class="bet">反著押 <b>大 2.5</b> @ 1.58<span class="neg">EV -12.7%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 55%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 02:45 · 足球</div>
-      <div>里爾 vs 布雷斯特</div>
-      <div class="bet">反著押 <b>大 2.5</b> @ 1.53<span class="neg">EV -12.8%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 57%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 22:00 · 足球</div>
-      <div>曼城 vs 伊普斯維奇</div>
-      <div class="bet">反著押 <b>主勝 曼城＋和局</b> @ 0.94<span class="neg">EV -12.8%</span><span class="chip">不下</span>      </div>
-<div class="sub neg">合起來的賠率低於 1：不管結果都賠</div>      <div class="sub">反指標：押大冷門（賠率≥8） · 這一邊公允機率 92%</div>
-    </li>
-    <li>
-      <div class="sub">10/19 03:00 · 足球</div>
-      <div>皇家馬德里 vs 塞維亞</div>
-      <div class="bet">反著押 <b>主勝 皇家馬德里＋和局</b> @ 0.94<span class="neg">EV -13.1%</span><span class="chip">不下</span>      </div>
-<div class="sub neg">合起來的賠率低於 1：不管結果都賠</div>      <div class="sub">反指標：押大冷門（賠率≥8） · 這一邊公允機率 92%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 23:30 · 足球</div>
-      <div>諾丁漢森林 vs 兵工廠</div>
-      <div class="bet">反著押 <b>和局＋客勝 兵工廠</b> @ 1.03<span class="neg">EV -13.4%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 84%</div>
-    </li>
-    <li>
-      <div class="sub">10/19 02:45 · 足球</div>
-      <div>里昂 vs 尼斯</div>
-      <div class="bet">反著押 <b>大 2.5</b> @ 1.50<span class="neg">EV -13.5%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 58%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 23:15 · 足球</div>
-      <div>勒哈佛爾 vs 歐塞爾</div>
-      <div class="bet">反著押 <b>大 2.5</b> @ 1.70<span class="neg">EV -13.7%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 51%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 23:15 · 足球</div>
-      <div>史特拉斯堡 vs 巴黎聖日耳曼</div>
-      <div class="bet">反著押 <b>和局＋客勝 巴黎聖日耳曼</b> @ 1.00<span class="neg">EV -13.8%</span><span class="chip">不下</span>      </div>
-<div class="sub neg">合起來的賠率低於 1：不管結果都賠</div>      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 86%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 00:30 · 足球</div>
-      <div>皇家貝提斯 vs 巴塞隆納</div>
-      <div class="bet">反著押 <b>和局＋客勝 巴塞隆納</b> @ 1.01<span class="neg">EV -13.9%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 86%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 21:30 · 足球</div>
-      <div>柏林聯 vs 多特蒙德</div>
-      <div class="bet">反著押 <b>和局＋客勝 多特蒙德</b> @ 1.04<span class="neg">EV -14.3%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 83%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 23:30 · 足球</div>
-      <div>諾丁漢森林 vs 兵工廠</div>
-      <div class="bet">反著押 <b>大 2.5</b> @ 1.73<span class="neg">EV -14.3%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 50%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 21:30 · 足球</div>
-      <div>漢堡 vs 斯圖加特</div>
-      <div class="bet">反著押 <b>和局＋客勝 斯圖加特</b> @ 1.12<span class="neg">EV -14.4%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 77%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 00:00 · 足球</div>
-      <div>波隆那 vs 國際米蘭</div>
-      <div class="bet">反著押 <b>和局＋客勝 國際米蘭</b> @ 1.02<span class="neg">EV -14.6%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 84%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 21:00 · 足球</div>
-      <div>威尼斯 vs 拿坡里</div>
-      <div class="bet">反著押 <b>和局＋客勝 拿坡里</b> @ 1.06<span class="neg">EV -15.0%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 80%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 19:30 · 足球</div>
-      <div>艾佛頓 vs 切爾西</div>
-      <div class="bet">反著押 <b>和局＋客勝 切爾西</b> @ 1.20<span class="neg">EV -15.0%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門、系統的模型分歧 · 這一邊公允機率 71%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 23:15 · 足球</div>
-      <div>洛里昂 vs 摩納哥</div>
-      <div class="bet">反著押 <b>和局＋客勝 摩納哥</b> @ 1.14<span class="neg">EV -15.2%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 75%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 23:30 · 足球</div>
-      <div>門興格拉德巴赫 vs 霍芬海姆</div>
-      <div class="bet">反著押 <b>和局＋客勝 霍芬海姆</b> @ 1.22<span class="neg">EV -15.2%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門、系統的模型分歧 · 這一邊公允機率 70%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 20:00 · 足球</div>
-      <div>西班牙人 vs 馬德里競技</div>
-      <div class="bet">反著押 <b>和局＋客勝 馬德里競技</b> @ 1.05<span class="neg">EV -15.3%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 81%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 02:45 · 足球</div>
-      <div>勒芒 vs 圖盧茲</div>
-      <div class="bet">反著押 <b>和局＋客勝 圖盧茲</b> @ 1.24<span class="neg">EV -15.3%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 68%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 22:00 · 足球</div>
-      <div>曼城 vs 伊普斯維奇</div>
-      <div class="bet">反著押 <b>小 3.5</b> @ 1.65<span class="neg">EV -15.4%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 51%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 03:00 · 足球</div>
-      <div>瓦倫西亞 vs 畢爾包</div>
-      <div class="bet">反著押 <b>和局＋客勝 畢爾包</b> @ 1.18<span class="neg">EV -15.8%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 72%</div>
-    </li>
-    <li>
-      <div class="sub">10/19 00:30 · 足球</div>
-      <div>馬拉加 vs 皇家社會</div>
-      <div class="bet">反著押 <b>和局＋客勝 皇家社會</b> @ 1.18<span class="neg">EV -16.1%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 71%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 21:00 · 足球</div>
-      <div>威尼斯 vs 拿坡里</div>
-      <div class="bet">反著押 <b>主勝 威尼斯＋和局</b> @ 1.78<span class="neg">EV -24.2%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 43%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 21:00 · 足球</div>
-      <div>布萊頓 vs 水晶宮</div>
-      <div class="bet">反著押 <b>和局＋客勝 水晶宮</b> @ 2.03<span class="neg">EV -25.2%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 37%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 02:45 · 足球</div>
-      <div>羅馬 vs 熱那亞</div>
-      <div class="bet">反著押 <b>和局＋客勝 熱那亞</b> @ 2.17<span class="neg">EV -29.5%</span><span class="chip">不下</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 32%</div>
-    </li>
-    <li>
-      <div class="sub">10/17 21:30 · 足球</div>
-      <div>FC Schalke 04 vs 1. FSV Mainz 05</div>
-      <div class="bet">反著押 <b>和局＋客勝 1. FSV Mainz 05</b><span class="chip">運彩沒有這場</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 69%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 02:45 · 足球</div>
-      <div>ES Troyes AC vs Racing Club de Lens</div>
-      <div class="bet">反著押 <b>和局＋客勝 Racing Club de Lens</b><span class="chip">運彩沒有這場</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 77%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 21:00 · 足球</div>
-      <div>ACF Fiorentina vs Como 1907</div>
-      <div class="bet">反著押 <b>和局＋客勝 Como 1907</b><span class="chip">運彩沒有這場</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 72%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 21:00 · 足球</div>
-      <div>Angers SCO vs Olympique de Marseille</div>
-      <div class="bet">反著押 <b>和局＋客勝 Olympique de Marseille</b><span class="chip">運彩沒有這場</span>      </div>
-      <div class="sub">反指標：押主場冷門 · 這一邊公允機率 71%</div>
-    </li>
-    <li>
-      <div class="sub">10/18 21:00 · 足球</div>
-      <div>ACF Fiorentina vs Como 1907</div>
-      <div class="bet">反著押 <b>主勝 ACF Fiorentina＋和局</b><span class="chip">運彩沒有這場</span>      </div>
-      <div class="sub">反指標：系統的模型分歧 · 這一邊公允機率 53%</div>
-    </li>
-  </ul>
-</section>
-
-<section>
-  <h2>反向紀錄 <span class="count">真實運彩價 · 20 注</span></h2>
-  <p class="howto">從開始記錄起，每場打完的比賽裡，上面幾種押法賽前會押的那一邊，反過來押的結果。運彩價是開賽前最後一次上傳的價格（足球反押一個結果＝另外兩個結果按比例分注）；沒有運彩價的只算命中，不算損益。</p>
-  <div class="scroll"><table>
-    <tr><th>反指標</th><th class="num">運彩損益</th><th class="num">報酬率</th><th class="num">反著押贏 / 市場預期</th><th class="num">注數</th></tr>
-    <tr>
-      <td>T-10：G≥+6 押強隊不讓分<span class="sub">MLB · 反著押弱隊不讓分</span></td>
-      <td class="num ">—<span class="sub">0 注有運彩價</span></td>
-      <td class="num">—</td>
-      <td class="num">0 / 0</td>
-      <td class="num">0</td>
-    </tr>
-    <tr>
-      <td>押主場熱門（勝率≥55%）<span class="sub">MLB · 反著押客隊不讓分</span></td>
-      <td class="num pos">+1.26<span class="sub">1 注有運彩價</span></td>
-      <td class="num">+126.0%</td>
-      <td class="num">1 / 0.4</td>
-      <td class="num">1</td>
-    </tr>
-    <tr>
-      <td>押大冷門（賠率≥8）<span class="sub">足球 · 反著押另外兩個結果</span></td>
-      <td class="num neg">-1.23<span class="sub">5 注有運彩價</span></td>
-      <td class="num">-24.6%</td>
-      <td class="num">4 / 4.6</td>
-      <td class="num">5</td>
-    </tr>
-    <tr>
-      <td>押主場冷門<span class="sub">足球 · 反著押和局＋客勝</span></td>
-      <td class="num neg">-2.00<span class="sub">7 注有運彩價</span></td>
-      <td class="num">-28.5%</td>
-      <td class="num">5 / 6.5</td>
-      <td class="num">8</td>
-    </tr>
-    <tr>
-      <td>系統的模型分歧<span class="sub">足球 · 反著押反方向</span></td>
-      <td class="num pos">+0.56<span class="sub">1 注有運彩價</span></td>
-      <td class="num">+55.6%</td>
-      <td class="num">6 / 3.1</td>
-      <td class="num">6</td>
-    </tr>
-  </table></div>
   <details class="more">
-    <summary>每一注（最近 20 注）</summary>
-    <ul class="items" style="margin-top:8px">
-      <li>
-        <div class="sub">10/15 08:00 · MLB · 押主場熱門（勝率≥55%）</div>
-        <div>Milwaukee Brewers @ Los Angeles Dodgers <span class="sub">6-2</span></div>
-        <div class="bet">反著押 <b>Milwaukee Brewers 不讓分</b> @ 2.26          → <b class="pos">贏</b>
-<span class="pos">+1.26 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 押主場冷門</div>
-        <div>AS Roma vs Real Madrid CF <span class="sub">3-4</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 Real Madrid CF</b> @ 1.15          → <b class="pos">贏</b>
-<span class="pos">+0.15 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 押主場冷門</div>
-        <div>FK Bodø/Glimt vs Borussia Dortmund <span class="sub">1-0</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 Borussia Dortmund</b> @ 1.25          → <b class="neg">輸</b>
-<span class="neg">-1.00 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 押主場冷門</div>
-        <div>ŠK Slovan Bratislava vs VfB Stuttgart <span class="sub">0-3</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 VfB Stuttgart</b> @ 1.00          → <b class="pos">贏</b>
-<span class="">0.00 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 系統的模型分歧</div>
-        <div>AS Roma vs Real Madrid CF <span class="sub">3-4</span></div>
-        <div class="bet">反著押 <b>反押 AS Roma +0.5</b>          → <b class="pos">贏</b>
-<span class="sub">（沒有運彩價）</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 系統的模型分歧</div>
-        <div>Manchester City FC vs Paris Saint-Germain FC <span class="sub">2-4</span></div>
-        <div class="bet">反著押 <b>反押 Manchester City FC -0.5</b>          → <b class="pos">贏</b>
-<span class="sub">（沒有運彩價）</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 系統的模型分歧</div>
-        <div>AS Roma vs Real Madrid CF <span class="sub">3-4</span></div>
-        <div class="bet">反著押 <b>反押 小分 3.5</b>          → <b class="pos">贏</b>
-<span class="sub">（沒有運彩價）</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 03:00 · 足球 · 系統的模型分歧</div>
-        <div>Manchester City FC vs Paris Saint-Germain FC <span class="sub">2-4</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 Paris Saint-Germain FC</b> @ 1.56          → <b class="pos">贏</b>
-<span class="pos">+0.56 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 00:45 · 足球 · 押大冷門（賠率≥8）</div>
-        <div>LASK Linz vs Liverpool FC <span class="sub">3-6</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 Liverpool FC</b> @ 0.97          → <b class="pos">贏</b>
-<span class="neg">-0.03 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 00:45 · 足球 · 押主場冷門</div>
-        <div>LASK Linz vs Liverpool FC <span class="sub">3-6</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 Liverpool FC</b> @ 0.97          → <b class="pos">贏</b>
-<span class="neg">-0.03 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/15 00:45 · 足球 · 押主場冷門</div>
-        <div>Feyenoord Rotterdam vs Como 1907 <span class="sub">3-2</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 Como 1907</b> @ 1.24          → <b class="neg">輸</b>
-<span class="neg">-1.00 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 押大冷門（賠率≥8）</div>
-        <div>FC Internazionale Milano vs Club Brugge KV <span class="sub">3-4</span></div>
-        <div class="bet">反著押 <b>主勝 FC Internazionale Milano＋和局</b> @ 0.94          → <b class="neg">輸</b>
-<span class="neg">-1.00 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 押大冷門（賠率≥8）</div>
-        <div>Galatasaray SK vs FC Barcelona <span class="sub">1-4</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 FC Barcelona</b> @ 0.97          → <b class="pos">贏</b>
-<span class="neg">-0.03 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 押主場冷門</div>
-        <div>Galatasaray SK vs FC Barcelona <span class="sub">1-4</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 FC Barcelona</b> @ 0.97          → <b class="pos">贏</b>
-<span class="neg">-0.03 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 押大冷門（賠率≥8）</div>
-        <div>Arsenal FC vs Lille OSC <span class="sub">3-0</span></div>
-        <div class="bet">反著押 <b>主勝 Arsenal FC＋和局</b> @ 0.91          → <b class="pos">贏</b>
-<span class="neg">-0.09 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 押大冷門（賠率≥8）</div>
-        <div>Viking FK vs FC Bayern München <span class="sub">3-3</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 FC Bayern München</b> @ 0.91          → <b class="pos">贏</b>
-<span class="neg">-0.09 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 押主場冷門</div>
-        <div>Viking FK vs FC Bayern München <span class="sub">3-3</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 FC Bayern München</b> @ 0.91          → <b class="pos">贏</b>
-<span class="neg">-0.09 單位</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 系統的模型分歧</div>
-        <div>Arsenal FC vs Lille OSC <span class="sub">3-0</span></div>
-        <div class="bet">反著押 <b>反押 Lille OSC +1.5</b>          → <b class="pos">贏</b>
-<span class="sub">（沒有運彩價）</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 03:00 · 足球 · 系統的模型分歧</div>
-        <div>Villarreal CF vs SSC Napoli <span class="sub">3-1</span></div>
-        <div class="bet">反著押 <b>反押 SSC Napoli +0.25</b>          → <b class="pos">贏</b>
-<span class="sub">（沒有運彩價）</span>        </div>
-      </li>
-      <li>
-        <div class="sub">10/14 00:45 · 足球 · 押主場冷門</div>
-        <div>Sabah FK vs SK Slavia Praha <span class="sub">2-0</span></div>
-        <div class="bet">反著押 <b>和局＋客勝 SK Slavia Praha</b>          → <b class="neg">輸</b>
-<span class="sub">（沒有運彩價）</span>        </div>
-      </li>
-    </ul>
-  </details>
-</section>
-
-<details class="more">
-  <summary>其他 48 種押法（全部結果，最差的在前）</summary>
-  <div style="margin-top:10px"><div class="scroll"><table>
-  <tr><th>押法</th><th class="num">差距（z）</th><th class="num">反著做：運彩價</th><th class="num">國際價</th><th class="num">理論</th><th class="num">命中 vs 市場</th><th class="num">前段／後段</th><th class="num">場數</th></tr>
+    <summary>其他 48 種押法（全部結果，最差的在前）</summary>
+    <div class="scroll"><table class="tbl">
+  <thead><tr><th>押法</th><th class="r">差距（z）</th><th class="r">反著做：運彩價</th><th class="r">國際價</th><th class="r">理論</th><th class="r">命中 vs 市場</th><th class="r">前段／後段</th><th class="r">場數</th></tr></thead>
+  <tbody>
   <tr>
-    <td>押客場大熱門（勝率≥60%）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押客場大熱門（勝率≥60%）<span class="sub">MLB</span></td>
     <td class="num neg">-3.00<span class="sub">z -2.1</span></td>
     <td class="num neg">-6.2%</td>
     <td class="num pos">+1.8%<span class="sub">最佳 +4.9</span></td>
@@ -894,7 +1233,7 @@
     <td class="num">1,087</td>
   </tr>
   <tr>
-    <td>兩隊上一場都 1 球↓：押小 2.5<span class="sub">足球</span></td>
+    <td class="wrap-cell">兩隊上一場都 1 球↓：押小 2.5<span class="sub">足球</span></td>
     <td class="num neg">-1.45<span class="sub">z -1.8</span></td>
     <td class="num neg">-14.1%</td>
     <td class="num neg">-3.7%<span class="sub">最佳 +1.2</span></td>
@@ -904,7 +1243,7 @@
     <td class="num">3,534</td>
   </tr>
   <tr>
-    <td>押升班馬<span class="sub">足球</span></td>
+    <td class="wrap-cell">押升班馬<span class="sub">足球</span></td>
     <td class="num neg">-0.55<span class="sub">z -1.6</span></td>
     <td class="num neg">-17.0%</td>
     <td class="num neg">-5.9%<span class="sub">最佳 -0.7</span></td>
@@ -914,7 +1253,7 @@
     <td class="num">16,094</td>
   </tr>
   <tr>
-    <td>每場都押小 2.5<span class="sub">足球</span></td>
+    <td class="wrap-cell">每場都押小 2.5<span class="sub">足球</span></td>
     <td class="num neg">-0.32<span class="sub">z -1.5</span></td>
     <td class="num neg">-14.5%</td>
     <td class="num neg">-5.4%<span class="sub">最佳 -0.8</span></td>
@@ -924,7 +1263,7 @@
     <td class="num">54,879</td>
   </tr>
   <tr>
-    <td>押五連敗的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押五連敗的球隊<span class="sub">足球</span></td>
     <td class="num neg">-1.78<span class="sub">z -1.5</span></td>
     <td class="num neg">-13.4%</td>
     <td class="num neg">-3.0%<span class="sub">最佳 +1.9</span></td>
@@ -934,7 +1273,7 @@
     <td class="num">1,183</td>
   </tr>
   <tr>
-    <td>押冷門（賠率≥5）<span class="sub">足球</span></td>
+    <td class="wrap-cell">押冷門（賠率≥5）<span class="sub">足球</span></td>
     <td class="num neg">-0.40<span class="sub">z -1.4</span></td>
     <td class="num neg">-12.9%</td>
     <td class="num neg">-4.0%<span class="sub">最佳 +0.3</span></td>
@@ -944,7 +1283,7 @@
     <td class="num">13,111</td>
   </tr>
   <tr>
-    <td>押五連勝的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押五連勝的球隊<span class="sub">足球</span></td>
     <td class="num neg">-1.32<span class="sub">z -1.1</span></td>
     <td class="num neg">-27.6%</td>
     <td class="num neg">-9.3%<span class="sub">最佳 -0.6</span></td>
@@ -954,7 +1293,7 @@
     <td class="num">1,528</td>
   </tr>
   <tr>
-    <td>押上一場大敗（輸3球↑）的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押上一場大敗（輸3球↑）的球隊<span class="sub">足球</span></td>
     <td class="num neg">-0.57<span class="sub">z -1.1</span></td>
     <td class="num neg">-16.7%</td>
     <td class="num neg">-5.5%<span class="sub">最佳 -0.3</span></td>
@@ -964,7 +1303,7 @@
     <td class="num">7,094</td>
   </tr>
   <tr>
-    <td>季後賽押熱門<span class="sub">MLB</span></td>
+    <td class="wrap-cell">季後賽押熱門<span class="sub">MLB</span></td>
     <td class="num neg">-3.37<span class="sub">z -1.0</span></td>
     <td class="num neg">-5.6%</td>
     <td class="num pos">+2.4%<span class="sub">最佳 +5.5</span></td>
@@ -974,7 +1313,7 @@
     <td class="num">229</td>
   </tr>
   <tr>
-    <td>每場都押熱門 −1.5<span class="sub">MLB</span></td>
+    <td class="wrap-cell">每場都押熱門 −1.5<span class="sub">MLB</span></td>
     <td class="num neg">-0.49<span class="sub">z -1.0</span></td>
     <td class="num neg">-13.0%</td>
     <td class="num neg">-3.0%<span class="sub">最佳 -0.9</span></td>
@@ -984,7 +1323,7 @@
     <td class="num">10,522</td>
   </tr>
   <tr>
-    <td>押上一場被完封的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押上一場被完封的球隊<span class="sub">MLB</span></td>
     <td class="num neg">-1.34<span class="sub">z -1.0</span></td>
     <td class="num neg">-11.3%</td>
     <td class="num neg">-1.7%<span class="sub">最佳 +0.3</span></td>
@@ -994,7 +1333,7 @@
     <td class="num">1,344</td>
   </tr>
   <tr>
-    <td>押上一場贏 5 分↑的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押上一場贏 5 分↑的球隊<span class="sub">MLB</span></td>
     <td class="num neg">-0.85<span class="sub">z -0.9</span></td>
     <td class="num neg">-11.8%</td>
     <td class="num neg">-3.0%<span class="sub">最佳 -0.7</span></td>
@@ -1004,7 +1343,7 @@
     <td class="num">2,777</td>
   </tr>
   <tr>
-    <td>每場都押主隊不讓分<span class="sub">MLB</span></td>
+    <td class="wrap-cell">每場都押主隊不讓分<span class="sub">MLB</span></td>
     <td class="num neg">-0.42<span class="sub">z -0.9</span></td>
     <td class="num neg">-12.6%</td>
     <td class="num neg">-4.0%<span class="sub">最佳 -2.0</span></td>
@@ -1014,7 +1353,7 @@
     <td class="num">10,522</td>
   </tr>
   <tr>
-    <td>押上一場進4球↑的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押上一場進4球↑的球隊<span class="sub">足球</span></td>
     <td class="num neg">-0.45<span class="sub">z -0.7</span></td>
     <td class="num neg">-22.1%</td>
     <td class="num neg">-7.2%<span class="sub">最佳 -0.5</span></td>
@@ -1024,7 +1363,7 @@
     <td class="num">5,349</td>
   </tr>
   <tr>
-    <td>開季前 5 輪押熱門<span class="sub">足球</span></td>
+    <td class="wrap-cell">開季前 5 輪押熱門<span class="sub">足球</span></td>
     <td class="num neg">-0.39<span class="sub">z -0.7</span></td>
     <td class="num neg">-22.3%</td>
     <td class="num neg">-8.1%<span class="sub">最佳 -1.7</span></td>
@@ -1034,7 +1373,7 @@
     <td class="num">7,887</td>
   </tr>
   <tr>
-    <td>押上一場得 10 分↑的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押上一場得 10 分↑的球隊<span class="sub">MLB</span></td>
     <td class="num neg">-0.86<span class="sub">z -0.7</span></td>
     <td class="num neg">-12.5%</td>
     <td class="num neg">-3.7%<span class="sub">最佳 -1.5</span></td>
@@ -1044,7 +1383,7 @@
     <td class="num">1,391</td>
   </tr>
   <tr>
-    <td>押榜首球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押榜首球隊<span class="sub">足球</span></td>
     <td class="num neg">-0.47<span class="sub">z -0.7</span></td>
     <td class="num neg">-27.9%</td>
     <td class="num neg">-10.7%<span class="sub">最佳 -2.4</span></td>
@@ -1054,7 +1393,7 @@
     <td class="num">4,079</td>
   </tr>
   <tr>
-    <td>押勝率 .600↑ 的強隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押勝率 .600↑ 的強隊<span class="sub">MLB</span></td>
     <td class="num neg">-0.68<span class="sub">z -0.6</span></td>
     <td class="num neg">-12.0%</td>
     <td class="num neg">-4.2%<span class="sub">最佳 -1.4</span></td>
@@ -1064,7 +1403,7 @@
     <td class="num">1,888</td>
   </tr>
   <tr>
-    <td>低級別聯賽押冷門（賠率≥5）<span class="sub">足球</span></td>
+    <td class="wrap-cell">低級別聯賽押冷門（賠率≥5）<span class="sub">足球</span></td>
     <td class="num neg">-0.42<span class="sub">z -0.6</span></td>
     <td class="num neg">-13.0%</td>
     <td class="num neg">-5.3%<span class="sub">最佳 -0.7</span></td>
@@ -1074,7 +1413,7 @@
     <td class="num">2,313</td>
   </tr>
   <tr>
-    <td>勢均力敵（勝率&lt;55%）押熱門<span class="sub">MLB</span></td>
+    <td class="wrap-cell">勢均力敵（勝率&lt;55%）押熱門<span class="sub">MLB</span></td>
     <td class="num neg">-0.52<span class="sub">z -0.6</span></td>
     <td class="num neg">-12.8%</td>
     <td class="num neg">-4.0%<span class="sub">最佳 -2.0</span></td>
@@ -1084,7 +1423,7 @@
     <td class="num">3,252</td>
   </tr>
   <tr>
-    <td>押大熱門（勝率≥65%）不讓分<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押大熱門（勝率≥65%）不讓分<span class="sub">MLB</span></td>
     <td class="num neg">-0.60<span class="sub">z -0.6</span></td>
     <td class="num neg">-11.8%</td>
     <td class="num neg">-6.1%<span class="sub">最佳 -3.6</span></td>
@@ -1094,7 +1433,7 @@
     <td class="num">1,929</td>
   </tr>
   <tr>
-    <td>系列賽：押昨天贏的那隊再贏<span class="sub">MLB</span></td>
+    <td class="wrap-cell">系列賽：押昨天贏的那隊再贏<span class="sub">MLB</span></td>
     <td class="num neg">-0.28<span class="sub">z -0.5</span></td>
     <td class="num neg">-12.7%</td>
     <td class="num neg">-3.9%<span class="sub">最佳 -1.8</span></td>
@@ -1104,7 +1443,7 @@
     <td class="num">7,061</td>
   </tr>
   <tr>
-    <td>押被市場拋售的一邊（−4pp↓）<span class="sub">足球</span></td>
+    <td class="wrap-cell">押被市場拋售的一邊（−4pp↓）<span class="sub">足球</span></td>
     <td class="num neg">-0.18<span class="sub">z -0.4</span></td>
     <td class="num neg">-18.0%</td>
     <td class="num neg">-5.8%<span class="sub">最佳 +0.8</span></td>
@@ -1114,7 +1453,7 @@
     <td class="num">10,679</td>
   </tr>
   <tr>
-    <td>押三連敗的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押三連敗的球隊<span class="sub">足球</span></td>
     <td class="num neg">-0.19<span class="sub">z -0.3</span></td>
     <td class="num neg">-16.0%</td>
     <td class="num neg">-5.5%<span class="sub">最佳 -0.5</span></td>
@@ -1124,7 +1463,7 @@
     <td class="num">5,730</td>
   </tr>
   <tr>
-    <td>低總分線（≤7）押小<span class="sub">MLB</span></td>
+    <td class="wrap-cell">低總分線（≤7）押小<span class="sub">MLB</span></td>
     <td class="num neg">-0.52<span class="sub">z -0.3</span></td>
     <td class="num neg">-12.8%</td>
     <td class="num neg">-3.8%<span class="sub">最佳 -2.5</span></td>
@@ -1134,7 +1473,7 @@
     <td class="num">734</td>
   </tr>
   <tr>
-    <td>押五連敗的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押五連敗的球隊<span class="sub">MLB</span></td>
     <td class="num neg">-0.47<span class="sub">z -0.3</span></td>
     <td class="num neg">-12.9%</td>
     <td class="num neg">-2.8%<span class="sub">最佳 -1.1</span></td>
@@ -1144,7 +1483,7 @@
     <td class="num">809</td>
   </tr>
   <tr>
-    <td>人氣球隊當客隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">人氣球隊當客隊<span class="sub">MLB</span></td>
     <td class="num neg">-0.20<span class="sub">z -0.2</span></td>
     <td class="num neg">-13.1%</td>
     <td class="num neg">-4.2%<span class="sub">最佳 -1.7</span></td>
@@ -1154,7 +1493,7 @@
     <td class="num">1,558</td>
   </tr>
   <tr>
-    <td>高總分線（≥9.5）押大<span class="sub">MLB</span></td>
+    <td class="wrap-cell">高總分線（≥9.5）押大<span class="sub">MLB</span></td>
     <td class="num neg">-0.16<span class="sub">z -0.1</span></td>
     <td class="num neg">-13.5%</td>
     <td class="num neg">-4.7%<span class="sub">最佳 -3.2</span></td>
@@ -1164,7 +1503,7 @@
     <td class="num">1,902</td>
   </tr>
   <tr>
-    <td>每場都押客隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">每場都押客隊<span class="sub">足球</span></td>
     <td class="num neg">-0.01<span class="sub">z -0.1</span></td>
     <td class="num neg">-17.1%</td>
     <td class="num neg">-6.1%<span class="sub">最佳 -1.0</span></td>
@@ -1174,7 +1513,7 @@
     <td class="num">54,880</td>
   </tr>
   <tr>
-    <td>押人氣球隊（洋基、道奇、紅襪、小熊、大都會）<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押人氣球隊（洋基、道奇、紅襪、小熊、大都會）<span class="sub">MLB</span></td>
     <td class="num neg">-0.02<span class="sub">z -0.0</span></td>
     <td class="num neg">-13.7%</td>
     <td class="num neg">-5.4%<span class="sub">最佳 -3.0</span></td>
@@ -1184,7 +1523,7 @@
     <td class="num">3,103</td>
   </tr>
   <tr>
-    <td>押三連敗的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押三連敗的球隊<span class="sub">MLB</span></td>
     <td class="num pos">+0.07<span class="sub">z +0.1</span></td>
     <td class="num neg">-13.9%</td>
     <td class="num neg">-4.3%<span class="sub">最佳 -2.5</span></td>
@@ -1194,7 +1533,7 @@
     <td class="num">2,672</td>
   </tr>
   <tr>
-    <td>勢均力敵（主客差&lt;5pp）押和局<span class="sub">足球</span></td>
+    <td class="wrap-cell">勢均力敵（主客差&lt;5pp）押和局<span class="sub">足球</span></td>
     <td class="num pos">+0.08<span class="sub">z +0.1</span></td>
     <td class="num neg">-16.1%</td>
     <td class="num neg">-6.4%<span class="sub">最佳 -1.2</span></td>
@@ -1204,7 +1543,7 @@
     <td class="num">6,316</td>
   </tr>
   <tr>
-    <td>大熱門（≥65%）押 −1.5<span class="sub">MLB</span></td>
+    <td class="wrap-cell">大熱門（≥65%）押 −1.5<span class="sub">MLB</span></td>
     <td class="num pos">+0.20<span class="sub">z +0.2</span></td>
     <td class="num neg">-14.0%</td>
     <td class="num neg">-5.4%<span class="sub">最佳 -2.5</span></td>
@@ -1214,7 +1553,7 @@
     <td class="num">1,929</td>
   </tr>
   <tr>
-    <td>押三連勝的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押三連勝的球隊<span class="sub">MLB</span></td>
     <td class="num pos">+0.17<span class="sub">z +0.2</span></td>
     <td class="num neg">-13.6%</td>
     <td class="num neg">-5.2%<span class="sub">最佳 -2.9</span></td>
@@ -1224,7 +1563,7 @@
     <td class="num">2,688</td>
   </tr>
   <tr>
-    <td>押超級熱門（賠率≤1.30）<span class="sub">足球</span></td>
+    <td class="wrap-cell">押超級熱門（賠率≤1.30）<span class="sub">足球</span></td>
     <td class="num pos">+0.17<span class="sub">z +0.2</span></td>
     <td class="num neg">-47.2%</td>
     <td class="num neg">-20.6%<span class="sub">最佳 -9.2</span></td>
@@ -1234,7 +1573,7 @@
     <td class="num">3,043</td>
   </tr>
   <tr>
-    <td>押墊底球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押墊底球隊<span class="sub">足球</span></td>
     <td class="num pos">+0.19<span class="sub">z +0.3</span></td>
     <td class="num neg">-15.3%</td>
     <td class="num neg">-5.6%<span class="sub">最佳 -0.8</span></td>
@@ -1244,7 +1583,7 @@
     <td class="num">5,433</td>
   </tr>
   <tr>
-    <td>開季（三、四月）押熱門<span class="sub">MLB</span></td>
+    <td class="wrap-cell">開季（三、四月）押熱門<span class="sub">MLB</span></td>
     <td class="num pos">+0.39<span class="sub">z +0.3</span></td>
     <td class="num neg">-14.6%</td>
     <td class="num neg">-6.5%<span class="sub">最佳 -4.5</span></td>
@@ -1254,7 +1593,7 @@
     <td class="num">1,858</td>
   </tr>
   <tr>
-    <td>熱門被拋售（開→收 −4pp↓）還押熱門<span class="sub">MLB</span></td>
+    <td class="wrap-cell">熱門被拋售（開→收 −4pp↓）還押熱門<span class="sub">MLB</span></td>
     <td class="num pos">+1.01<span class="sub">z +0.4</span></td>
     <td class="num neg">-15.2%</td>
     <td class="num neg">-7.2%<span class="sub">最佳 -3.1</span></td>
@@ -1264,7 +1603,7 @@
     <td class="num">454</td>
   </tr>
   <tr>
-    <td>每場都押熱門<span class="sub">足球</span></td>
+    <td class="wrap-cell">每場都押熱門<span class="sub">足球</span></td>
     <td class="num pos">+0.13<span class="sub">z +0.6</span></td>
     <td class="num neg">-23.3%</td>
     <td class="num neg">-9.1%<span class="sub">最佳 -2.5</span></td>
@@ -1274,7 +1613,7 @@
     <td class="num">54,880</td>
   </tr>
   <tr>
-    <td>押五連勝的球隊<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押五連勝的球隊<span class="sub">MLB</span></td>
     <td class="num pos">+1.75<span class="sub">z +1.0</span></td>
     <td class="num neg">-16.9%</td>
     <td class="num neg">-9.0%<span class="sub">最佳 -6.7</span></td>
@@ -1284,7 +1623,7 @@
     <td class="num">791</td>
   </tr>
   <tr>
-    <td>押主場冷門<span class="sub">MLB</span></td>
+    <td class="wrap-cell">押主場冷門<span class="sub">MLB</span></td>
     <td class="num pos">+0.83<span class="sub">z +1.1</span></td>
     <td class="num neg">-14.9%</td>
     <td class="num neg">-5.0%<span class="sub">最佳 -3.7</span></td>
@@ -1294,7 +1633,7 @@
     <td class="num">4,001</td>
   </tr>
   <tr>
-    <td>押豪門客場<span class="sub">足球</span></td>
+    <td class="wrap-cell">押豪門客場<span class="sub">足球</span></td>
     <td class="num pos">+1.25<span class="sub">z +1.3</span></td>
     <td class="num neg">-29.9%</td>
     <td class="num neg">-11.5%<span class="sub">最佳 -4.1</span></td>
@@ -1304,7 +1643,7 @@
     <td class="num">2,522</td>
   </tr>
   <tr>
-    <td>押 5 場沒贏的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押 5 場沒贏的球隊<span class="sub">足球</span></td>
     <td class="num pos">+0.61<span class="sub">z +1.4</span></td>
     <td class="num neg">-16.8%</td>
     <td class="num neg">-6.5%<span class="sub">最佳 -1.6</span></td>
@@ -1314,7 +1653,7 @@
     <td class="num">10,534</td>
   </tr>
   <tr>
-    <td>每場都押大 2.5<span class="sub">足球</span></td>
+    <td class="wrap-cell">每場都押大 2.5<span class="sub">足球</span></td>
     <td class="num pos">+0.32<span class="sub">z +1.5</span></td>
     <td class="num neg">-15.9%</td>
     <td class="num neg">-6.7%<span class="sub">最佳 -2.1</span></td>
@@ -1324,7 +1663,7 @@
     <td class="num">54,879</td>
   </tr>
   <tr>
-    <td>押客場熱門<span class="sub">足球</span></td>
+    <td class="wrap-cell">押客場熱門<span class="sub">足球</span></td>
     <td class="num pos">+0.72<span class="sub">z +2.0</span></td>
     <td class="num neg">-22.9%</td>
     <td class="num neg">-9.3%<span class="sub">最佳 -3.0</span></td>
@@ -1334,7 +1673,7 @@
     <td class="num">17,659</td>
   </tr>
   <tr>
-    <td>押豪門（曼聯、皇馬、拜仁…）<span class="sub">足球</span></td>
+    <td class="wrap-cell">押豪門（曼聯、皇馬、拜仁…）<span class="sub">足球</span></td>
     <td class="num pos">+1.30<span class="sub">z +2.0</span></td>
     <td class="num neg">-35.7%</td>
     <td class="num neg">-15.0%<span class="sub">最佳 -6.8</span></td>
@@ -1344,7 +1683,7 @@
     <td class="num">5,047</td>
   </tr>
   <tr>
-    <td>每場都押和局<span class="sub">足球</span></td>
+    <td class="wrap-cell">每場都押和局<span class="sub">足球</span></td>
     <td class="num pos">+0.39<span class="sub">z +2.1</span></td>
     <td class="num neg">-15.4%</td>
     <td class="num neg">-6.1%<span class="sub">最佳 -0.9</span></td>
@@ -1354,7 +1693,7 @@
     <td class="num">54,880</td>
   </tr>
   <tr>
-    <td>押 8 場不敗的球隊<span class="sub">足球</span></td>
+    <td class="wrap-cell">押 8 場不敗的球隊<span class="sub">足球</span></td>
     <td class="num pos">+1.66<span class="sub">z +2.4</span></td>
     <td class="num neg">-29.7%</td>
     <td class="num neg">-14.2%<span class="sub">最佳 -7.0</span></td>
@@ -1363,14 +1702,102 @@
     <td class="num">+1.1 / +2.4</td>
     <td class="num">4,534</td>
   </tr>
+  </tbody>
 </table></div>
-</div>
-</details>
 
-<footer>
-回測（2026-10-15）：MLB 2021–2025 共 10,522 場（六家美國莊家，排除混入的盤中價），足球 2019/20–2026/27 22 個聯賽 54,880 場（football-data.co.uk）。  市場機率是收盤價去水後的機率（足球用 Pinnacle）。反著做：兩邊盤就押另一邊；不讓分押另外兩個結果、按比例分注。運彩價依它實際的水錢換算：足球的水錢多抽在冷門上（熱門約 13%、最冷的一邊約 40%），所以用「冪次」方式分配，對 191 個真實盤口的誤差約 4%；MLB 兩邊差不多，平均分配。
-  一次測幾十種押法，就算全部沒有規律，也會有一兩種看起來 z 小於 −2，所以只看兩段時間都差的。重跑：python scripts/backtest_fade.py。
-</footer>
-</div>
+  </details>
+  <p class="stamp-line">回測（2026-10-15）：MLB 2021–2025 共 10,522 場（六家美國莊家，排除混入的盤中價），足球 2019/20–2026/27 22 個聯賽 54,880 場（football-data.co.uk）。市場機率是收盤價去水後的機率（足球用 Pinnacle）。運彩價依它實際的水錢換算：足球的水錢多抽在冷門上（熱門約 13%、最冷的一邊約 40%），對 191 個真實盤口的誤差約 4%；MLB 兩邊差不多，平均分配。一次測幾十種押法，就算全部沒有規律，也會有一兩種看起來 z 小於 −2，所以只看兩段時間都差的。</p>
+</section>
+</main>
+<footer class="foot wrap">國際價是多家國際莊家去水後的中位數；「公允賠率」= 1 ÷ 國際去水機率。運彩賠率高於公允賠率才有價值，低於它就是在付水錢。數字是機率估計，不是保證；請自行判斷並控制風險。</footer>
+<script>
+(function () {
+  // Tabs: 即將開賽 / 歷史數據 (and more). Without script every panel shows.
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+  function select(id, push) {
+    tabs.forEach(function (t) {
+      var on = t.getAttribute('aria-controls') === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      var panel = document.getElementById(t.getAttribute('aria-controls'));
+      if (panel) panel.classList.toggle('active', on);
+    });
+    if (push && history.replaceState) history.replaceState(null, '', id === tabs[0].getAttribute('aria-controls') ? location.pathname : '#' + id);
+  }
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function (e) { e.preventDefault(); select(t.getAttribute('aria-controls'), true); });
+  });
+  if (tabs.length) {
+    var h = location.hash.slice(1), wanted = tabs[0].getAttribute('aria-controls');
+    tabs.forEach(function (t) { if (t.getAttribute('aria-controls') === h) wanted = h; });
+    var target = h && document.getElementById(h);
+    if (target && !target.classList.contains('tabpanel')) {
+      var panel = target.closest('.tabpanel');
+      if (panel) wanted = panel.id;
+    }
+    select(wanted, false);
+    // A match card is scrolled to; a tab name only switches the tab (the hero stays in view).
+    if (target && !target.classList.contains('tabpanel')) target.scrollIntoView();
+  }
+
+  // History filters: a row of buttons shows only the records tagged with the choice.
+  Array.prototype.forEach.call(document.querySelectorAll('.filters'), function (group) {
+    var scope = group.closest('.tabpanel') || document;
+    var buttons = group.querySelectorAll('button');
+    var items = scope.querySelectorAll('[data-tags]');
+    Array.prototype.forEach.call(buttons, function (b) {
+      b.addEventListener('click', function () {
+        var f = b.getAttribute('data-f');
+        Array.prototype.forEach.call(buttons, function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        Array.prototype.forEach.call(items, function (it) {
+          it.hidden = !(f === 'all' || (it.getAttribute('data-tags') || '').split(' ').indexOf(f) !== -1);
+        });
+      });
+    });
+  });
+
+  // Price charts: a crosshair and one tooltip with every series at the nearest time.
+  Array.prototype.forEach.call(document.querySelectorAll('figure.spark'), function (fig) {
+    var svg = fig.querySelector('svg'), cross = svg && svg.querySelector('.cross');
+    var tips = [];
+    try { tips = JSON.parse(fig.getAttribute('data-tip') || '[]'); } catch (e) { tips = []; }
+    if (!svg || !cross || !tips.length) return;
+    var box = document.createElement('div');
+    box.className = 'tip'; box.hidden = true; fig.appendChild(box);
+    var width = svg.viewBox.baseVal.width, at = tips.length - 1;
+    function show(i) {
+      at = Math.max(0, Math.min(tips.length - 1, i));
+      var t = tips[at];
+      cross.setAttribute('x1', t.x); cross.setAttribute('x2', t.x); cross.style.display = '';
+      box.textContent = '';
+      var head = document.createElement('div'); head.className = 'tt'; head.textContent = t.t; box.appendChild(head);
+      t.v.forEach(function (v) {
+        var row = document.createElement('div'); row.className = 'tr';
+        var k = document.createElement('i'); k.className = 'k ' + v[0];
+        var b = document.createElement('b'); b.textContent = v[2];
+        var s = document.createElement('span'); s.textContent = v[1];
+        row.appendChild(k); row.appendChild(b); row.appendChild(s); box.appendChild(row);
+      });
+      box.hidden = false;
+      var r = svg.getBoundingClientRect(), px = t.x / width * r.width;
+      box.style.left = Math.max(0, Math.min(px - 64, r.width - box.offsetWidth)) + 'px';
+    }
+    function hide() { box.hidden = true; cross.style.display = 'none'; }
+    function nearest(clientX) {
+      var r = svg.getBoundingClientRect(), x = (clientX - r.left) / r.width * width, best = 0;
+      tips.forEach(function (t, i) { if (Math.abs(t.x - x) < Math.abs(tips[best].x - x)) best = i; });
+      return best;
+    }
+    svg.addEventListener('pointermove', function (e) { show(nearest(e.clientX)); });
+    svg.addEventListener('pointerdown', function (e) { show(nearest(e.clientX)); });
+    svg.addEventListener('pointerleave', hide);
+    fig.addEventListener('focus', function () { show(at); });
+    fig.addEventListener('blur', hide);
+    fig.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowLeft') { show(at - 1); e.preventDefault(); }
+      if (e.key === 'ArrowRight') { show(at + 1); e.preventDefault(); }
+    });
+  });
+})();
+</script>
 </body>
 </html>
