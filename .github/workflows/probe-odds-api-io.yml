@@ -19,6 +19,8 @@ jobs:
       # reported as such, so it can be moved); the value itself is never written out.
       ODDS_API_IO_KEY: ${{ secrets.ODDS_API_IO_KEY || vars.ODDS_API_IO_KEY }}
       KEY_SOURCE: ${{ secrets.ODDS_API_IO_KEY != '' && 'secret' || vars.ODDS_API_IO_KEY != '' && 'variable' || 'none' }}
+      # The main key, checked with The Odds API's free sports list (still valid?).
+      THE_ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

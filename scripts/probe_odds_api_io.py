@@ -110,9 +110,31 @@ def probe_sport(sport: str, slug: str | None, books: list[str], key: str, log: l
     return out
 
 
+def check_the_odds_api() -> dict[str, Any]:
+    """Is the main key (ODDS_API_KEY, The Odds API) still the one the pipeline needs? The
+    sports list is free of quota. Only the-odds-api.com ever sees that key."""
+    key = os.environ.get("THE_ODDS_API_KEY", "").strip()
+    if not key:
+        return {"status": "not set"}
+    try:
+        resp = requests.get(
+            "https://api.the-odds-api.com/v4/sports", params={"apiKey": key}, timeout=30
+        )
+    except requests.RequestException as exc:
+        return {"error": type(exc).__name__}
+    return {
+        "status": resp.status_code,
+        "remaining": resp.headers.get("x-requests-remaining"),
+        "used": resp.headers.get("x-requests-used"),
+    }
+
+
 def main(out_path: Path) -> int:
     key = os.environ.get("ODDS_API_IO_KEY", "").strip()
-    result: dict[str, Any] = {"key_source": os.environ.get("KEY_SOURCE", "")}
+    result: dict[str, Any] = {
+        "key_source": os.environ.get("KEY_SOURCE", ""),
+        "the_odds_api": check_the_odds_api(),
+    }
     log: list[dict[str, Any]] = []
     if not key:
         result["error"] = "ODDS_API_IO_KEY is not set (GitHub: Settings > Secrets > Actions)"
@@ -130,8 +152,9 @@ def main(out_path: Path) -> int:
         )
     result["requests"] = log
     text = json.dumps(result, ensure_ascii=False, indent=1)
-    if key:
-        text = text.replace(key, "***")  # never write the key, whatever echoed it
+    for secret in (key, os.environ.get("THE_ODDS_API_KEY", "").strip()):
+        if secret:
+            text = text.replace(secret, "***")  # never write a key, whatever echoed it
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(text + "\n", encoding="utf-8")
     print(f"wrote {out_path}: {len(log)} requests")
