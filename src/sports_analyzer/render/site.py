@@ -433,6 +433,47 @@ def market_sides(sport: str, market: str) -> list[str]:
     return ["home", "away"]
 
 
+def tape_focus(key: Any, line: Any) -> tuple[str, str, str, bool]:
+    """A ledger or review selection -> the tape's (market, side, line) and whether it
+    stands in for the bet. Spread lines are the home handicap in the ledgers and the tape
+    alike. A derived bet (三向讓分, team totals, first half ...) has no price history of
+    its own, so its team's match-winner price stands in (home when it names no team)."""
+    key = str(key or "")
+    text = "" if line in (None, "") else f"{float(line):g}"
+    if key in ("home", "draw", "away"):
+        return "h2h", key, "", False
+    if key in ("over", "under") and text:
+        return "totals", key, text, False
+    if key in ("spread_home", "spread_away") and text:
+        return "spread", key.removeprefix("spread_"), text, False
+    side = next((s for s in ("home", "away", "draw") if s in key.split("_")), "home")
+    return "h2h", side, "", True
+
+
+def past_curve(
+    rows: list[Mapping[str, str]],
+    kickoff: Any,
+    sport: str,
+    focus: tuple[str, str, str, bool],
+    home: str,
+    away: str,
+    refs: Iterable[dict[str, Any]] = (),
+) -> dict[str, Any]:
+    """A finished match's prices of one side up to kickoff, for the history cards: the
+    chart (blue international, amber 運彩's own de-vigged), its caption, and how many
+    times the tape saw that market (the note when that is too few to draw)."""
+    market, side, line, stand_in = focus
+    obs = observations(rows, market, line, parse_time(kickoff))
+    caption = f"{side_label(sport, market, side, line, home, away)}：開賽前的隱含機率"
+    if stand_in:
+        caption += "（推算玩法沒有逐次報價，畫這隊的勝負盤）"
+    return {
+        "chart": spark(price_series(obs, side), refs=list(refs)),
+        "seen": len(obs),
+        "caption": caption,
+    }
+
+
 def ev_reader(sport: str, cfg: ModelConfig, labels: Mapping[str, str]) -> Any:
     """Value reading: at a 運彩 upload, the EV of each price against the international
     price nearest in time (within the freshness window), else no judgement."""
@@ -560,7 +601,7 @@ def value_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
         if c.get("tw")
     ]
     cards = by_kickoff(cards)
-    history = value_history(site)
+    history = value_history(site, by_match)
     reports = [
         {"sport": SPORT_LABELS[sport], **snap["tw_report"]}
         for sport, snap in (("football", site.football), ("mlb", site.mlb))
@@ -590,9 +631,12 @@ def _review_rows(site: Site) -> dict[tuple[str, str], dict[str, str]]:
     return out
 
 
-def value_history(site: Site) -> dict[str, Any]:
+def value_history(
+    site: Site, by_match: Mapping[tuple[str, str], list] | None = None
+) -> dict[str, Any]:
     """Every 運彩 value bet the system recorded, judged by its closing-line value apart
-    from the result; then the matches it looked at and passed on, priced at the close."""
+    from the result, with its prices up to kickoff; then the matches it looked at and
+    passed on, priced at the close."""
     reviews = _review_rows(site)
     bets = []
     newest = sorted(site.value_rows, key=lambda r: str(r.get("captured_at")), reverse=True)
@@ -615,6 +659,14 @@ def value_history(site: Site) -> dict[str, Any]:
                 "price": r.get("tw_price"),
                 "ev": _float(r.get("ev")),
                 "score": _score(row, sport),
+                "curve": past_curve(
+                    (by_match or {}).get((sport, str(r.get("match_id"))), []),
+                    r.get("kickoff_utc"),
+                    sport,
+                    tape_focus(r.get("selection_key"), r.get("line")),
+                    home,
+                    away,
+                ),
                 **pick,
             }
         )
@@ -715,6 +767,34 @@ def g_series(
     return out
 
 
+def g_chart(gs: list[tuple[datetime, float, str]], cfg: ModelConfig) -> dict[str, Any] | None:
+    """G over time with its ±threshold lines; None until G was seen twice."""
+    if len(gs) < 2:
+        return None
+    t = round(cfg.g_threshold * 100)
+    return spark(
+        [{"key": "g", "label": "G", "points": gs}],
+        refs=[
+            {"value": cfg.g_threshold, "label": f"+{t}"},
+            {"value": -cfg.g_threshold, "label": f"−{t}"},
+        ],
+        kind="g",
+        min_span=0.12,
+    )
+
+
+def mlb_past_curve(
+    rows: list[Mapping[str, str]], row: Mapping[str, Any], home: str, away: str, cfg: ModelConfig
+) -> dict[str, Any]:
+    """A finished MLB game's curve: G up to the first pitch, else the home moneyline (the
+    same as its card before the game)."""
+    gs = g_series(rows, parse_time(row.get("kickoff_utc")))
+    chart = g_chart(gs, cfg)
+    if chart:
+        return {"chart": chart, "seen": len(gs), "caption": "G 值（國際）：開賽前的變化"}
+    return past_curve(rows, row.get("kickoff_utc"), "mlb", tape_focus("home", ""), home, away)
+
+
 def t10_card(card: dict[str, Any], rows: list[Mapping[str, str]], site: Site) -> dict[str, Any]:
     cfg = site.cfg
     kickoff = parse_time(card.get("kickoff_utc"))
@@ -724,19 +804,7 @@ def t10_card(card: dict[str, Any], rows: list[Mapping[str, str]], site: Site) ->
     home, away = names(card)
     labels = {"home": f"{home}", "away": f"{away}"}
     obs = observations(rows, "h2h", "", kickoff)
-    chart = (
-        spark(
-            [{"key": "g", "label": "G", "points": gs}],
-            refs=[
-                {"value": cfg.g_threshold, "label": "+6"},
-                {"value": -cfg.g_threshold, "label": "−6"},
-            ],
-            kind="g",
-            min_span=0.12,
-        )
-        if len(gs) >= 2
-        else None
-    )
+    chart = g_chart(gs, cfg)
     g_by_time = {p[0]: p for p in gs}
     price_read = ev_reader("mlb", cfg, {s: f"{labels[s]} 不讓分" for s in labels})
 
@@ -771,7 +839,7 @@ def t10_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str, 
         t10_card(c, by_match.get(("mlb", _id(c)), []), site)
         for c in upcoming(mlb_cards(site), site.now)
     ]
-    history = t10_history(site)
+    history = t10_history(site, by_match)
     return {
         **_base(site, "t10", "T-10"),
         "cards": cards,
@@ -805,23 +873,30 @@ def shape_check(row: Mapping[str, Any]) -> dict[str, str] | None:
     }
 
 
-def t10_history(site: Site) -> dict[str, Any]:
+def t10_history(
+    site: Site, by_match: Mapping[tuple[str, str], list] | None = None
+) -> dict[str, Any]:
     picks = match_picks(site.signal_rows, site.value_rows)
     items = []
     for row in sorted(site.mlb_reviews, key=lambda r: str(r.get("kickoff_utc")), reverse=True):
         x = review.explain_mlb(row, picks.get(("mlb", str(row.get("game_pk"))), []))
+        home, away = known_names(
+            site, "mlb", row.get("game_pk"), str(row.get("home")), str(row.get("away"))
+        )
         items.append(
             {
                 "row": row,
                 "when": when(row.get("kickoff_utc"), site.now),
-                "title": match_title(
-                    "mlb",
-                    *known_names(
-                        site, "mlb", row.get("game_pk"), str(row.get("home")), str(row.get("away"))
-                    ),
-                ),  # fmt: skip
+                "title": match_title("mlb", home, away),
                 "score": _score(row, "mlb"),
                 "shape": shape_check(row),
+                "curve": mlb_past_curve(
+                    (by_match or {}).get(("mlb", str(row.get("game_pk"))), []),
+                    row,
+                    home,
+                    away,
+                    site.cfg,
+                ),
                 **x,
             }
         )
@@ -893,7 +968,7 @@ def radar_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
         for m in site.history
         if m.get("closed") and any(ev["type"] == "radar" for ev in m["events"])
     ]
-    history = [_event_match(m, ("radar",), site) for m in events]
+    history = [_event_match(m, ("radar",), site, by_match) for m in events]
     return {
         **_base(site, "radar", "延遲雷達"),
         "cards": cards,
@@ -911,9 +986,15 @@ def radar_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
     }
 
 
-def _event_match(m: Mapping[str, Any], kinds: tuple[str, ...], site: Site) -> dict[str, Any]:
+def _event_match(
+    m: Mapping[str, Any],
+    kinds: tuple[str, ...],
+    site: Site,
+    by_match: Mapping[tuple[str, str], list] | None = None,
+) -> dict[str, Any]:
     """One match of the 大戶 record (moves.event_history) for a history list, with the
-    events of the given kinds and what went right or wrong for each."""
+    events of the given kinds, what went right or wrong for each, and the curve of the
+    first one's side up to kickoff."""
     v = bighand_view(m, site.cfg)
     events = [e for e in v["events"] if e["type"] in kinds]
     for e in events:
@@ -925,13 +1006,31 @@ def _event_match(m: Mapping[str, Any], kinds: tuple[str, ...], site: Site) -> di
     # The record keeps home-away; MLB is read away first, like its title (away @ home).
     h, _, a = str(m.get("score") or "").partition("-")
     score = (f"{a}–{h}" if m["sport"] == "mlb" else f"{h}–{a}") if a else ""
+    curve = None
+    if events:
+        first = events[0]
+        home, away = _event_names(m)
+        curve = past_curve(
+            (by_match or {}).get((m["sport"], str(m["match_id"])), []),
+            m.get("kickoff_utc"),
+            m["sport"],
+            (first["market"], first["side"], first["line"], False),
+            home,
+            away,
+        )
     return {
         **v,
         "events": events,
         "tone": tone,
         "score_text": score,
         "when": when(m.get("kickoff_utc"), site.now),
+        "curve": curve,
     }
+
+
+def _event_names(m: Mapping[str, Any]) -> tuple[str, str]:
+    """運彩's Chinese names when the record kept them, else the international ones."""
+    return str(m.get("home_zh") or m.get("home", "")), str(m.get("away_zh") or m.get("away", ""))
 
 
 def _event_lessons(e: Mapping[str, Any]) -> list[dict[str, str]]:
@@ -1044,7 +1143,7 @@ def moves_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
     cards = by_kickoff(cards)
     kinds = ("tw_only", "intl_big")
     history = [
-        _event_match(m, kinds, site)
+        _event_match(m, kinds, site, by_match)
         for m in site.history
         if m.get("closed") and any(e["type"] in kinds for e in m["events"])
     ]
@@ -1160,6 +1259,55 @@ def model_card(
     }
 
 
+def review_focus(row: Mapping[str, Any]) -> tuple[tuple[str, str, str, bool], float | None]:
+    """The side a reviewed match's curve follows, and the model's probability of it (the
+    chart's reference line): the lean (模型分歧 signal or 1X2 lean) when there is one, else
+    the 1X2 outcome where the model sat furthest above the opening market; home when the
+    model was not usable (a pooled cup model's numbers mean nothing)."""
+    if row.get("lean_key"):
+        return tape_focus(row["lean_key"], row.get("lean_line")), _float(row.get("lean_model_p"))
+    if str(row.get("model_ok")) != "1":
+        return tape_focus("home", ""), None
+    gaps = []
+    for side, m, o in (("home", "model_h", "open_h"), ("draw", "model_d", "open_d"),
+                       ("away", "model_a", "open_a")):  # fmt: skip
+        mp, op = _float(row.get(m)), _float(row.get(o))
+        if mp is not None and op is not None:
+            gaps.append((mp - op, side, mp))
+    if not gaps:
+        return tape_focus("home", ""), None
+    _, side, mp = max(gaps)
+    return tape_focus(side, ""), mp
+
+
+def with_review_curves(
+    reviews: dict[str, Any], by_match: Mapping[tuple[str, str], list], cfg: ModelConfig
+) -> dict[str, Any]:
+    """Each review card (cards.review_views) gets its curve up to kickoff."""
+    for v in reviews.get("football", []):
+        row = v["row"]
+        focus, model_p = review_focus(row)
+        v["curve"] = past_curve(
+            by_match.get(("football", str(row.get("match_id"))), []),
+            row.get("kickoff_utc"),
+            "football",
+            focus,
+            str(row.get("home", "")),
+            str(row.get("away", "")),
+            refs=[{"value": model_p, "label": "模型"}] if model_p is not None else [],
+        )
+    for v in reviews.get("mlb", []):
+        row = v["row"]
+        v["curve"] = mlb_past_curve(
+            by_match.get(("mlb", str(row.get("game_pk"))), []),
+            row,
+            str(row.get("home", "")),
+            str(row.get("away", "")),
+            cfg,
+        )
+    return reviews
+
+
 def model_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str, Any]:
     by_id = {_id(c): c for c in football_cards(site)}
     signals = defaultdict(list)
@@ -1172,7 +1320,11 @@ def model_page(site: Site, by_match: Mapping[tuple[str, str], list]) -> dict[str
         for c in upcoming(football_cards(site), site.now)
     ]
     cards = by_kickoff(cards)
-    reviews = review_views(site.football_reviews, [], site.signal_rows, site.value_rows)
+    reviews = with_review_curves(
+        review_views(site.football_reviews, [], site.signal_rows, site.value_rows),
+        by_match,
+        site.cfg,
+    )
     return {
         **_base(site, "model", "模型分歧"),
         "cards": cards,
@@ -1202,16 +1354,72 @@ def signal_allowed(
 
 
 # ================================================================ 反者道之動
-def fade_page(site: Site) -> dict[str, Any]:
-    live = [
-        {
-            **r,
-            "names": [fade.STRATEGIES[k]["name"] for k in r["strategies"]],
-            "id": anchor(r.get("sport_key", ""), r.get("match_id", "")),
-            "when": when(r.get("kickoff_utc"), site.now),
-        }
-        for r in site.fade_live
+def fade_series(obs: list[Obs], sides: list[str]) -> list[dict[str, Any]]:
+    """The opposite bet's two lines on one axis: its international fair probability (the
+    sides added up) and the probability 運彩's price stands for (1 / the dutched price,
+    margin included). EV is positive only where the first line is above the second."""
+    intl = [
+        (o.at, sum(o.intl[s] for s in sides), "") for o in obs if all(s in o.intl for s in sides)
     ]
+    tw = []
+    for o in obs:
+        prices = [o.tw[s][1] for s in sides if s in o.tw]
+        if len(prices) == len(sides) and all(prices):
+            price = fade.dutch(prices)
+            tw.append((o.at, 1 / price, f"{price:.2f}"))
+    out = []
+    if intl:
+        out.append({"key": "intl", "label": "國際公允", "points": intl})
+    if tw:
+        out.append({"key": "tw", "label": "運彩價換算（含水）", "points": tw})
+    return out
+
+
+def fade_reader(sides: list[str], threshold: float, cfg: ModelConfig) -> Any:
+    """At each 運彩 upload: the opposite bet's EV against the international price nearest
+    in time (within the freshness window)."""
+    within = timedelta(minutes=cfg.max_price_gap_minutes)
+
+    def read(obs: list[Obs], i: int) -> tuple[str, str]:
+        o = obs[i]
+        prices = [o.tw[s][1] for s in sides if s in o.tw]
+        if len(prices) != len(sides) or not all(prices):
+            return "國際更新", "neutral"
+        fair = o if all(s in o.intl for s in sides) else nearest_intl(obs, o.at, within)
+        if fair is None or not all(s in fair.intl for s in sides):
+            return "國際價隔太久，不判斷", "warn"
+        ev = sum(fair.intl[s] for s in sides) * fade.dutch(prices) - 1
+        return f"反著押 EV {ev * 100:+.1f}%", "good" if ev >= threshold else "neutral"
+
+    return read
+
+
+def fade_page(site: Site, by_match: Mapping[tuple[str, str], list] | None = None) -> dict[str, Any]:
+    live = []
+    for r in site.fade_live:
+        sides = list(r.get("bet_sides") or [])
+        sport = str(r.get("sport_key", ""))
+        obs = observations(
+            (by_match or {}).get((sport, str(r.get("match_id"))), []),
+            str(r.get("market") or "h2h"),
+            str(r.get("line") or ""),
+            parse_time(r.get("kickoff_utc")),
+        )
+        live.append(
+            {
+                **r,
+                "names": [fade.STRATEGIES[k]["name"] for k in r["strategies"]],
+                "id": anchor(sport, r.get("match_id", "")),
+                "when": when(r.get("kickoff_utc"), site.now),
+                "chart": spark(fade_series(obs, sides)) if sides else None,
+                "sides": [SIDE_ZH.get(x, x) for x in sides],
+                "timeline": timeline_rows(
+                    obs, sides, fade_reader(sides, float(r.get("threshold") or 0), site.cfg)
+                )
+                if sides
+                else [],
+            }
+        )
     # A match two strategies point at has two cards: one anchor.
     live = unique_anchors(by_kickoff(live))
     record = [
@@ -1366,11 +1574,17 @@ def waiting(site: Site) -> list[dict[str, Any]]:
     return out
 
 
-def reviews_page(site: Site) -> dict[str, Any]:
+def reviews_page(
+    site: Site, by_match: Mapping[tuple[str, str], list] | None = None
+) -> dict[str, Any]:
     return {
         **_base(site, "reviews", "全部檢討"),
-        "reviews": review_views(
-            site.football_reviews, site.mlb_reviews, site.signal_rows, site.value_rows
+        "reviews": with_review_curves(
+            review_views(
+                site.football_reviews, site.mlb_reviews, site.signal_rows, site.value_rows
+            ),
+            by_match or {},
+            site.cfg,
         ),
         "waiting": waiting(site),
     }
@@ -1385,8 +1599,8 @@ def build_pages(site: Site) -> dict[str, dict[str, Any]]:
         "radar": radar_page(site, by_match),
         "moves": moves_page(site, by_match),
         "model": model_page(site, by_match),
-        "fade": fade_page(site),
-        "reviews": reviews_page(site),
+        "fade": fade_page(site, by_match),
+        "reviews": reviews_page(site, by_match),
     }
     pages["index"] = hub_page(site, pages)
     return pages

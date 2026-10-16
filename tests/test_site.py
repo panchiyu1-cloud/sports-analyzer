@@ -311,6 +311,124 @@ class OrderTests(unittest.TestCase):
         self.assertEqual([c["id"] for c in site.unique_anchors(cards)], ["m-mlb-9", ""])
 
 
+def fade_row(**kw) -> dict:
+    base = {"sport_key": "football", "sport": "足球", "match_id": "1", "status": "pass",
+            "strategies": ["home_dog"], "kickoff_utc": "2026-10-17T14:00:00+00:00",
+            "match": "A vs B", "fade_label": "和局＋客勝", "tw_price": 1.2, "ev": -0.157,
+            "threshold": 0.02, "fair_prob": 0.70, "market": "h2h", "line": "",
+            "bet_sides": ["draw", "away"]}  # fmt: skip
+    return {**base, **kw}
+
+
+class FadeCurveTests(unittest.TestCase):
+    """Every 反指標 card charts its opposite bet: fair probability vs what 運彩 pays."""
+
+    TAPE = [
+        tape_row("2026-10-15T00:30:00+00:00", "intl", "h2h", "home", 0.30),
+        tape_row("2026-10-15T00:30:00+00:00", "intl", "h2h", "draw", 0.25),
+        tape_row("2026-10-15T00:30:00+00:00", "intl", "h2h", "away", 0.45),
+        tape_row("2026-10-15T01:00:00+00:00", "tw", "h2h", "draw", 0.24, 3.15),
+        tape_row("2026-10-15T01:00:00+00:00", "tw", "h2h", "away", 0.47, 1.95),
+    ]
+
+    def test_the_two_lines_and_the_reading(self):
+        obs = site.observations(self.TAPE, "h2h", "", None)
+        lines = {s["key"]: s["points"] for s in site.fade_series(obs, ["draw", "away"])}
+        self.assertAlmostEqual(lines["intl"][0][1], 0.70)  # 0.25 + 0.45
+        # 1 / (1/3.15 + 1/1.95) = 1.2044: 運彩 asks for 1 / 1.2044 = 83.0%
+        self.assertAlmostEqual(lines["tw"][0][1], 0.8303, places=4)
+        self.assertEqual(lines["tw"][0][2], "1.20")
+        read = site.fade_reader(["draw", "away"], 0.02, CFG)
+        # the upload half an hour after the international price: 0.70 x 1.2044 - 1 = -15.7%
+        self.assertEqual(read(obs, 1), ("反著押 EV -15.7%", "neutral"))
+        self.assertEqual(read(obs, 0), ("國際更新", "neutral"))
+
+    def test_the_card_carries_the_curve_or_says_why_not(self):
+        s = site.Site(now=NOW, football=None, mlb=None, tape=self.TAPE, fade_live=[fade_row()])
+        html = site.render_page(s, "fade")
+        self.assertIn('class="spark"', html)
+        self.assertIn("這一邊的機率：藍線高過橘線才有 EV", html)
+        lone = site.Site(now=NOW, football=None, mlb=None, tape=self.TAPE[:3],
+                         fade_live=[fade_row()])  # fmt: skip
+        html = site.render_page(lone, "fade")
+        self.assertNotIn('class="spark"', html)
+        self.assertIn("目前只有 1 次報價（10/15 08:30），下一次更新後就會畫出變化", html)
+
+
+def mlb_tape(at: str, market: str, side: str, prob: float, line: str = "") -> dict:
+    return {**tape_row(at, "intl", market, side, prob, line=line), "sport": "mlb",
+            "match_id": "7", "kickoff_utc": "2026-10-16T00:00:00+00:00"}  # fmt: skip
+
+
+class HistoryCurveTests(unittest.TestCase):
+    """Finished matches keep a curve too: their prices up to kickoff, on every history card."""
+
+    def test_ledger_and_review_keys_map_to_the_tape(self):
+        self.assertEqual(site.tape_focus("away", ""), ("h2h", "away", "", False))
+        self.assertEqual(site.tape_focus("under", "2.5"), ("totals", "under", "2.5", False))
+        # Spread lines are the home handicap in the ledgers and in the tape alike.
+        self.assertEqual(site.tape_focus("spread_away", "-1.50"), ("spread", "away", "-1.5", False))
+        # A derived bet has no price history of its own: its team's 1X2 price stands in.
+        self.assertEqual(site.tape_focus("hcp3_away", "2"), ("h2h", "away", "", True))
+        self.assertEqual(site.tape_focus("team_home_over", "1.5"), ("h2h", "home", "", True))
+        self.assertEqual(site.tape_focus("btts_yes", ""), ("h2h", "home", "", True))
+
+    def test_the_curve_stops_at_kickoff(self):
+        rows = [
+            tape_row("2026-10-17T08:00:00+00:00", "intl", "h2h", "home", 0.48),
+            tape_row("2026-10-17T12:00:00+00:00", "tw", "h2h", "home", 0.47, 1.95),
+            tape_row("2026-10-17T15:00:00+00:00", "intl", "h2h", "home", 0.70),  # in play
+        ]
+        kickoff = "2026-10-17T14:00:00+00:00"
+        home = site.tape_focus("home", "")
+        c = site.past_curve(rows, kickoff, "football", home, "兵工廠", "切爾西")
+        self.assertEqual(c["seen"], 2)
+        self.assertEqual(c["caption"], "主勝 兵工廠：開賽前的隱含機率")
+        self.assertEqual(c["chart"]["end"], "10/17 20:00")  # 12:00 UTC, not the in-play price
+        lone = site.past_curve(rows[:1], kickoff, "football", home, "兵工廠", "切爾西")
+        self.assertIsNone(lone["chart"])
+        self.assertEqual(lone["seen"], 1)
+
+    def test_a_review_follows_its_lean_else_the_models_side(self):
+        lean = {"lean_key": "spread_away", "lean_line": "-1.5", "lean_model_p": "0.6448"}
+        self.assertEqual(site.review_focus(lean), (("spread", "away", "-1.5", False), 0.6448))
+        row = {"model_ok": "1", "model_h": "0.36", "model_d": "0.27", "model_a": "0.37",
+               "open_h": "0.45", "open_d": "0.26", "open_a": "0.29"}  # fmt: skip
+        # Gaps: home -9pp, draw +1pp, away +8pp.
+        self.assertEqual(site.review_focus(row), (("h2h", "away", "", False), 0.37))
+        # A pooled cup model's numbers mean nothing: home, and no model line.
+        self.assertEqual(site.review_focus({**row, "model_ok": "0"}),
+                         (("h2h", "home", "", False), None))  # fmt: skip
+
+    def test_mlb_history_charts_g_else_the_home_moneyline(self):
+        row = {"game_pk": "7", "kickoff_utc": "2026-10-16T00:00:00+00:00",
+               "home": "Los Angeles Dodgers", "away": "Milwaukee Brewers",
+               "final_a": "2", "final_h": "3"}  # fmt: skip
+        ml = [mlb_tape("2026-10-15T08:00:00+00:00", "h2h", "home", 0.60),
+              mlb_tape("2026-10-15T08:00:00+00:00", "h2h", "away", 0.40),
+              mlb_tape("2026-10-15T20:00:00+00:00", "h2h", "home", 0.62),
+              mlb_tape("2026-10-15T20:00:00+00:00", "h2h", "away", 0.38)]  # fmt: skip
+        rl = [mlb_tape("2026-10-15T08:00:00+00:00", "spread", "home", 0.45, "-1.5"),
+              mlb_tape("2026-10-15T20:00:00+00:00", "spread", "home", 0.48, "-1.5")]  # fmt: skip
+        g = site.mlb_past_curve(ml + rl, row, "道奇", "釀酒人", CFG)
+        # G = 0.60 + 0.45 - 1 = +5.0, then 0.62 + 0.48 - 1 = +10.0
+        self.assertEqual(g["caption"], "G 值（國際）：開賽前的變化")
+        self.assertEqual([e["text"] for e in g["chart"]["ends"]], ["+10.0"])
+        self.assertEqual([r["label"] for r in g["chart"]["refs"]], ["+6", "−6"])
+        price = site.mlb_past_curve(ml, row, "道奇", "釀酒人", CFG)
+        self.assertEqual(price["caption"], "道奇 不讓分：開賽前的隱含機率")
+        self.assertIsNotNone(price["chart"])
+        # On the page: the review card carries its curve, or says why there is none.
+        s = site.Site(now=NOW, football=None, mlb=None, tape=ml, mlb_reviews=[row])
+        html = site.render_page(s, "reviews")
+        card = re.search(r'<article class="card review".*?</article>', html, flags=re.S).group(0)
+        self.assertIn('class="spark"', card)
+        self.assertIn("Los Angeles Dodgers 不讓分：開賽前的隱含機率", card)
+        bare = site.render_page(site.Site(now=NOW, football=None, mlb=None, tape=ml[:2],
+                                          mlb_reviews=[row]), "reviews")  # fmt: skip
+        self.assertIn("開賽前只有 1 次報價，畫不成曲線", bare)
+
+
 class AnchorTests(unittest.TestCase):
     def test_no_page_repeats_an_anchor(self):
         """Two strategies pointing at one match give two fade cards, one anchor."""

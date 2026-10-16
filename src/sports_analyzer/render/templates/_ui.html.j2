@@ -45,6 +45,16 @@
     <line class="cross" x1="0" x2="0" y1="{{ g.y0 }}" y2="{{ g.y1 }}" style="display:none"/>
   </svg>
 </figure>
+{% else %}
+{# Every card gets its curve once there are two prices; until then, say so. #}
+<p class="nochart"><span class="cap">{{ caption }}</span>{% if c.timeline|length == 1 %}目前只有 1 次報價（{{ c.timeline[0].at }}），下一次更新後就會畫出變化。{% elif c.timeline %}這幾次報價還畫不成曲線，下一次更新後就會畫出變化。{% else %}還沒有報價紀錄，下一次更新後就會開始畫。{% endif %}</p>
+{% endif %}
+{% endmacro %}
+
+{# A finished match's curve up to kickoff (site.past_curve), on the history cards. #}
+{% macro past_chart(p) %}
+{% if p %}
+{% if p.chart %}{{ chart(p, p.caption) }}{% else %}<p class="nochart"><span class="cap">{{ p.caption }}</span>{% if p.seen %}開賽前只有 {{ p.seen }} 次報價，畫不成曲線。{% else %}這場開賽前沒有留下報價紀錄。{% endif %}</p>{% endif %}
 {% endif %}
 {% endmacro %}
 
@@ -109,6 +119,7 @@
   {% if m.bets %}
   <ul class="why">{% for b in m.bets %}<li>可下 {{ b.captured_at|tpe }} {{ b.market }}：<b>{{ b.selection }}</b> @ {{ b.tw_price }}{% if b.ev_pct is not none %}（EV {{ '%+.1f%%'|format(b.ev_pct * 100) }}）{% endif %} → <span class="{{ 'pos' if b.status in ('win', 'half_win') else ('neg' if b.status in ('loss', 'half_loss') else '') }}">{{ b.status_label }}</span></li>{% endfor %}</ul>
   {% endif %}
+  {{ past_chart(m.curve) }}
   {% if m.tables %}
   <details class="more">
     <summary>價格走勢（到開賽前）</summary>

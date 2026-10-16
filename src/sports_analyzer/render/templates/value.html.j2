@@ -88,6 +88,7 @@
       <div class="verdict-row"><span class="chip {{ b.tone }}">{{ b.verdict_label }}</span></div>
       <ul class="why">{% for l in b.lines %}<li>{{ l }}</li>{% endfor %}</ul>
       <p class="conclusion"><b>結論</b>{{ b.conclusion }}</p>
+      {{ ui.past_chart(b.curve) }}
     </article>
   {% endfor %}
   </div>

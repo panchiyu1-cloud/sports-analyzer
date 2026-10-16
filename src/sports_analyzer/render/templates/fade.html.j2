@@ -33,7 +33,7 @@
 {{ ui.tabs([("upcoming", "今日反指標", live|length), ("history", "反向紀錄", record_n), ("backtest", "回測", none)]) }}
 
 <section id="upcoming" class="tabpanel active" role="tabpanel">
-  <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是<b>反過來那一邊</b>在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 {{ (cfg.value_threshold * 100)|round|int }}%、MLB {{ (cfg.mlb_value_threshold * 100)|round|int }}%）才值得下，那時它也會出現在運彩價值頁。多數會是負的：反指標也要看價格。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
+  <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是<b>反過來那一邊</b>在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 {{ (cfg.value_threshold * 100)|round|int }}%、MLB {{ (cfg.mlb_value_threshold * 100)|round|int }}%）才值得下，那時它也會出現在運彩價值頁。多數會是負的：反指標也要看價格。卡片下的線圖是這一邊每次抓價時的機率：藍線是國際公允機率，橘線是運彩賠率換算成的機率（含水錢）；藍線高過橘線，EV 才是正的。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
   {% if live %}
   <div class="cards">
   {% for r in live %}
@@ -46,6 +46,7 @@
         <dt>反指標</dt><dd>{{ r.names|join('、') }}</dd>
         <dt>這一邊</dt><dd>公允機率 {{ '%.0f%%'|format(r.fair_prob * 100) }}</dd>
       </dl>
+      {{ ui.timeline(r, "這一邊的機率：藍線高過橘線才有 EV") }}
     </article>
   {% endfor %}
   </div>

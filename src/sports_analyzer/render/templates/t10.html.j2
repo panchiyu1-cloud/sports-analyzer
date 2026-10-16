@@ -81,6 +81,7 @@
       {{ rv.picks_block(i.picks) }}
       <details class="more"><summary>比賽經過</summary><ul class="why">{% for b in i.bullets %}<li>{{ b }}</li>{% endfor %}</ul></details>
       <p class="conclusion"><b>結論</b>{{ i.conclusion }}</p>
+      {{ ui.past_chart(i.curve) }}
     </article>
   {% endfor %}
   </div>

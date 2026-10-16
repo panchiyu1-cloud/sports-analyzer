@@ -446,6 +446,15 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   caught moves by what came after (`_event_lessons`).
 - 模型分歧 cards chart the signal's own market (1X2 / 大小 / 讓球) with the model as a line;
   `signal_allowed` applies today's signal rules to older snapshots.
+- Every card carries a curve (owner, 2026-10-16: 「每種分析的卡片下面都有數值變化的曲線」).
+  反者道之動 cards chart the opposite bet (`fade_series`): its sides' international fair
+  probability added up (blue) vs 1 / 運彩's dutched price, margin included (amber), so EV > 0
+  only where blue is above amber; `fade_reader` reads each upload. History cards (value
+  bets, T-10, caught moves, every review) chart the prices up to kickoff (`past_curve`):
+  the selection's own market (`tape_focus`; a derived bet has no price history, its team's
+  1X2 stands in and the caption says so), reviews the lean (`review_focus`) with the model
+  as a line, MLB G (`mlb_past_curve`, else the home moneyline). With fewer than two prices
+  the card says so (`.nochart`) instead of drawing nothing.
 - Front page: headline (可下 / 雷達候選 / none), next upload (`upload_plan`), method tiles,
   48-hour board with flags linking to the cards (`anchor`: m-<sport>-<id>); 反指標 only when
   its price pays, 模型分歧 as a quiet chip (most games carry one).
