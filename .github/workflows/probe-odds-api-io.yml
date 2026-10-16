@@ -1,0 +1,37 @@
+name: Probe odds-api.io key
+
+# Manual, one-off: what does the owner's odds-api.io key give (selected bookmakers,
+# league slugs, one league's events and odds for football and MLB, quota headers)?
+# About seven of the free 100 requests an hour. The summary goes to the side branch
+# probe-odds-api-io (main is not touched); the key is only ever in the secret.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      ODDS_API_IO_KEY: ${{ secrets.ODDS_API_IO_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: Ask odds-api.io what the key gives
+        run: python scripts/probe_odds_api_io.py probe/odds_api_io.json
+      - name: Push the summary to a side branch
+        run: |
+          git config user.name "sports-analyzer bot"
+          git config user.email "actions@users.noreply.github.com"
+          cp probe/odds_api_io.json /tmp/odds_api_io.json
+          git checkout --orphan probe-odds-api-io
+          git rm -rq --cached .
+          mkdir -p probe && cp /tmp/odds_api_io.json probe/odds_api_io.json
+          git add -f probe/odds_api_io.json
+          git commit -qm "chore(probe): odds-api.io key check"
+          git push -qf origin probe-odds-api-io
