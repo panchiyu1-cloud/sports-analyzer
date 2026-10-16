@@ -429,6 +429,53 @@ class HistoryCurveTests(unittest.TestCase):
         self.assertIn("開賽前只有 1 次報價，畫不成曲線", bare)
 
 
+class LeagueTests(unittest.TestCase):
+    """Every card names its league (owner, 2026-10-16: easier to tell matches apart)."""
+
+    LEAGUES = ("英超", "西甲", "德甲", "義甲", "法甲", "歐冠", "MLB")
+
+    def make_site(self) -> site.Site:
+        pl = card(competition="PL", competition_name="英超")
+        football = {"competitions": [{"code": "PL", "name": "英超", "cards": [pl], "signals": []}]}
+        record = {"sport": "足球", "competition": "FL1", "match_id": "9", "strategy": "home_dog",
+                  "kickoff_utc": "2026-10-15T19:00:00+00:00", "match": "C vs D",
+                  "fade_label": "和局＋客勝 D", "fair_prob": 0.6, "tw_price": 1.3,
+                  "result": "win", "score": "1-2", "units": 0.3}  # fmt: skip
+        value = {"sport": "football", "competition": "PD", "match_id": "5",
+                 "captured_at": "2026-10-14T20:00+08:00", "kickoff_utc": "2026-10-14T19:00:00+00:00",
+                 "home": "Sevilla FC", "away": "Real Betis", "selection": "主勝",
+                 "selection_key": "home", "line": "", "tw_price": "2.4", "fair_prob": "0.45",
+                 "ev": "0.08", "status": "win"}  # fmt: skip
+        mlb_review = {"game_pk": "1", "kickoff_utc": "2026-10-15T00:00:00+00:00",
+                      "final_a": "2", "final_h": "3"}  # fmt: skip
+        return site.Site(
+            now=NOW,
+            football=football,
+            mlb={"games": [mlb_game(3, "2026-10-17T00:00:00+00:00")]},
+            tape=[],
+            mlb_reviews=[mlb_review],
+            value_rows=[value],
+            # One fade row carries its league, one only a match id the snapshots know.
+            fade_live=[fade_row(competition="PL"), fade_row(match_id="2", competition="")],
+            fade_record=[record],
+            names={("football", "2"): {"competition": "德甲", "home_zh": "", "away_zh": ""}},
+        )
+
+    def test_every_card_on_every_page_names_its_league(self):
+        s = self.make_site()
+        for key, _, _ in site.PAGES:
+            html = site.render_page(s, key)
+            for art in re.findall(r"<article\b.*?</article>", html, flags=re.S):
+                head = re.sub(r"<[^>]+>", " ", art)[:120]
+                self.assertTrue(any(x in head for x in self.LEAGUES), f"{key}: {head}")
+
+    def test_fade_cards_and_record_say_which_league(self):
+        html = site.render_page(self.make_site(), "fade")
+        self.assertIn('<span class="comp">英超</span>', html)
+        self.assertIn('<span class="comp">德甲</span>', html)  # from the snapshots' names
+        self.assertIn('<span class="sub">法甲・押主場冷門', html)  # "FL1" in the record
+
+
 class AnchorTests(unittest.TestCase):
     def test_no_page_repeats_an_anchor(self):
         """Two strategies pointing at one match give two fade cards, one anchor."""

@@ -90,6 +90,7 @@ class LiveTests(unittest.TestCase):
         r = rows[0]
         self.assertEqual(r["strategies"], ["t10_g6", "home_fav55"])
         self.assertEqual((r["fade_label"], r["match"]), ("釀酒人 不讓分", "釀酒人 @ 道奇"))
+        self.assertEqual(r["competition"], "MLB")
         self.assertEqual((r["tw_price"], r["ev"], r["status"]), (2.26, -0.1412, "pass"))
         stale = fade.live_candidates([], [], [mlb_card(0.62, 0.0, 2.6, 0.04, False)], self.cfg)
         self.assertEqual((stale[0]["strategies"], stale[0]["status"]), (["home_fav55"], "stale"))
@@ -100,11 +101,13 @@ class LiveTests(unittest.TestCase):
 
     def test_football_longshot_home_underdog_and_a_signal(self):
         card = football_card((0.07, 0.18, 0.75), (21.0, 7.0, 1.15))
+        card.update(competition="PL", competition_name="英超")
         signals = [
             {"match_id": 7, "selection_key": "away", "line": None},
             {"match_id": 7, "selection_key": "over", "line": 3.5},
         ]
         rows = fade.live_candidates([card], signals, [], self.cfg)
+        self.assertEqual({r["competition"] for r in rows}, {"英超"})  # every card names it
         by = {tuple(r["strategies"]): r for r in rows}
         # The home side is both the longest price and the home underdog: one bet,
         # draw + away dutched at 運彩: 1 / (1/7 + 1/1.15) = 0.987, a sure loss.
@@ -144,6 +147,8 @@ class RecordTests(unittest.TestCase):
         football = [
             {  # home longshot at 7%: draw + away at 運彩 7.0 / 1.15; the away side won 0-2
                 "match_id": "7",
+                "competition": "PL",
+                "competition_name": "英超",
                 "kickoff_utc": "2026-10-17T14:00:00+00:00",
                 "home": "Ipswich",
                 "away": "Man City",
@@ -161,6 +166,7 @@ class RecordTests(unittest.TestCase):
         signals = [
             {  # 模型分歧 on over 3.5 lost (2 goals): the opposite (under) won, no 運彩 price
                 "sport": "football",
+                "competition": "PL",
                 "match_id": "7",
                 "kickoff_utc": "2026-10-17T14:00:00+00:00",
                 "home": "Ipswich",
@@ -185,6 +191,12 @@ class RecordTests(unittest.TestCase):
         self.assertLess(long_row["units"], 0)  # won, and still lost money
         sig = by[("model_signal", "足球")]
         self.assertEqual((sig["result"], sig["units"], sig["fair_prob"]), ("win", None, 0.55))
+        # Each row names its league: the review's name, the ledger's code (the page turns
+        # "PL" into 英超), MLB for baseball.
+        self.assertEqual(
+            (mlb_row["competition"], long_row["competition"], sig["competition"]),
+            ("MLB", "英超", "PL"),
+        )
         s = fade.record_summary(rows)
         self.assertEqual(
             (s["t10_g6"]["n"], s["t10_g6"]["wins"], s["t10_g6"]["units"]), (1, 1.0, 1.26)

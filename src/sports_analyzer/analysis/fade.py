@@ -162,6 +162,7 @@ def live_candidates(
         base = {
             "sport": "MLB",
             "sport_key": "mlb",
+            "competition": "MLB",
             "match_id": str(card.get("game_pk")),
             "kickoff_utc": card.get("kickoff_utc", ""),
             "match": f"{names['away']} @ {names['home']}",
@@ -237,6 +238,11 @@ def live_candidates(
     return out
 
 
+def _competition(row: Mapping[str, Any]) -> str:
+    """The league's name ('英超') when the card or review row has it, else its code."""
+    return str(row.get("competition_name") or row.get("competition") or "")
+
+
 def _names(card: Mapping[str, Any]) -> dict[str, str]:
     tw = card.get("tw") or {}
     return {
@@ -263,6 +269,7 @@ def _against_1x2(
     return {
         "sport": "足球",
         "sport_key": "football",
+        "competition": _competition(card),
         "match_id": str(card.get("match_id")),
         "kickoff_utc": card.get("kickoff_utc", ""),
         "match": f"{names['home']} vs {names['away']}",
@@ -301,6 +308,7 @@ def _against_total(
     return {
         "sport": "足球",
         "sport_key": "football",
+        "competition": _competition(card),
         "match_id": str(card.get("match_id")),
         "kickoff_utc": card.get("kickoff_utc", ""),
         "match": f"{names['home']} vs {names['away']}",
@@ -339,6 +347,8 @@ def fade_record(
         price = _num(r.get(f"tw_{dog}"))
         base = {
             "sport": "MLB",
+            "competition": "MLB",
+            "match_id": str(r.get("game_pk", "")),
             "kickoff_utc": r.get("kickoff_utc", ""),
             "match": f"{r.get('away')} @ {r.get('home')}",
             "fade_label": f"{r.get(dog)} 不讓分",
@@ -382,6 +392,8 @@ def fade_record(
             {
                 "strategy": "model_signal",
                 "sport": "足球",
+                "competition": _competition(s),
+                "match_id": str(s.get("match_id", "")),
                 "kickoff_utc": s.get("kickoff_utc", ""),
                 "match": f"{s.get('home')} vs {s.get('away')}",
                 "fade_label": f"反押 {s.get('selection')}",
@@ -405,6 +417,8 @@ def _record_1x2(
     names = {"home": str(r.get("home", "")), "away": str(r.get("away", ""))}
     return {
         "sport": "足球",
+        "competition": _competition(r),
+        "match_id": str(r.get("match_id", "")),
         "kickoff_utc": r.get("kickoff_utc", ""),
         "match": f"{names['home']} vs {names['away']}",
         "fade_label": "＋".join(

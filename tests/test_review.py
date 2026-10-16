@@ -729,7 +729,7 @@ class RenderTests(unittest.TestCase):
         }
         site = Site(now=NOW, football=football, mlb=None, tape=[], value_rows=[value])
         html = render_page(site, "reviews")
-        self.assertIn("<b>Arsenal FC vs Lille OSC（有推薦）</b>", html)
+        self.assertIn("英超 <b>Arsenal FC vs Lille OSC（有推薦）</b>", html)  # with its league
         self.assertIn("比賽一結束就會自動檢討", html)
 
 

@@ -14,7 +14,7 @@
     {"label": "推薦已結算", "value": (reviews.picks.wins|int ~ "/" ~ reviews.picks.settled) if reviews.picks.settled else "—"},
   ]) }}
 {% if waiting %}
-<p class="stamp-line">已開賽、等待賽果：{% for c in waiting %}{% if c.recommended %}<b>{{ c.title }}（有推薦）</b>{% else %}{{ c.title }}{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}。比賽一結束就會自動檢討：開賽後足球約 2 小時、MLB 約 2.5 小時開始查結果，查到就產生，通常幾分鐘到半小時內。</p>
+<p class="stamp-line">已開賽、等待賽果：{% for c in waiting %}{{ c.league }} {% if c.recommended %}<b>{{ c.title }}（有推薦）</b>{% else %}{{ c.title }}{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}。比賽一結束就會自動檢討：開賽後足球約 2 小時、MLB 約 2.5 小時開始查結果，查到就產生，通常幾分鐘到半小時內。</p>
 {% endif %}
 {{ ui.tabs([("football", "足球", reviews.football|length), ("mlb", "MLB", reviews.mlb|length), ("summary", "累計", none)]) }}
 

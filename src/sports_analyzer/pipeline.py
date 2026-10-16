@@ -1120,7 +1120,7 @@ def render_latest() -> Path:
         value_rows=value_rows,
         history=history,
         history_summary=moves_mod.history_summary(history),
-        radar=_radar(tape, now, football, mlb),
+        radar=_radar(tape, now, football, mlb, names),
         tracked=moves_mod.track(tape, MODEL),
         fade_summary=fade_summary,
         fade_live=fade_live,
@@ -1210,9 +1210,12 @@ def _radar(
     now: datetime,
     football: dict[str, Any] | None,
     mlb: dict[str, Any] | None,
+    names: dict[tuple[str, str], dict[str, str]] | None = None,
 ) -> dict[str, Any]:
     """延遲雷達 for the front page: what the tape says now (moves.radar), the names 運彩
-    uses, and when to upload so that the coming games get judged with fresh prices."""
+    uses and each match's league (`names`: the last two weeks of snapshots, so a match a
+    newer snapshot left out still says which league it is), and when to upload so that
+    the coming games get judged with fresh prices."""
     found = moves_mod.radar(tape, now, MODEL)
     starts = {
         "football": [
@@ -1231,7 +1234,8 @@ def _radar(
         now,
         MODEL,
     )
-    names = _match_names([s for s in (football, mlb) if s])
+    if names is None:
+        names = _match_names([s for s in (football, mlb) if s])
     return {"found": found, "names": names, "plan": plan}
 
 

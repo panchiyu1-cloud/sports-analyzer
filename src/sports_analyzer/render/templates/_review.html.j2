@@ -19,7 +19,7 @@
 {% macro football_card(r) %}
 {% set row = r.row %}
 <article class="card review" id="m-football-{{ row.match_id }}">
-  <div class="top"><span>{{ row.kickoff_local }}</span><span>{{ row.competition_name }}</span></div>
+  <div class="top"><span>{{ row.kickoff_local }}</span><span>{{ row.competition_name or row.competition or '足球' }}</span></div>
   <div class="teams">
     <div><div class="name">{{ row.home }}</div></div>
     <div class="score">{{ row.ft_h }} – {{ row.ft_a }}{% if row.ht_h != '' and row.ht_h is not none %}<div class="sub">半場 {{ row.ht_h }}–{{ row.ht_a }}</div>{% endif %}</div>

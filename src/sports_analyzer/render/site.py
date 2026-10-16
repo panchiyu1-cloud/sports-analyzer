@@ -144,6 +144,16 @@ def comp_name(sport: str, competition: Any) -> str:
     return COMPETITION_BY_CODE[code].name if code in COMPETITION_BY_CODE else code
 
 
+def league(site: Site, sport: str, competition: Any, match_id: Any = None) -> str:
+    """The league every card names (owner, 2026-10-16: easier to tell matches apart):
+    英超 / 西甲 ... from a code or a name, MLB for baseball; from the snapshots of the last
+    two weeks when the row itself does not carry it."""
+    name = comp_name(sport, competition)
+    if not name and match_id not in (None, ""):
+        name = (site.names.get((sport, str(match_id))) or {}).get("competition", "")
+    return name or SPORT_LABELS.get(sport, "")
+
+
 def football_cards(site: Site) -> list[dict[str, Any]]:
     return [
         c for comp in (site.football or {}).get("competitions", []) for c in comp.get("cards", [])
@@ -551,7 +561,9 @@ def _card_head(card: Mapping[str, Any], site: Site) -> dict[str, Any]:
         "id": anchor(sport, _id(card)),
         "sport": sport,
         "sport_label": SPORT_LABELS[sport],
-        "competition": card.get("competition_name") or SPORT_LABELS[sport],
+        "competition": league(
+            site, sport, card.get("competition_name") or card.get("competition"), _id(card)
+        ),
         "kickoff_utc": card.get("kickoff_utc"),
         "when": when(card.get("kickoff_utc"), site.now),
         "home": home,
@@ -651,7 +663,7 @@ def value_history(
         bets.append(
             {
                 "sport_label": SPORT_LABELS.get(sport, sport),
-                "competition": comp_name(sport, r.get("competition")),
+                "competition": league(site, sport, r.get("competition"), r.get("match_id")),
                 "when": when(r.get("kickoff_utc"), site.now),
                 "title": match_title(sport, home, away),
                 "market": r.get("market", ""),
@@ -742,7 +754,9 @@ def _passed_row(
         "kickoff_utc": str(row.get("kickoff_utc")),
         "when": when(row.get("kickoff_utc"), site.now),
         "title": match_title(sport, home, away),
-        "competition": comp_name(sport, row.get("competition") or row.get("competition_name")),
+        "competition": league(
+            site, sport, row.get("competition") or row.get("competition_name"), mid
+        ),
         "sport_label": SPORT_LABELS[sport],
         "score": _score(row, sport),
         "cells": cells,
@@ -1020,6 +1034,7 @@ def _event_match(
         )
     return {
         **v,
+        "competition": league(site, m["sport"], m.get("competition"), m.get("match_id")),
         "events": events,
         "tone": tone,
         "score_text": score,
@@ -1408,6 +1423,7 @@ def fade_page(site: Site, by_match: Mapping[tuple[str, str], list] | None = None
         live.append(
             {
                 **r,
+                "league": league(site, sport, r.get("competition"), r.get("match_id")),
                 "names": [fade.STRATEGIES[k]["name"] for k in r["strategies"]],
                 "id": anchor(sport, r.get("match_id", "")),
                 "when": when(r.get("kickoff_utc"), site.now),
@@ -1425,6 +1441,12 @@ def fade_page(site: Site, by_match: Mapping[tuple[str, str], list] | None = None
     record = [
         {
             **r,
+            "league": league(
+                site,
+                "mlb" if r.get("sport") == "MLB" else "football",
+                r.get("competition"),
+                r.get("match_id"),
+            ),
             "strategy_name": fade.STRATEGIES[r["strategy"]]["name"],
             "result_label": FADE_RESULTS.get(r["result"], r["result"]),
         }
@@ -1570,7 +1592,13 @@ def waiting(site: Site) -> list[dict[str, Any]]:
             continue
         seen.add(key)
         home, away = names(c)
-        out.append({"title": match_title(key[0], home, away), "recommended": key in picks})
+        out.append(
+            {
+                "title": match_title(key[0], home, away),
+                "league": league(site, key[0], c.get("competition_name"), key[1]),
+                "recommended": key in picks,
+            }
+        )
     return out
 
 

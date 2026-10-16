@@ -458,6 +458,11 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   1X2 stands in and the caption says so), reviews the lean (`review_focus`) with the model
   as a line, MLB G (`mlb_past_curve`, else the home moneyline). With fewer than two prices
   the card says so (`.nochart`) instead of drawing nothing.
+- Every card names its league (owner, 2026-10-16: 「每個卡片都要有聯盟的名稱，方便辨識」):
+  `site.league` gives 英超 / 西甲 / 德甲 / 義甲 / 法甲 / 歐冠 / MLB from a code or a name, and
+  the last two weeks of snapshots (`Site.names`) when a row does not carry it; the fade
+  rows (`fade.live_candidates`, `fade.fade_record`) carry `competition`, the radar uses the
+  same two weeks of names, the reviews page's waiting list names the league too.
 - Front page: headline (可下 / 雷達候選 / none), next upload (`upload_plan`), method tiles,
   48-hour board with flags linking to the cards (`anchor`: m-<sport>-<id>); 反指標 only when
   its price pays, 模型分歧 as a quiet chip (most games carry one).

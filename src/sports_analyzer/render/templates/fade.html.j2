@@ -38,7 +38,7 @@
   <div class="cards">
   {% for r in live %}
     <article class="match"{% if r.id %} id="{{ r.id }}"{% endif %} data-status="{{ r.status }}">
-      <div class="mt"><span class="comp">{{ r.sport }}</span><span class="kick">{{ r.when.date }} {{ r.when.time }}</span><span>{{ r.when.weekday }}</span><span class="eta">{{ r.when.eta }}</span></div>
+      <div class="mt"><span class="comp">{{ r.league }}</span><span class="kick">{{ r.when.date }} {{ r.when.time }}</span><span>{{ r.when.weekday }}</span><span class="eta">{{ r.when.eta }}</span></div>
       <h3 class="teams">{{ r.match }}</h3>
       <div class="verdict">{{ ui.status_chip(r.status) }}<span>反著押 <b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}</span>{% if r.ev is not none %}<span class="{{ 'pos' if r.ev >= r.threshold else ('neg' if r.ev < 0 else '') }}">EV {{ '%+.1f%%'|format(r.ev * 100) }}</span>{% endif %}</div>
       {% if r.tw_price and r.tw_price < 1 %}<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>{% endif %}
@@ -82,7 +82,7 @@
     {% for r in record %}
     <tr>
       <td class="num">{{ r.kickoff_utc|tpe }}</td>
-      <td class="wrap-cell">{{ r.match }}<span class="sub">{{ r.sport }}・{{ r.strategy_name }}{% if r.score %}・{{ r.score }}{% endif %}</span></td>
+      <td class="wrap-cell">{{ r.match }}<span class="sub">{{ r.league }}・{{ r.strategy_name }}{% if r.score %}・{{ r.score }}{% endif %}</span></td>
       <td class="wrap-cell"><b>{{ r.fade_label }}</b>{% if r.tw_price %} @ {{ '%.2f'|format(r.tw_price) }}{% endif %}</td>
       <td class="num {{ 'good' if r.result in ('win', 'half_win') else ('bad' if r.result in ('loss', 'half_loss') else '') }}">{{ r.result_label }}</td>
       <td class="num">{% if r.units is not none %}<span class="{{ 'pos' if r.units >= 0.005 else ('neg' if r.units <= -0.005 else '') }}">{{ '%+.2f'|format(r.units) if r.units|abs >= 0.005 else '0.00' }}</span>{% else %}<span class="muted">沒有運彩價</span>{% endif %}</td>
