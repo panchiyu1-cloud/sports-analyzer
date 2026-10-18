@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-18T00:50:22+00:00",
+ "generated_at": "2026-10-18T12:58:42+00:00",
  "date": "2026-10-18",
- "credits_remaining": 359,
+ "credits_remaining": 334,
  "games": [
   {
    "sport": "mlb",
@@ -13,27 +13,182 @@
    "away": "Tampa Bay Rays",
    "home_key": "cleveland guardians",
    "away_key": "tampa bay rays",
-   "home_probable": null,
-   "away_probable": null,
+   "home_probable": "Parker Messick",
+   "away_probable": "Drew Rasmussen",
    "venue": "Progressive Field",
-   "market": null,
-   "t10": null,
-   "notes": [
-    "找不到對應賠率（可能尚未開盤）"
-   ],
-   "t10v": null,
-   "tw": null
+   "market": {
+    "books": 20,
+    "h2h": {
+     "home": {
+      "fair": 0.444,
+      "fair_odds": 2.25,
+      "best": 2.2,
+      "book": "tipico_de"
+     },
+     "away": {
+      "fair": 0.556,
+      "fair_odds": 1.8,
+      "best": 1.83,
+      "book": "betfair_ex_eu"
+     },
+     "odds_at": "2026-10-18T12:58+00:00"
+    },
+    "totals": null,
+    "spread": {
+     "line": 1.5,
+     "home": {
+      "fair": 0.6008,
+      "fair_odds": 1.66,
+      "best": 1.66,
+      "book": "onexbet"
+     },
+     "away": {
+      "fair": 0.3992,
+      "fair_odds": 2.51,
+      "best": 2.47,
+      "book": "mybookieag"
+     },
+     "odds_at": "2026-10-18T12:58+00:00"
+    }
+   },
+   "t10": {
+    "favourite": "away",
+    "p_ml": 0.556,
+    "c_cover": 0.3992,
+    "g": -0.0448,
+    "shape": "中性",
+    "threshold": 0.06
+   },
+   "notes": [],
+   "t10v": {
+    "favourite": "away",
+    "fav_zh": "坦帕灣光芒",
+    "dog_zh": "克里夫蘭守護者",
+    "g_intl": -0.0448,
+    "g_tw": -0.005,
+    "g_gap": 0.0398,
+    "dp": 0.0204,
+    "dc": 0.0194,
+    "shape": "中性",
+    "hints": [
+     "運彩把坦帕灣光芒贏 2 分以上算得比國際高 1.9pp → 克里夫蘭守護者 +1.5 相對划算",
+     "運彩把坦帕灣光芒贏球算得比國際高 2.0pp → 克里夫蘭守護者 不讓分相對划算"
+    ],
+    "bets": [
+     {
+      "key": "fav_ml",
+      "label": "坦帕灣光芒 不讓分",
+      "side": "away",
+      "line": null,
+      "price": 1.55,
+      "fair_prob": 0.556,
+      "fair_odds": 1.8,
+      "ev": -0.1382,
+      "fresh": true
+     },
+     {
+      "key": "dog_ml",
+      "label": "克里夫蘭守護者 不讓分",
+      "side": "home",
+      "line": null,
+      "price": 1.98,
+      "fair_prob": 0.444,
+      "fair_odds": 2.25,
+      "ev": -0.1209,
+      "fresh": true
+     },
+     {
+      "key": "fav_rl",
+      "label": "坦帕灣光芒 -1.5",
+      "side": "away",
+      "line": -1.5,
+      "price": 2.0,
+      "fair_prob": 0.3992,
+      "fair_odds": 2.51,
+      "ev": -0.2016,
+      "fresh": true
+     },
+     {
+      "key": "dog_rl",
+      "label": "克里夫蘭守護者 +1.5",
+      "side": "home",
+      "line": 1.5,
+      "price": 1.54,
+      "fair_prob": 0.6008,
+      "fair_odds": 1.66,
+      "ev": -0.0748,
+      "fresh": true
+     }
+    ],
+    "best": {
+     "key": "dog_rl",
+     "label": "克里夫蘭守護者 +1.5",
+     "side": "home",
+     "line": 1.5,
+     "price": 1.54,
+     "fair_prob": 0.6008,
+     "fair_odds": 1.66,
+     "ev": -0.0748,
+     "fresh": true
+    },
+    "pick": null,
+    "status": "pass",
+    "threshold": 0.03,
+    "tw_at": "2026-10-18T20:05+08:00",
+    "fair_at": "2026-10-18T20:58+08:00",
+    "minutes_before": 543,
+    "timing": "early"
+   },
+   "tw": {
+    "game_no": "103",
+    "home_zh": "克里夫蘭守護者",
+    "away_zh": "坦帕灣光芒",
+    "captured_at": "2026-10-18T20:05+08:00",
+    "fair_at": "2026-10-18T20:58+08:00",
+    "fair_fresh": true,
+    "h2h": {
+     "line": null,
+     "home": {
+      "price": 1.98,
+      "fair_odds": 2.25,
+      "fair_prob": 0.444,
+      "ev": -0.1209
+     },
+     "away": {
+      "price": 1.55,
+      "fair_odds": 1.8,
+      "fair_prob": 0.556,
+      "ev": -0.1382
+     }
+    },
+    "totals": null,
+    "spread": {
+     "line": 1.5,
+     "home": {
+      "price": 1.54,
+      "fair_odds": 1.66,
+      "fair_prob": 0.6008,
+      "ev": -0.0748
+     },
+     "away": {
+      "price": 2.0,
+      "fair_odds": 2.51,
+      "fair_prob": 0.3992,
+      "ev": -0.2016
+     }
+    },
+    "values": [],
+    "derived": []
+   }
   }
  ],
  "odds_key": "baseball_mlb",
  "tw_report": {
-  "matched": 0,
+  "matched": 1,
   "unmatched_cards": [],
-  "unmatched_games": [
-   "坦帕灣光芒 @ 克里夫蘭守護者 (2026-10-18T21:00+00:00)"
-  ],
+  "unmatched_games": [],
   "tw_games": 1,
-  "avg_overround": null,
+  "avg_overround": 0.1502,
   "file": "2026-10-18-2005.json",
   "unknown_teams": [],
   "unknown_markets": {},
