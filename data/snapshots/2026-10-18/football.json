@@ -1411,27 +1411,27 @@
       }
      ],
      "market": {
-      "books": 24,
+      "books": 25,
       "h2h": {
        "home": {
-        "fair": 0.1578,
-        "fair_odds": 6.34,
-        "best": 6.5,
-        "book": "unibet_nl"
+        "fair": 0.1337,
+        "fair_odds": 7.48,
+        "best": 7.4,
+        "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2354,
-        "fair_odds": 4.25,
-        "best": 4.1,
+        "fair": 0.2254,
+        "fair_odds": 4.44,
+        "best": 4.4,
         "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.6067,
-        "fair_odds": 1.65,
-        "best": 1.68,
-        "book": "onexbet"
+        "fair": 0.6409,
+        "fair_odds": 1.56,
+        "best": 1.62,
+        "book": "gtbets"
        },
-       "odds_at": "2026-10-18T13:18+00:00"
+       "odds_at": "2026-10-18T14:48+00:00"
       },
       "totals": {
        "line": 2.5,
@@ -1462,27 +1462,27 @@
       "home_zh": "諾丁漢森林",
       "away_zh": "兵工廠",
       "captured_at": "2026-10-18T20:05+08:00",
-      "fair_at": "2026-10-18T21:18+08:00",
+      "fair_at": "2026-10-18T22:48+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 4.45,
-        "fair_odds": 6.34,
-        "fair_prob": 0.1578,
-        "ev": -0.2978
+        "fair_odds": 7.48,
+        "fair_prob": 0.1337,
+        "ev": -0.405
        },
        "draw": {
         "price": 3.35,
-        "fair_odds": 4.25,
-        "fair_prob": 0.2354,
-        "ev": -0.2114
+        "fair_odds": 4.44,
+        "fair_prob": 0.2254,
+        "ev": -0.2449
        },
        "away": {
         "price": 1.5,
-        "fair_odds": 1.65,
-        "fair_prob": 0.6067,
-        "ev": -0.0899
+        "fair_odds": 1.56,
+        "fair_prob": 0.6409,
+        "ev": -0.0386
        }
       },
       "totals": {
@@ -1504,6 +1504,17 @@
       "values": [],
       "derived": [
        {
+        "market": "諾丁漢森林 大小 0.5",
+        "selection_key": "team_home_under",
+        "selection": "諾丁漢森林 小 0.5",
+        "line": 0.5,
+        "tw_price": 2.05,
+        "fair_odds": 2.1,
+        "fair_prob": 0.4773,
+        "ev": -0.0216,
+        "derived": true
+       },
+       {
         "market": "[上半場]大小 1.5",
         "selection_key": "ht_under",
         "selection": "上半場 小 1.5",
@@ -1512,6 +1523,17 @@
         "fair_odds": 1.5,
         "fair_prob": 0.6663,
         "ev": -0.0805,
+        "derived": true
+       },
+       {
+        "market": "兵工廠 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "兵工廠 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.56,
+        "fair_odds": 1.71,
+        "fair_prob": 0.5849,
+        "ev": -0.0876,
         "derived": true
        },
        {
@@ -1532,41 +1554,30 @@
         "line": 1.5,
         "tw_price": 1.18,
         "fair_odds": 1.3,
-        "fair_prob": 0.7702,
-        "ev": -0.0912,
+        "fair_prob": 0.7705,
+        "ev": -0.0909,
         "derived": true
        },
        {
-        "market": "諾丁漢森林 大小 0.5",
-        "selection_key": "team_home_under",
-        "selection": "諾丁漢森林 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.05,
-        "fair_odds": 2.27,
-        "fair_prob": 0.4396,
-        "ev": -0.0988,
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:1 客（兵工廠）",
+        "line": 1.0,
+        "tw_price": 2.35,
+        "fair_odds": 2.63,
+        "fair_prob": 0.3804,
+        "ev": -0.1061,
         "derived": true
        },
        {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
         "line": null,
-        "tw_price": 1.68,
-        "fair_odds": 1.9,
-        "fair_prob": 0.5271,
-        "ev": -0.1144,
-        "derived": true
-       },
-       {
-        "market": "兵工廠 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "兵工廠 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.56,
-        "fair_odds": 1.77,
-        "fair_prob": 0.5641,
-        "ev": -0.1201,
+        "tw_price": 1.9,
+        "fair_odds": 2.14,
+        "fair_prob": 0.4663,
+        "ev": -0.114,
         "derived": true
        },
        {
@@ -1576,8 +1587,19 @@
         "line": null,
         "tw_price": 1.75,
         "fair_odds": 2.0,
-        "fair_prob": 0.501,
-        "ev": -0.1232,
+        "fair_prob": 0.5009,
+        "ev": -0.1235,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:2 客（兵工廠）",
+        "line": 2.0,
+        "tw_price": 4.4,
+        "fair_odds": 5.02,
+        "fair_prob": 0.1992,
+        "ev": -0.1236,
         "derived": true
        },
        {
@@ -1586,20 +1608,31 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 3.35,
-        "fair_odds": 3.87,
-        "fair_prob": 0.2587,
-        "ev": -0.1334,
+        "fair_odds": 3.84,
+        "fair_prob": 0.2605,
+        "ev": -0.1272,
         "derived": true
        },
        {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:2 主（諾丁漢森林）",
-        "line": 2.0,
-        "tw_price": 1.35,
-        "fair_odds": 1.58,
-        "fair_prob": 0.6339,
-        "ev": -0.1443,
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_no",
+        "selection": "兩隊都進球：否",
+        "line": null,
+        "tw_price": 1.75,
+        "fair_odds": 2.04,
+        "fair_prob": 0.4901,
+        "ev": -0.1424,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_yes",
+        "selection": "兩隊都進球：是",
+        "line": null,
+        "tw_price": 1.68,
+        "fair_odds": 1.96,
+        "fair_prob": 0.5099,
+        "ev": -0.1433,
         "derived": true
        },
        {
@@ -1608,20 +1641,9 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.15,
-        "fair_odds": 2.52,
-        "fair_prob": 0.397,
-        "ev": -0.1465,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 1.9,
-        "fair_odds": 2.26,
-        "fair_prob": 0.4431,
-        "ev": -0.158,
+        "fair_odds": 2.56,
+        "fair_prob": 0.3908,
+        "ev": -0.1599,
         "derived": true
        },
        {
@@ -1631,63 +1653,8 @@
         "line": null,
         "tw_price": 1.68,
         "fair_odds": 2.0,
-        "fair_prob": 0.499,
-        "ev": -0.1617,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
-        "line": null,
-        "tw_price": 1.75,
-        "fair_odds": 2.11,
-        "fair_prob": 0.4729,
-        "ev": -0.1725,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:1 主（諾丁漢森林）",
-        "line": 1.0,
-        "tw_price": 2.1,
-        "fair_odds": 2.54,
-        "fair_prob": 0.3932,
-        "ev": -0.1742,
-        "derived": true
-       },
-       {
-        "market": "兵工廠 大小 1.5",
-        "selection_key": "team_away_under",
-        "selection": "兵工廠 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.88,
-        "fair_odds": 2.29,
-        "fair_prob": 0.4359,
-        "ev": -0.1804,
-        "derived": true
-       },
-       {
-        "market": "諾丁漢森林 大小 0.5",
-        "selection_key": "team_home_over",
-        "selection": "諾丁漢森林 大 0.5",
-        "line": 0.5,
-        "tw_price": 1.46,
-        "fair_odds": 1.78,
-        "fair_prob": 0.5604,
-        "ev": -0.1818,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:1 客（兵工廠）",
-        "line": 1.0,
-        "tw_price": 2.35,
-        "fair_odds": 2.87,
-        "fair_prob": 0.3481,
-        "ev": -0.182,
+        "fair_prob": 0.4991,
+        "ev": -0.1615,
         "derived": true
        },
        {
@@ -1696,31 +1663,53 @@
         "selection": "讓分0:2 和",
         "line": 2.0,
         "tw_price": 4.1,
-        "fair_odds": 5.27,
-        "fair_prob": 0.1897,
-        "ev": -0.2221,
+        "fair_odds": 5.0,
+        "fair_prob": 0.2,
+        "ev": -0.18,
         "derived": true
        },
        {
         "market": "讓分 0:2",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:2 客（兵工廠）",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:2 主（諾丁漢森林）",
         "line": 2.0,
-        "tw_price": 4.4,
-        "fair_odds": 5.67,
-        "fair_prob": 0.1764,
-        "ev": -0.2238,
+        "tw_price": 1.35,
+        "fair_odds": 1.66,
+        "fair_prob": 0.6008,
+        "ev": -0.1889,
         "derived": true
        },
        {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 4.75,
-        "fair_odds": 6.25,
-        "fair_prob": 0.1599,
-        "ev": -0.2406,
+        "market": "兵工廠 大小 1.5",
+        "selection_key": "team_away_under",
+        "selection": "兵工廠 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.88,
+        "fair_odds": 2.41,
+        "fair_prob": 0.4151,
+        "ev": -0.2196,
+        "derived": true
+       },
+       {
+        "market": "諾丁漢森林 大小 0.5",
+        "selection_key": "team_home_over",
+        "selection": "諾丁漢森林 大 0.5",
+        "line": 0.5,
+        "tw_price": 1.46,
+        "fair_odds": 1.91,
+        "fair_prob": 0.5227,
+        "ev": -0.2368,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:1 主（諾丁漢森林）",
+        "line": 1.0,
+        "tw_price": 2.1,
+        "fair_odds": 2.78,
+        "fair_prob": 0.3591,
+        "ev": -0.2459,
         "derived": true
        },
        {
@@ -1751,9 +1740,20 @@
         "selection": "小 1.5",
         "line": 1.5,
         "tw_price": 3.1,
-        "fair_odds": 4.35,
-        "fair_prob": 0.2298,
-        "ev": -0.2876,
+        "fair_odds": 4.36,
+        "fair_prob": 0.2295,
+        "ev": -0.2884,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 4.75,
+        "fair_odds": 7.0,
+        "fair_prob": 0.1429,
+        "ev": -0.3212,
         "derived": true
        }
       ]
@@ -12271,11 +12271,9 @@
    "[角球數]大小 8.5": 17
   },
   "pregame": {
-   "due": 7,
-   "refreshed": 7,
-   "markets": [
-    "h2h"
-   ]
+   "due": 6,
+   "refreshed": 0,
+   "skipped": "upload not recent"
   },
   "values_added": 0
  }
