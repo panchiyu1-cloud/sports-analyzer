@@ -75,20 +75,150 @@
     "threshold": 0.06
    },
    "notes": [],
-   "t10v": null,
-   "tw": null
+   "t10v": {
+    "favourite": "home",
+    "fav_zh": "坦帕灣光芒",
+    "dog_zh": "克里夫蘭守護者",
+    "g_intl": -0.084,
+    "g_tw": 0.0149,
+    "g_gap": 0.0989,
+    "dp": 0.0474,
+    "dc": 0.0515,
+    "shape": "一分差型",
+    "hints": [
+     "運彩把坦帕灣光芒贏 2 分以上算得比國際高 5.2pp → 克里夫蘭守護者 +1.5 相對划算",
+     "運彩把坦帕灣光芒贏球算得比國際高 4.7pp → 克里夫蘭守護者 不讓分相對划算"
+    ],
+    "bets": [
+     {
+      "key": "fav_ml",
+      "label": "坦帕灣光芒 不讓分",
+      "side": "home",
+      "line": null,
+      "price": 1.48,
+      "fair_prob": 0.5626,
+      "fair_odds": 1.78,
+      "ev": -0.1674,
+      "fresh": false
+     },
+     {
+      "key": "dog_ml",
+      "label": "克里夫蘭守護者 不讓分",
+      "side": "away",
+      "line": null,
+      "price": 2.11,
+      "fair_prob": 0.4374,
+      "fair_odds": 2.29,
+      "ev": -0.0771,
+      "fresh": false
+     },
+     {
+      "key": "fav_rl",
+      "label": "坦帕灣光芒 -1.5",
+      "side": "home",
+      "line": -1.5,
+      "price": 2.05,
+      "fair_prob": 0.3534,
+      "fair_odds": 2.83,
+      "ev": -0.2755,
+      "fresh": false
+     },
+     {
+      "key": "dog_rl",
+      "label": "克里夫蘭守護者 +1.5",
+      "side": "away",
+      "line": 1.5,
+      "price": 1.51,
+      "fair_prob": 0.6466,
+      "fair_odds": 1.55,
+      "ev": -0.0236,
+      "fresh": false
+     }
+    ],
+    "best": {
+     "key": "dog_rl",
+     "label": "克里夫蘭守護者 +1.5",
+     "side": "away",
+     "line": 1.5,
+     "price": 1.51,
+     "fair_prob": 0.6466,
+     "fair_odds": 1.55,
+     "ev": -0.0236,
+     "fresh": false
+    },
+    "pick": null,
+    "status": "stale",
+    "threshold": 0.03,
+    "tw_at": "2026-10-19T20:00+08:00",
+    "fair_at": "2026-10-19T08:51+08:00",
+    "minutes_before": 728,
+    "timing": "early"
+   },
+   "tw": {
+    "game_no": "101",
+    "home_zh": "坦帕灣光芒",
+    "away_zh": "克里夫蘭守護者",
+    "captured_at": "2026-10-19T20:00+08:00",
+    "fair_at": "2026-10-19T08:51+08:00",
+    "fair_fresh": false,
+    "h2h": {
+     "line": null,
+     "home": {
+      "price": 1.48,
+      "fair_odds": 1.78,
+      "fair_prob": 0.5626,
+      "ev": -0.1674
+     },
+     "away": {
+      "price": 2.11,
+      "fair_odds": 2.29,
+      "fair_prob": 0.4374,
+      "ev": -0.0771
+     }
+    },
+    "totals": {
+     "line": 6.5,
+     "over": {
+      "price": 1.73,
+      "fair_odds": 1.98,
+      "fair_prob": 0.5042,
+      "ev": -0.1277
+     },
+     "under": {
+      "price": 1.75,
+      "fair_odds": 2.02,
+      "fair_prob": 0.4958,
+      "ev": -0.1323
+     }
+    },
+    "spread": {
+     "line": -1.5,
+     "home": {
+      "price": 2.05,
+      "fair_odds": 2.83,
+      "fair_prob": 0.3534,
+      "ev": -0.2755
+     },
+     "away": {
+      "price": 1.51,
+      "fair_odds": 1.55,
+      "fair_prob": 0.6466,
+      "ev": -0.0236
+     }
+    },
+    "values": [],
+    "derived": []
+   }
   }
  ],
  "odds_key": "baseball_mlb",
  "tw_report": {
-  "matched": 0,
-  "unmatched_cards": [
-   "Tampa Bay Rays vs Cleveland Guardians"
-  ],
+  "matched": 1,
+  "unmatched_cards": [],
   "unmatched_games": [],
-  "tw_games": 0,
-  "avg_overround": null,
-  "file": "2026-10-19-0800.json",
+  "tw_games": 1,
+  "avg_overround": 0.1496,
+  "file": "2026-10-19-2000.json",
   "unknown_teams": [],
   "unknown_markets": {},
   "pregame": {
