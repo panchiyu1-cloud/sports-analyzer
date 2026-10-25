@@ -103,42 +103,40 @@
       "books": 24,
       "h2h": {
        "home": {
-        "fair": 0.4667,
-        "fair_odds": 2.14,
+        "fair": 0.4686,
+        "fair_odds": 2.13,
         "best": 2.15,
         "book": "onexbet"
        },
        "draw": {
-        "fair": 0.2442,
+        "fair": 0.2448,
         "fair_odds": 4.09,
         "best": 4.04,
         "book": "onexbet"
        },
        "away": {
-        "fair": 0.2891,
-        "fair_odds": 3.46,
-        "best": 3.5,
+        "fair": 0.2866,
+        "fair_odds": 3.49,
+        "best": 3.6,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 3.5,
        "over": {
-        "fair": 0.3976,
-        "fair_odds": 2.51,
+        "fair": 0.3908,
+        "fair_odds": 2.56,
         "best": 2.4,
         "book": "onexbet"
        },
        "under": {
-        "fair": 0.6024,
-        "fair_odds": 1.66,
+        "fair": 0.6092,
+        "fair_odds": 1.64,
         "best": 1.67,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T12:01+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -152,42 +150,42 @@
       "home_zh": "利物浦",
       "away_zh": "布萊頓",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.9,
-        "fair_odds": 2.14,
-        "fair_prob": 0.4667,
-        "ev": -0.1133
+        "fair_odds": 2.13,
+        "fair_prob": 0.4686,
+        "ev": -0.1097
        },
        "draw": {
         "price": 3.2,
         "fair_odds": 4.09,
-        "fair_prob": 0.2442,
-        "ev": -0.2186
+        "fair_prob": 0.2448,
+        "ev": -0.2166
        },
        "away": {
         "price": 2.7,
-        "fair_odds": 3.46,
-        "fair_prob": 0.2891,
-        "ev": -0.2194
+        "fair_odds": 3.49,
+        "fair_prob": 0.2866,
+        "ev": -0.2262
        }
       },
       "totals": {
        "line": 3.5,
        "over": {
         "price": 2.05,
-        "fair_odds": 2.51,
-        "fair_prob": 0.3976,
-        "ev": -0.1849
+        "fair_odds": 2.56,
+        "fair_prob": 0.3908,
+        "ev": -0.1989
        },
        "under": {
         "price": 1.46,
-        "fair_odds": 1.66,
-        "fair_prob": 0.6024,
-        "ev": -0.1205
+        "fair_odds": 1.64,
+        "fair_prob": 0.6092,
+        "ev": -0.1106
        }
       },
       "spread": null,
@@ -199,9 +197,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 3.8,
-        "fair_odds": 4.14,
-        "fair_prob": 0.2413,
-        "ev": -0.0829,
+        "fair_odds": 4.11,
+        "fair_prob": 0.2431,
+        "ev": -0.0761,
         "derived": true
        },
        {
@@ -210,9 +208,9 @@
         "selection": "讓分0:1 主（利物浦）",
         "line": 1.0,
         "tw_price": 1.28,
-        "fair_odds": 1.41,
-        "fair_prob": 0.7109,
-        "ev": -0.09,
+        "fair_odds": 1.4,
+        "fair_prob": 0.7134,
+        "ev": -0.0868,
         "derived": true
        },
        {
@@ -221,31 +219,20 @@
         "selection": "布萊頓 小 1.5",
         "line": 1.5,
         "tw_price": 1.5,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5949,
-        "ev": -0.1076,
+        "fair_odds": 1.66,
+        "fair_prob": 0.6017,
+        "ev": -0.0974,
         "derived": true
        },
        {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
-        "line": null,
-        "tw_price": 1.4,
-        "fair_odds": 1.57,
-        "fair_prob": 0.6353,
-        "ev": -0.1105,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "over",
-        "selection": "大 2.5",
-        "line": 2.5,
-        "tw_price": 1.43,
-        "fair_odds": 1.61,
-        "fair_prob": 0.6202,
-        "ev": -0.1131,
+        "market": "[上半場]大小 1.5",
+        "selection_key": "ht_under",
+        "selection": "上半場 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.5,
+        "fair_odds": 1.69,
+        "fair_prob": 0.5934,
+        "ev": -0.1099,
         "derived": true
        },
        {
@@ -255,19 +242,30 @@
         "line": null,
         "tw_price": 1.76,
         "fair_odds": 1.99,
-        "fair_prob": 0.5019,
-        "ev": -0.1166,
+        "fair_prob": 0.502,
+        "ev": -0.1164,
         "derived": true
        },
        {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_under",
-        "selection": "上半場 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.5,
-        "fair_odds": 1.7,
-        "fair_prob": 0.5881,
-        "ev": -0.1178,
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_yes",
+        "selection": "兩隊都進球：是",
+        "line": null,
+        "tw_price": 1.4,
+        "fair_odds": 1.59,
+        "fair_prob": 0.6308,
+        "ev": -0.1169,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 2.5",
+        "selection_key": "over",
+        "selection": "大 2.5",
+        "line": 2.5,
+        "tw_price": 1.43,
+        "fair_odds": 1.63,
+        "fair_prob": 0.6138,
+        "ev": -0.1223,
         "derived": true
        },
        {
@@ -276,9 +274,9 @@
         "selection": "利物浦 大 1.5",
         "line": 1.5,
         "tw_price": 1.63,
-        "fair_odds": 1.85,
-        "fair_prob": 0.54,
-        "ev": -0.1198,
+        "fair_odds": 1.86,
+        "fair_prob": 0.5367,
+        "ev": -0.1251,
         "derived": true
        },
        {
@@ -288,8 +286,8 @@
         "line": null,
         "tw_price": 2.35,
         "fair_odds": 2.71,
-        "fair_prob": 0.3685,
-        "ev": -0.134,
+        "fair_prob": 0.3686,
+        "ev": -0.1337,
         "derived": true
        },
        {
@@ -299,8 +297,8 @@
         "line": -1.0,
         "tw_price": 1.6,
         "fair_odds": 1.88,
-        "fair_prob": 0.5333,
-        "ev": -0.1467,
+        "fair_prob": 0.5314,
+        "ev": -0.1498,
         "derived": true
        },
        {
@@ -309,9 +307,20 @@
         "selection": "利物浦 小 1.5",
         "line": 1.5,
         "tw_price": 1.8,
-        "fair_odds": 2.17,
-        "fair_prob": 0.46,
-        "ev": -0.172,
+        "fair_odds": 2.16,
+        "fair_prob": 0.4633,
+        "ev": -0.1661,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_draw",
+        "selection": "上半場 和局",
+        "line": null,
+        "tw_price": 2.2,
+        "fair_odds": 2.66,
+        "fair_prob": 0.3765,
+        "ev": -0.1716,
         "derived": true
        },
        {
@@ -321,30 +330,8 @@
         "line": null,
         "tw_price": 1.66,
         "fair_odds": 2.01,
-        "fair_prob": 0.4981,
-        "ev": -0.1732,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 2.2,
-        "fair_odds": 2.67,
-        "fair_prob": 0.3742,
-        "ev": -0.1768,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_over",
-        "selection": "上半場 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.96,
-        "fair_odds": 2.43,
-        "fair_prob": 0.4119,
-        "ev": -0.1927,
+        "fair_prob": 0.498,
+        "ev": -0.1733,
         "derived": true
        },
        {
@@ -353,20 +340,9 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 2.2,
-        "fair_odds": 2.74,
-        "fair_prob": 0.3647,
-        "ev": -0.1977,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 3.1,
-        "fair_odds": 3.89,
-        "fair_prob": 0.2573,
-        "ev": -0.2023,
+        "fair_odds": 2.71,
+        "fair_prob": 0.3692,
+        "ev": -0.1877,
         "derived": true
        },
        {
@@ -375,9 +351,31 @@
         "selection": "小 2.5",
         "line": 2.5,
         "tw_price": 2.1,
-        "fair_odds": 2.63,
-        "fair_prob": 0.3798,
-        "ev": -0.2024,
+        "fair_odds": 2.59,
+        "fair_prob": 0.3862,
+        "ev": -0.189,
+        "derived": true
+       },
+       {
+        "market": "[上半場]大小 1.5",
+        "selection_key": "ht_over",
+        "selection": "上半場 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.96,
+        "fair_odds": 2.46,
+        "fair_prob": 0.4066,
+        "ev": -0.2031,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 3.1,
+        "fair_odds": 3.92,
+        "fair_prob": 0.2548,
+        "ev": -0.21,
         "derived": true
        },
        {
@@ -386,9 +384,9 @@
         "selection": "布萊頓 大 1.5",
         "line": 1.5,
         "tw_price": 1.96,
-        "fair_odds": 2.47,
-        "fair_prob": 0.4051,
-        "ev": -0.2061,
+        "fair_odds": 2.51,
+        "fair_prob": 0.3983,
+        "ev": -0.2194,
         "derived": true
        },
        {
@@ -398,8 +396,8 @@
         "line": -1.0,
         "tw_price": 3.25,
         "fair_odds": 4.44,
-        "fair_prob": 0.2254,
-        "ev": -0.2676,
+        "fair_prob": 0.2255,
+        "ev": -0.2672,
         "derived": true
        },
        {
@@ -408,9 +406,9 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 4.35,
-        "fair_odds": 6.11,
-        "fair_prob": 0.1637,
-        "ev": -0.288,
+        "fair_odds": 6.12,
+        "fair_prob": 0.1634,
+        "ev": -0.2892,
         "derived": true
        },
        {
@@ -419,9 +417,9 @@
         "selection": "讓分0:1 客（布萊頓）",
         "line": 1.0,
         "tw_price": 5.2,
-        "fair_odds": 7.97,
-        "fair_prob": 0.1254,
-        "ev": -0.3477,
+        "fair_odds": 8.12,
+        "fair_prob": 0.1232,
+        "ev": -0.3594,
         "derived": true
        }
       ]
@@ -515,42 +513,40 @@
       "books": 24,
       "h2h": {
        "home": {
-        "fair": 0.3648,
-        "fair_odds": 2.74,
-        "best": 2.8,
-        "book": "pinnacle"
+        "fair": 0.3688,
+        "fair_odds": 2.71,
+        "best": 2.71,
+        "book": "onexbet"
        },
        "draw": {
-        "fair": 0.2624,
-        "fair_odds": 3.81,
-        "best": 3.75,
-        "book": "unibet_se"
+        "fair": 0.2697,
+        "fair_odds": 3.71,
+        "best": 3.6,
+        "book": "onexbet"
        },
        "away": {
-        "fair": 0.3728,
-        "fair_odds": 2.68,
-        "best": 2.74,
-        "book": "matchbook"
+        "fair": 0.3615,
+        "fair_odds": 2.77,
+        "best": 2.8,
+        "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.6116,
-        "fair_odds": 1.64,
-        "best": 1.63,
-        "book": "onexbet"
+        "fair": 0.5687,
+        "fair_odds": 1.76,
+        "best": 1.71,
+        "book": "betsson"
        },
        "under": {
-        "fair": 0.3884,
-        "fair_odds": 2.57,
-        "best": 2.49,
+        "fair": 0.4313,
+        "fair_odds": 2.32,
+        "best": 2.34,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T12:01+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -564,42 +560,42 @@
       "home_zh": "水晶宮",
       "away_zh": "紐卡索聯",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 2.45,
-        "fair_odds": 2.74,
-        "fair_prob": 0.3648,
-        "ev": -0.1062
+        "fair_odds": 2.71,
+        "fair_prob": 0.3688,
+        "ev": -0.0964
        },
        "draw": {
         "price": 3.1,
-        "fair_odds": 3.81,
-        "fair_prob": 0.2624,
-        "ev": -0.1866
+        "fair_odds": 3.71,
+        "fair_prob": 0.2697,
+        "ev": -0.1639
        },
        "away": {
         "price": 2.15,
-        "fair_odds": 2.68,
-        "fair_prob": 0.3728,
-        "ev": -0.1985
+        "fair_odds": 2.77,
+        "fair_prob": 0.3615,
+        "ev": -0.2228
        }
       },
       "totals": {
        "line": 2.5,
        "over": {
         "price": 1.45,
-        "fair_odds": 1.64,
-        "fair_prob": 0.6116,
-        "ev": -0.1132
+        "fair_odds": 1.76,
+        "fair_prob": 0.5687,
+        "ev": -0.1754
        },
        "under": {
         "price": 2.07,
-        "fair_odds": 2.57,
-        "fair_prob": 0.3884,
-        "ev": -0.196
+        "fair_odds": 2.32,
+        "fair_prob": 0.4313,
+        "ev": -0.1072
        }
       },
       "spread": null,
@@ -611,20 +607,9 @@
         "selection": "小 4.5",
         "line": 4.5,
         "tw_price": 1.16,
-        "fair_odds": 1.27,
-        "fair_prob": 0.7878,
-        "ev": -0.0862,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:1 主（水晶宮）",
-        "line": 1.0,
-        "tw_price": 1.45,
-        "fair_odds": 1.59,
-        "fair_prob": 0.6272,
-        "ev": -0.0906,
+        "fair_odds": 1.22,
+        "fair_prob": 0.8213,
+        "ev": -0.0473,
         "derived": true
        },
        {
@@ -633,20 +618,9 @@
         "selection": "紐卡索聯 小 1.5",
         "line": 1.5,
         "tw_price": 1.68,
-        "fair_odds": 1.89,
-        "fair_prob": 0.5285,
-        "ev": -0.1122,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "odd",
-        "selection": "總進球：單",
-        "line": null,
-        "tw_price": 1.78,
-        "fair_odds": 2.01,
-        "fair_prob": 0.4985,
-        "ev": -0.1126,
+        "fair_odds": 1.76,
+        "fair_prob": 0.5666,
+        "ev": -0.048,
         "derived": true
        },
        {
@@ -655,20 +629,9 @@
         "selection": "小 3.5",
         "line": 3.5,
         "tw_price": 1.45,
-        "fair_odds": 1.64,
-        "fair_prob": 0.6115,
-        "ev": -0.1133,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
-        "line": null,
-        "tw_price": 1.38,
-        "fair_odds": 1.56,
-        "fair_prob": 0.6416,
-        "ev": -0.1145,
+        "fair_odds": 1.53,
+        "fair_prob": 0.6553,
+        "ev": -0.0498,
         "derived": true
        },
        {
@@ -677,31 +640,20 @@
         "selection": "上半場 小 1.5",
         "line": 1.5,
         "tw_price": 1.48,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5952,
-        "ev": -0.119,
+        "fair_odds": 1.59,
+        "fair_prob": 0.6296,
+        "ev": -0.0682,
         "derived": true
        },
        {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 2.85,
-        "fair_odds": 3.25,
-        "fair_prob": 0.3072,
-        "ev": -0.1244,
-        "derived": true
-       },
-       {
-        "market": "水晶宮 大小 1.5",
-        "selection_key": "team_home_over",
-        "selection": "水晶宮 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.86,
-        "fair_odds": 2.15,
-        "fair_prob": 0.4655,
-        "ev": -0.1342,
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:1 主（水晶宮）",
+        "line": 1.0,
+        "tw_price": 1.45,
+        "fair_odds": 1.57,
+        "fair_prob": 0.6385,
+        "ev": -0.0742,
         "derived": true
        },
        {
@@ -710,20 +662,20 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 4.2,
-        "fair_odds": 4.87,
-        "fair_prob": 0.2052,
-        "ev": -0.138,
+        "fair_odds": 4.69,
+        "fair_prob": 0.2133,
+        "ev": -0.1041,
         "derived": true
        },
        {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（紐卡索聯）",
-        "line": -1.0,
-        "tw_price": 1.35,
-        "fair_odds": 1.57,
-        "fair_prob": 0.6352,
-        "ev": -0.1425,
+        "market": "[總分]單雙",
+        "selection_key": "odd",
+        "selection": "總進球：單",
+        "line": null,
+        "tw_price": 1.78,
+        "fair_odds": 2.0,
+        "fair_prob": 0.4988,
+        "ev": -0.1121,
         "derived": true
        },
        {
@@ -732,9 +684,9 @@
         "selection": "水晶宮 小 1.5",
         "line": 1.5,
         "tw_price": 1.58,
-        "fair_odds": 1.87,
-        "fair_prob": 0.5345,
-        "ev": -0.1555,
+        "fair_odds": 1.78,
+        "fair_prob": 0.5611,
+        "ev": -0.1135,
         "derived": true
        },
        {
@@ -743,42 +695,9 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.2,
-        "fair_odds": 2.63,
-        "fair_prob": 0.3805,
-        "ev": -0.1628,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "even",
-        "selection": "總進球：雙",
-        "line": null,
-        "tw_price": 1.65,
-        "fair_odds": 1.99,
-        "fair_prob": 0.5015,
-        "ev": -0.1726,
-        "derived": true
-       },
-       {
-        "market": "紐卡索聯 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "紐卡索聯 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.75,
-        "fair_odds": 2.12,
-        "fair_prob": 0.4715,
-        "ev": -0.1748,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_over",
-        "selection": "上半場 大 1.5",
-        "line": 1.5,
-        "tw_price": 2.0,
-        "fair_odds": 2.47,
-        "fair_prob": 0.4048,
-        "ev": -0.1905,
+        "fair_odds": 2.52,
+        "fair_prob": 0.3976,
+        "ev": -0.1253,
         "derived": true
        },
        {
@@ -787,31 +706,64 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 2.25,
-        "fair_odds": 2.79,
-        "fair_prob": 0.3584,
-        "ev": -0.1937,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 3.5",
-        "selection_key": "over",
-        "selection": "大 3.5",
-        "line": 3.5,
-        "tw_price": 2.07,
-        "fair_odds": 2.57,
-        "fair_prob": 0.3885,
-        "ev": -0.1959,
+        "fair_odds": 2.59,
+        "fair_prob": 0.3856,
+        "ev": -0.1325,
         "derived": true
        },
        {
         "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
         "line": null,
-        "tw_price": 2.55,
-        "fair_odds": 3.2,
-        "fair_prob": 0.3122,
-        "ev": -0.2038,
+        "tw_price": 2.85,
+        "fair_odds": 3.3,
+        "fair_prob": 0.3035,
+        "ev": -0.1352,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（紐卡索聯）",
+        "line": -1.0,
+        "tw_price": 1.35,
+        "fair_odds": 1.58,
+        "fair_prob": 0.6312,
+        "ev": -0.1479,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_yes",
+        "selection": "兩隊都進球：是",
+        "line": null,
+        "tw_price": 1.38,
+        "fair_odds": 1.63,
+        "fair_prob": 0.6144,
+        "ev": -0.1521,
+        "derived": true
+       },
+       {
+        "market": "[總分]單雙",
+        "selection_key": "even",
+        "selection": "總進球：雙",
+        "line": null,
+        "tw_price": 1.65,
+        "fair_odds": 2.0,
+        "fair_prob": 0.5012,
+        "ev": -0.1731,
+        "derived": true
+       },
+       {
+        "market": "水晶宮 大小 1.5",
+        "selection_key": "team_home_over",
+        "selection": "水晶宮 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.86,
+        "fair_odds": 2.28,
+        "fair_prob": 0.4389,
+        "ev": -0.1836,
         "derived": true
        },
        {
@@ -820,9 +772,53 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 3.95,
-        "fair_odds": 5.24,
-        "fair_prob": 0.191,
-        "ev": -0.2455,
+        "fair_odds": 5.18,
+        "fair_prob": 0.1931,
+        "ev": -0.2374,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 2.55,
+        "fair_odds": 3.34,
+        "fair_prob": 0.299,
+        "ev": -0.2377,
+        "derived": true
+       },
+       {
+        "market": "紐卡索聯 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "紐卡索聯 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.75,
+        "fair_odds": 2.31,
+        "fair_prob": 0.4334,
+        "ev": -0.2416,
+        "derived": true
+       },
+       {
+        "market": "[上半場]大小 1.5",
+        "selection_key": "ht_over",
+        "selection": "上半場 大 1.5",
+        "line": 1.5,
+        "tw_price": 2.0,
+        "fair_odds": 2.7,
+        "fair_prob": 0.3704,
+        "ev": -0.2592,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 3.5",
+        "selection_key": "over",
+        "selection": "大 3.5",
+        "line": 3.5,
+        "tw_price": 2.07,
+        "fair_odds": 2.9,
+        "fair_prob": 0.3447,
+        "ev": -0.2865,
         "derived": true
        },
        {
@@ -831,9 +827,9 @@
         "selection": "讓分1:0 主（水晶宮）",
         "line": -1.0,
         "tw_price": 4.5,
-        "fair_odds": 6.27,
-        "fair_prob": 0.1596,
-        "ev": -0.2819,
+        "fair_odds": 6.43,
+        "fair_prob": 0.1555,
+        "ev": -0.3003,
         "derived": true
        },
        {
@@ -842,9 +838,9 @@
         "selection": "讓分0:1 客（紐卡索聯）",
         "line": 1.0,
         "tw_price": 3.8,
-        "fair_odds": 5.5,
-        "fair_prob": 0.1818,
-        "ev": -0.3092,
+        "fair_odds": 5.94,
+        "fair_prob": 0.1684,
+        "ev": -0.3599,
         "derived": true
        },
        {
@@ -853,9 +849,9 @@
         "selection": "大 4.5",
         "line": 4.5,
         "tw_price": 3.2,
-        "fair_odds": 4.71,
-        "fair_prob": 0.2122,
-        "ev": -0.3209,
+        "fair_odds": 5.6,
+        "fair_prob": 0.1787,
+        "ev": -0.4281,
         "derived": true
        }
       ]
@@ -949,42 +945,40 @@
       "books": 24,
       "h2h": {
        "home": {
-        "fair": 0.4,
-        "fair_odds": 2.5,
-        "best": 2.52,
+        "fair": 0.4009,
+        "fair_odds": 2.49,
+        "best": 2.48,
         "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2766,
-        "fair_odds": 3.62,
-        "best": 3.65,
-        "book": "unibet_se"
+        "fair": 0.2752,
+        "fair_odds": 3.63,
+        "best": 3.6,
+        "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.3234,
+        "fair": 0.324,
         "fair_odds": 3.09,
         "best": 3.08,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.538,
-        "fair_odds": 1.86,
-        "best": 1.86,
-        "book": "onexbet"
+        "fair": 0.5322,
+        "fair_odds": 1.88,
+        "best": 1.88,
+        "book": "matchbook"
        },
        "under": {
-        "fair": 0.462,
-        "fair_odds": 2.16,
-        "best": 2.2,
-        "book": "leovegas_se"
+        "fair": 0.4678,
+        "fair_odds": 2.14,
+        "best": 2.12,
+        "book": "matchbook"
        },
-       "odds_at": "2026-10-25T12:01+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -998,42 +992,42 @@
       "home_zh": "曼聯",
       "away_zh": "伯恩茅斯",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 2.15,
-        "fair_odds": 2.5,
-        "fair_prob": 0.4,
-        "ev": -0.14
+        "fair_odds": 2.49,
+        "fair_prob": 0.4009,
+        "ev": -0.1381
        },
        "draw": {
         "price": 2.95,
-        "fair_odds": 3.62,
-        "fair_prob": 0.2766,
-        "ev": -0.184
+        "fair_odds": 3.63,
+        "fair_prob": 0.2752,
+        "ev": -0.1882
        },
        "away": {
         "price": 2.55,
         "fair_odds": 3.09,
-        "fair_prob": 0.3234,
-        "ev": -0.1753
+        "fair_prob": 0.324,
+        "ev": -0.1738
        }
       },
       "totals": {
        "line": 2.5,
        "over": {
         "price": 1.62,
-        "fair_odds": 1.86,
-        "fair_prob": 0.538,
-        "ev": -0.1284
+        "fair_odds": 1.88,
+        "fair_prob": 0.5322,
+        "ev": -0.1378
        },
        "under": {
         "price": 1.82,
-        "fair_odds": 2.16,
-        "fair_prob": 0.462,
-        "ev": -0.1592
+        "fair_odds": 2.14,
+        "fair_prob": 0.4678,
+        "ev": -0.1486
        }
       },
       "spread": null,
@@ -1045,9 +1039,9 @@
         "selection": "小 3.5",
         "line": 3.5,
         "tw_price": 1.32,
-        "fair_odds": 1.46,
-        "fair_prob": 0.6849,
-        "ev": -0.0959,
+        "fair_odds": 1.45,
+        "fair_prob": 0.6904,
+        "ev": -0.0887,
         "derived": true
        },
        {
@@ -1056,20 +1050,9 @@
         "selection": "上半場 小 1.5",
         "line": 1.5,
         "tw_price": 1.38,
-        "fair_odds": 1.53,
-        "fair_prob": 0.6532,
-        "ev": -0.0986,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
-        "line": null,
-        "tw_price": 1.5,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5946,
-        "ev": -0.1082,
+        "fair_odds": 1.52,
+        "fair_prob": 0.6576,
+        "ev": -0.0926,
         "derived": true
        },
        {
@@ -1078,9 +1061,9 @@
         "selection": "總進球：單",
         "line": null,
         "tw_price": 1.78,
-        "fair_odds": 2.01,
-        "fair_prob": 0.4983,
-        "ev": -0.113,
+        "fair_odds": 2.0,
+        "fair_prob": 0.4991,
+        "ev": -0.1116,
         "derived": true
        },
        {
@@ -1089,9 +1072,20 @@
         "selection": "伯恩茅斯 小 1.5",
         "line": 1.5,
         "tw_price": 1.43,
-        "fair_odds": 1.62,
-        "fair_prob": 0.616,
-        "ev": -0.1192,
+        "fair_odds": 1.61,
+        "fair_prob": 0.6203,
+        "ev": -0.113,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_yes",
+        "selection": "兩隊都進球：是",
+        "line": null,
+        "tw_price": 1.5,
+        "fair_odds": 1.7,
+        "fair_prob": 0.5899,
+        "ev": -0.1152,
         "derived": true
        },
        {
@@ -1101,8 +1095,30 @@
         "line": 1.0,
         "tw_price": 1.3,
         "fair_odds": 1.48,
-        "fair_prob": 0.6766,
-        "ev": -0.1204,
+        "fair_prob": 0.676,
+        "ev": -0.1212,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分1:0 和",
+        "line": -1.0,
+        "tw_price": 3.8,
+        "fair_odds": 4.33,
+        "fair_prob": 0.2312,
+        "ev": -0.1215,
+        "derived": true
+       },
+       {
+        "market": "曼聯 大小 1.5",
+        "selection_key": "team_home_under",
+        "selection": "曼聯 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.55,
+        "fair_odds": 1.78,
+        "fair_prob": 0.5617,
+        "ev": -0.1294,
         "derived": true
        },
        {
@@ -1112,41 +1128,8 @@
         "line": -1.0,
         "tw_price": 1.45,
         "fair_odds": 1.67,
-        "fair_prob": 0.6,
-        "ev": -0.13,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
-        "line": -1.0,
-        "tw_price": 3.8,
-        "fair_odds": 4.37,
-        "fair_prob": 0.2289,
-        "ev": -0.1303,
-        "derived": true
-       },
-       {
-        "market": "曼聯 大小 1.5",
-        "selection_key": "team_home_under",
-        "selection": "曼聯 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.55,
-        "fair_odds": 1.79,
-        "fair_prob": 0.5576,
-        "ev": -0.1357,
-        "derived": true
-       },
-       {
-        "market": "曼聯 大小 1.5",
-        "selection_key": "team_home_over",
-        "selection": "曼聯 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.9,
-        "fair_odds": 2.26,
-        "fair_prob": 0.4424,
-        "ev": -0.1594,
+        "fair_prob": 0.5991,
+        "ev": -0.1312,
         "derived": true
        },
        {
@@ -1155,31 +1138,20 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.05,
-        "fair_odds": 2.44,
-        "fair_prob": 0.4095,
-        "ev": -0.1605,
+        "fair_odds": 2.43,
+        "fair_prob": 0.4119,
+        "ev": -0.1557,
         "derived": true
        },
        {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 3.05,
-        "fair_odds": 3.68,
-        "fair_prob": 0.2718,
-        "ev": -0.171,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 2.6,
-        "fair_odds": 3.14,
-        "fair_prob": 0.3187,
-        "ev": -0.1714,
+        "market": "曼聯 大小 1.5",
+        "selection_key": "team_home_over",
+        "selection": "曼聯 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.9,
+        "fair_odds": 2.28,
+        "fair_prob": 0.4383,
+        "ev": -0.1672,
         "derived": true
        },
        {
@@ -1188,20 +1160,31 @@
         "selection": "總進球：雙",
         "line": null,
         "tw_price": 1.65,
-        "fair_odds": 1.99,
-        "fair_prob": 0.5017,
-        "ev": -0.1722,
+        "fair_odds": 2.0,
+        "fair_prob": 0.5009,
+        "ev": -0.1735,
         "derived": true
        },
        {
-        "market": "伯恩茅斯 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "伯恩茅斯 大 1.5",
-        "line": 1.5,
-        "tw_price": 2.1,
-        "fair_odds": 2.6,
-        "fair_prob": 0.384,
-        "ev": -0.1935,
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 2.6,
+        "fair_odds": 3.15,
+        "fair_prob": 0.3176,
+        "ev": -0.1743,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 3.05,
+        "fair_odds": 3.7,
+        "fair_prob": 0.2705,
+        "ev": -0.1748,
         "derived": true
        },
        {
@@ -1210,9 +1193,20 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 1.96,
-        "fair_odds": 2.47,
-        "fair_prob": 0.4054,
-        "ev": -0.2053,
+        "fair_odds": 2.44,
+        "fair_prob": 0.4101,
+        "ev": -0.1961,
+        "derived": true
+       },
+       {
+        "market": "伯恩茅斯 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "伯恩茅斯 大 1.5",
+        "line": 1.5,
+        "tw_price": 2.1,
+        "fair_odds": 2.63,
+        "fair_prob": 0.3797,
+        "ev": -0.2026,
         "derived": true
        },
        {
@@ -1221,20 +1215,9 @@
         "selection": "上半場 大 1.5",
         "line": 1.5,
         "tw_price": 2.25,
-        "fair_odds": 2.88,
-        "fair_prob": 0.3468,
-        "ev": -0.2197,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 3.5",
-        "selection_key": "over",
-        "selection": "大 3.5",
-        "line": 3.5,
-        "tw_price": 2.4,
-        "fair_odds": 3.17,
-        "fair_prob": 0.3151,
-        "ev": -0.2439,
+        "fair_odds": 2.92,
+        "fair_prob": 0.3424,
+        "ev": -0.2295,
         "derived": true
        },
        {
@@ -1243,9 +1226,20 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 4.1,
-        "fair_odds": 5.49,
-        "fair_prob": 0.1821,
-        "ev": -0.2534,
+        "fair_odds": 5.44,
+        "fair_prob": 0.1838,
+        "ev": -0.2462,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 3.5",
+        "selection_key": "over",
+        "selection": "大 3.5",
+        "line": 3.5,
+        "tw_price": 2.4,
+        "fair_odds": 3.23,
+        "fair_prob": 0.3096,
+        "ev": -0.2569,
         "derived": true
        },
        {
@@ -1254,9 +1248,9 @@
         "selection": "讓分0:1 客（伯恩茅斯）",
         "line": 1.0,
         "tw_price": 5.0,
-        "fair_odds": 7.08,
-        "fair_prob": 0.1413,
-        "ev": -0.2935,
+        "fair_odds": 7.14,
+        "fair_prob": 0.1401,
+        "ev": -0.2994,
         "derived": true
        },
        {
@@ -1265,9 +1259,9 @@
         "selection": "讓分1:0 主（曼聯）",
         "line": -1.0,
         "tw_price": 3.95,
-        "fair_odds": 5.84,
-        "fair_prob": 0.1711,
-        "ev": -0.324,
+        "fair_odds": 5.89,
+        "fair_prob": 0.1697,
+        "ev": -0.3298,
         "derived": true
        }
       ]
@@ -1336,42 +1330,40 @@
       "books": 24,
       "h2h": {
        "home": {
-        "fair": 0.1869,
-        "fair_odds": 5.35,
-        "best": 5.4,
+        "fair": 0.1906,
+        "fair_odds": 5.25,
+        "best": 5.5,
         "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2297,
-        "fair_odds": 4.35,
+        "fair": 0.2274,
+        "fair_odds": 4.4,
         "best": 4.25,
         "book": "unibet_se"
        },
        "away": {
-        "fair": 0.5834,
-        "fair_odds": 1.71,
+        "fair": 0.582,
+        "fair_odds": 1.72,
         "best": 1.73,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.5827,
-        "fair_odds": 1.72,
-        "best": 1.72,
+        "fair": 0.5845,
+        "fair_odds": 1.71,
+        "best": 1.73,
         "book": "matchbook"
        },
        "under": {
-        "fair": 0.4173,
-        "fair_odds": 2.4,
-        "best": 2.36,
+        "fair": 0.4155,
+        "fair_odds": 2.41,
+        "best": 2.34,
         "book": "matchbook"
        },
-       "odds_at": "2026-10-25T12:01+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -1385,42 +1377,42 @@
       "home_zh": "赫爾城",
       "away_zh": "布倫特福德",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 4.0,
-        "fair_odds": 5.35,
-        "fair_prob": 0.1869,
-        "ev": -0.2524
+        "fair_odds": 5.25,
+        "fair_prob": 0.1906,
+        "ev": -0.2376
        },
        "draw": {
         "price": 3.4,
-        "fair_odds": 4.35,
-        "fair_prob": 0.2297,
-        "ev": -0.219
+        "fair_odds": 4.4,
+        "fair_prob": 0.2274,
+        "ev": -0.2268
        },
        "away": {
         "price": 1.5,
-        "fair_odds": 1.71,
-        "fair_prob": 0.5834,
-        "ev": -0.1249
+        "fair_odds": 1.72,
+        "fair_prob": 0.582,
+        "ev": -0.127
        }
       },
       "totals": {
        "line": 2.5,
        "over": {
         "price": 1.53,
-        "fair_odds": 1.72,
-        "fair_prob": 0.5827,
-        "ev": -0.1085
+        "fair_odds": 1.71,
+        "fair_prob": 0.5845,
+        "ev": -0.1057
        },
        "under": {
         "price": 1.93,
-        "fair_odds": 2.4,
-        "fair_prob": 0.4173,
-        "ev": -0.1946
+        "fair_odds": 2.41,
+        "fair_prob": 0.4155,
+        "ev": -0.1981
        }
       },
       "spread": null,
@@ -1433,30 +1425,8 @@
         "line": null,
         "tw_price": 1.56,
         "fair_odds": 1.72,
-        "fair_prob": 0.5799,
-        "ev": -0.0953,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 3.5",
-        "selection_key": "under",
-        "selection": "小 3.5",
-        "line": 3.5,
-        "tw_price": 1.38,
-        "fair_odds": 1.56,
-        "fair_prob": 0.6413,
-        "ev": -0.115,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_under",
-        "selection": "上半場 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.43,
-        "fair_odds": 1.62,
-        "fair_prob": 0.6186,
-        "ev": -0.1154,
+        "fair_prob": 0.5811,
+        "ev": -0.0935,
         "derived": true
        },
        {
@@ -1465,9 +1435,9 @@
         "selection": "赫爾城 大 0.5",
         "line": 0.5,
         "tw_price": 1.38,
-        "fair_odds": 1.56,
-        "fair_prob": 0.6407,
-        "ev": -0.1158,
+        "fair_odds": 1.55,
+        "fair_prob": 0.6448,
+        "ev": -0.1102,
         "derived": true
        },
        {
@@ -1477,8 +1447,30 @@
         "line": 1.5,
         "tw_price": 1.5,
         "fair_odds": 1.7,
-        "fair_prob": 0.5889,
-        "ev": -0.1166,
+        "fair_prob": 0.5884,
+        "ev": -0.1174,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 3.5",
+        "selection_key": "under",
+        "selection": "小 3.5",
+        "line": 3.5,
+        "tw_price": 1.38,
+        "fair_odds": 1.56,
+        "fair_prob": 0.6395,
+        "ev": -0.1175,
+        "derived": true
+       },
+       {
+        "market": "[上半場]大小 1.5",
+        "selection_key": "ht_under",
+        "selection": "上半場 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.43,
+        "fair_odds": 1.62,
+        "fair_prob": 0.6171,
+        "ev": -0.1175,
         "derived": true
        },
        {
@@ -1488,8 +1480,8 @@
         "line": null,
         "tw_price": 1.75,
         "fair_odds": 1.99,
-        "fair_prob": 0.5018,
-        "ev": -0.1218,
+        "fair_prob": 0.5026,
+        "ev": -0.1204,
         "derived": true
        },
        {
@@ -1498,9 +1490,9 @@
         "selection": "讓分0:2 主（赫爾城）",
         "line": 2.0,
         "tw_price": 1.35,
-        "fair_odds": 1.55,
-        "fair_prob": 0.6455,
-        "ev": -0.1286,
+        "fair_odds": 1.54,
+        "fair_prob": 0.6477,
+        "ev": -0.1256,
         "derived": true
        },
        {
@@ -1509,9 +1501,9 @@
         "selection": "上半場 客勝",
         "line": null,
         "tw_price": 1.95,
-        "fair_odds": 2.28,
-        "fair_prob": 0.4377,
-        "ev": -0.1465,
+        "fair_odds": 2.29,
+        "fair_prob": 0.4362,
+        "ev": -0.1495,
         "derived": true
        },
        {
@@ -1520,9 +1512,20 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 3.45,
-        "fair_odds": 4.07,
-        "fair_prob": 0.2457,
-        "ev": -0.1525,
+        "fair_odds": 4.06,
+        "fair_prob": 0.2465,
+        "ev": -0.1496,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:1 主（赫爾城）",
+        "line": 1.0,
+        "tw_price": 2.0,
+        "fair_odds": 2.39,
+        "fair_prob": 0.418,
+        "ev": -0.164,
         "derived": true
        },
        {
@@ -1532,19 +1535,8 @@
         "line": null,
         "tw_price": 1.68,
         "fair_odds": 2.01,
-        "fair_prob": 0.4982,
-        "ev": -0.1631,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:1 主（赫爾城）",
-        "line": 1.0,
-        "tw_price": 2.0,
-        "fair_odds": 2.4,
-        "fair_prob": 0.4166,
-        "ev": -0.1668,
+        "fair_prob": 0.4974,
+        "ev": -0.1644,
         "derived": true
        },
        {
@@ -1554,30 +1546,8 @@
         "line": null,
         "tw_price": 2.2,
         "fair_odds": 2.66,
-        "fair_prob": 0.3763,
-        "ev": -0.172,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:1 客（布倫特福德）",
-        "line": 1.0,
-        "tw_price": 2.4,
-        "fair_odds": 2.96,
-        "fair_prob": 0.3377,
-        "ev": -0.1894,
-        "derived": true
-       },
-       {
-        "market": "赫爾城 大小 0.5",
-        "selection_key": "team_home_under",
-        "selection": "赫爾城 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.25,
-        "fair_odds": 2.78,
-        "fair_prob": 0.3593,
-        "ev": -0.1916,
+        "fair_prob": 0.3761,
+        "ev": -0.1727,
         "derived": true
        },
        {
@@ -1586,9 +1556,20 @@
         "selection": "大 3.5",
         "line": 3.5,
         "tw_price": 2.25,
-        "fair_odds": 2.79,
-        "fair_prob": 0.3587,
-        "ev": -0.193,
+        "fair_odds": 2.77,
+        "fair_prob": 0.3605,
+        "ev": -0.1889,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 4.3,
+        "fair_odds": 5.32,
+        "fair_prob": 0.1878,
+        "ev": -0.1925,
         "derived": true
        },
        {
@@ -1598,8 +1579,19 @@
         "line": 1.5,
         "tw_price": 1.96,
         "fair_odds": 2.43,
-        "fair_prob": 0.4111,
-        "ev": -0.1942,
+        "fair_prob": 0.4116,
+        "ev": -0.1933,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:1 客（布倫特福德）",
+        "line": 1.0,
+        "tw_price": 2.4,
+        "fair_odds": 2.98,
+        "fair_prob": 0.3355,
+        "ev": -0.1948,
         "derived": true
        },
        {
@@ -1608,20 +1600,20 @@
         "selection": "上半場 大 1.5",
         "line": 1.5,
         "tw_price": 2.1,
-        "fair_odds": 2.62,
-        "fair_prob": 0.3814,
-        "ev": -0.199,
+        "fair_odds": 2.61,
+        "fair_prob": 0.3829,
+        "ev": -0.196,
         "derived": true
        },
        {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 4.3,
-        "fair_odds": 5.38,
-        "fair_prob": 0.186,
-        "ev": -0.2003,
+        "market": "赫爾城 大小 0.5",
+        "selection_key": "team_home_under",
+        "selection": "赫爾城 小 0.5",
+        "line": 0.5,
+        "tw_price": 2.25,
+        "fair_odds": 2.81,
+        "fair_prob": 0.3552,
+        "ev": -0.2007,
         "derived": true
        },
        {
@@ -1630,9 +1622,9 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 1.88,
-        "fair_odds": 2.38,
-        "fair_prob": 0.4201,
-        "ev": -0.2103,
+        "fair_odds": 2.39,
+        "fair_prob": 0.4189,
+        "ev": -0.2125,
         "derived": true
        },
        {
@@ -1641,9 +1633,9 @@
         "selection": "讓分0:2 客（布倫特福德）",
         "line": 2.0,
         "tw_price": 4.4,
-        "fair_odds": 5.74,
-        "fair_prob": 0.1741,
-        "ev": -0.2339,
+        "fair_odds": 5.79,
+        "fair_prob": 0.1728,
+        "ev": -0.2398,
         "derived": true
        },
        {
@@ -1652,9 +1644,9 @@
         "selection": "讓分0:2 和",
         "line": 2.0,
         "tw_price": 4.2,
-        "fair_odds": 5.54,
-        "fair_prob": 0.1804,
-        "ev": -0.2422,
+        "fair_odds": 5.57,
+        "fair_prob": 0.1796,
+        "ev": -0.2459,
         "derived": true
        }
       ]
@@ -2628,42 +2620,40 @@
       "books": 20,
       "h2h": {
        "home": {
-        "fair": 0.3035,
+        "fair": 0.303,
         "fair_odds": 3.3,
         "best": 3.3,
         "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2759,
-        "fair_odds": 3.62,
+        "fair": 0.2773,
+        "fair_odds": 3.61,
         "best": 3.55,
-        "book": "unibet_nl"
+        "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.4206,
+        "fair": 0.4197,
         "fair_odds": 2.38,
         "best": 2.38,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.5449,
+        "fair": 0.544,
         "fair_odds": 1.84,
         "best": 1.84,
         "book": "onexbet"
        },
        "under": {
-        "fair": 0.4551,
-        "fair_odds": 2.2,
-        "best": 2.18,
+        "fair": 0.456,
+        "fair_odds": 2.19,
+        "best": 2.16,
         "book": "matchbook"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -2677,27 +2667,27 @@
       "home_zh": "塞爾塔維戈",
       "away_zh": "皇家貝提斯",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 2.7,
         "fair_odds": 3.3,
-        "fair_prob": 0.3035,
-        "ev": -0.1805
+        "fair_prob": 0.303,
+        "ev": -0.1819
        },
        "draw": {
         "price": 2.95,
-        "fair_odds": 3.62,
-        "fair_prob": 0.2759,
-        "ev": -0.1861
+        "fair_odds": 3.61,
+        "fair_prob": 0.2773,
+        "ev": -0.182
        },
        "away": {
         "price": 2.05,
         "fair_odds": 2.38,
-        "fair_prob": 0.4206,
-        "ev": -0.1378
+        "fair_prob": 0.4197,
+        "ev": -0.1396
        }
       },
       "totals": {
@@ -2705,14 +2695,14 @@
        "over": {
         "price": 1.62,
         "fair_odds": 1.84,
-        "fair_prob": 0.5449,
-        "ev": -0.1173
+        "fair_prob": 0.544,
+        "ev": -0.1187
        },
        "under": {
         "price": 1.82,
-        "fair_odds": 2.2,
-        "fair_prob": 0.4551,
-        "ev": -0.1717
+        "fair_odds": 2.19,
+        "fair_prob": 0.456,
+        "ev": -0.1701
        }
       },
       "spread": null,
@@ -2725,8 +2715,8 @@
         "line": 1.5,
         "tw_price": 1.18,
         "fair_odds": 1.26,
-        "fair_prob": 0.7934,
-        "ev": -0.0638,
+        "fair_prob": 0.7933,
+        "ev": -0.0639,
         "derived": true
        },
        {
@@ -2736,8 +2726,8 @@
         "line": 1.5,
         "tw_price": 1.4,
         "fair_odds": 1.54,
-        "fair_prob": 0.648,
-        "ev": -0.0929,
+        "fair_prob": 0.6486,
+        "ev": -0.0919,
         "derived": true
        },
        {
@@ -2746,9 +2736,9 @@
         "selection": "讓分1:0 客（皇家貝提斯）",
         "line": -1.0,
         "tw_price": 1.3,
-        "fair_odds": 1.44,
-        "fair_prob": 0.6965,
-        "ev": -0.0945,
+        "fair_odds": 1.43,
+        "fair_prob": 0.697,
+        "ev": -0.0939,
         "derived": true
        },
        {
@@ -2758,8 +2748,8 @@
         "line": 2.0,
         "tw_price": 1.15,
         "fair_odds": 1.28,
-        "fair_prob": 0.7815,
-        "ev": -0.1013,
+        "fair_prob": 0.7818,
+        "ev": -0.1009,
         "derived": true
        },
        {
@@ -2770,7 +2760,7 @@
         "tw_price": 1.5,
         "fair_odds": 1.67,
         "fair_prob": 0.5978,
-        "ev": -0.1032,
+        "ev": -0.1033,
         "derived": true
        },
        {
@@ -2780,8 +2770,8 @@
         "line": 3.5,
         "tw_price": 1.32,
         "fair_odds": 1.47,
-        "fair_prob": 0.6784,
-        "ev": -0.1045,
+        "fair_prob": 0.6793,
+        "ev": -0.1034,
         "derived": true
        },
        {
@@ -2790,9 +2780,9 @@
         "selection": "塞爾塔維戈 小 1.5",
         "line": 1.5,
         "tw_price": 1.42,
-        "fair_odds": 1.6,
-        "fair_prob": 0.6269,
-        "ev": -0.1098,
+        "fair_odds": 1.59,
+        "fair_prob": 0.6274,
+        "ev": -0.1091,
         "derived": true
        },
        {
@@ -2802,8 +2792,8 @@
         "line": null,
         "tw_price": 1.78,
         "fair_odds": 2.01,
-        "fair_prob": 0.4977,
-        "ev": -0.1141,
+        "fair_prob": 0.4973,
+        "ev": -0.1147,
         "derived": true
        },
        {
@@ -2812,9 +2802,9 @@
         "selection": "讓分0:1 主（塞爾塔維戈）",
         "line": 1.0,
         "tw_price": 1.5,
-        "fair_odds": 1.73,
-        "fair_prob": 0.5794,
-        "ev": -0.1309,
+        "fair_odds": 1.72,
+        "fair_prob": 0.5803,
+        "ev": -0.1295,
         "derived": true
        },
        {
@@ -2824,8 +2814,8 @@
         "line": 1.5,
         "tw_price": 1.6,
         "fair_odds": 1.86,
-        "fair_prob": 0.5376,
-        "ev": -0.1398,
+        "fair_prob": 0.5384,
+        "ev": -0.1386,
         "derived": true
        },
        {
@@ -2834,20 +2824,9 @@
         "selection": "皇家貝提斯 大 1.5",
         "line": 1.5,
         "tw_price": 1.85,
-        "fair_odds": 2.16,
-        "fair_prob": 0.4624,
-        "ev": -0.1446,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 2.5,
-        "fair_odds": 3.0,
-        "fair_prob": 0.333,
-        "ev": -0.1675,
+        "fair_odds": 2.17,
+        "fair_prob": 0.4616,
+        "ev": -0.146,
         "derived": true
        },
        {
@@ -2857,8 +2836,19 @@
         "line": null,
         "tw_price": 2.05,
         "fair_odds": 2.46,
-        "fair_prob": 0.4059,
-        "ev": -0.1678,
+        "fair_prob": 0.4063,
+        "ev": -0.1671,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 2.5,
+        "fair_odds": 3.01,
+        "fair_prob": 0.3327,
+        "ev": -0.1683,
         "derived": true
        },
        {
@@ -2868,8 +2858,8 @@
         "line": null,
         "tw_price": 1.65,
         "fair_odds": 1.99,
-        "fair_prob": 0.5023,
-        "ev": -0.1712,
+        "fair_prob": 0.5027,
+        "ev": -0.1706,
         "derived": true
        },
        {
@@ -2879,8 +2869,8 @@
         "line": null,
         "tw_price": 3.15,
         "fair_odds": 3.83,
-        "fair_prob": 0.2611,
-        "ev": -0.1776,
+        "fair_prob": 0.261,
+        "ev": -0.1778,
         "derived": true
        },
        {
@@ -2890,8 +2880,8 @@
         "line": 1.5,
         "tw_price": 2.15,
         "fair_odds": 2.68,
-        "fair_prob": 0.3731,
-        "ev": -0.1979,
+        "fair_prob": 0.3726,
+        "ev": -0.199,
         "derived": true
        },
        {
@@ -2900,9 +2890,9 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 3.75,
-        "fair_odds": 4.68,
-        "fair_prob": 0.2136,
-        "ev": -0.1991,
+        "fair_odds": 4.7,
+        "fair_prob": 0.213,
+        "ev": -0.2014,
         "derived": true
        },
        {
@@ -2913,7 +2903,7 @@
         "tw_price": 1.96,
         "fair_odds": 2.49,
         "fair_prob": 0.4022,
-        "ev": -0.2118,
+        "ev": -0.2116,
         "derived": true
        },
        {
@@ -2922,9 +2912,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 4.2,
-        "fair_odds": 5.35,
-        "fair_prob": 0.187,
-        "ev": -0.2147,
+        "fair_odds": 5.36,
+        "fair_prob": 0.1864,
+        "ev": -0.217,
         "derived": true
        },
        {
@@ -2933,9 +2923,9 @@
         "selection": "上半場 大 1.5",
         "line": 1.5,
         "tw_price": 2.2,
-        "fair_odds": 2.84,
-        "fair_prob": 0.352,
-        "ev": -0.2255,
+        "fair_odds": 2.85,
+        "fair_prob": 0.3514,
+        "ev": -0.227,
         "derived": true
        },
        {
@@ -2944,9 +2934,9 @@
         "selection": "大 3.5",
         "line": 3.5,
         "tw_price": 2.4,
-        "fair_odds": 3.11,
-        "fair_prob": 0.3216,
-        "ev": -0.2282,
+        "fair_odds": 3.12,
+        "fair_prob": 0.3207,
+        "ev": -0.2302,
         "derived": true
        },
        {
@@ -2955,9 +2945,9 @@
         "selection": "讓分0:1 客（皇家貝提斯）",
         "line": 1.0,
         "tw_price": 3.7,
-        "fair_odds": 4.83,
-        "fair_prob": 0.207,
-        "ev": -0.234,
+        "fair_odds": 4.84,
+        "fair_prob": 0.2067,
+        "ev": -0.2351,
         "derived": true
        },
        {
@@ -2967,8 +2957,8 @@
         "line": 2.0,
         "tw_price": 5.1,
         "fair_odds": 7.66,
-        "fair_prob": 0.1306,
-        "ev": -0.3339,
+        "fair_prob": 0.1305,
+        "ev": -0.3345,
         "derived": true
        },
        {
@@ -2978,8 +2968,8 @@
         "line": 1.5,
         "tw_price": 3.1,
         "fair_odds": 4.84,
-        "fair_prob": 0.2066,
-        "ev": -0.3594,
+        "fair_prob": 0.2067,
+        "ev": -0.3593,
         "derived": true
        },
        {
@@ -2988,9 +2978,9 @@
         "selection": "讓分0:2 客（皇家貝提斯）",
         "line": 2.0,
         "tw_price": 7.25,
-        "fair_odds": 11.37,
-        "fair_prob": 0.0879,
-        "ev": -0.3625,
+        "fair_odds": 11.4,
+        "fair_prob": 0.0877,
+        "ev": -0.3642,
         "derived": true
        },
        {
@@ -3000,8 +2990,8 @@
         "line": -1.0,
         "tw_price": 5.3,
         "fair_odds": 8.58,
-        "fair_prob": 0.1165,
-        "ev": -0.3824,
+        "fair_prob": 0.1166,
+        "ev": -0.3821,
         "derived": true
        }
       ]
@@ -4421,42 +4411,40 @@
       "books": 23,
       "h2h": {
        "home": {
-        "fair": 0.3005,
-        "fair_odds": 3.33,
-        "best": 3.35,
+        "fair": 0.2994,
+        "fair_odds": 3.34,
+        "best": 3.4,
         "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2285,
-        "fair_odds": 4.38,
+        "fair": 0.2286,
+        "fair_odds": 4.37,
         "best": 4.42,
         "book": "onexbet"
        },
        "away": {
-        "fair": 0.4711,
+        "fair": 0.4721,
         "fair_odds": 2.12,
         "best": 2.12,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 3.5,
        "over": {
-        "fair": 0.531,
+        "fair": 0.5309,
         "fair_odds": 1.88,
         "best": 1.86,
         "book": "onexbet"
        },
        "under": {
-        "fair": 0.469,
+        "fair": 0.4691,
         "fair_odds": 2.13,
-        "best": 2.15,
-        "book": "pinnacle"
+        "best": 2.12,
+        "book": "betonlineag"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -4470,27 +4458,27 @@
       "home_zh": "霍芬海姆",
       "away_zh": "勒沃庫森",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 2.75,
-        "fair_odds": 3.33,
-        "fair_prob": 0.3005,
-        "ev": -0.1736
+        "fair_odds": 3.34,
+        "fair_prob": 0.2994,
+        "ev": -0.1766
        },
        "draw": {
         "price": 3.5,
-        "fair_odds": 4.38,
-        "fair_prob": 0.2285,
-        "ev": -0.2002
+        "fair_odds": 4.37,
+        "fair_prob": 0.2286,
+        "ev": -0.1999
        },
        "away": {
         "price": 1.8,
         "fair_odds": 2.12,
-        "fair_prob": 0.4711,
-        "ev": -0.152
+        "fair_prob": 0.4721,
+        "ev": -0.1502
        }
       },
       "totals": {
@@ -4498,14 +4486,14 @@
        "over": {
         "price": 1.58,
         "fair_odds": 1.88,
-        "fair_prob": 0.531,
-        "ev": -0.161
+        "fair_prob": 0.5309,
+        "ev": -0.1612
        },
        "under": {
         "price": 1.86,
         "fair_odds": 2.13,
-        "fair_prob": 0.469,
-        "ev": -0.1277
+        "fair_prob": 0.4691,
+        "ev": -0.1275
        }
       },
       "spread": null,
@@ -4518,8 +4506,8 @@
         "line": 2.0,
         "tw_price": 1.26,
         "fair_odds": 1.39,
-        "fair_prob": 0.7178,
-        "ev": -0.0956,
+        "fair_prob": 0.7169,
+        "ev": -0.0967,
         "derived": true
        },
        {
@@ -4529,8 +4517,8 @@
         "line": 4.5,
         "tw_price": 1.36,
         "fair_odds": 1.51,
-        "fair_prob": 0.6636,
-        "ev": -0.0975,
+        "fair_prob": 0.6637,
+        "ev": -0.0974,
         "derived": true
        },
        {
@@ -4540,8 +4528,19 @@
         "line": 2.5,
         "tw_price": 1.4,
         "fair_odds": 1.56,
-        "fair_prob": 0.6418,
-        "ev": -0.1014,
+        "fair_prob": 0.6412,
+        "ev": -0.1023,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（勒沃庫森）",
+        "line": -1.0,
+        "tw_price": 1.28,
+        "fair_odds": 1.43,
+        "fair_prob": 0.7006,
+        "ev": -0.1032,
         "derived": true
        },
        {
@@ -4552,18 +4551,7 @@
         "tw_price": 1.22,
         "fair_odds": 1.36,
         "fair_prob": 0.7346,
-        "ev": -0.1037,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（勒沃庫森）",
-        "line": -1.0,
-        "tw_price": 1.28,
-        "fair_odds": 1.43,
-        "fair_prob": 0.6995,
-        "ev": -0.1046,
+        "ev": -0.1038,
         "derived": true
        },
        {
@@ -4574,7 +4562,7 @@
         "tw_price": 1.76,
         "fair_odds": 2.0,
         "fair_prob": 0.5004,
-        "ev": -0.1192,
+        "ev": -0.1193,
         "derived": true
        },
        {
@@ -4583,9 +4571,9 @@
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.23,
-        "fair_odds": 1.4,
-        "fair_prob": 0.7118,
-        "ev": -0.1244,
+        "fair_odds": 1.41,
+        "fair_prob": 0.7117,
+        "ev": -0.1246,
         "derived": true
        },
        {
@@ -4595,8 +4583,8 @@
         "line": 1.0,
         "tw_price": 1.65,
         "fair_odds": 1.89,
-        "fair_prob": 0.5289,
-        "ev": -0.1272,
+        "fair_prob": 0.5279,
+        "ev": -0.1289,
         "derived": true
        },
        {
@@ -4605,9 +4593,9 @@
         "selection": "霍芬海姆 小 1.5",
         "line": 1.5,
         "tw_price": 1.75,
-        "fair_odds": 2.02,
-        "fair_prob": 0.4954,
-        "ev": -0.1331,
+        "fair_odds": 2.01,
+        "fair_prob": 0.4963,
+        "ev": -0.1315,
         "derived": true
        },
        {
@@ -4617,8 +4605,8 @@
         "line": 1.5,
         "tw_price": 1.66,
         "fair_odds": 1.94,
-        "fair_prob": 0.5149,
-        "ev": -0.1453,
+        "fair_prob": 0.5148,
+        "ev": -0.1454,
         "derived": true
        },
        {
@@ -4628,8 +4616,8 @@
         "line": 1.5,
         "tw_price": 1.76,
         "fair_odds": 2.06,
-        "fair_prob": 0.4851,
-        "ev": -0.1462,
+        "fair_prob": 0.4852,
+        "ev": -0.1461,
         "derived": true
        },
        {
@@ -4638,9 +4626,9 @@
         "selection": "霍芬海姆 大 1.5",
         "line": 1.5,
         "tw_price": 1.68,
-        "fair_odds": 1.98,
-        "fair_prob": 0.5046,
-        "ev": -0.1522,
+        "fair_odds": 1.99,
+        "fair_prob": 0.5037,
+        "ev": -0.1538,
         "derived": true
        },
        {
@@ -4650,8 +4638,8 @@
         "line": null,
         "tw_price": 3.0,
         "fair_odds": 3.57,
-        "fair_prob": 0.2805,
-        "ev": -0.1585,
+        "fair_prob": 0.2798,
+        "ev": -0.1605,
         "derived": true
        },
        {
@@ -4660,9 +4648,9 @@
         "selection": "上半場 客勝",
         "line": null,
         "tw_price": 2.15,
-        "fair_odds": 2.57,
-        "fair_prob": 0.3897,
-        "ev": -0.1622,
+        "fair_odds": 2.56,
+        "fair_prob": 0.3903,
+        "ev": -0.1607,
         "derived": true
        },
        {
@@ -4673,7 +4661,7 @@
         "tw_price": 1.66,
         "fair_odds": 2.0,
         "fair_prob": 0.4996,
-        "ev": -0.1707,
+        "ev": -0.1706,
         "derived": true
        },
        {
@@ -4683,8 +4671,8 @@
         "line": 1.0,
         "tw_price": 4.05,
         "fair_odds": 4.98,
-        "fair_prob": 0.2007,
-        "ev": -0.1871,
+        "fair_prob": 0.2008,
+        "ev": -0.1866,
         "derived": true
        },
        {
@@ -4695,7 +4683,7 @@
         "tw_price": 2.45,
         "fair_odds": 3.03,
         "fair_prob": 0.3298,
-        "ev": -0.1919,
+        "ev": -0.192,
         "derived": true
        },
        {
@@ -4705,8 +4693,8 @@
         "line": null,
         "tw_price": 2.8,
         "fair_odds": 3.47,
-        "fair_prob": 0.2882,
-        "ev": -0.1932,
+        "fair_prob": 0.2883,
+        "ev": -0.1928,
         "derived": true
        },
        {
@@ -4716,8 +4704,8 @@
         "line": 2.5,
         "tw_price": 2.2,
         "fair_odds": 2.79,
-        "fair_prob": 0.3582,
-        "ev": -0.2121,
+        "fair_prob": 0.3588,
+        "ev": -0.2106,
         "derived": true
        },
        {
@@ -4726,9 +4714,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 4.7,
-        "fair_odds": 6.02,
-        "fair_prob": 0.1661,
-        "ev": -0.2193,
+        "fair_odds": 6.04,
+        "fair_prob": 0.1656,
+        "ev": -0.2217,
         "derived": true
        },
        {
@@ -4737,9 +4725,9 @@
         "selection": "讓分0:1 客（勒沃庫森）",
         "line": 1.0,
         "tw_price": 2.85,
-        "fair_odds": 3.7,
-        "fair_prob": 0.2703,
-        "ev": -0.2296,
+        "fair_odds": 3.69,
+        "fair_prob": 0.2712,
+        "ev": -0.227,
         "derived": true
        },
        {
@@ -4749,8 +4737,8 @@
         "line": 4.5,
         "tw_price": 2.28,
         "fair_odds": 2.97,
-        "fair_prob": 0.3364,
-        "ev": -0.2329,
+        "fair_prob": 0.3363,
+        "ev": -0.2332,
         "derived": true
        },
        {
@@ -4761,7 +4749,7 @@
         "tw_price": 2.85,
         "fair_odds": 3.77,
         "fair_prob": 0.2654,
-        "ev": -0.2437,
+        "ev": -0.2435,
         "derived": true
        },
        {
@@ -4770,9 +4758,9 @@
         "selection": "讓分0:2 和",
         "line": 2.0,
         "tw_price": 4.95,
-        "fair_odds": 6.97,
-        "fair_prob": 0.1435,
-        "ev": -0.2894,
+        "fair_odds": 6.95,
+        "fair_prob": 0.1439,
+        "ev": -0.2879,
         "derived": true
        },
        {
@@ -4781,9 +4769,9 @@
         "selection": "讓分0:2 客（勒沃庫森）",
         "line": 2.0,
         "tw_price": 4.95,
-        "fair_odds": 7.21,
-        "fair_prob": 0.1386,
-        "ev": -0.3138,
+        "fair_odds": 7.18,
+        "fair_prob": 0.1392,
+        "ev": -0.3108,
         "derived": true
        },
        {
@@ -4792,9 +4780,9 @@
         "selection": "讓分1:0 主（霍芬海姆）",
         "line": -1.0,
         "tw_price": 4.85,
-        "fair_odds": 7.44,
-        "fair_prob": 0.1344,
-        "ev": -0.3484,
+        "fair_odds": 7.48,
+        "fair_prob": 0.1338,
+        "ev": -0.3512,
         "derived": true
        }
       ]
@@ -5321,25 +5309,24 @@
       "books": 23,
       "h2h": {
        "home": {
-        "fair": 0.5156,
-        "fair_odds": 1.94,
-        "best": 1.97,
-        "book": "betfair_ex_eu"
+        "fair": 0.4863,
+        "fair_odds": 2.06,
+        "best": 2.06,
+        "book": "pinnacle"
        },
        "draw": {
-        "fair": 0.2287,
-        "fair_odds": 4.37,
-        "best": 4.28,
-        "book": "onexbet"
-       },
-       "away": {
-        "fair": 0.2557,
-        "fair_odds": 3.91,
-        "best": 3.95,
+        "fair": 0.2255,
+        "fair_odds": 4.43,
+        "best": 4.3,
         "book": "unibet_se"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "away": {
+        "fair": 0.2882,
+        "fair_odds": 3.47,
+        "best": 3.54,
+        "book": "onexbet"
+       },
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 3.5,
@@ -5370,27 +5357,27 @@
       "home_zh": "亞特蘭大",
       "away_zh": "弗羅西諾內",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.7,
-        "fair_odds": 1.94,
-        "fair_prob": 0.5156,
-        "ev": -0.1235
+        "fair_odds": 2.06,
+        "fair_prob": 0.4863,
+        "ev": -0.1733
        },
        "draw": {
         "price": 3.55,
-        "fair_odds": 4.37,
-        "fair_prob": 0.2287,
-        "ev": -0.1881
+        "fair_odds": 4.43,
+        "fair_prob": 0.2255,
+        "ev": -0.1995
        },
        "away": {
         "price": 3.05,
-        "fair_odds": 3.91,
-        "fair_prob": 0.2557,
-        "ev": -0.2201
+        "fair_odds": 3.47,
+        "fair_prob": 0.2882,
+        "ev": -0.121
        }
       },
       "totals": {
@@ -5417,9 +5404,9 @@
         "selection": "讓分2:0 客（弗羅西諾內）",
         "line": -2.0,
         "tw_price": 1.3,
-        "fair_odds": 1.39,
-        "fair_prob": 0.721,
-        "ev": -0.0628,
+        "fair_odds": 1.34,
+        "fair_prob": 0.7482,
+        "ev": -0.0273,
         "derived": true
        },
        {
@@ -5434,14 +5421,25 @@
         "derived": true
        },
        {
+        "market": "亞特蘭大 大小 2.5",
+        "selection_key": "team_home_under",
+        "selection": "亞特蘭大 小 2.5",
+        "line": 2.5,
+        "tw_price": 1.42,
+        "fair_odds": 1.57,
+        "fair_prob": 0.6389,
+        "ev": -0.0928,
+        "derived": true
+       },
+       {
         "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（弗羅西諾內）",
         "line": -1.0,
-        "tw_price": 3.95,
-        "fair_odds": 4.44,
-        "fair_prob": 0.2251,
-        "ev": -0.1107,
+        "tw_price": 1.75,
+        "fair_odds": 1.95,
+        "fair_prob": 0.5137,
+        "ev": -0.101,
         "derived": true
        },
        {
@@ -5456,36 +5454,47 @@
         "derived": true
        },
        {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分1:0 和",
+        "line": -1.0,
+        "tw_price": 3.95,
+        "fair_odds": 4.45,
+        "fair_prob": 0.2246,
+        "ev": -0.113,
+        "derived": true
+       },
+       {
         "market": "兩隊是否都進球",
         "selection_key": "btts_yes",
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.26,
-        "fair_odds": 1.43,
-        "fair_prob": 0.7007,
-        "ev": -0.1171,
-        "derived": true
-       },
-       {
-        "market": "亞特蘭大 大小 2.5",
-        "selection_key": "team_home_under",
-        "selection": "亞特蘭大 小 2.5",
-        "line": 2.5,
-        "tw_price": 1.42,
-        "fair_odds": 1.62,
-        "fair_prob": 0.6172,
-        "ev": -0.1236,
+        "fair_odds": 1.42,
+        "fair_prob": 0.7036,
+        "ev": -0.1135,
         "derived": true
        },
        {
         "market": "弗羅西諾內 大小 1.5",
-        "selection_key": "team_away_under",
-        "selection": "弗羅西諾內 小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "弗羅西諾內 大 1.5",
         "line": 1.5,
-        "tw_price": 1.62,
-        "fair_odds": 1.85,
-        "fair_prob": 0.5396,
-        "ev": -0.1258,
+        "tw_price": 1.82,
+        "fair_odds": 2.06,
+        "fair_prob": 0.4865,
+        "ev": -0.1146,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 3.25,
+        "fair_odds": 3.69,
+        "fair_prob": 0.2707,
+        "ev": -0.1202,
         "derived": true
        },
        {
@@ -5494,9 +5503,9 @@
         "selection": "總進球：單",
         "line": null,
         "tw_price": 1.75,
-        "fair_odds": 2.0,
-        "fair_prob": 0.499,
-        "ev": -0.1267,
+        "fair_odds": 1.99,
+        "fair_prob": 0.5013,
+        "ev": -0.1228,
         "derived": true
        },
        {
@@ -5508,28 +5517,6 @@
         "fair_odds": 1.97,
         "fair_prob": 0.5076,
         "ev": -0.127,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 2.05,
-        "fair_odds": 2.39,
-        "fair_prob": 0.419,
-        "ev": -0.141,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（弗羅西諾內）",
-        "line": -1.0,
-        "tw_price": 1.75,
-        "fair_odds": 2.06,
-        "fair_prob": 0.4844,
-        "ev": -0.1523,
         "derived": true
        },
        {
@@ -5549,42 +5536,31 @@
         "selection": "總進球：雙",
         "line": null,
         "tw_price": 1.68,
-        "fair_odds": 2.0,
-        "fair_prob": 0.501,
-        "ev": -0.1583,
-        "derived": true
-       },
-       {
-        "market": "弗羅西諾內 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "弗羅西諾內 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.82,
-        "fair_odds": 2.17,
-        "fair_prob": 0.4604,
+        "fair_odds": 2.01,
+        "fair_prob": 0.4987,
         "ev": -0.1621,
         "derived": true
        },
        {
-        "market": "亞特蘭大 大小 2.5",
-        "selection_key": "team_home_over",
-        "selection": "亞特蘭大 大 2.5",
-        "line": 2.5,
-        "tw_price": 2.15,
-        "fair_odds": 2.61,
-        "fair_prob": 0.3828,
-        "ev": -0.1769,
+        "market": "弗羅西諾內 大小 1.5",
+        "selection_key": "team_away_under",
+        "selection": "弗羅西諾內 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.62,
+        "fair_odds": 1.95,
+        "fair_prob": 0.5135,
+        "ev": -0.1681,
         "derived": true
        },
        {
         "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
         "line": null,
-        "tw_price": 3.25,
-        "fair_odds": 3.97,
-        "fair_prob": 0.2519,
-        "ev": -0.1813,
+        "tw_price": 2.05,
+        "fair_odds": 2.52,
+        "fair_prob": 0.3975,
+        "ev": -0.1851,
         "derived": true
        },
        {
@@ -5593,9 +5569,9 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.45,
-        "fair_odds": 3.04,
-        "fair_prob": 0.3291,
-        "ev": -0.1938,
+        "fair_odds": 3.01,
+        "fair_prob": 0.3318,
+        "ev": -0.1871,
         "derived": true
        },
        {
@@ -5610,25 +5586,25 @@
         "derived": true
        },
        {
+        "market": "亞特蘭大 大小 2.5",
+        "selection_key": "team_home_over",
+        "selection": "亞特蘭大 大 2.5",
+        "line": 2.5,
+        "tw_price": 2.15,
+        "fair_odds": 2.77,
+        "fair_prob": 0.3611,
+        "ev": -0.2236,
+        "derived": true
+       },
+       {
         "market": "兩隊是否都進球",
         "selection_key": "btts_no",
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 2.6,
-        "fair_odds": 3.34,
-        "fair_prob": 0.2993,
-        "ev": -0.2218,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_home",
-        "selection": "讓分1:0 主（亞特蘭大）",
-        "line": -1.0,
-        "tw_price": 2.65,
-        "fair_odds": 3.44,
-        "fair_prob": 0.2905,
-        "ev": -0.2303,
+        "fair_odds": 3.37,
+        "fair_prob": 0.2964,
+        "ev": -0.2293,
         "derived": true
        },
        {
@@ -5643,14 +5619,25 @@
         "derived": true
        },
        {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_home",
+        "selection": "讓分1:0 主（亞特蘭大）",
+        "line": -1.0,
+        "tw_price": 2.65,
+        "fair_odds": 3.82,
+        "fair_prob": 0.2617,
+        "ev": -0.3064,
+        "derived": true
+       },
+       {
         "market": "讓分 2:0",
         "selection_key": "hcp3_draw",
         "selection": "讓分2:0 和",
         "line": -2.0,
         "tw_price": 4.75,
-        "fair_odds": 6.88,
-        "fair_prob": 0.1454,
-        "ev": -0.3093,
+        "fair_odds": 7.4,
+        "fair_prob": 0.1352,
+        "ev": -0.3578,
         "derived": true
        },
        {
@@ -5659,9 +5646,9 @@
         "selection": "讓分2:0 主（亞特蘭大）",
         "line": -2.0,
         "tw_price": 4.55,
-        "fair_odds": 7.48,
-        "fair_prob": 0.1336,
-        "ev": -0.392,
+        "fair_odds": 8.58,
+        "fair_prob": 0.1166,
+        "ev": -0.4695,
         "derived": true
        }
       ]
@@ -5743,25 +5730,24 @@
       "books": 23,
       "h2h": {
        "home": {
-        "fair": 0.4374,
-        "fair_odds": 2.29,
-        "best": 2.29,
-        "book": "onexbet"
+        "fair": 0.4153,
+        "fair_odds": 2.41,
+        "best": 2.44,
+        "book": "matchbook"
        },
        "draw": {
-        "fair": 0.293,
-        "fair_odds": 3.41,
-        "best": 3.35,
-        "book": "unibet_nl"
+        "fair": 0.2913,
+        "fair_odds": 3.43,
+        "best": 3.45,
+        "book": "unibet_se"
        },
        "away": {
-        "fair": 0.2696,
-        "fair_odds": 3.71,
-        "best": 3.8,
-        "book": "betfair_ex_eu"
+        "fair": 0.2934,
+        "fair_odds": 3.41,
+        "best": 3.4,
+        "book": "unibet_se"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
@@ -5792,27 +5778,27 @@
       "home_zh": "熱那亞",
       "away_zh": "威尼斯",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 2.0,
-        "fair_odds": 2.29,
-        "fair_prob": 0.4374,
-        "ev": -0.1252
+        "fair_odds": 2.41,
+        "fair_prob": 0.4153,
+        "ev": -0.1694
        },
        "draw": {
         "price": 2.85,
-        "fair_odds": 3.41,
-        "fair_prob": 0.293,
-        "ev": -0.165
+        "fair_odds": 3.43,
+        "fair_prob": 0.2913,
+        "ev": -0.1698
        },
        "away": {
         "price": 2.9,
-        "fair_odds": 3.71,
-        "fair_prob": 0.2696,
-        "ev": -0.2182
+        "fair_odds": 3.41,
+        "fair_prob": 0.2934,
+        "ev": -0.1491
        }
       },
       "totals": {
@@ -5839,9 +5825,9 @@
         "selection": "威尼斯 大 0.5",
         "line": 0.5,
         "tw_price": 1.32,
-        "fair_odds": 1.42,
-        "fair_prob": 0.7045,
-        "ev": -0.0701,
+        "fair_odds": 1.39,
+        "fair_prob": 0.719,
+        "ev": -0.051,
         "derived": true
        },
        {
@@ -5856,14 +5842,25 @@
         "derived": true
        },
        {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（威尼斯）",
+        "line": -1.0,
+        "tw_price": 1.55,
+        "fair_odds": 1.71,
+        "fair_prob": 0.5847,
+        "ev": -0.0937,
+        "derived": true
+       },
+       {
         "market": "兩隊是否都進球",
         "selection_key": "btts_yes",
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.63,
-        "fair_odds": 1.81,
-        "fair_prob": 0.554,
-        "ev": -0.097,
+        "fair_odds": 1.8,
+        "fair_prob": 0.5557,
+        "ev": -0.0941,
         "derived": true
        },
        {
@@ -5878,14 +5875,25 @@
         "derived": true
        },
        {
+        "market": "熱那亞 大小 1.5",
+        "selection_key": "team_home_under",
+        "selection": "熱那亞 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.52,
+        "fair_odds": 1.71,
+        "fair_prob": 0.584,
+        "ev": -0.1124,
+        "derived": true
+       },
+       {
         "market": "[總分]單雙",
         "selection_key": "odd",
         "selection": "總進球：單",
         "line": null,
         "tw_price": 1.78,
-        "fair_odds": 2.02,
-        "fair_prob": 0.4959,
-        "ev": -0.1172,
+        "fair_odds": 2.01,
+        "fair_prob": 0.4972,
+        "ev": -0.1151,
         "derived": true
        },
        {
@@ -5894,75 +5902,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 3.55,
-        "fair_odds": 4.02,
-        "fair_prob": 0.2485,
-        "ev": -0.118,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（威尼斯）",
-        "line": -1.0,
-        "tw_price": 1.55,
-        "fair_odds": 1.78,
-        "fair_prob": 0.5626,
-        "ev": -0.128,
-        "derived": true
-       },
-       {
-        "market": "熱那亞 大小 1.5",
-        "selection_key": "team_home_under",
-        "selection": "熱那亞 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.52,
-        "fair_odds": 1.76,
-        "fair_prob": 0.5671,
-        "ev": -0.138,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 1.95,
-        "fair_odds": 2.31,
-        "fair_prob": 0.4326,
-        "ev": -0.1564,
-        "derived": true
-       },
-       {
-        "market": "熱那亞 大小 1.5",
-        "selection_key": "team_home_over",
-        "selection": "熱那亞 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.94,
-        "fair_odds": 2.31,
-        "fair_prob": 0.4329,
-        "ev": -0.1602,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 2.5,
-        "fair_odds": 2.99,
-        "fair_prob": 0.3345,
-        "ev": -0.1637,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "even",
-        "selection": "總進球：雙",
-        "line": null,
-        "tw_price": 1.65,
-        "fair_odds": 1.98,
-        "fair_prob": 0.5041,
-        "ev": -0.1683,
+        "fair_odds": 4.12,
+        "fair_prob": 0.2425,
+        "ev": -0.1392,
         "derived": true
        },
        {
@@ -5971,9 +5913,53 @@
         "selection": "上半場 客勝",
         "line": null,
         "tw_price": 3.45,
-        "fair_odds": 4.29,
-        "fair_prob": 0.2329,
-        "ev": -0.1967,
+        "fair_odds": 4.06,
+        "fair_prob": 0.2462,
+        "ev": -0.1506,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_draw",
+        "selection": "上半場 和局",
+        "line": null,
+        "tw_price": 1.95,
+        "fair_odds": 2.3,
+        "fair_prob": 0.4339,
+        "ev": -0.1539,
+        "derived": true
+       },
+       {
+        "market": "[總分]單雙",
+        "selection_key": "even",
+        "selection": "總進球：雙",
+        "line": null,
+        "tw_price": 1.65,
+        "fair_odds": 1.99,
+        "fair_prob": 0.5028,
+        "ev": -0.1703,
+        "derived": true
+       },
+       {
+        "market": "熱那亞 大小 1.5",
+        "selection_key": "team_home_over",
+        "selection": "熱那亞 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.94,
+        "fair_odds": 2.4,
+        "fair_prob": 0.416,
+        "ev": -0.1929,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 2.5,
+        "fair_odds": 3.13,
+        "fair_prob": 0.3199,
+        "ev": -0.2002,
         "derived": true
        },
        {
@@ -5982,9 +5968,9 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 1.8,
-        "fair_odds": 2.24,
-        "fair_prob": 0.446,
-        "ev": -0.1972,
+        "fair_odds": 2.25,
+        "fair_prob": 0.4443,
+        "ev": -0.2003,
         "derived": true
        },
        {
@@ -6015,9 +6001,9 @@
         "selection": "威尼斯 小 0.5",
         "line": 0.5,
         "tw_price": 2.4,
-        "fair_odds": 3.38,
-        "fair_prob": 0.2955,
-        "ev": -0.2908,
+        "fair_odds": 3.56,
+        "fair_prob": 0.281,
+        "ev": -0.3255,
         "derived": true
        },
        {
@@ -6026,9 +6012,9 @@
         "selection": "讓分1:0 主（熱那亞）",
         "line": -1.0,
         "tw_price": 3.65,
-        "fair_odds": 5.29,
-        "fair_prob": 0.1889,
-        "ev": -0.3103,
+        "fair_odds": 5.79,
+        "fair_prob": 0.1728,
+        "ev": -0.3692,
         "derived": true
        }
       ]
@@ -6122,25 +6108,24 @@
       "books": 23,
       "h2h": {
        "home": {
-        "fair": 0.1206,
-        "fair_odds": 8.29,
-        "best": 8.0,
+        "fair": 0.1403,
+        "fair_odds": 7.13,
+        "best": 7.0,
         "book": "unibet_se"
        },
        "draw": {
-        "fair": 0.2159,
-        "fair_odds": 4.63,
-        "best": 4.5,
-        "book": "codere_it"
+        "fair": 0.2216,
+        "fair_odds": 4.51,
+        "best": 4.4,
+        "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.6636,
-        "fair_odds": 1.51,
-        "best": 1.54,
+        "fair": 0.638,
+        "fair_odds": 1.57,
+        "best": 1.6,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
@@ -6171,27 +6156,27 @@
       "home_zh": "萊切",
       "away_zh": "尤文圖斯",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T08:47+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 4.95,
-        "fair_odds": 8.29,
-        "fair_prob": 0.1206,
-        "ev": -0.403
+        "fair_odds": 7.13,
+        "fair_prob": 0.1403,
+        "ev": -0.3055
        },
        "draw": {
         "price": 3.45,
-        "fair_odds": 4.63,
-        "fair_prob": 0.2159,
-        "ev": -0.2551
+        "fair_odds": 4.51,
+        "fair_prob": 0.2216,
+        "ev": -0.2355
        },
        "away": {
         "price": 1.4,
-        "fair_odds": 1.51,
-        "fair_prob": 0.6636,
-        "ev": -0.071
+        "fair_odds": 1.57,
+        "fair_prob": 0.638,
+        "ev": -0.1068
        }
       },
       "totals": {
@@ -6213,17 +6198,6 @@
       "values": [],
       "derived": [
        {
-        "market": "萊切 大小 0.5",
-        "selection_key": "team_home_under",
-        "selection": "萊切 小 0.5",
-        "line": 0.5,
-        "tw_price": 1.94,
-        "fair_odds": 1.98,
-        "fair_prob": 0.5059,
-        "ev": -0.0185,
-        "derived": true
-       },
-       {
         "market": "[上半場]大小 1.5",
         "selection_key": "ht_under",
         "selection": "上半場 小 1.5",
@@ -6232,6 +6206,17 @@
         "fair_odds": 1.49,
         "fair_prob": 0.669,
         "ev": -0.0634,
+        "derived": true
+       },
+       {
+        "market": "萊切 大小 0.5",
+        "selection_key": "team_home_under",
+        "selection": "萊切 小 0.5",
+        "line": 0.5,
+        "tw_price": 1.94,
+        "fair_odds": 2.11,
+        "fair_prob": 0.4741,
+        "ev": -0.0803,
         "derived": true
        },
        {
@@ -6246,36 +6231,25 @@
         "derived": true
        },
        {
-        "market": "尤文圖斯 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "尤文圖斯 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.5,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5953,
-        "ev": -0.1071,
-        "derived": true
-       },
-       {
         "market": "讓分 0:1",
         "selection_key": "hcp3_draw",
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 3.35,
-        "fair_odds": 3.8,
-        "fair_prob": 0.2634,
-        "ev": -0.1177,
+        "fair_odds": 3.78,
+        "fair_prob": 0.2645,
+        "ev": -0.114,
         "derived": true
        },
        {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:1 客（尤文圖斯）",
-        "line": 1.0,
-        "tw_price": 2.2,
-        "fair_odds": 2.5,
-        "fair_prob": 0.4002,
-        "ev": -0.1197,
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:2 主（萊切）",
+        "line": 2.0,
+        "tw_price": 1.45,
+        "fair_odds": 1.65,
+        "fair_prob": 0.6074,
+        "ev": -0.1193,
         "derived": true
        },
        {
@@ -6285,41 +6259,8 @@
         "line": null,
         "tw_price": 1.75,
         "fair_odds": 1.99,
-        "fair_prob": 0.5017,
-        "ev": -0.122,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
-        "line": null,
-        "tw_price": 1.72,
-        "fair_odds": 1.98,
-        "fair_prob": 0.5063,
-        "ev": -0.1292,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 1.8,
-        "fair_odds": 2.08,
-        "fair_prob": 0.4803,
-        "ev": -0.1355,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 2.2,
-        "fair_odds": 2.58,
-        "fair_prob": 0.3879,
-        "ev": -0.1465,
+        "fair_prob": 0.5027,
+        "ev": -0.1202,
         "derived": true
        },
        {
@@ -6328,31 +6269,42 @@
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.72,
+        "fair_odds": 1.97,
+        "fair_prob": 0.508,
+        "ev": -0.1263,
+        "derived": true
+       },
+       {
+        "market": "尤文圖斯 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "尤文圖斯 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.5,
+        "fair_odds": 1.73,
+        "fair_prob": 0.579,
+        "ev": -0.1315,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_draw",
+        "selection": "上半場 和局",
+        "line": null,
+        "tw_price": 2.2,
+        "fair_odds": 2.54,
+        "fair_prob": 0.3934,
+        "ev": -0.1345,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_no",
+        "selection": "兩隊都進球：否",
+        "line": null,
+        "tw_price": 1.72,
         "fair_odds": 2.03,
-        "fair_prob": 0.4937,
-        "ev": -0.1508,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:2 客（尤文圖斯）",
-        "line": 2.0,
-        "tw_price": 3.95,
-        "fair_odds": 4.69,
-        "fair_prob": 0.2133,
-        "ev": -0.1574,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:2 主（萊切）",
-        "line": 2.0,
-        "tw_price": 1.45,
-        "fair_odds": 1.72,
-        "fair_prob": 0.5804,
-        "ev": -0.1584,
+        "fair_prob": 0.492,
+        "ev": -0.1537,
         "derived": true
        },
        {
@@ -6362,19 +6314,19 @@
         "line": null,
         "tw_price": 1.68,
         "fair_odds": 2.01,
-        "fair_prob": 0.4983,
-        "ev": -0.1629,
+        "fair_prob": 0.4973,
+        "ev": -0.1646,
         "derived": true
        },
        {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分0:2 和",
-        "line": 2.0,
-        "tw_price": 3.95,
-        "fair_odds": 4.85,
-        "fair_prob": 0.2062,
-        "ev": -0.1854,
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 1.8,
+        "fair_odds": 2.17,
+        "fair_prob": 0.4616,
+        "ev": -0.1692,
         "derived": true
        },
        {
@@ -6383,9 +6335,20 @@
         "selection": "尤文圖斯 小 1.5",
         "line": 1.5,
         "tw_price": 1.96,
-        "fair_odds": 2.47,
-        "fair_prob": 0.4047,
-        "ev": -0.2067,
+        "fair_odds": 2.38,
+        "fair_prob": 0.421,
+        "ev": -0.1748,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:1 客（尤文圖斯）",
+        "line": 1.0,
+        "tw_price": 2.2,
+        "fair_odds": 2.68,
+        "fair_prob": 0.3736,
+        "ev": -0.1781,
         "derived": true
        },
        {
@@ -6394,9 +6357,9 @@
         "selection": "讓分0:1 主（萊切）",
         "line": 1.0,
         "tw_price": 2.25,
-        "fair_odds": 2.97,
-        "fair_prob": 0.3365,
-        "ev": -0.243,
+        "fair_odds": 2.76,
+        "fair_prob": 0.3619,
+        "ev": -0.1856,
         "derived": true
        },
        {
@@ -6405,9 +6368,42 @@
         "selection": "萊切 大 0.5",
         "line": 0.5,
         "tw_price": 1.52,
-        "fair_odds": 2.02,
-        "fair_prob": 0.4941,
-        "ev": -0.249,
+        "fair_odds": 1.9,
+        "fair_prob": 0.5259,
+        "ev": -0.2006,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分0:2 和",
+        "line": 2.0,
+        "tw_price": 3.95,
+        "fair_odds": 5.04,
+        "fair_prob": 0.1984,
+        "ev": -0.2163,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:2 客（尤文圖斯）",
+        "line": 2.0,
+        "tw_price": 3.95,
+        "fair_odds": 5.15,
+        "fair_prob": 0.1942,
+        "ev": -0.2328,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 5.2,
+        "fair_odds": 6.89,
+        "fair_prob": 0.145,
+        "ev": -0.2458,
         "derived": true
        },
        {
@@ -6430,17 +6426,6 @@
         "fair_odds": 3.02,
         "fair_prob": 0.331,
         "ev": -0.2719,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 5.2,
-        "fair_odds": 7.59,
-        "fair_prob": 0.1318,
-        "ev": -0.3147,
         "derived": true
        }
       ]
@@ -6534,25 +6519,24 @@
       "books": 23,
       "h2h": {
        "home": {
-        "fair": 0.1911,
-        "fair_odds": 5.23,
-        "best": 5.4,
-        "book": "betfair_ex_eu"
+        "fair": 0.2067,
+        "fair_odds": 4.84,
+        "best": 4.8,
+        "book": "unibet_se"
        },
        "draw": {
-        "fair": 0.2491,
-        "fair_odds": 4.02,
-        "best": 3.9,
+        "fair": 0.2589,
+        "fair_odds": 3.86,
+        "best": 3.79,
         "book": "onexbet"
        },
        "away": {
-        "fair": 0.5599,
-        "fair_odds": 1.79,
-        "best": 1.8,
-        "book": "onexbet"
+        "fair": 0.5344,
+        "fair_odds": 1.87,
+        "best": 1.88,
+        "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
@@ -6583,27 +6567,27 @@
       "home_zh": "烏迪內斯",
       "away_zh": "AC米蘭",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T08:47+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 3.65,
-        "fair_odds": 5.23,
-        "fair_prob": 0.1911,
-        "ev": -0.3025
+        "fair_odds": 4.84,
+        "fair_prob": 0.2067,
+        "ev": -0.2455
        },
        "draw": {
         "price": 3.05,
-        "fair_odds": 4.02,
-        "fair_prob": 0.2491,
-        "ev": -0.2402
+        "fair_odds": 3.86,
+        "fair_prob": 0.2589,
+        "ev": -0.2104
        },
        "away": {
         "price": 1.65,
-        "fair_odds": 1.79,
-        "fair_prob": 0.5599,
-        "ev": -0.0762
+        "fair_odds": 1.87,
+        "fair_prob": 0.5344,
+        "ev": -0.1182
        }
       },
       "totals": {
@@ -6630,9 +6614,9 @@
         "selection": "讓分1:0 客（AC米蘭）",
         "line": -1.0,
         "tw_price": 1.16,
-        "fair_odds": 1.24,
-        "fair_prob": 0.8089,
-        "ev": -0.0617,
+        "fair_odds": 1.26,
+        "fair_prob": 0.7933,
+        "ev": -0.0798,
         "derived": true
        },
        {
@@ -6647,14 +6631,14 @@
         "derived": true
        },
        {
-        "market": "AC米蘭 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "AC米蘭 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.72,
-        "fair_odds": 1.9,
-        "fair_prob": 0.5263,
-        "ev": -0.0947,
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_yes",
+        "selection": "兩隊都進球：是",
+        "line": null,
+        "tw_price": 1.65,
+        "fair_odds": 1.83,
+        "fair_prob": 0.5468,
+        "ev": -0.0978,
         "derived": true
        },
        {
@@ -6669,25 +6653,25 @@
         "derived": true
        },
        {
-        "market": "烏迪內斯 大小 0.5",
-        "selection_key": "team_home_under",
-        "selection": "烏迪內斯 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.2,
-        "fair_odds": 2.47,
-        "fair_prob": 0.4045,
-        "ev": -0.1102,
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:2 主（烏迪內斯）",
+        "line": 2.0,
+        "tw_price": 1.26,
+        "fair_odds": 1.43,
+        "fair_prob": 0.6994,
+        "ev": -0.1187,
         "derived": true
        },
        {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
-        "line": null,
-        "tw_price": 1.65,
-        "fair_odds": 1.86,
-        "fair_prob": 0.5371,
-        "ev": -0.1138,
+        "market": "AC米蘭 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "AC米蘭 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.72,
+        "fair_odds": 1.95,
+        "fair_prob": 0.5116,
+        "ev": -0.12,
         "derived": true
        },
        {
@@ -6696,64 +6680,9 @@
         "selection": "總進球：單",
         "line": null,
         "tw_price": 1.76,
-        "fair_odds": 1.99,
-        "fair_prob": 0.5013,
-        "ev": -0.1176,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 2.15,
-        "fair_odds": 2.44,
-        "fair_prob": 0.4099,
-        "ev": -0.1188,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分0:1 和",
-        "line": 1.0,
-        "tw_price": 3.4,
-        "fair_odds": 3.9,
-        "fair_prob": 0.2561,
-        "ev": -0.1291,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:1 客（AC米蘭）",
-        "line": 1.0,
-        "tw_price": 2.85,
-        "fair_odds": 3.29,
-        "fair_prob": 0.3037,
-        "ev": -0.1344,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:2 主（烏迪內斯）",
-        "line": 2.0,
-        "tw_price": 1.26,
-        "fair_odds": 1.47,
-        "fair_prob": 0.6794,
-        "ev": -0.144,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 2.05,
-        "fair_odds": 2.44,
-        "fair_prob": 0.4094,
-        "ev": -0.1607,
+        "fair_odds": 2.0,
+        "fair_prob": 0.5,
+        "ev": -0.12,
         "derived": true
        },
        {
@@ -6762,31 +6691,53 @@
         "selection": "烏迪內斯 大 0.5",
         "line": 0.5,
         "tw_price": 1.4,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5955,
-        "ev": -0.1662,
+        "fair_odds": 1.62,
+        "fair_prob": 0.6169,
+        "ev": -0.1364,
         "derived": true
        },
        {
-        "market": "[總分]單雙",
-        "selection_key": "even",
-        "selection": "總進球：雙",
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
         "line": null,
-        "tw_price": 1.66,
-        "fair_odds": 2.01,
-        "fair_prob": 0.4987,
-        "ev": -0.1722,
+        "tw_price": 2.15,
+        "fair_odds": 2.53,
+        "fair_prob": 0.3952,
+        "ev": -0.1504,
         "derived": true
        },
        {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分0:1 和",
+        "line": 1.0,
+        "tw_price": 3.4,
+        "fair_odds": 4.0,
+        "fair_prob": 0.2498,
+        "ev": -0.1506,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_draw",
+        "selection": "上半場 和局",
         "line": null,
-        "tw_price": 1.78,
-        "fair_odds": 2.16,
-        "fair_prob": 0.4629,
-        "ev": -0.176,
+        "tw_price": 2.05,
+        "fair_odds": 2.43,
+        "fair_prob": 0.4123,
+        "ev": -0.1547,
+        "derived": true
+       },
+       {
+        "market": "烏迪內斯 大小 0.5",
+        "selection_key": "team_home_under",
+        "selection": "烏迪內斯 小 0.5",
+        "line": 0.5,
+        "tw_price": 2.2,
+        "fair_odds": 2.61,
+        "fair_prob": 0.3831,
+        "ev": -0.1571,
         "derived": true
        },
        {
@@ -6795,20 +6746,9 @@
         "selection": "AC米蘭 小 1.5",
         "line": 1.5,
         "tw_price": 1.72,
-        "fair_odds": 2.11,
-        "fair_prob": 0.4737,
-        "ev": -0.1853,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:2 客（AC米蘭）",
-        "line": 2.0,
-        "tw_price": 5.55,
-        "fair_odds": 6.87,
-        "fair_prob": 0.1456,
-        "ev": -0.1919,
+        "fair_odds": 2.05,
+        "fair_prob": 0.4884,
+        "ev": -0.16,
         "derived": true
        },
        {
@@ -6817,20 +6757,53 @@
         "selection": "讓分0:1 主（烏迪內斯）",
         "line": 1.0,
         "tw_price": 1.8,
-        "fair_odds": 2.27,
-        "fair_prob": 0.4402,
-        "ev": -0.2077,
+        "fair_odds": 2.15,
+        "fair_prob": 0.4656,
+        "ev": -0.1619,
         "derived": true
        },
        {
-        "market": "讓分 0:2",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分0:2 和",
-        "line": 2.0,
-        "tw_price": 4.45,
-        "fair_odds": 5.71,
-        "fair_prob": 0.175,
-        "ev": -0.2212,
+        "market": "[總分]單雙",
+        "selection_key": "even",
+        "selection": "總進球：雙",
+        "line": null,
+        "tw_price": 1.66,
+        "fair_odds": 2.0,
+        "fair_prob": 0.5,
+        "ev": -0.17,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:1 客（AC米蘭）",
+        "line": 1.0,
+        "tw_price": 2.85,
+        "fair_odds": 3.51,
+        "fair_prob": 0.2846,
+        "ev": -0.189,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_no",
+        "selection": "兩隊都進球：否",
+        "line": null,
+        "tw_price": 1.78,
+        "fair_odds": 2.21,
+        "fair_prob": 0.4532,
+        "ev": -0.1933,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 4.1,
+        "fair_odds": 5.19,
+        "fair_prob": 0.1925,
+        "ev": -0.2107,
         "derived": true
        },
        {
@@ -6856,14 +6829,25 @@
         "derived": true
        },
        {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 4.1,
-        "fair_odds": 5.53,
-        "fair_prob": 0.1807,
-        "ev": -0.2592,
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分0:2 和",
+        "line": 2.0,
+        "tw_price": 4.45,
+        "fair_odds": 5.97,
+        "fair_prob": 0.1674,
+        "ev": -0.2549,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:2",
+        "selection_key": "hcp3_away",
+        "selection": "讓分0:2 客（AC米蘭）",
+        "line": 2.0,
+        "tw_price": 5.55,
+        "fair_odds": 7.51,
+        "fair_prob": 0.1331,
+        "ev": -0.261,
         "derived": true
        },
        {
@@ -6872,9 +6856,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 4.65,
-        "fair_odds": 7.46,
-        "fair_prob": 0.1341,
-        "ev": -0.3765,
+        "fair_odds": 7.04,
+        "fair_prob": 0.1421,
+        "ev": -0.3391,
         "derived": true
        },
        {
@@ -6883,9 +6867,9 @@
         "selection": "讓分1:0 主（烏迪內斯）",
         "line": -1.0,
         "tw_price": 8.0,
-        "fair_odds": 17.55,
-        "fair_prob": 0.057,
-        "ev": -0.5441,
+        "fair_odds": 15.49,
+        "fair_prob": 0.0646,
+        "ev": -0.4835,
         "derived": true
        }
       ]
@@ -8022,45 +8006,43 @@
       }
      ],
      "market": {
-      "books": 21,
+      "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.4948,
+        "fair": 0.4955,
         "fair_odds": 2.02,
         "best": 2.04,
         "book": "onexbet"
        },
        "draw": {
-        "fair": 0.2661,
-        "fair_odds": 3.76,
-        "best": 3.65,
+        "fair": 0.2665,
+        "fair_odds": 3.75,
+        "best": 3.7,
         "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.2391,
-        "fair_odds": 4.18,
+        "fair": 0.2379,
+        "fair_odds": 4.2,
         "best": 4.3,
         "book": "coolbet"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.5446,
-        "fair_odds": 1.84,
-        "best": 1.83,
-        "book": "unibet_se"
+        "fair": 0.5468,
+        "fair_odds": 1.83,
+        "best": 1.81,
+        "book": "onexbet"
        },
        "under": {
-        "fair": 0.4554,
-        "fair_odds": 2.2,
+        "fair": 0.4532,
+        "fair_odds": 2.21,
         "best": 2.17,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T12:55+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -8074,42 +8056,42 @@
       "home_zh": "摩納哥",
       "away_zh": "里爾",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T20:55+08:00",
+      "fair_at": "2026-10-25T21:22+08:00",
       "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.75,
         "fair_odds": 2.02,
-        "fair_prob": 0.4948,
-        "ev": -0.1341
+        "fair_prob": 0.4955,
+        "ev": -0.1329
        },
        "draw": {
         "price": 3.1,
-        "fair_odds": 3.76,
-        "fair_prob": 0.2661,
-        "ev": -0.1751
+        "fair_odds": 3.75,
+        "fair_prob": 0.2665,
+        "ev": -0.1738
        },
        "away": {
         "price": 3.3,
-        "fair_odds": 4.18,
-        "fair_prob": 0.2391,
-        "ev": -0.211
+        "fair_odds": 4.2,
+        "fair_prob": 0.2379,
+        "ev": -0.2149
        }
       },
       "totals": {
        "line": 2.5,
        "over": {
         "price": 1.58,
-        "fair_odds": 1.84,
-        "fair_prob": 0.5446,
-        "ev": -0.1395
+        "fair_odds": 1.83,
+        "fair_prob": 0.5468,
+        "ev": -0.1361
        },
        "under": {
         "price": 1.86,
-        "fair_odds": 2.2,
-        "fair_prob": 0.4554,
-        "ev": -0.153
+        "fair_odds": 2.21,
+        "fair_prob": 0.4532,
+        "ev": -0.157
        }
       },
       "spread": null,
@@ -8122,19 +8104,8 @@
         "line": 1.0,
         "tw_price": 1.2,
         "fair_odds": 1.31,
-        "fair_prob": 0.7609,
-        "ev": -0.0869,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
-        "line": -1.0,
-        "tw_price": 3.55,
-        "fair_odds": 3.91,
-        "fair_prob": 0.2556,
-        "ev": -0.0925,
+        "fair_prob": 0.7621,
+        "ev": -0.0855,
         "derived": true
        },
        {
@@ -8143,9 +8114,20 @@
         "selection": "上半場 小 1.5",
         "line": 1.5,
         "tw_price": 1.4,
-        "fair_odds": 1.54,
-        "fair_prob": 0.6482,
-        "ev": -0.0925,
+        "fair_odds": 1.55,
+        "fair_prob": 0.6465,
+        "ev": -0.0949,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分1:0 和",
+        "line": -1.0,
+        "tw_price": 3.55,
+        "fair_odds": 3.92,
+        "fair_prob": 0.2549,
+        "ev": -0.0953,
         "derived": true
        },
        {
@@ -8155,8 +8137,8 @@
         "line": 1.5,
         "tw_price": 1.32,
         "fair_odds": 1.46,
-        "fair_prob": 0.6839,
-        "ev": -0.0972,
+        "fair_prob": 0.6832,
+        "ev": -0.0982,
         "derived": true
        },
        {
@@ -8165,9 +8147,9 @@
         "selection": "小 3.5",
         "line": 3.5,
         "tw_price": 1.33,
-        "fair_odds": 1.47,
-        "fair_prob": 0.6787,
-        "ev": -0.0974,
+        "fair_odds": 1.48,
+        "fair_prob": 0.6766,
+        "ev": -0.1001,
         "derived": true
        },
        {
@@ -8177,8 +8159,8 @@
         "line": null,
         "tw_price": 1.52,
         "fair_odds": 1.71,
-        "fair_prob": 0.5846,
-        "ev": -0.1114,
+        "fair_prob": 0.5862,
+        "ev": -0.109,
         "derived": true
        },
        {
@@ -8188,8 +8170,8 @@
         "line": null,
         "tw_price": 1.76,
         "fair_odds": 2.01,
-        "fair_prob": 0.4979,
-        "ev": -0.1236,
+        "fair_prob": 0.4976,
+        "ev": -0.1242,
         "derived": true
        },
        {
@@ -8198,9 +8180,9 @@
         "selection": "摩納哥 大 1.5",
         "line": 1.5,
         "tw_price": 1.68,
-        "fair_odds": 1.95,
-        "fair_prob": 0.5123,
-        "ev": -0.1393,
+        "fair_odds": 1.94,
+        "fair_prob": 0.5146,
+        "ev": -0.1354,
         "derived": true
        },
        {
@@ -8210,8 +8192,8 @@
         "line": -1.0,
         "tw_price": 1.7,
         "fair_odds": 1.98,
-        "fair_prob": 0.5052,
-        "ev": -0.1412,
+        "fair_prob": 0.5045,
+        "ev": -0.1424,
         "derived": true
        },
        {
@@ -8220,9 +8202,9 @@
         "selection": "摩納哥 小 1.5",
         "line": 1.5,
         "tw_price": 1.75,
-        "fair_odds": 2.05,
-        "fair_prob": 0.4877,
-        "ev": -0.1466,
+        "fair_odds": 2.06,
+        "fair_prob": 0.4854,
+        "ev": -0.1506,
         "derived": true
        },
        {
@@ -8231,9 +8213,20 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.1,
-        "fair_odds": 2.49,
-        "fair_prob": 0.4011,
-        "ev": -0.1577,
+        "fair_odds": 2.5,
+        "fair_prob": 0.4001,
+        "ev": -0.1598,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 2.2,
+        "fair_odds": 2.63,
+        "fair_prob": 0.3798,
+        "ev": -0.1645,
         "derived": true
        },
        {
@@ -8243,19 +8236,8 @@
         "line": null,
         "tw_price": 1.66,
         "fair_odds": 1.99,
-        "fair_prob": 0.5021,
-        "ev": -0.1666,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 2.2,
-        "fair_odds": 2.64,
-        "fair_prob": 0.3786,
-        "ev": -0.167,
+        "fair_prob": 0.5024,
+        "ev": -0.1661,
         "derived": true
        },
        {
@@ -8265,8 +8247,8 @@
         "line": null,
         "tw_price": 3.7,
         "fair_odds": 4.54,
-        "fair_prob": 0.2203,
-        "ev": -0.185,
+        "fair_prob": 0.2201,
+        "ev": -0.1856,
         "derived": true
        },
        {
@@ -8275,9 +8257,9 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 1.94,
-        "fair_odds": 2.41,
-        "fair_prob": 0.4154,
-        "ev": -0.1941,
+        "fair_odds": 2.42,
+        "fair_prob": 0.4138,
+        "ev": -0.1971,
         "derived": true
        },
        {
@@ -8286,9 +8268,9 @@
         "selection": "上半場 大 1.5",
         "line": 1.5,
         "tw_price": 2.2,
-        "fair_odds": 2.84,
-        "fair_prob": 0.3518,
-        "ev": -0.226,
+        "fair_odds": 2.83,
+        "fair_prob": 0.3535,
+        "ev": -0.2223,
         "derived": true
        },
        {
@@ -8298,8 +8280,8 @@
         "line": 1.5,
         "tw_price": 2.4,
         "fair_odds": 3.16,
-        "fair_prob": 0.3161,
-        "ev": -0.2414,
+        "fair_prob": 0.3168,
+        "ev": -0.2396,
         "derived": true
        },
        {
@@ -8308,9 +8290,9 @@
         "selection": "大 3.5",
         "line": 3.5,
         "tw_price": 2.35,
-        "fair_odds": 3.11,
-        "fair_prob": 0.3213,
-        "ev": -0.2449,
+        "fair_odds": 3.09,
+        "fair_prob": 0.3234,
+        "ev": -0.24,
         "derived": true
        },
        {
@@ -8319,9 +8301,9 @@
         "selection": "讓分1:0 主（摩納哥）",
         "line": -1.0,
         "tw_price": 2.95,
-        "fair_odds": 4.18,
-        "fair_prob": 0.2392,
-        "ev": -0.2944,
+        "fair_odds": 4.15,
+        "fair_prob": 0.2407,
+        "ev": -0.2899,
         "derived": true
        },
        {
@@ -8330,9 +8312,9 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 4.55,
-        "fair_odds": 6.91,
-        "fair_prob": 0.1447,
-        "ev": -0.3414,
+        "fair_odds": 6.96,
+        "fair_prob": 0.1437,
+        "ev": -0.3462,
         "derived": true
        },
        {
@@ -8341,9 +8323,9 @@
         "selection": "讓分0:1 客（里爾）",
         "line": 1.0,
         "tw_price": 6.75,
-        "fair_odds": 10.6,
-        "fair_prob": 0.0944,
-        "ev": -0.3631,
+        "fair_odds": 10.61,
+        "fair_prob": 0.0942,
+        "ev": -0.3639,
         "derived": true
        }
       ]
@@ -8437,42 +8419,40 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.6483,
-        "fair_odds": 1.54,
-        "best": 1.57,
+        "fair": 0.6654,
+        "fair_odds": 1.5,
+        "best": 1.53,
         "book": "onexbet"
        },
        "draw": {
-        "fair": 0.1915,
-        "fair_odds": 5.22,
-        "best": 5.1,
+        "fair": 0.1858,
+        "fair_odds": 5.38,
+        "best": 5.2,
         "book": "betfair_ex_eu"
        },
        "away": {
-        "fair": 0.1602,
-        "fair_odds": 6.24,
-        "best": 6.2,
+        "fair": 0.1488,
+        "fair_odds": 6.72,
+        "best": 6.6,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T05:17+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 3.5,
        "over": {
-        "fair": 0.3923,
-        "fair_odds": 2.55,
-        "best": 2.46,
-        "book": "onexbet"
+        "fair": 0.4106,
+        "fair_odds": 2.44,
+        "best": 2.35,
+        "book": "unibet_se"
        },
        "under": {
-        "fair": 0.6077,
-        "fair_odds": 1.65,
-        "best": 1.64,
+        "fair": 0.5894,
+        "fair_odds": 1.7,
+        "best": 1.7,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -8486,42 +8466,42 @@
       "home_zh": "馬賽",
       "away_zh": "勒哈佛爾",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T13:17+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.35,
-        "fair_odds": 1.54,
-        "fair_prob": 0.6483,
-        "ev": -0.1248
+        "fair_odds": 1.5,
+        "fair_prob": 0.6654,
+        "ev": -0.1017
        },
        "draw": {
         "price": 3.9,
-        "fair_odds": 5.22,
-        "fair_prob": 0.1915,
-        "ev": -0.2531
+        "fair_odds": 5.38,
+        "fair_prob": 0.1858,
+        "ev": -0.2754
        },
        "away": {
         "price": 4.7,
-        "fair_odds": 6.24,
-        "fair_prob": 0.1602,
-        "ev": -0.2471
+        "fair_odds": 6.72,
+        "fair_prob": 0.1488,
+        "ev": -0.3006
        }
       },
       "totals": {
        "line": 3.5,
        "over": {
         "price": 1.96,
-        "fair_odds": 2.55,
-        "fair_prob": 0.3923,
-        "ev": -0.2311
+        "fair_odds": 2.44,
+        "fair_prob": 0.4106,
+        "ev": -0.1952
        },
        "under": {
         "price": 1.5,
-        "fair_odds": 1.65,
-        "fair_prob": 0.6077,
-        "ev": -0.0884
+        "fair_odds": 1.7,
+        "fair_prob": 0.5894,
+        "ev": -0.1159
        }
       },
       "spread": null,
@@ -8533,9 +8513,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 3.55,
-        "fair_odds": 3.62,
-        "fair_prob": 0.2763,
-        "ev": -0.019,
+        "fair_odds": 3.7,
+        "fair_prob": 0.2702,
+        "ev": -0.0407,
         "derived": true
        },
        {
@@ -8544,9 +8524,9 @@
         "selection": "讓分2:0 客（勒哈佛爾）",
         "line": -2.0,
         "tw_price": 1.55,
-        "fair_odds": 1.59,
-        "fair_prob": 0.63,
-        "ev": -0.0235,
+        "fair_odds": 1.64,
+        "fair_prob": 0.6088,
+        "ev": -0.0563,
         "derived": true
        },
        {
@@ -8555,20 +8535,9 @@
         "selection": "小 4.5",
         "line": 4.5,
         "tw_price": 1.2,
-        "fair_odds": 1.27,
-        "fair_prob": 0.7847,
-        "ev": -0.0583,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_under",
-        "selection": "上半場 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.55,
-        "fair_odds": 1.69,
-        "fair_prob": 0.5923,
-        "ev": -0.082,
+        "fair_odds": 1.3,
+        "fair_prob": 0.77,
+        "ev": -0.076,
         "derived": true
        },
        {
@@ -8578,19 +8547,30 @@
         "line": 0.5,
         "tw_price": 1.38,
         "fair_odds": 1.51,
-        "fair_prob": 0.6641,
-        "ev": -0.0835,
+        "fair_prob": 0.6619,
+        "ev": -0.0865,
         "derived": true
        },
        {
-        "market": "馬賽 大小 2.5",
-        "selection_key": "team_home_under",
-        "selection": "馬賽 小 2.5",
+        "market": "[上半場]大小 1.5",
+        "selection_key": "ht_under",
+        "selection": "上半場 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.55,
+        "fair_odds": 1.73,
+        "fair_prob": 0.578,
+        "ev": -0.1041,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 2.5",
+        "selection_key": "over",
+        "selection": "大 2.5",
         "line": 2.5,
-        "tw_price": 1.45,
-        "fair_odds": 1.6,
-        "fair_prob": 0.6256,
-        "ev": -0.0928,
+        "tw_price": 1.4,
+        "fair_odds": 1.58,
+        "fair_prob": 0.6323,
+        "ev": -0.1148,
         "derived": true
        },
        {
@@ -8600,8 +8580,8 @@
         "line": null,
         "tw_price": 1.73,
         "fair_odds": 1.97,
-        "fair_prob": 0.5072,
-        "ev": -0.1226,
+        "fair_prob": 0.5065,
+        "ev": -0.1237,
         "derived": true
        },
        {
@@ -8610,53 +8590,20 @@
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.52,
-        "fair_odds": 1.75,
-        "fair_prob": 0.5715,
-        "ev": -0.1314,
+        "fair_odds": 1.74,
+        "fair_prob": 0.5755,
+        "ev": -0.1253,
         "derived": true
        },
        {
-        "market": "[總分]大小 2.5",
-        "selection_key": "over",
-        "selection": "大 2.5",
+        "market": "馬賽 大小 2.5",
+        "selection_key": "team_home_under",
+        "selection": "馬賽 小 2.5",
         "line": 2.5,
-        "tw_price": 1.4,
-        "fair_odds": 1.63,
-        "fair_prob": 0.6152,
-        "ev": -0.1387,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 2.4,
-        "fair_odds": 2.82,
-        "fair_prob": 0.3546,
-        "ev": -0.1491,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "under",
-        "selection": "小 2.5",
-        "line": 2.5,
-        "tw_price": 2.2,
-        "fair_odds": 2.6,
-        "fair_prob": 0.3848,
-        "ev": -0.1535,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（勒哈佛爾）",
-        "line": -1.0,
-        "tw_price": 2.4,
-        "fair_odds": 2.84,
-        "fair_prob": 0.3517,
-        "ev": -0.1559,
+        "tw_price": 1.45,
+        "fair_odds": 1.66,
+        "fair_prob": 0.602,
+        "ev": -0.1272,
         "derived": true
        },
        {
@@ -8665,9 +8612,9 @@
         "selection": "上半場 主勝",
         "line": null,
         "tw_price": 1.75,
-        "fair_odds": 2.08,
-        "fair_prob": 0.4811,
-        "ev": -0.158,
+        "fair_odds": 2.01,
+        "fair_prob": 0.4969,
+        "ev": -0.1304,
         "derived": true
        },
        {
@@ -8677,30 +8624,19 @@
         "line": null,
         "tw_price": 1.7,
         "fair_odds": 2.03,
-        "fair_prob": 0.4928,
-        "ev": -0.1622,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
-        "line": null,
-        "tw_price": 1.94,
-        "fair_odds": 2.33,
-        "fair_prob": 0.4285,
-        "ev": -0.1686,
+        "fair_prob": 0.4935,
+        "ev": -0.1611,
         "derived": true
        },
        {
         "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
+        "selection_key": "ht_draw",
+        "selection": "上半場 和局",
         "line": null,
-        "tw_price": 4.85,
-        "fair_odds": 6.09,
-        "fair_prob": 0.1643,
-        "ev": -0.203,
+        "tw_price": 2.4,
+        "fair_odds": 2.9,
+        "fair_prob": 0.3446,
+        "ev": -0.1731,
         "derived": true
        },
        {
@@ -8709,9 +8645,42 @@
         "selection": "馬賽 大 2.5",
         "line": 2.5,
         "tw_price": 2.07,
-        "fair_odds": 2.67,
-        "fair_prob": 0.3744,
-        "ev": -0.2251,
+        "fair_odds": 2.51,
+        "fair_prob": 0.398,
+        "ev": -0.1761,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_no",
+        "selection": "兩隊都進球：否",
+        "line": null,
+        "tw_price": 1.94,
+        "fair_odds": 2.36,
+        "fair_prob": 0.4245,
+        "ev": -0.1764,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 2.5",
+        "selection_key": "under",
+        "selection": "小 2.5",
+        "line": 2.5,
+        "tw_price": 2.2,
+        "fair_odds": 2.72,
+        "fair_prob": 0.3677,
+        "ev": -0.191,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（勒哈佛爾）",
+        "line": -1.0,
+        "tw_price": 2.4,
+        "fair_odds": 2.99,
+        "fair_prob": 0.3346,
+        "ev": -0.197,
         "derived": true
        },
        {
@@ -8720,31 +8689,9 @@
         "selection": "上半場 大 1.5",
         "line": 1.5,
         "tw_price": 1.9,
-        "fair_odds": 2.45,
-        "fair_prob": 0.4077,
-        "ev": -0.2253,
-        "derived": true
-       },
-       {
-        "market": "勒哈佛爾 大小 0.5",
-        "selection_key": "team_away_under",
-        "selection": "勒哈佛爾 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.25,
-        "fair_odds": 2.98,
-        "fair_prob": 0.3359,
-        "ev": -0.2442,
-        "derived": true
-       },
-       {
-        "market": "讓分 2:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分2:0 和",
-        "line": -2.0,
-        "tw_price": 4.0,
-        "fair_odds": 5.35,
-        "fair_prob": 0.1869,
-        "ev": -0.2523,
+        "fair_odds": 2.37,
+        "fair_prob": 0.422,
+        "ev": -0.1982,
         "derived": true
        },
        {
@@ -8753,20 +8700,42 @@
         "selection": "讓分1:0 主（馬賽）",
         "line": -1.0,
         "tw_price": 2.0,
-        "fair_odds": 2.69,
-        "fair_prob": 0.372,
-        "ev": -0.2561,
+        "fair_odds": 2.53,
+        "fair_prob": 0.3952,
+        "ev": -0.2096,
         "derived": true
        },
        {
-        "market": "[總分]大小 4.5",
-        "selection_key": "over",
-        "selection": "大 4.5",
-        "line": 4.5,
-        "tw_price": 2.95,
-        "fair_odds": 4.65,
-        "fair_prob": 0.2153,
-        "ev": -0.365,
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 4.85,
+        "fair_odds": 6.31,
+        "fair_prob": 0.1585,
+        "ev": -0.2312,
+        "derived": true
+       },
+       {
+        "market": "讓分 2:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分2:0 和",
+        "line": -2.0,
+        "tw_price": 4.0,
+        "fair_odds": 5.23,
+        "fair_prob": 0.1912,
+        "ev": -0.2353,
+        "derived": true
+       },
+       {
+        "market": "勒哈佛爾 大小 0.5",
+        "selection_key": "team_away_under",
+        "selection": "勒哈佛爾 小 0.5",
+        "line": 0.5,
+        "tw_price": 2.25,
+        "fair_odds": 2.96,
+        "fair_prob": 0.3381,
+        "ev": -0.2394,
         "derived": true
        },
        {
@@ -8775,9 +8744,20 @@
         "selection": "讓分2:0 主（馬賽）",
         "line": -2.0,
         "tw_price": 3.4,
-        "fair_odds": 5.46,
-        "fair_prob": 0.1831,
-        "ev": -0.3775,
+        "fair_odds": 5.0,
+        "fair_prob": 0.2,
+        "ev": -0.3201,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 4.5",
+        "selection_key": "over",
+        "selection": "大 4.5",
+        "line": 4.5,
+        "tw_price": 2.95,
+        "fair_odds": 4.35,
+        "fair_prob": 0.23,
+        "ev": -0.3216,
         "derived": true
        }
       ]
@@ -8871,42 +8851,40 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.5454,
-        "fair_odds": 1.83,
-        "best": 1.86,
-        "book": "betfair_ex_eu"
-       },
-       "draw": {
-        "fair": 0.2189,
-        "fair_odds": 4.57,
-        "best": 4.4,
-        "book": "betfair_ex_eu"
-       },
-       "away": {
-        "fair": 0.2357,
-        "fair_odds": 4.24,
-        "best": 4.21,
-        "book": "onexbet"
-       },
-       "odds_at": "2026-10-25T05:17+00:00",
-       "stale": true
-      },
-      "totals": {
-       "line": 3.5,
-       "over": {
-        "fair": 0.4495,
-        "fair_odds": 2.22,
-        "best": 2.2,
-        "book": "unibet_se"
-       },
-       "under": {
-        "fair": 0.5505,
+        "fair": 0.549,
         "fair_odds": 1.82,
         "best": 1.83,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "draw": {
+        "fair": 0.2196,
+        "fair_odds": 4.55,
+        "best": 4.4,
+        "book": "betfair_ex_eu"
+       },
+       "away": {
+        "fair": 0.2315,
+        "fair_odds": 4.32,
+        "best": 4.3,
+        "book": "betfair_ex_eu"
+       },
+       "odds_at": "2026-10-25T13:22+00:00"
+      },
+      "totals": {
+       "line": 3.5,
+       "over": {
+        "fair": 0.4455,
+        "fair_odds": 2.24,
+        "best": 2.2,
+        "book": "unibet_se"
+       },
+       "under": {
+        "fair": 0.5545,
+        "fair_odds": 1.8,
+        "best": 1.83,
+        "book": "onexbet"
+       },
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -8920,42 +8898,42 @@
       "home_zh": "雷恩",
       "away_zh": "史特拉斯堡",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T13:17+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.6,
-        "fair_odds": 1.83,
-        "fair_prob": 0.5454,
-        "ev": -0.1274
+        "fair_odds": 1.82,
+        "fair_prob": 0.549,
+        "ev": -0.1216
        },
        "draw": {
         "price": 3.5,
-        "fair_odds": 4.57,
-        "fair_prob": 0.2189,
-        "ev": -0.2339
+        "fair_odds": 4.55,
+        "fair_prob": 0.2196,
+        "ev": -0.2314
        },
        "away": {
         "price": 3.35,
-        "fair_odds": 4.24,
-        "fair_prob": 0.2357,
-        "ev": -0.2104
+        "fair_odds": 4.32,
+        "fair_prob": 0.2315,
+        "ev": -0.2245
        }
       },
       "totals": {
        "line": 3.5,
        "over": {
         "price": 1.88,
-        "fair_odds": 2.22,
-        "fair_prob": 0.4495,
-        "ev": -0.1549
+        "fair_odds": 2.24,
+        "fair_prob": 0.4455,
+        "ev": -0.1625
        },
        "under": {
         "price": 1.56,
-        "fair_odds": 1.82,
-        "fair_prob": 0.5505,
-        "ev": -0.1412
+        "fair_odds": 1.8,
+        "fair_prob": 0.5545,
+        "ev": -0.135
        }
       },
       "spread": null,
@@ -8967,9 +8945,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 3.7,
-        "fair_odds": 3.99,
-        "fair_prob": 0.2508,
-        "ev": -0.0719,
+        "fair_odds": 3.98,
+        "fair_prob": 0.2515,
+        "ev": -0.0693,
         "derived": true
        },
        {
@@ -8979,8 +8957,8 @@
         "line": -2.0,
         "tw_price": 1.3,
         "fair_odds": 1.41,
-        "fair_prob": 0.7109,
-        "ev": -0.0758,
+        "fair_prob": 0.708,
+        "ev": -0.0796,
         "derived": true
        },
        {
@@ -8989,20 +8967,9 @@
         "selection": "讓分0:1 主（雷恩）",
         "line": 1.0,
         "tw_price": 1.19,
-        "fair_odds": 1.31,
-        "fair_prob": 0.7643,
-        "ev": -0.0905,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "over",
-        "selection": "大 2.5",
-        "line": 2.5,
-        "tw_price": 1.35,
-        "fair_odds": 1.5,
-        "fair_prob": 0.6672,
-        "ev": -0.0993,
+        "fair_odds": 1.3,
+        "fair_prob": 0.7685,
+        "ev": -0.0855,
         "derived": true
        },
        {
@@ -9011,9 +8978,20 @@
         "selection": "小 4.5",
         "line": 4.5,
         "tw_price": 1.22,
-        "fair_odds": 1.36,
-        "fair_prob": 0.7375,
-        "ev": -0.1003,
+        "fair_odds": 1.35,
+        "fair_prob": 0.7409,
+        "ev": -0.0961,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 2.5",
+        "selection_key": "over",
+        "selection": "大 2.5",
+        "line": 2.5,
+        "tw_price": 1.35,
+        "fair_odds": 1.51,
+        "fair_prob": 0.6637,
+        "ev": -0.1041,
         "derived": true
        },
        {
@@ -9022,9 +9000,20 @@
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.38,
-        "fair_odds": 1.54,
-        "fair_prob": 0.648,
-        "ev": -0.1057,
+        "fair_odds": 1.55,
+        "fair_prob": 0.6449,
+        "ev": -0.11,
+        "derived": true
+       },
+       {
+        "market": "史特拉斯堡 大小 1.5",
+        "selection_key": "team_away_under",
+        "selection": "史特拉斯堡 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.43,
+        "fair_odds": 1.61,
+        "fair_prob": 0.6206,
+        "ev": -0.1125,
         "derived": true
        },
        {
@@ -9045,19 +9034,8 @@
         "line": null,
         "tw_price": 1.75,
         "fair_odds": 1.99,
-        "fair_prob": 0.5037,
-        "ev": -0.1185,
-        "derived": true
-       },
-       {
-        "market": "史特拉斯堡 大小 1.5",
-        "selection_key": "team_away_under",
-        "selection": "史特拉斯堡 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.43,
-        "fair_odds": 1.63,
-        "fair_prob": 0.6142,
-        "ev": -0.1217,
+        "fair_prob": 0.5035,
+        "ev": -0.1189,
         "derived": true
        },
        {
@@ -9066,9 +9044,9 @@
         "selection": "上半場 小 1.5",
         "line": 1.5,
         "tw_price": 1.58,
-        "fair_odds": 1.83,
-        "fair_prob": 0.5479,
-        "ev": -0.1343,
+        "fair_odds": 1.81,
+        "fair_prob": 0.551,
+        "ev": -0.1294,
         "derived": true
        },
        {
@@ -9077,20 +9055,9 @@
         "selection": "上半場 主勝",
         "line": null,
         "tw_price": 2.0,
-        "fair_odds": 2.36,
-        "fair_prob": 0.4242,
-        "ev": -0.1516,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（史特拉斯堡）",
-        "line": -1.0,
-        "tw_price": 1.85,
-        "fair_odds": 2.2,
-        "fair_prob": 0.4546,
-        "ev": -0.159,
+        "fair_odds": 2.35,
+        "fair_prob": 0.4262,
+        "ev": -0.1475,
         "derived": true
        },
        {
@@ -9099,9 +9066,20 @@
         "selection": "上半場 大 1.5",
         "line": 1.5,
         "tw_price": 1.86,
-        "fair_odds": 2.21,
-        "fair_prob": 0.4521,
-        "ev": -0.1592,
+        "fair_odds": 2.23,
+        "fair_prob": 0.449,
+        "ev": -0.1649,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（史特拉斯堡）",
+        "line": -1.0,
+        "tw_price": 1.85,
+        "fair_odds": 2.22,
+        "fair_prob": 0.4511,
+        "ev": -0.1655,
         "derived": true
        },
        {
@@ -9110,9 +9088,9 @@
         "selection": "總進球：雙",
         "line": null,
         "tw_price": 1.68,
-        "fair_odds": 2.02,
-        "fair_prob": 0.4963,
-        "ev": -0.1663,
+        "fair_odds": 2.01,
+        "fair_prob": 0.4965,
+        "ev": -0.1658,
         "derived": true
        },
        {
@@ -9121,20 +9099,9 @@
         "selection": "上半場 客勝",
         "line": null,
         "tw_price": 3.65,
-        "fair_odds": 4.42,
-        "fair_prob": 0.2263,
-        "ev": -0.174,
-        "derived": true
-       },
-       {
-        "market": "史特拉斯堡 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "史特拉斯堡 大 1.5",
-        "line": 1.5,
-        "tw_price": 2.1,
-        "fair_odds": 2.59,
-        "fair_prob": 0.3858,
-        "ev": -0.1898,
+        "fair_odds": 4.48,
+        "fair_prob": 0.2234,
+        "ev": -0.1847,
         "derived": true
        },
        {
@@ -9143,9 +9110,20 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.3,
-        "fair_odds": 2.86,
-        "fair_prob": 0.3495,
-        "ev": -0.1961,
+        "fair_odds": 2.85,
+        "fair_prob": 0.3504,
+        "ev": -0.1941,
+        "derived": true
+       },
+       {
+        "market": "兩隊是否都進球",
+        "selection_key": "btts_no",
+        "selection": "兩隊都進球：否",
+        "line": null,
+        "tw_price": 2.25,
+        "fair_odds": 2.82,
+        "fair_prob": 0.3551,
+        "ev": -0.2011,
         "derived": true
        },
        {
@@ -9156,18 +9134,18 @@
         "tw_price": 2.1,
         "fair_odds": 2.63,
         "fair_prob": 0.3796,
-        "ev": -0.2029,
+        "ev": -0.2028,
         "derived": true
        },
        {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
-        "line": null,
-        "tw_price": 2.25,
-        "fair_odds": 2.84,
-        "fair_prob": 0.352,
-        "ev": -0.2081,
+        "market": "史特拉斯堡 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "史特拉斯堡 大 1.5",
+        "line": 1.5,
+        "tw_price": 2.1,
+        "fair_odds": 2.64,
+        "fair_prob": 0.3794,
+        "ev": -0.2033,
         "derived": true
        },
        {
@@ -9176,9 +9154,9 @@
         "selection": "小 2.5",
         "line": 2.5,
         "tw_price": 2.3,
-        "fair_odds": 3.0,
-        "fair_prob": 0.3328,
-        "ev": -0.2345,
+        "fair_odds": 2.97,
+        "fair_prob": 0.3363,
+        "ev": -0.2264,
         "derived": true
        },
        {
@@ -9187,9 +9165,9 @@
         "selection": "讓分1:0 主（雷恩）",
         "line": -1.0,
         "tw_price": 2.55,
-        "fair_odds": 3.39,
-        "fair_prob": 0.2946,
-        "ev": -0.2489,
+        "fair_odds": 3.36,
+        "fair_prob": 0.2974,
+        "ev": -0.2416,
         "derived": true
        },
        {
@@ -9198,9 +9176,9 @@
         "selection": "大 4.5",
         "line": 4.5,
         "tw_price": 2.85,
-        "fair_odds": 3.81,
-        "fair_prob": 0.2625,
-        "ev": -0.2518,
+        "fair_odds": 3.86,
+        "fair_prob": 0.2591,
+        "ev": -0.2616,
         "derived": true
        },
        {
@@ -9209,9 +9187,9 @@
         "selection": "讓分2:0 和",
         "line": -2.0,
         "tw_price": 4.5,
-        "fair_odds": 6.47,
-        "fair_prob": 0.1545,
-        "ev": -0.3049,
+        "fair_odds": 6.42,
+        "fair_prob": 0.1558,
+        "ev": -0.2987,
         "derived": true
        },
        {
@@ -9220,9 +9198,9 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 4.85,
-        "fair_odds": 7.22,
-        "fair_prob": 0.1385,
-        "ev": -0.3282,
+        "fair_odds": 7.32,
+        "fair_prob": 0.1367,
+        "ev": -0.3372,
         "derived": true
        },
        {
@@ -9231,9 +9209,9 @@
         "selection": "讓分0:1 客（史特拉斯堡）",
         "line": 1.0,
         "tw_price": 6.5,
-        "fair_odds": 10.29,
-        "fair_prob": 0.0972,
-        "ev": -0.3684,
+        "fair_odds": 10.55,
+        "fair_prob": 0.0948,
+        "ev": -0.3837,
         "derived": true
        },
        {
@@ -9242,9 +9220,9 @@
         "selection": "讓分2:0 主（雷恩）",
         "line": -2.0,
         "tw_price": 4.5,
-        "fair_odds": 7.43,
-        "fair_prob": 0.1347,
-        "ev": -0.3941,
+        "fair_odds": 7.34,
+        "fair_prob": 0.1362,
+        "ev": -0.3872,
         "derived": true
        }
       ]
@@ -9326,42 +9304,40 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.3187,
-        "fair_odds": 3.14,
-        "best": 3.1,
-        "book": "onexbet"
+        "fair": 0.3152,
+        "fair_odds": 3.17,
+        "best": 3.2,
+        "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2874,
-        "fair_odds": 3.48,
+        "fair": 0.2887,
+        "fair_odds": 3.46,
         "best": 3.4,
         "book": "leovegas_se"
        },
        "away": {
-        "fair": 0.3938,
-        "fair_odds": 2.54,
-        "best": 2.58,
-        "book": "betfair_ex_eu"
+        "fair": 0.3961,
+        "fair_odds": 2.52,
+        "best": 2.52,
+        "book": "onexbet"
        },
-       "odds_at": "2026-10-25T05:17+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.469,
-        "fair_odds": 2.13,
+        "fair": 0.468,
+        "fair_odds": 2.14,
         "best": 2.08,
         "book": "onexbet"
        },
        "under": {
-        "fair": 0.531,
+        "fair": 0.532,
         "fair_odds": 1.88,
         "best": 1.87,
         "book": "onexbet"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -9375,42 +9351,42 @@
       "home_zh": "昂傑",
       "away_zh": "洛里昂",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T13:17+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 2.6,
-        "fair_odds": 3.14,
-        "fair_prob": 0.3187,
-        "ev": -0.1714
+        "fair_odds": 3.17,
+        "fair_prob": 0.3152,
+        "ev": -0.1805
        },
        "draw": {
         "price": 2.85,
-        "fair_odds": 3.48,
-        "fair_prob": 0.2874,
-        "ev": -0.1809
+        "fair_odds": 3.46,
+        "fair_prob": 0.2887,
+        "ev": -0.1772
        },
        "away": {
         "price": 2.15,
-        "fair_odds": 2.54,
-        "fair_prob": 0.3938,
-        "ev": -0.1533
+        "fair_odds": 2.52,
+        "fair_prob": 0.3961,
+        "ev": -0.1484
        }
       },
       "totals": {
        "line": 2.5,
        "over": {
         "price": 1.8,
-        "fair_odds": 2.13,
-        "fair_prob": 0.469,
-        "ev": -0.1558
+        "fair_odds": 2.14,
+        "fair_prob": 0.468,
+        "ev": -0.1576
        },
        "under": {
         "price": 1.63,
         "fair_odds": 1.88,
-        "fair_prob": 0.531,
-        "ev": -0.1345
+        "fair_prob": 0.532,
+        "ev": -0.1328
        }
       },
       "spread": null,
@@ -9423,8 +9399,8 @@
         "line": 1.5,
         "tw_price": 1.25,
         "fair_odds": 1.36,
-        "fair_prob": 0.7336,
-        "ev": -0.083,
+        "fair_prob": 0.7334,
+        "ev": -0.0832,
         "derived": true
        },
        {
@@ -9434,8 +9410,8 @@
         "line": 0.5,
         "tw_price": 1.33,
         "fair_odds": 1.48,
-        "fair_prob": 0.6744,
-        "ev": -0.103,
+        "fair_prob": 0.6738,
+        "ev": -0.1038,
         "derived": true
        },
        {
@@ -9445,8 +9421,19 @@
         "line": null,
         "tw_price": 1.63,
         "fair_odds": 1.82,
-        "fair_prob": 0.5494,
-        "ev": -0.1045,
+        "fair_prob": 0.549,
+        "ev": -0.1052,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（洛里昂）",
+        "line": -1.0,
+        "tw_price": 1.3,
+        "fair_odds": 1.46,
+        "fair_prob": 0.6848,
+        "ev": -0.1098,
         "derived": true
        },
        {
@@ -9456,8 +9443,19 @@
         "line": null,
         "tw_price": 1.78,
         "fair_odds": 2.0,
-        "fair_prob": 0.4994,
-        "ev": -0.1111,
+        "fair_prob": 0.499,
+        "ev": -0.1118,
+        "derived": true
+       },
+       {
+        "market": "昂傑 大小 1.5",
+        "selection_key": "team_home_under",
+        "selection": "昂傑 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.33,
+        "fair_odds": 1.5,
+        "fair_prob": 0.6672,
+        "ev": -0.1127,
         "derived": true
        },
        {
@@ -9467,30 +9465,8 @@
         "line": 1.5,
         "tw_price": 1.46,
         "fair_odds": 1.65,
-        "fair_prob": 0.6076,
-        "ev": -0.1129,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（洛里昂）",
-        "line": -1.0,
-        "tw_price": 1.3,
-        "fair_odds": 1.47,
-        "fair_prob": 0.6813,
-        "ev": -0.1144,
-        "derived": true
-       },
-       {
-        "market": "昂傑 大小 1.5",
-        "selection_key": "team_home_under",
-        "selection": "昂傑 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.33,
-        "fair_odds": 1.51,
-        "fair_prob": 0.6642,
-        "ev": -0.1166,
+        "fair_prob": 0.6061,
+        "ev": -0.115,
         "derived": true
        },
        {
@@ -9499,9 +9475,9 @@
         "selection": "讓分0:1 主（昂傑）",
         "line": 1.0,
         "tw_price": 1.45,
-        "fair_odds": 1.65,
-        "fair_prob": 0.6062,
-        "ev": -0.1211,
+        "fair_odds": 1.66,
+        "fair_prob": 0.6039,
+        "ev": -0.1243,
         "derived": true
        },
        {
@@ -9511,8 +9487,8 @@
         "line": null,
         "tw_price": 1.95,
         "fair_odds": 2.28,
-        "fair_prob": 0.4386,
-        "ev": -0.1448,
+        "fair_prob": 0.4389,
+        "ev": -0.1441,
         "derived": true
        },
        {
@@ -9522,30 +9498,8 @@
         "line": null,
         "tw_price": 1.65,
         "fair_odds": 2.0,
-        "fair_prob": 0.5006,
-        "ev": -0.174,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 3.2,
-        "fair_odds": 3.87,
-        "fair_prob": 0.2581,
-        "ev": -0.1741,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
-        "line": -1.0,
-        "tw_price": 4.0,
-        "fair_odds": 4.87,
-        "fair_prob": 0.2055,
-        "ev": -0.1781,
+        "fair_prob": 0.501,
+        "ev": -0.1734,
         "derived": true
        },
        {
@@ -9554,9 +9508,31 @@
         "selection": "上半場 客勝",
         "line": null,
         "tw_price": 2.7,
-        "fair_odds": 3.3,
-        "fair_prob": 0.3033,
-        "ev": -0.181,
+        "fair_odds": 3.28,
+        "fair_prob": 0.3049,
+        "ev": -0.1768,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 3.2,
+        "fair_odds": 3.9,
+        "fair_prob": 0.2562,
+        "ev": -0.1803,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分1:0 和",
+        "line": -1.0,
+        "tw_price": 4.0,
+        "fair_odds": 4.91,
+        "fair_prob": 0.2035,
+        "ev": -0.1861,
         "derived": true
        },
        {
@@ -9566,8 +9542,8 @@
         "line": null,
         "tw_price": 1.8,
         "fair_odds": 2.22,
-        "fair_prob": 0.4506,
-        "ev": -0.1889,
+        "fair_prob": 0.451,
+        "ev": -0.1882,
         "derived": true
        },
        {
@@ -9576,9 +9552,9 @@
         "selection": "洛里昂 大 1.5",
         "line": 1.5,
         "tw_price": 2.05,
-        "fair_odds": 2.55,
-        "fair_prob": 0.3924,
-        "ev": -0.1955,
+        "fair_odds": 2.54,
+        "fair_prob": 0.3939,
+        "ev": -0.1926,
         "derived": true
        },
        {
@@ -9587,9 +9563,9 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 3.65,
-        "fair_odds": 4.59,
-        "fair_prob": 0.218,
-        "ev": -0.2042,
+        "fair_odds": 4.58,
+        "fair_prob": 0.2185,
+        "ev": -0.2024,
         "derived": true
        },
        {
@@ -9598,9 +9574,9 @@
         "selection": "昂傑 大 1.5",
         "line": 1.5,
         "tw_price": 2.35,
-        "fair_odds": 2.98,
-        "fair_prob": 0.3358,
-        "ev": -0.211,
+        "fair_odds": 3.0,
+        "fair_prob": 0.3328,
+        "ev": -0.2178,
         "derived": true
        },
        {
@@ -9610,8 +9586,8 @@
         "line": 0.5,
         "tw_price": 2.35,
         "fair_odds": 3.07,
-        "fair_prob": 0.3256,
-        "ev": -0.2348,
+        "fair_prob": 0.3262,
+        "ev": -0.2335,
         "derived": true
        },
        {
@@ -9620,9 +9596,9 @@
         "selection": "讓分0:1 客（洛里昂）",
         "line": 1.0,
         "tw_price": 4.15,
-        "fair_odds": 5.69,
-        "fair_prob": 0.1758,
-        "ev": -0.2704,
+        "fair_odds": 5.63,
+        "fair_prob": 0.1776,
+        "ev": -0.263,
         "derived": true
        },
        {
@@ -9632,8 +9608,8 @@
         "line": 1.5,
         "tw_price": 2.7,
         "fair_odds": 3.75,
-        "fair_prob": 0.2664,
-        "ev": -0.2808,
+        "fair_prob": 0.2666,
+        "ev": -0.2803,
         "derived": true
        },
        {
@@ -9642,9 +9618,9 @@
         "selection": "讓分1:0 主（昂傑）",
         "line": -1.0,
         "tw_price": 5.4,
-        "fair_odds": 8.83,
-        "fair_prob": 0.1133,
-        "ev": -0.3884,
+        "fair_odds": 8.95,
+        "fair_prob": 0.1117,
+        "ev": -0.3966,
         "derived": true
        }
       ]
@@ -9710,45 +9686,43 @@
      },
      "h2h": [],
      "market": {
-      "books": 22,
+      "books": 21,
       "h2h": {
        "home": {
-        "fair": 0.6295,
-        "fair_odds": 1.59,
-        "best": 1.63,
-        "book": "coolbet"
+        "fair": 0.6417,
+        "fair_odds": 1.56,
+        "best": 1.57,
+        "book": "onexbet"
        },
        "draw": {
-        "fair": 0.2079,
-        "fair_odds": 4.81,
-        "best": 4.7,
-        "book": "betfair_ex_eu"
+        "fair": 0.2059,
+        "fair_odds": 4.86,
+        "best": 4.62,
+        "book": "onexbet"
        },
        "away": {
-        "fair": 0.1626,
-        "fair_odds": 6.15,
-        "best": 6.6,
+        "fair": 0.1524,
+        "fair_odds": 6.56,
+        "best": 6.8,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-10-25T05:17+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
        "over": {
-        "fair": 0.6036,
-        "fair_odds": 1.66,
-        "best": 1.67,
+        "fair": 0.6131,
+        "fair_odds": 1.63,
+        "best": 1.64,
         "book": "onexbet"
        },
        "under": {
-        "fair": 0.3964,
-        "fair_odds": 2.52,
-        "best": 2.4,
-        "book": "unibet_se"
+        "fair": 0.3869,
+        "fair_odds": 2.58,
+        "best": 2.47,
+        "book": "betsson"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -9762,42 +9736,42 @@
       "home_zh": "圖盧茲",
       "away_zh": "特魯瓦",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T13:17+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.4,
-        "fair_odds": 1.59,
-        "fair_prob": 0.6295,
-        "ev": -0.1187
+        "fair_odds": 1.56,
+        "fair_prob": 0.6417,
+        "ev": -0.1016
        },
        "draw": {
         "price": 3.75,
-        "fair_odds": 4.81,
-        "fair_prob": 0.2079,
-        "ev": -0.2204
+        "fair_odds": 4.86,
+        "fair_prob": 0.2059,
+        "ev": -0.2279
        },
        "away": {
         "price": 4.6,
-        "fair_odds": 6.15,
-        "fair_prob": 0.1626,
-        "ev": -0.252
+        "fair_odds": 6.56,
+        "fair_prob": 0.1524,
+        "ev": -0.299
        }
       },
       "totals": {
        "line": 2.5,
        "over": {
         "price": 1.45,
-        "fair_odds": 1.66,
-        "fair_prob": 0.6036,
-        "ev": -0.1248
+        "fair_odds": 1.63,
+        "fair_prob": 0.6131,
+        "ev": -0.111
        },
        "under": {
         "price": 2.07,
-        "fair_odds": 2.52,
-        "fair_prob": 0.3964,
-        "ev": -0.1795
+        "fair_odds": 2.58,
+        "fair_prob": 0.3869,
+        "ev": -0.1991
        }
       },
       "spread": null,
@@ -9809,20 +9783,9 @@
         "selection": "讓分2:0 客（特魯瓦）",
         "line": -2.0,
         "tw_price": 1.5,
-        "fair_odds": 1.55,
-        "fair_prob": 0.6449,
-        "ev": -0.0326,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
-        "line": -1.0,
-        "tw_price": 3.45,
-        "fair_odds": 3.68,
-        "fair_prob": 0.2721,
-        "ev": -0.0613,
+        "fair_odds": 1.59,
+        "fair_prob": 0.6298,
+        "ev": -0.0552,
         "derived": true
        },
        {
@@ -9831,9 +9794,31 @@
         "selection": "特魯瓦 大 0.5",
         "line": 0.5,
         "tw_price": 1.4,
-        "fair_odds": 1.5,
-        "fair_prob": 0.6662,
-        "ev": -0.0673,
+        "fair_odds": 1.51,
+        "fair_prob": 0.6621,
+        "ev": -0.0731,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分1:0 和",
+        "line": -1.0,
+        "tw_price": 3.45,
+        "fair_odds": 3.74,
+        "fair_prob": 0.2677,
+        "ev": -0.0766,
+        "derived": true
+       },
+       {
+        "market": "圖盧茲 大小 1.5",
+        "selection_key": "team_home_over",
+        "selection": "圖盧茲 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.4,
+        "fair_odds": 1.56,
+        "fair_prob": 0.6417,
+        "ev": -0.1016,
         "derived": true
        },
        {
@@ -9843,8 +9828,8 @@
         "line": null,
         "tw_price": 1.56,
         "fair_odds": 1.74,
-        "fair_prob": 0.5738,
-        "ev": -0.1048,
+        "fair_prob": 0.5754,
+        "ev": -0.1024,
         "derived": true
        },
        {
@@ -9853,9 +9838,9 @@
         "selection": "上半場 小 1.5",
         "line": 1.5,
         "tw_price": 1.48,
-        "fair_odds": 1.66,
-        "fair_prob": 0.6018,
-        "ev": -0.1094,
+        "fair_odds": 1.68,
+        "fair_prob": 0.594,
+        "ev": -0.1209,
         "derived": true
        },
        {
@@ -9864,20 +9849,9 @@
         "selection": "小 3.5",
         "line": 3.5,
         "tw_price": 1.43,
-        "fair_odds": 1.61,
-        "fair_prob": 0.6199,
-        "ev": -0.1135,
-        "derived": true
-       },
-       {
-        "market": "圖盧茲 大小 1.5",
-        "selection_key": "team_home_over",
-        "selection": "圖盧茲 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.4,
-        "fair_odds": 1.59,
-        "fair_prob": 0.6276,
-        "ev": -0.1214,
+        "fair_odds": 1.64,
+        "fair_prob": 0.6099,
+        "ev": -0.1278,
         "derived": true
        },
        {
@@ -9886,20 +9860,9 @@
         "selection": "總進球：單",
         "line": null,
         "tw_price": 1.73,
-        "fair_odds": 1.98,
-        "fair_prob": 0.504,
-        "ev": -0.1281,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（特魯瓦）",
-        "line": -1.0,
-        "tw_price": 2.3,
-        "fair_odds": 2.7,
-        "fair_prob": 0.3705,
-        "ev": -0.1478,
+        "fair_odds": 1.99,
+        "fair_prob": 0.503,
+        "ev": -0.1299,
         "derived": true
        },
        {
@@ -9908,9 +9871,9 @@
         "selection": "上半場 主勝",
         "line": null,
         "tw_price": 1.8,
-        "fair_odds": 2.13,
-        "fair_prob": 0.4698,
-        "ev": -0.1543,
+        "fair_odds": 2.08,
+        "fair_prob": 0.4811,
+        "ev": -0.134,
         "derived": true
        },
        {
@@ -9919,9 +9882,31 @@
         "selection": "總進球：雙",
         "line": null,
         "tw_price": 1.7,
-        "fair_odds": 2.02,
-        "fair_prob": 0.496,
-        "ev": -0.1568,
+        "fair_odds": 2.01,
+        "fair_prob": 0.497,
+        "ev": -0.155,
+        "derived": true
+       },
+       {
+        "market": "讓分 1:0",
+        "selection_key": "hcp3_away",
+        "selection": "讓分1:0 客（特魯瓦）",
+        "line": -1.0,
+        "tw_price": 2.3,
+        "fair_odds": 2.79,
+        "fair_prob": 0.3583,
+        "ev": -0.1759,
+        "derived": true
+       },
+       {
+        "market": "[總分]大小 3.5",
+        "selection_key": "over",
+        "selection": "大 3.5",
+        "line": 3.5,
+        "tw_price": 2.1,
+        "fair_odds": 2.56,
+        "fair_prob": 0.3901,
+        "ev": -0.1809,
         "derived": true
        },
        {
@@ -9930,31 +9915,20 @@
         "selection": "上半場 和局",
         "line": null,
         "tw_price": 2.3,
-        "fair_odds": 2.77,
-        "fair_prob": 0.3614,
-        "ev": -0.1687,
+        "fair_odds": 2.81,
+        "fair_prob": 0.3553,
+        "ev": -0.1829,
         "derived": true
        },
        {
-        "market": "圖盧茲 大小 1.5",
-        "selection_key": "team_home_under",
-        "selection": "圖盧茲 小 1.5",
+        "market": "[上半場]大小 1.5",
+        "selection_key": "ht_over",
+        "selection": "上半場 大 1.5",
         "line": 1.5,
-        "tw_price": 2.2,
-        "fair_odds": 2.69,
-        "fair_prob": 0.3724,
-        "ev": -0.1807,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 4.8,
-        "fair_odds": 5.93,
-        "fair_prob": 0.1687,
-        "ev": -0.1901,
+        "tw_price": 2.0,
+        "fair_odds": 2.46,
+        "fair_prob": 0.406,
+        "ev": -0.188,
         "derived": true
        },
        {
@@ -9964,30 +9938,19 @@
         "line": null,
         "tw_price": 1.88,
         "fair_odds": 2.35,
-        "fair_prob": 0.4262,
-        "ev": -0.1988,
+        "fair_prob": 0.4246,
+        "ev": -0.2017,
         "derived": true
        },
        {
-        "market": "[總分]大小 3.5",
-        "selection_key": "over",
-        "selection": "大 3.5",
-        "line": 3.5,
-        "tw_price": 2.1,
-        "fair_odds": 2.63,
-        "fair_prob": 0.3801,
-        "ev": -0.2018,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_over",
-        "selection": "上半場 大 1.5",
+        "market": "圖盧茲 大小 1.5",
+        "selection_key": "team_home_under",
+        "selection": "圖盧茲 小 1.5",
         "line": 1.5,
-        "tw_price": 2.0,
-        "fair_odds": 2.51,
-        "fair_prob": 0.3982,
-        "ev": -0.2036,
+        "tw_price": 2.2,
+        "fair_odds": 2.79,
+        "fair_prob": 0.3583,
+        "ev": -0.2118,
         "derived": true
        },
        {
@@ -9996,20 +9959,20 @@
         "selection": "讓分1:0 主（圖盧茲）",
         "line": -1.0,
         "tw_price": 2.1,
-        "fair_odds": 2.8,
-        "fair_prob": 0.3574,
-        "ev": -0.2494,
+        "fair_odds": 2.67,
+        "fair_prob": 0.374,
+        "ev": -0.2145,
         "derived": true
        },
        {
-        "market": "特魯瓦 大小 0.5",
-        "selection_key": "team_away_under",
-        "selection": "特魯瓦 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.2,
-        "fair_odds": 3.0,
-        "fair_prob": 0.3338,
-        "ev": -0.2657,
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_away",
+        "selection": "上半場 客勝",
+        "line": null,
+        "tw_price": 4.8,
+        "fair_odds": 6.11,
+        "fair_prob": 0.1636,
+        "ev": -0.2146,
         "derived": true
        },
        {
@@ -10018,9 +9981,20 @@
         "selection": "讓分2:0 和",
         "line": -2.0,
         "tw_price": 4.0,
-        "fair_odds": 5.45,
-        "fair_prob": 0.1834,
-        "ev": -0.2662,
+        "fair_odds": 5.34,
+        "fair_prob": 0.1872,
+        "ev": -0.2512,
+        "derived": true
+       },
+       {
+        "market": "特魯瓦 大小 0.5",
+        "selection_key": "team_away_under",
+        "selection": "特魯瓦 小 0.5",
+        "line": 0.5,
+        "tw_price": 2.2,
+        "fair_odds": 2.96,
+        "fair_prob": 0.3379,
+        "ev": -0.2566,
         "derived": true
        },
        {
@@ -10029,9 +10003,9 @@
         "selection": "讓分2:0 主（圖盧茲）",
         "line": -2.0,
         "tw_price": 3.65,
-        "fair_odds": 5.83,
-        "fair_prob": 0.1716,
-        "ev": -0.3736,
+        "fair_odds": 5.47,
+        "fair_prob": 0.183,
+        "ev": -0.3322,
         "derived": true
        }
       ]
@@ -10100,25 +10074,24 @@
       "books": 22,
       "h2h": {
        "home": {
-        "fair": 0.4706,
-        "fair_odds": 2.12,
-        "best": 2.14,
+        "fair": 0.4622,
+        "fair_odds": 2.16,
+        "best": 2.2,
         "book": "betfair_ex_eu"
        },
        "draw": {
-        "fair": 0.2591,
-        "fair_odds": 3.86,
-        "best": 3.78,
-        "book": "onexbet"
+        "fair": 0.261,
+        "fair_odds": 3.83,
+        "best": 3.8,
+        "book": "leovegas_se"
        },
        "away": {
-        "fair": 0.2702,
-        "fair_odds": 3.7,
-        "best": 3.71,
-        "book": "onexbet"
+        "fair": 0.2768,
+        "fair_odds": 3.61,
+        "best": 3.65,
+        "book": "leovegas_se"
        },
-       "odds_at": "2026-10-25T05:17+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "totals": {
        "line": 2.5,
@@ -10131,11 +10104,10 @@
        "under": {
         "fair": 0.4414,
         "fair_odds": 2.27,
-        "best": 2.22,
-        "book": "onexbet"
+        "best": 2.25,
+        "book": "tipico_de"
        },
-       "odds_at": "2026-10-25T00:47+00:00",
-       "stale": true
+       "odds_at": "2026-10-25T13:22+00:00"
       },
       "spread": null
      },
@@ -10149,27 +10121,27 @@
       "home_zh": "歐塞爾",
       "away_zh": "勒芒",
       "captured_at": "2026-10-25T20:00+08:00",
-      "fair_at": "2026-10-25T13:17+08:00",
-      "fair_fresh": false,
+      "fair_at": "2026-10-25T21:22+08:00",
+      "fair_fresh": true,
       "h2h": {
        "line": null,
        "home": {
         "price": 1.9,
-        "fair_odds": 2.12,
-        "fair_prob": 0.4706,
-        "ev": -0.1059
+        "fair_odds": 2.16,
+        "fair_prob": 0.4622,
+        "ev": -0.1218
        },
        "draw": {
         "price": 3.1,
-        "fair_odds": 3.86,
-        "fair_prob": 0.2591,
-        "ev": -0.1968
+        "fair_odds": 3.83,
+        "fair_prob": 0.261,
+        "ev": -0.1909
        },
        "away": {
         "price": 2.85,
-        "fair_odds": 3.7,
-        "fair_prob": 0.2702,
-        "ev": -0.2299
+        "fair_odds": 3.61,
+        "fair_prob": 0.2768,
+        "ev": -0.2111
        }
       },
       "totals": {
@@ -10196,9 +10168,9 @@
         "selection": "讓分2:0 客（勒芒）",
         "line": -2.0,
         "tw_price": 1.19,
-        "fair_odds": 1.28,
-        "fair_prob": 0.781,
-        "ev": -0.0706,
+        "fair_odds": 1.27,
+        "fair_prob": 0.787,
+        "ev": -0.0635,
         "derived": true
        },
        {
@@ -10207,31 +10179,9 @@
         "selection": "讓分1:0 和",
         "line": -1.0,
         "tw_price": 3.7,
-        "fair_odds": 3.98,
-        "fair_prob": 0.2511,
-        "ev": -0.0708,
-        "derived": true
-       },
-       {
-        "market": "勒芒 大小 1.5",
-        "selection_key": "team_away_under",
-        "selection": "勒芒 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.42,
-        "fair_odds": 1.54,
-        "fair_prob": 0.6508,
-        "ev": -0.0759,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:1 主（歐塞爾）",
-        "line": 1.0,
-        "tw_price": 1.26,
-        "fair_odds": 1.37,
-        "fair_prob": 0.7298,
-        "ev": -0.0805,
+        "fair_odds": 4.03,
+        "fair_prob": 0.2484,
+        "ev": -0.0809,
         "derived": true
        },
        {
@@ -10241,8 +10191,19 @@
         "line": 1.5,
         "tw_price": 1.15,
         "fair_odds": 1.25,
-        "fair_prob": 0.7982,
-        "ev": -0.0821,
+        "fair_prob": 0.7986,
+        "ev": -0.0816,
+        "derived": true
+       },
+       {
+        "market": "勒芒 大小 1.5",
+        "selection_key": "team_away_under",
+        "selection": "勒芒 小 1.5",
+        "line": 1.5,
+        "tw_price": 1.42,
+        "fair_odds": 1.55,
+        "fair_prob": 0.6446,
+        "ev": -0.0847,
         "derived": true
        },
        {
@@ -10254,6 +10215,17 @@
         "fair_odds": 1.57,
         "fair_prob": 0.6374,
         "ev": -0.0884,
+        "derived": true
+       },
+       {
+        "market": "讓分 0:1",
+        "selection_key": "hcp3_home",
+        "selection": "讓分0:1 主（歐塞爾）",
+        "line": 1.0,
+        "tw_price": 1.26,
+        "fair_odds": 1.38,
+        "fair_prob": 0.7232,
+        "ev": -0.0888,
         "derived": true
        },
        {
@@ -10274,8 +10246,8 @@
         "line": null,
         "tw_price": 1.76,
         "fair_odds": 2.0,
-        "fair_prob": 0.5005,
-        "ev": -0.1191,
+        "fair_prob": 0.5003,
+        "ev": -0.1195,
         "derived": true
        },
        {
@@ -10284,31 +10256,9 @@
         "selection": "兩隊都進球：是",
         "line": null,
         "tw_price": 1.46,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5963,
-        "ev": -0.1294,
-        "derived": true
-       },
-       {
-        "market": "歐塞爾 大小 1.5",
-        "selection_key": "team_home_over",
-        "selection": "歐塞爾 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.73,
-        "fair_odds": 1.99,
-        "fair_prob": 0.5027,
-        "ev": -0.1304,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 2.35,
-        "fair_odds": 2.75,
-        "fair_prob": 0.3631,
-        "ev": -0.1468,
+        "fair_odds": 1.67,
+        "fair_prob": 0.598,
+        "ev": -0.1269,
         "derived": true
        },
        {
@@ -10317,9 +10267,20 @@
         "selection": "讓分1:0 客（勒芒）",
         "line": -1.0,
         "tw_price": 1.6,
-        "fair_odds": 1.89,
-        "fair_prob": 0.5294,
-        "ev": -0.153,
+        "fair_odds": 1.86,
+        "fair_prob": 0.5378,
+        "ev": -0.1395,
+        "derived": true
+       },
+       {
+        "market": "歐塞爾 大小 1.5",
+        "selection_key": "team_home_over",
+        "selection": "歐塞爾 大 1.5",
+        "line": 1.5,
+        "tw_price": 1.73,
+        "fair_odds": 2.01,
+        "fair_prob": 0.4972,
+        "ev": -0.1398,
         "derived": true
        },
        {
@@ -10328,9 +10289,20 @@
         "selection": "歐塞爾 小 1.5",
         "line": 1.5,
         "tw_price": 1.7,
-        "fair_odds": 2.01,
-        "fair_prob": 0.4973,
-        "ev": -0.1545,
+        "fair_odds": 1.99,
+        "fair_prob": 0.5028,
+        "ev": -0.1453,
+        "derived": true
+       },
+       {
+        "market": "[上半場]不讓分",
+        "selection_key": "ht_home",
+        "selection": "上半場 主勝",
+        "line": null,
+        "tw_price": 2.35,
+        "fair_odds": 2.79,
+        "fair_prob": 0.3581,
+        "ev": -0.1585,
         "derived": true
        },
        {
@@ -10340,8 +10312,8 @@
         "line": null,
         "tw_price": 2.1,
         "fair_odds": 2.51,
-        "fair_prob": 0.3979,
-        "ev": -0.1645,
+        "fair_prob": 0.3984,
+        "ev": -0.1633,
         "derived": true
        },
        {
@@ -10351,8 +10323,8 @@
         "line": null,
         "tw_price": 1.66,
         "fair_odds": 2.0,
-        "fair_prob": 0.4995,
-        "ev": -0.1709,
+        "fair_prob": 0.4997,
+        "ev": -0.1704,
         "derived": true
        },
        {
@@ -10361,9 +10333,9 @@
         "selection": "兩隊都進球：否",
         "line": null,
         "tw_price": 2.05,
-        "fair_odds": 2.48,
-        "fair_prob": 0.4037,
-        "ev": -0.1724,
+        "fair_odds": 2.49,
+        "fair_prob": 0.402,
+        "ev": -0.176,
         "derived": true
        },
        {
@@ -10372,9 +10344,20 @@
         "selection": "上半場 客勝",
         "line": null,
         "tw_price": 3.3,
-        "fair_odds": 4.18,
-        "fair_prob": 0.2391,
-        "ev": -0.2111,
+        "fair_odds": 4.11,
+        "fair_prob": 0.2435,
+        "ev": -0.1965,
+        "derived": true
+       },
+       {
+        "market": "勒芒 大小 1.5",
+        "selection_key": "team_away_over",
+        "selection": "勒芒 大 1.5",
+        "line": 1.5,
+        "tw_price": 2.15,
+        "fair_odds": 2.81,
+        "fair_prob": 0.3554,
+        "ev": -0.2358,
         "derived": true
        },
        {
@@ -10400,25 +10383,14 @@
         "derived": true
        },
        {
-        "market": "勒芒 大小 1.5",
-        "selection_key": "team_away_over",
-        "selection": "勒芒 大 1.5",
-        "line": 1.5,
-        "tw_price": 2.15,
-        "fair_odds": 2.86,
-        "fair_prob": 0.3492,
-        "ev": -0.2491,
-        "derived": true
-       },
-       {
         "market": "讓分 1:0",
         "selection_key": "hcp3_home",
         "selection": "讓分1:0 主（歐塞爾）",
         "line": -1.0,
         "tw_price": 3.35,
-        "fair_odds": 4.56,
-        "fair_prob": 0.2195,
-        "ev": -0.2647,
+        "fair_odds": 4.68,
+        "fair_prob": 0.2138,
+        "ev": -0.2838,
         "derived": true
        },
        {
@@ -10427,9 +10399,9 @@
         "selection": "讓分0:1 和",
         "line": 1.0,
         "tw_price": 4.35,
-        "fair_odds": 6.24,
-        "fair_prob": 0.1602,
-        "ev": -0.303,
+        "fair_odds": 6.14,
+        "fair_prob": 0.1628,
+        "ev": -0.2916,
         "derived": true
        },
        {
@@ -10438,20 +10410,9 @@
         "selection": "小 1.5",
         "line": 1.5,
         "tw_price": 3.3,
-        "fair_odds": 4.95,
-        "fair_prob": 0.2018,
-        "ev": -0.334,
-        "derived": true
-       },
-       {
-        "market": "讓分 2:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分2:0 和",
-        "line": -2.0,
-        "tw_price": 4.9,
-        "fair_odds": 7.53,
-        "fair_prob": 0.1328,
-        "ev": -0.3495,
+        "fair_odds": 4.97,
+        "fair_prob": 0.2014,
+        "ev": -0.3354,
         "derived": true
        },
        {
@@ -10460,9 +10421,20 @@
         "selection": "讓分0:1 客（勒芒）",
         "line": 1.0,
         "tw_price": 5.65,
-        "fair_odds": 9.09,
-        "fair_prob": 0.11,
-        "ev": -0.3786,
+        "fair_odds": 8.78,
+        "fair_prob": 0.114,
+        "ev": -0.3561,
+        "derived": true
+       },
+       {
+        "market": "讓分 2:0",
+        "selection_key": "hcp3_draw",
+        "selection": "讓分2:0 和",
+        "line": -2.0,
+        "tw_price": 4.9,
+        "fair_odds": 7.7,
+        "fair_prob": 0.1299,
+        "ev": -0.3634,
         "derived": true
        },
        {
@@ -10471,9 +10443,9 @@
         "selection": "讓分2:0 主（歐塞爾）",
         "line": -2.0,
         "tw_price": 6.5,
-        "fair_odds": 11.6,
-        "fair_prob": 0.0862,
-        "ev": -0.4397,
+        "fair_odds": 12.03,
+        "fair_prob": 0.0831,
+        "ev": -0.4599,
         "derived": true
        }
       ]
@@ -11004,8 +10976,12 @@
    "[角球數]大小 8.5": 17
   },
   "pregame": {
-   "due": 0,
-   "refreshed": 0
+   "due": 12,
+   "refreshed": 12,
+   "markets": [
+    "h2h",
+    "totals"
+   ]
   },
   "values_added": 0
  }
