@@ -2,6 +2,7 @@
 
     python -m sports_analyzer.pipeline football [--days 2] [--date YYYY-MM-DD]
     python -m sports_analyzer.pipeline mlb
+    python -m sports_analyzer.pipeline nba
     python -m sports_analyzer.pipeline review           # post-match review of finished games
     python -m sports_analyzer.pipeline radar            # 延遲雷達: fresh prices near kickoff
     python -m sports_analyzer.pipeline render            # re-render from the latest snapshots
@@ -37,6 +38,8 @@ from .analysis import pregame, review
 from .analysis.football import build_cards
 from .analysis.mlb import build_cards as build_mlb_cards
 from .analysis.mlb import g_value_block, t10_value_block
+from .analysis.nba import build_cards as build_nba_cards
+from .analysis.nba import shape_block
 from .analysis.taiwan import annotate as annotate_tw
 from .config import (
     COMPETITION_BY_CODE,
@@ -52,6 +55,8 @@ from .config import (
     MLB_REVIEWS_PATH,
     MODEL,
     MOVES_DIR,
+    NBA_ODDS_KEY,
+    NBA_REVIEWS_PATH,
     ODDS_BUDGET_PATH,
     SENSOR_DIR,
     SNAPSHOT_DIR,
@@ -64,7 +69,8 @@ from .config import (
 from .fetch import taiwan
 from .fetch.football import FootballDataClient, Match
 from .fetch.mlb import MlbClient
-from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, OddsClient, OddsEvent
+from .fetch.nba import NbaClient
+from .fetch.odds import FOOTBALL_MARKETS, MLB_MARKETS, NBA_MARKETS, OddsClient, OddsEvent
 from .fetch.oddsio import LEAGUES as IO_LEAGUES
 from .fetch.oddsio import MAX_IDS, OddsIoClient
 from .history import find_stats, load_history, load_stats
@@ -409,12 +415,25 @@ def run_mlb(
 
 
 def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | None) -> None:
-    """Carry market blocks and 運彩 comparisons from an earlier same-date MLB snapshot."""
+    """MLB: carry blocks from an earlier same-date snapshot, the T-10 G block with them."""
+    _merge_previous_games(snapshot, previous, "game_pk", ("t10",))
+
+
+def _merge_previous_games(
+    snapshot: dict[str, Any],
+    previous: dict[str, Any] | None,
+    key: str,
+    derived: tuple[str, ...] = (),
+) -> None:
+    """Carry market blocks and 運彩 comparisons from an earlier same-date snapshot of a
+    sport whose snapshot is a list of games (MLB by game_pk, NBA by game_id). `derived`
+    names the card blocks computed from the market (MLB's t10, NBA's shape), carried
+    with it."""
     if not previous or previous.get("date") != snapshot.get("date"):
         return
-    old_cards = {str(c.get("game_pk")): c for c in previous.get("games", [])}
+    old_cards = {str(c.get(key)): c for c in previous.get("games", [])}
     for card in snapshot["games"]:
-        old = old_cards.get(str(card.get("game_pk")))
+        old = old_cards.get(str(card.get(key)))
         if not old:
             continue
         if card.get("market") is None and old.get("market"):
@@ -424,7 +443,8 @@ def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | Non
                 k: ({**v, "stale": True} if isinstance(v, dict) else v)
                 for k, v in old["market"].items()
             }
-            card["t10"] = old.get("t10")
+            for name in derived:
+                card[name] = old.get(name)
             bought = (old["market"].get("h2h") or {}).get("odds_at")
             card["notes"] = [
                 f"國際價沿用 {taipei_time(bought)} 的報價（這次沒有更新：預算不足或比賽已開打）"
@@ -439,6 +459,72 @@ def _merge_previous_mlb(snapshot: dict[str, Any], previous: dict[str, Any] | Non
                     card["market"][key] = {**old["market"][key], "stale": True}
         if old.get("tw") and not card.get("tw"):
             card["tw"] = old["tw"]
+
+
+# ------------------------------------------------------------------------ NBA
+def run_nba(
+    today_local: date,
+    settings: Settings | None = None,
+    cfg: ModelConfig = MODEL,
+    markets: tuple[str, ...] = NBA_MARKETS,
+) -> dict[str, Any]:
+    """The NBA games of one US date (the Taipei date's: they tip off the next Taipei
+    morning, like MLB) with the market consensus, the fair prices and what the market
+    expects. `markets`: the evening run keeps the handicap and drops the totals."""
+    client = NbaClient()
+    games = client.scoreboard(today_local)
+    # The last two US dates' finals settle the 運彩 ledger (a Taipei day spans two).
+    finals = {
+        g.game_id: (g.home_score or 0, g.away_score or 0)
+        for d in (today_local - timedelta(days=1), today_local - timedelta(days=2))
+        for g in client.scoreboard(d)
+        if g.is_final
+    }
+    tw_settled = tw_ledger.settle(TW_LEDGER_PATH, finals, "nba")
+    log.info("nba: %d games on %s, %d 運彩 rows settled", len(games), today_local, tw_settled)
+    events: list[OddsEvent] = []
+    credits = None
+    budget = budget_mod.load(ODDS_BUDGET_PATH, today_local)
+    markets = budget_mod.plan_markets(
+        markets,
+        1 if games else 0,
+        budget_mod.allowance_today(budget, datetime.now(UTC).date()),
+        essential=("h2h", "spreads"),  # 運彩's two main basketball markets
+    )
+    if games and settings and settings.odds_api_key and markets:
+        odds = OddsClient(settings.odds_api_key, regions=settings.odds_regions)
+        first = min(g.tipoff for g in games) - timedelta(hours=1)
+        last = max(g.tipoff for g in games) + timedelta(hours=1)
+        try:
+            events = odds.odds(NBA_ODDS_KEY, commence_from=first, commence_to=last, markets=markets)
+        except requests.RequestException as exc:
+            # The type only: a connection error's text carries the URL, key included.
+            log.warning("NBA odds unavailable (%s); keeping earlier prices", type(exc).__name__)
+        credits = odds.credits_remaining()
+        budget_mod.save(
+            ODDS_BUDGET_PATH,
+            budget_mod.record(budget, odds.credits_used(), credits, datetime.now(UTC).date()),
+        )
+    cards = build_nba_cards(games, events, cfg)
+    snapshot = {
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "date": today_local.isoformat(),
+        "credits_remaining": credits,
+        "games": cards,
+        "odds_key": NBA_ODDS_KEY,
+    }
+    # The evening refresh must not wipe what the morning found (started games lose
+    # their odds; the 運彩 comparison lives on the card).
+    _merge_previous_games(snapshot, _latest_snapshot("nba"), "game_id", ("shape",))
+    moves_mod.record(MOVES_DIR, moves_mod.intl_rows(cards, "nba", snapshot["generated_at"]))
+    clv_updated = tw_ledger.update_clv(TW_LEDGER_PATH, cards, "nba")
+    log.info(
+        "nba: %d cards with odds, %d 運彩 CLV filled",
+        sum(1 for c in cards if c["market"]),
+        clv_updated,
+    )
+    _write_snapshot(today_local, "nba", snapshot)
+    return snapshot
 
 
 # ------------------------------------------------------------------ 運彩
@@ -529,10 +615,61 @@ def run_tw(
             _write_snapshot(date.fromisoformat(snap["date"]), "mlb", snap)
         reports["mlb"] = rep
         log.info("tw mlb: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
+
+    # NBA, the same way as MLB: the newest snapshot holds the next US date, the one
+    # before it the games tipping off later today (Taipei).
+    nba_snaps = _latest_snapshots("nba", 2)
+    games, path, parse_report = taiwan.load_latest(TW_DIR, "basketball")
+    if nba_snaps and path:
+        latest = nba_snaps[-1]
+        cards = _games_of(nba_snaps, "game_id")
+        for snap in nba_snaps:
+            _backfill_odds_at(snap)
+        captured = taiwan.captured_at(path)
+        pre, refreshed = _pregame_refresh("nba", cards, captured, settings, now, cfg)
+        for card in refreshed:
+            card["shape"] = shape_block(card["market"], cfg)
+            card["notes"] = [n for n in card.get("notes", []) if "賠率" not in n]
+        if refreshed:
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "nba", now=now)
+        nba_cfg = replace(cfg, value_threshold=cfg.nba_value_threshold)
+        rep = annotate_tw(cards, games, captured, nba_cfg)
+        rep.update(
+            {
+                "file": path.name,
+                "unknown_teams": sorted(parse_report.unknown_teams),
+                "unknown_markets": parse_report.unknown_markets,
+                "pregame": pre,
+            }
+        )
+        latest["tw_report"] = rep
+        _tape(cards, "nba")
+        rep["values_added"] = tw_ledger.append_values(
+            TW_LEDGER_PATH, cards, "nba", competition_of=lambda c: "NBA", added_rows=new_values
+        )
+        for snap in nba_snaps:
+            _write_snapshot(date.fromisoformat(snap["date"]), "nba", snap)
+        reports["nba"] = rep
+        log.info("tw nba: %s", {k: v for k, v in rep.items() if k not in ("unmatched_games",)})
+    elif path is None:
+        log.info("tw nba: no upload found under %s", TW_DIR / "basketball")
     if new_values and settings and settings.ntfy_topic:
         tracked = moves_mod.track(moves_mod.read(MOVES_DIR), cfg)
         notify.notify_value_bets(settings.ntfy_topic, new_values, tracked)
     return reports
+
+
+def _games_of(snapshots: list[dict[str, Any]], key: str) -> list[dict[str, Any]]:
+    """The games of the newest snapshot plus those of the older ones it does not list
+    (the newest copy of a game wins). `snapshots` are oldest first."""
+    cards: list[dict[str, Any]] = list(snapshots[-1].get("games", [])) if snapshots else []
+    seen = {str(c.get(key)) for c in cards}
+    for older in snapshots[:-1][::-1]:
+        for c in older.get("games", []):
+            if str(c.get(key)) not in seen:
+                cards.append(c)
+                seen.add(str(c.get(key)))
+    return cards
 
 
 def _tape(cards: list[dict[str, Any]], sport: str) -> None:
@@ -571,9 +708,10 @@ def _buy_fresh(
     report: dict[str, Any],
     essential_only: bool = False,
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
-    """One request per sport key (MLB, or each football competition with a due match):
-    h2h + spreads (+ totals) for MLB and h2h (+ totals) for football, or only the
-    essential ones (h2h; MLB also the run line, the other half of G), within the
+    """One request per sport key (MLB, NBA, or each football competition with a due
+    match): h2h + spreads (+ totals) for MLB and NBA and h2h (+ totals) for football, or
+    only the essential ones (h2h; MLB also the run line, the other half of G; NBA also
+    the handicap), within the
     budget's allowance plus the pre-game extra. Prices close to kickoff are worth more
     than the routine runs' ones; the reserve is never touched."""
     if not settings or not settings.odds_api_key:
@@ -583,6 +721,9 @@ def _buy_fresh(
     if sport == "mlb":
         groups[MLB_ODDS_KEY] = due
         wanted, essential, prefer = MLB_MARKETS, ("h2h", "spreads"), None
+    elif sport == "nba":
+        groups[NBA_ODDS_KEY] = due
+        wanted, essential, prefer = NBA_MARKETS, ("h2h", "spreads"), None
     else:
         for card in due:
             comp = COMPETITION_BY_CODE.get(str(card.get("competition")))
@@ -651,6 +792,8 @@ def run_sensor(
         cards += [("football", c) for c in comp.get("cards", [])]
     for snap in _latest_snapshots("mlb", 2)[::-1]:  # newest first: it wins a duplicate
         cards += [("mlb", g) for g in snap.get("games", [])]
+    for snap in _latest_snapshots("nba", 2)[::-1]:
+        cards += [("nba", g) for g in snap.get("games", [])]
     watch = sensor_mod.watched(cards, now)
     client = client or OddsIoClient(settings.odds_api_io_key)
     budget = sensor_mod.allowance(state["usage"], now)
@@ -669,7 +812,14 @@ def run_sensor(
             sport, slugs = IO_LEAGUES[league]
             if client.requests + len(slugs) > budget:
                 break
-            events = [e for slug in slugs for e in client.events(sport, slug, since, until)]
+            try:
+                events = [e for slug in slugs for e in client.events(sport, slug, since, until)]
+            except requests.HTTPError as exc:
+                # One league the API does not know (a wrong slug, an off-season playoff
+                # slug) must not stop the other leagues' readings: it is asked again
+                # when its list is stale, like a league with no events.
+                log.warning("盯盤: %s events unavailable (%s)", league, type(exc).__name__)
+                events = []
             sensor_mod.store_events(state, league, events, now)
         mapped = sensor_mod.match_events(watch, sensor_mod.cached_events(state))
         readable = [w for w in watch if w.key in mapped]
@@ -753,7 +903,7 @@ def run_radar(
 ) -> dict[str, Any]:
     """延遲雷達's own purchase, rather than on an upload: fresh international prices,
     essential markets only, within the budget plus the pre-game extra. `only` (from the
-    盯盤 sensor): the competitions (PL ... CL, MLB) whose matches moved, all their
+    盯盤 sensor): the competitions (PL ... CL, MLB, NBA) whose matches moved, all their
     matches with a 運彩 price within the sensor's window; without it (a manual run),
     the matches starting within radar_window_hours whose price is old
     (pregame.radar_due). The render that follows sets the new prices against the last
@@ -769,7 +919,7 @@ def run_radar(
         out = []
         for c in cards:
             start = pregame.kickoff(c)
-            league = "MLB" if sport == "mlb" else str(c.get("competition", ""))
+            league = {"mlb": "MLB", "nba": "NBA"}.get(sport) or str(c.get("competition", ""))
             if c.get("tw") and start is not None and now < start <= end and league in only:
                 out.append(c)
         return out
@@ -813,6 +963,25 @@ def run_radar(
             for snap in mlb_snaps:
                 _write_snapshot(date.fromisoformat(snap["date"]), "mlb", snap)
         reports["mlb"] = rep
+
+    nba_snaps = _latest_snapshots("nba", 2)
+    if nba_snaps:
+        cards = _games_of(nba_snaps, "game_id")
+        for snap in nba_snaps:
+            _backfill_odds_at(snap)
+        due = pick(cards, "nba")
+        rep, refreshed = {"due": len(due), "refreshed": 0}, []
+        if due:
+            rep, refreshed = _buy_fresh("nba", due, settings, now, cfg, rep, True)
+        if refreshed:
+            for card in refreshed:
+                card["shape"] = shape_block(card["market"], cfg)
+                card["notes"] = [n for n in card.get("notes", []) if "賠率" not in n]
+            tw_ledger.update_clv(TW_LEDGER_PATH, cards, "nba", now=now)
+            moves_mod.record(MOVES_DIR, moves_mod.intl_rows(refreshed, "nba"))
+            for snap in nba_snaps:
+                _write_snapshot(date.fromisoformat(snap["date"]), "nba", snap)
+        reports["nba"] = rep
     log.info("radar: %s", reports)
     return reports
 
@@ -847,9 +1016,14 @@ def _backfill_odds_at(snapshot: dict[str, Any]) -> None:
 # simply asked again next time).
 FOOTBALL_REVIEW_AFTER_HOURS = 2.0
 MLB_REVIEW_AFTER_HOURS = 2.5
+# An NBA game runs 2 h 15 min to 2 h 40 min from tip-off (overtime included).
+NBA_REVIEW_AFTER_HOURS = 2.5
 # The 盯盤 rounds ask for a review only this long after kickoff: a postponed or abandoned
 # match must not start a run every few minutes. Later ones wait for the routine reviews.
-QUICK_REVIEW_HOURS = {"football": 6.0, "mlb": 9.0}
+QUICK_REVIEW_HOURS = {"football": 6.0, "mlb": 9.0, "nba": 7.0}
+# The result services key a game by its US date; every first pitch / tip-off is
+# 16:00-05:00 UTC, so six hours back always lands on it.
+US_DATE_SHIFT = timedelta(hours=6)
 
 
 def _review_times(now: datetime) -> list[tuple[str, datetime, datetime]]:
@@ -860,14 +1034,20 @@ def _review_times(now: datetime) -> list[tuple[str, datetime, datetime]]:
     done = {
         "football": {r["match_id"] for r in review_store.read(FOOTBALL_REVIEWS_PATH)},
         "mlb": {r["game_pk"] for r in review_store.read(MLB_REVIEWS_PATH)},
+        "nba": {r["game_id"] for r in review_store.read(NBA_REVIEWS_PATH)},
     }
-    after = {"football": FOOTBALL_REVIEW_AFTER_HOURS, "mlb": MLB_REVIEW_AFTER_HOURS}
+    after = {
+        "football": FOOTBALL_REVIEW_AFTER_HOURS,
+        "mlb": MLB_REVIEW_AFTER_HOURS,
+        "nba": NBA_REVIEW_AFTER_HOURS,
+    }
     cards_of = {
         "football": lambda s: [c for comp in s.get("competitions", []) for c in comp["cards"]],
         "mlb": lambda s: list(s.get("games", [])),
+        "nba": lambda s: list(s.get("games", [])),
     }
     out = []
-    for sport, key in (("football", "match_id"), ("mlb", "game_pk")):
+    for sport, key in (("football", "match_id"), ("mlb", "game_pk"), ("nba", "game_id")):
         pre = review.collect_prematch(_recent_snapshots(sport, now.date(), 2), cards_of[sport], key)
         for mid, entry in pre.items():
             try:
@@ -981,10 +1161,8 @@ def run_review(
     if mdue:
         client = MlbClient()
         finals = {}
-        # The schedule is keyed by the US date; every first pitch is 16:00-05:00 UTC, so
-        # six hours back always lands on it.
         for day in sorted(
-            {_dt_utc(e["card"]["kickoff_utc"]) - timedelta(hours=6) for e in mdue.values()}
+            {_dt_utc(e["card"]["kickoff_utc"]) - US_DATE_SHIFT for e in mdue.values()}
         ):
             for g in client.schedule(day.date()):
                 finals[str(g.game_pk)] = g
@@ -1001,6 +1179,43 @@ def run_review(
         )
         report["mlb"] = {"due": len(mdue), "added": added, "settled": settled}
     log.info("review mlb: %s", report.get("mlb", {"due": len(mdue)}))
+
+    nsnaps = _recent_snapshots("nba", now.date(), days)
+    npre = review.collect_prematch(nsnaps, lambda s: s.get("games", []), "game_id")
+    ndone = {r["game_id"] for r in review_store.read(NBA_REVIEWS_PATH)}
+    ndue = {
+        k: e
+        for k, e in npre.items()
+        if k not in ndone and _kicked_off(e["card"], now, NBA_REVIEW_AFTER_HOURS)
+    }
+    nrows: list[dict[str, Any]] = []
+    if ndue:
+        client = NbaClient()
+        nfinals = {}
+        for day in sorted(
+            {_dt_utc(e["card"]["kickoff_utc"]) - US_DATE_SHIFT for e in ndue.values()}
+        ):
+            try:
+                for g in client.scoreboard(day.date()):
+                    nfinals[str(g.game_id)] = g
+            except requests.RequestException as exc:
+                # ESPN's feed is public, not promised: the games are asked again next run.
+                log.warning(
+                    "nba: scoreboard for %s unavailable (%s)", day.date(), type(exc).__name__
+                )
+        for k, e in ndue.items():
+            g = nfinals.get(k)
+            if g is None or not g.is_final:
+                continue
+            nrows.append(review.nba_row(e, g, now))
+        added, _ = review_store.upsert(NBA_REVIEWS_PATH, nrows, review_store.NBA_COLUMNS, "game_id")
+        settled = tw_ledger.settle(
+            TW_LEDGER_PATH,
+            {k: (g.home_score or 0, g.away_score or 0) for k, g in nfinals.items() if g.is_final},
+            "nba",
+        )
+        report["nba"] = {"due": len(ndue), "added": added, "settled": settled}
+    log.info("review nba: %s", report.get("nba", {"due": len(ndue)}))
     return report
 
 
@@ -1008,7 +1223,7 @@ def review_changed(report: Mapping[str, Any]) -> bool:
     """Did a review run write anything: a review row, a settled bet, a closed signal?"""
     return any(
         (report.get(sport) or {}).get(key)
-        for sport in ("football", "mlb")
+        for sport in ("football", "mlb", "nba")
         for key in ("added", "updated", "settled", "signals_closed")
     )
 
@@ -1083,21 +1298,25 @@ def render_latest() -> Path:
     CSVs; returns docs/index.html. The 大戶 record is brought up to date first."""
     now = datetime.now(UTC)
     football = _latest_snapshot("football")
-    mlb = _mlb_for_page(now)
+    mlb = _games_for_page("mlb", "game_pk", now)
+    nba = _games_for_page("nba", "game_id", now)
     football_reviews = review_store.read(FOOTBALL_REVIEWS_PATH)
     mlb_reviews = review_store.read(MLB_REVIEWS_PATH)
+    nba_reviews = review_store.read(NBA_REVIEWS_PATH)
     signal_rows = ledger_mod.read(LEDGER_PATH)
     value_rows = tw_ledger.read(TW_LEDGER_PATH)
     # The whole tape: every page's price history and the 大戶 record draw from it.
     tape = moves_mod.read(MOVES_DIR, months=None)
     scores = {("football", str(r["match_id"])): r for r in football_reviews}
     scores.update({("mlb", str(r["game_pk"])): r for r in mlb_reviews})
+    scores.update({("nba", str(r["game_id"])): r for r in nba_reviews})
     # 運彩's Chinese names and the competition, as the snapshots of the last two weeks knew
     # them: kept in the 大戶 record and shown on the history of every page.
     names = _match_names(
-        [s for s in (football, mlb) if s]
+        [s for s in (football, mlb, nba) if s]
         + _recent_snapshots("football", now.date(), 14)[::-1]
         + _recent_snapshots("mlb", now.date(), 14)[::-1]
+        + _recent_snapshots("nba", now.date(), 14)[::-1]
     )
     history = moves_mod.event_history(
         _record_bighand(tape, names),
@@ -1113,14 +1332,16 @@ def render_latest() -> Path:
         now=now,
         football=football,
         mlb=mlb,
+        nba=nba,
         tape=tape,
         football_reviews=football_reviews,
         mlb_reviews=mlb_reviews,
+        nba_reviews=nba_reviews,
         signal_rows=signal_rows,
         value_rows=value_rows,
         history=history,
         history_summary=moves_mod.history_summary(history),
-        radar=_radar(tape, now, football, mlb, names),
+        radar=_radar(tape, now, football, mlb, names, nba),
         tracked=moves_mod.track(tape, MODEL),
         fade_summary=fade_summary,
         fade_live=fade_live,
@@ -1144,17 +1365,16 @@ def _started_today(now: datetime) -> list[dict[str, Any]]:
     front page and the reviews page keep the day's schedule whole with these."""
     since = now.astimezone(LOCAL_TZ).replace(hour=0, minute=0, second=0, microsecond=0)
     out: dict[tuple[str, str], dict[str, Any]] = {}
-    for sport in ("football", "mlb"):
+    for sport in ("football", "mlb", "nba"):
         for snap in _recent_snapshots(sport, now.date(), 2):  # oldest first
-            if sport == "mlb":
-                cards = list(snap.get("games", []))
-            else:
+            if sport == "football":
                 cards = [c for comp in snap.get("competitions", []) for c in comp["cards"]]
+            else:
+                cards = list(snap.get("games", []))
             for card in cards:
                 start = pregame.kickoff(card)
                 if start is not None and since <= start <= now:
-                    mid = card.get("game_pk") if sport == "mlb" else card.get("match_id")
-                    out[(sport, str(mid))] = card
+                    out[(sport, _card_id(card))] = card
     return sorted(out.values(), key=lambda c: str(c.get("kickoff_utc")))
 
 
@@ -1211,6 +1431,7 @@ def _radar(
     football: dict[str, Any] | None,
     mlb: dict[str, Any] | None,
     names: dict[tuple[str, str], dict[str, str]] | None = None,
+    nba: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """延遲雷達 for the front page: what the tape says now (moves.radar), the names 運彩
     uses and each match's league (`names`: the last two weeks of snapshots, so a match a
@@ -1224,6 +1445,7 @@ def _radar(
             for c in comp.get("cards", [])
         ],
         "mlb": [pregame.kickoff(g) for g in (mlb or {}).get("games", [])],
+        "nba": [pregame.kickoff(g) for g in (nba or {}).get("games", [])],
     }
     last_upload = {
         sport: moves_mod.parse_time(found["last"].get(sport, {}).get("tw")) for sport in starts
@@ -1235,7 +1457,7 @@ def _radar(
         MODEL,
     )
     if names is None:
-        names = _match_names([s for s in (football, mlb) if s])
+        names = _match_names([s for s in (football, mlb, nba) if s])
     return {"found": found, "names": names, "plan": plan}
 
 
@@ -1296,22 +1518,40 @@ def _match_names(snapshots: list[dict[str, Any]]) -> dict[tuple[str, str], dict[
     given newest first (the first value found wins)."""
     out: dict[tuple[str, str], dict[str, str]] = {}
     for snap in snapshots:
-        football = [c for comp in snap.get("competitions", []) for c in comp.get("cards", [])]
-        for sport, cards in (("football", football), ("mlb", snap.get("games", []))):
-            for c in cards:
-                mid = str(c.get("match_id") or c.get("game_pk") or "")
-                tw = c.get("tw") or {}
-                have = out.setdefault(
-                    (sport, mid), {"competition": "", "home_zh": "", "away_zh": ""}
-                )
-                found = {
-                    "competition": c.get("competition_name") or ("MLB" if sport == "mlb" else ""),
-                    "home_zh": tw.get("home_zh") or "",
-                    "away_zh": tw.get("away_zh") or "",
-                }
-                for k, v in found.items():
-                    have[k] = have[k] or v
+        cards = [c for comp in snap.get("competitions", []) for c in comp.get("cards", [])]
+        cards += list(snap.get("games", []))
+        for c in cards:
+            sport = _card_sport(c)
+            tw = c.get("tw") or {}
+            have = out.setdefault(
+                (sport, _card_id(c)), {"competition": "", "home_zh": "", "away_zh": ""}
+            )
+            found = {
+                "competition": c.get("competition_name") or GAME_LEAGUES.get(sport, ""),
+                "home_zh": tw.get("home_zh") or "",
+                "away_zh": tw.get("away_zh") or "",
+            }
+            for k, v in found.items():
+                have[k] = have[k] or v
     return out
+
+
+# Sports whose snapshot is a list of games rather than competitions, and the league
+# name their cards carry on the site.
+GAME_LEAGUES = {"mlb": "MLB", "nba": "NBA"}
+
+
+def _card_sport(card: Mapping[str, Any]) -> str:
+    """The sport a card belongs to (older MLB snapshots predate the `sport` field)."""
+    sport = str(card.get("sport") or "")
+    if sport:
+        return sport
+    return "mlb" if card.get("game_pk") else "football"
+
+
+def _card_id(card: Mapping[str, Any]) -> str:
+    """A card's id in its sport: football match id, MLB game_pk, NBA game_id."""
+    return str(card.get("match_id") or card.get("game_pk") or card.get("game_id") or "")
 
 
 def _final_scores(
@@ -1323,7 +1563,7 @@ def _final_scores(
         h, a = (
             (r.get("ft_h"), r.get("ft_a"))
             if key[0] == "football"
-            else (r.get("final_h"), r.get("final_a"))
+            else (r.get("final_h"), r.get("final_a"))  # MLB and NBA alike
         )
         try:
             out[key] = (int(float(h)), int(float(a)))
@@ -1332,22 +1572,24 @@ def _final_scores(
     return out
 
 
-def _mlb_for_page(now: datetime) -> dict[str, Any] | None:
-    """The newest MLB snapshot plus the games of the one before that have not started.
+def _games_for_page(sport: str, key: str, now: datetime) -> dict[str, Any] | None:
+    """The newest MLB / NBA snapshot plus the games of the one before that have not
+    started.
 
     The morning run already holds the next US date, so without this today's later
-    first pitches (and their pre-game comparisons) would drop off the page at 08:15.
+    first pitches / tip-offs (and their pre-game comparisons) would drop off the page
+    at 08:15.
     """
-    snaps = _latest_snapshots("mlb", 2)
+    snaps = _latest_snapshots(sport, 2)
     if not snaps:
         return None
     latest = snaps[-1]
     games = list(latest.get("games", []))
-    seen = {str(g.get("game_pk")) for g in games}
+    seen = {str(g.get(key)) for g in games}
     for older in snaps[:-1]:
         for g in older.get("games", []):
             start = pregame.kickoff(g)
-            if str(g.get("game_pk")) not in seen and start is not None and start > now:
+            if str(g.get(key)) not in seen and start is not None and start > now:
                 games.append(g)
     games.sort(key=lambda g: str(g.get("kickoff_utc", "")))
     return {**latest, "games": games}
@@ -1387,7 +1629,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="sports_analyzer.pipeline")
     parser.add_argument(
         "task",
-        choices=["football", "mlb", "tw", "review", "radar", "sensor", "render", "test-notify"],
+        choices=[
+            "football",
+            "mlb",
+            "nba",
+            "tw",
+            "review",
+            "radar",
+            "sensor",
+            "render",
+            "test-notify",
+        ],
     )
     parser.add_argument(
         "--days", type=int, default=None, help="fixture window in days (default from env or 2)"
@@ -1400,13 +1652,13 @@ def main(argv: list[str] | None = None) -> int:
         type=str,
         default=None,
         help="comma-separated odds markets, e.g. h2h (football default h2h,totals; "
-        "mlb default h2h,spreads,totals)",
+        "mlb and nba default h2h,spreads,totals)",
     )
     parser.add_argument(
         "--only",
         type=str,
         default=None,
-        help="radar: only these competitions, e.g. PL,SA,MLB (what the 盯盤 sensor saw move)",
+        help="radar: only these competitions, e.g. PL,SA,MLB,NBA (what the 盯盤 sensor saw move)",
     )
     parser.add_argument(
         "--hold",
@@ -1505,6 +1757,9 @@ def main(argv: list[str] | None = None) -> int:
     elif args.task == "mlb":
         local_today = datetime.now(LOCAL_TZ).date() if not args.date else today
         run_mlb(local_today, settings, markets=chosen or MLB_MARKETS)
+    elif args.task == "nba":
+        local_today = datetime.now(LOCAL_TZ).date() if not args.date else today
+        run_nba(local_today, settings, markets=chosen or NBA_MARKETS)
     render_safely()
     return 0
 

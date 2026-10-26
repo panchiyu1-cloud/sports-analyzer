@@ -1,0 +1,99 @@
+{% extends "base.html.j2" %}
+{% import "_ui.html.j2" as ui %}
+{% import "_review.html.j2" as rv %}
+{% block description %}NBA：運彩不讓分、讓分、大小對國際公允價的 EV，市場預期的比分，以及每場的賽後檢討{% endblock %}
+{% block main %}
+{% set thr = (cfg.nba_value_threshold * 100)|round|int %}
+{% set thr_d = (cfg.derived_value_threshold * 100)|round|int %}
+{% set gap_h = (cfg.max_price_gap_minutes / 60)|round|int %}
+{% set hs = history.summary %}
+{{ ui.hero("NBA",
+  "沒有自己的模型：NBA 的收盤價反著押、順著押都沒有找到規律（2026-10-25 的 50 種押法回測），所以這裡只做一件事——把運彩的不讓分、讓分、大小拿來和國際莊家去水後的公允價比，EV = 公允機率 × 運彩賠率 − 1，≥ " ~ thr ~ "% 才可下。運彩的讓分或大小線和國際不同時，用常態分佈把國際價換算到運彩的線（門檻 " ~ thr_d ~ "%）。最有機會的時間是開賽前一小時內：傷兵、輪休的消息剛把國際盤推動、運彩還沒跟上。",
+  [
+    {"label": "現在可下", "value": kpis.value, "tone": "good" if kpis.value else ""},
+    {"label": "即將開賽", "value": kpis.upcoming, "unit": " 場"},
+    {"label": "有運彩價", "value": kpis.on_tw, "unit": " 場"},
+    {"label": "可下的注 贏/注數", "value": (hs.wins ~ "/" ~ hs.bets) if hs.bets else "—"},
+  ]) }}
+{{ ui.tabs([("upcoming", "即將開賽", cards|length), ("history", "歷史數據", history.n)]) }}
+
+<section id="upcoming" class="tabpanel active" role="tabpanel">
+  <p class="howto">每張卡先寫市場怎麼看這場（誰讓幾分、大小線、換算出來的預期比分），再列運彩每種下法對公允價的 EV；「換算」是運彩的線和國際不同、用常態分佈換算過去的公允價。線圖是同一個選項在每次抓價時的隱含機率（藍＝國際、橘＝運彩去水後；橘線在藍線下面，運彩的賠率就比公允價高）。開賽前 {{ cfg.pregame_window_hours|round|int }} 小時內用捷徑上傳一次運彩籃球，系統會先買最新國際價再比，約 2–3 分鐘後這裡更新。</p>
+  {% if report %}
+  <p class="stamp-line">最近一次運彩籃球上傳（{{ report.file }}）：運彩 {{ report.tw_games }} 場、對上 {{ report.matched }} 場{% if report.avg_overround is not none %}，不讓分平均水錢 {{ '%.0f'|format(report.avg_overround * 100) }}%{% endif %}{% if report.unknown_teams %}，有 {{ report.unknown_teams|length }} 個運彩隊名還沒對照（{{ report.unknown_teams|join('、') }}），那些比賽暫時不能比價{% endif %}</p>
+  {% endif %}
+  {% if cards %}
+  <div class="cards">
+  {% for c in cards %}
+    {% set d = c.decision %}
+    <article class="match" id="{{ c.id }}" data-status="{{ c.status }}">
+      {{ ui.head(c) }}
+      {% if c.shape_text %}<p class="sub probables">{{ c.shape_text }}</p>{% endif %}
+      <div class="verdict">
+        {{ ui.status_chip(c.status) }}
+        {% if d and d.status == 'value' %}
+          {% for v in d['values'] %}<span><b>{{ v.label }}</b> @ {{ '%.2f'|format(v.price) }} <span class="pos">EV {{ '%+.1f%%'|format(v.ev * 100) }}</span>{% if v.derived %} <span class="chip ghost">換算</span>{% endif %}</span>{% endfor %}
+        {% elif d and d.status == 'stale' %}
+          <span class="sub">國際價 {{ d.fair_at|tpe }}、運彩價 {{ d.tw_at|tpe }} 相隔超過 {{ gap_h }} 小時</span>
+        {% elif d and d.best %}
+          <span class="sub">最接近：{{ d.best.label }} EV <b class="{{ 'neg' if d.best.ev is not none and d.best.ev < 0 else '' }}">{{ '%+.1f%%'|format(d.best.ev * 100) if d.best.ev is not none else '—' }}</b></span>
+        {% endif %}
+      </div>
+      {% if d and d.bets %}
+      <div class="scroll"><table class="tbl">
+        <thead><tr><th>運彩下法</th><th class="r">運彩</th><th class="r">公允</th><th class="r">EV</th></tr></thead>
+        <tbody>
+        {% for b in d.bets %}
+          {% set t = cfg.derived_value_threshold if b.derived else cfg.nba_value_threshold %}
+          <tr{% if d.pick and b.key == d.pick.key and b.line == d.pick.line %} class="on"{% endif %}><td>{{ b.label }}{% if b.derived %} <span class="chip ghost">換算</span>{% endif %}</td><td class="num">{{ '%.2f'|format(b.price) }}</td><td class="num muted">{{ '%.2f'|format(b.fair_odds) if b.fair_odds else '—' }}</td><td class="num {{ 'pos' if b.fresh and b.ev is not none and b.ev >= t else ('neg' if b.ev is not none and b.ev < 0 else '') }}">{{ '%+.1f%%'|format(b.ev * 100) if b.ev is not none else '—' }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table></div>
+      <p class="conclusion"><b>結論</b>{% if d.status == 'value' %}可下 {{ d.pick.label }} @ {{ '%.2f'|format(d.pick.price) }}（公允 {{ d.pick.fair_odds }}，EV {{ '%+.1f%%'|format(d.pick.ev * 100) }}{% if d.pick.derived %}，換算線{% endif %}）。下注前先確認運彩賠率沒有變低。{% elif d.status == 'pass' %}不下。最接近的是 {{ d.best.label }}（EV {{ '%+.1f%%'|format(d.best.ev * 100) }}），門檻 EV ≥ {{ thr }}%（換算線 {{ thr_d }}%）。{% else %}不判斷：國際價（{{ d.fair_at|tpe }}）和運彩價（{{ d.tw_at|tpe }}）相隔超過 {{ gap_h }} 小時，等下一次更新。{% endif %}</p>
+      {% else %}
+      <p class="none">還沒有運彩賠率。開賽前 {{ cfg.pregame_window_hours|round|int }} 小時內上傳一次運彩籃球，就會比不讓分、讓分、大小。</p>
+      {% endif %}
+      {% if c.notes %}<ul class="why">{% for n in c.notes %}<li>{{ n }}</li>{% endfor %}</ul>{% endif %}
+      {{ ui.timeline(c, c.focus_label ~ "：隱含機率") }}
+      {% if d %}<p class="stamp-line">運彩 {{ d.tw_at|tpe }}・國際 {{ d.fair_at|tpe }}{% if d.timing == 'pregame' %}・開賽前 {{ d.minutes_before }} 分比價{% endif %}</p>{% endif %}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("接下來沒有 NBA 比賽", "有比賽時，每天早上 08:15 和晚上 20:25（台灣時間）會自動抓賽程和國際價。") }}
+  {% endif %}
+</section>
+
+<section id="history" class="tabpanel" role="tabpanel">
+  <h2>每場檢討 <span class="count">{{ history.n }} 場・新到舊</span></h2>
+  <p class="howto">每場看兩件事。<b>市場</b>：熱門有沒有贏、有沒有過盤、總分大或小——這只是紀錄市場的盤口準不準，不是下注依據。<b>下注</b>：只有「可下」的注才看輸贏和 CLV；「不下」是因為運彩價格比公允價差，不管比分如何都是對的決定。</p>
+  {% if hs.games %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ hs.games }}</b><span>已檢討場次</span></div>
+    <div class="kpi"><b>{{ hs.fav_wins }} / {{ hs.fav_n }}</b><span>熱門不讓分贏（市場預期 {{ hs.fav_expected }}）</span></div>
+    <div class="kpi"><b>{{ hs.fav_covers }} / {{ hs.cover_n }}</b><span>熱門讓分過盤</span></div>
+    <div class="kpi"><b>{{ hs.overs }} / {{ hs.total_n }}</b><span>大分</span></div>
+    <div class="kpi"><b>{{ hs.wins }} / {{ hs.bets }}</b><span>可下的注 贏 / 注數（有判斷 {{ hs.judged }} 場）</span></div>
+    {% if hs.bets %}<div class="kpi"><b class="{{ 'pos' if hs.units > 0 else ('neg' if hs.units < 0 else '') }}">{{ '%+.2f'|format(hs.units) }}</b><span>損益（每注 1 單位）</span></div>{% endif %}
+  </div>
+  {% endif %}
+  {% if history.games %}
+  <div class="cards">
+  {% for i in history.games %}
+    <article class="past" data-tone="{{ i.tone }}">
+      <div class="mt"><span class="comp">NBA</span><span class="kick">{{ i.when.date }} {{ i.when.time }}</span><span>{{ i.when.weekday }}</span>{% if i.score %}<span class="score" title="客–主">{{ i.score }}</span>{% endif %}</div>
+      <h3 class="teams">{{ i.title }}</h3>
+      <div class="verdict-row"><span class="chip {{ i.tone }}">{{ i.label }}</span></div>
+      {{ rv.picks_block(i.picks) }}
+      <details class="more"><summary>比賽經過</summary><ul class="why">{% for b in i.bullets %}<li>{{ b }}</li>{% endfor %}</ul></details>
+      <p class="conclusion"><b>結論</b>{{ i.conclusion }}</p>
+      {{ ui.past_chart(i.curve) }}
+    </article>
+  {% endfor %}
+  </div>
+  {% else %}
+  {{ ui.empty("還沒有打完的比賽", "比賽一結束，賽前的盤口、比價和實際比分就會放在這裡對照。") }}
+  {% endif %}
+  <p class="stamp-line">讓分、大小換算用的常態分佈：勝分差的標準差 {{ cfg.nba_margin_sigma }} 分、總分 {{ cfg.nba_total_sigma }} 分，以 2007–2025 例行賽 22,677 場驗證（盤口移動 1–6 分內誤差 1 個百分點以內）。它只把國際價換算到運彩的線，不取代市場。</p>
+</section>
+{% endblock %}

@@ -69,7 +69,9 @@ def month_label(value: Any) -> str:
     return f"{d.year} 年 {d.month} 月"
 
 
-SPORT_LABELS = {"football": "足球", "mlb": "MLB"}
+SPORT_LABELS = {"football": "足球", "mlb": "MLB", "nba": "NBA"}
+# Sports read "away @ home", the way 運彩 and US books list them (football is home vs away).
+US_SPORTS = ("mlb", "nba")
 WATCH_ROWS = 8
 
 
@@ -111,7 +113,7 @@ def radar_view(radar: Mapping[str, Any], now: datetime) -> dict[str, Any]:
         "watch_total": len(found.get("watch", [])),
         "last": [
             {"sport": SPORT_LABELS[s], "tw": last[s].get("tw"), "intl": last[s].get("intl")}
-            for s in ("football", "mlb")
+            for s in ("football", "mlb", "nba")
             if s in last
         ],
         "plan": [
@@ -141,7 +143,7 @@ def _parse(value: Any) -> datetime | None:
 def side_label(sport: str, market: str, side: str, line: str, home: str, away: str) -> str:
     """'主勝 Arsenal FC', '大 2.5', 'Los Angeles Dodgers -1.5' ..."""
     if market == "h2h":
-        if sport == "mlb":
+        if sport in US_SPORTS:
             return f"{home if side == 'home' else away} 不讓分"
         return {"home": f"主勝 {home}", "draw": "和局", "away": f"客勝 {away}"}.get(side, side)
     if market == "totals":
@@ -151,8 +153,9 @@ def side_label(sport: str, market: str, side: str, line: str, home: str, away: s
 
 
 def match_title(sport: str, home: str, away: str) -> str:
-    """Football 'home vs away'; baseball 'away @ home' (the way 運彩 and US books list it)."""
-    return f"{home} vs {away}" if sport == "football" else f"{away} @ {home}"
+    """Football 'home vs away'; MLB and NBA 'away @ home' (the way 運彩 and US books list
+    them)."""
+    return f"{away} @ {home}" if sport in US_SPORTS else f"{home} vs {away}"
 
 
 def _names(item: Mapping[str, Any]) -> tuple[str, str]:
@@ -267,7 +270,7 @@ def bighand_view(m: Mapping[str, Any], cfg: ModelConfig = MODEL) -> dict[str, An
     return {
         **m,
         "title": match_title(sport, home, away),
-        "sport_label": "足球" if sport == "football" else "MLB",
+        "sport_label": SPORT_LABELS.get(sport, sport),
         "kickoff_local": taipei_time(m.get("kickoff_utc")),
         "events": events,
         "types": sorted({e["type"] for e in events}),
@@ -298,9 +301,9 @@ def _trajectory_table(
     """Time | international % per side | 運彩 price per side (| G for the MLB moneyline),
     one row per time we saw the market; the times a move was caught are marked."""
     market, line = t["market"], t["line"]
-    sides = [s for s in MARKET_SIDES[market] if not (sport == "mlb" and s == "draw")]
+    sides = [s for s in MARKET_SIDES[market] if not (sport in US_SPORTS and s == "draw")]
     if market == "h2h":
-        title = "不讓分" if sport == "mlb" else "勝平負"
+        title = "不讓分" if sport in US_SPORTS else "勝平負"
     elif market == "totals":
         title = f"大小 {line}"
     else:
@@ -331,11 +334,13 @@ def review_views(
     mlb_rows: list[Mapping[str, Any]],
     signal_rows: list[Mapping[str, Any]] | None = None,
     value_rows: list[Mapping[str, Any]] | None = None,
+    nba_rows: list[Mapping[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Explained review cards (newest first) and the cumulative summaries. Every
     recommendation the page made for a match (模型分歧 ledger rows, 運彩 value bets) is
     reviewed on that match's card."""
     picks = match_picks(signal_rows or [], value_rows or [])
+    nba_rows = nba_rows or []
     football = [
         {
             "row": row,
@@ -348,13 +353,19 @@ def review_views(
         {"row": row, **review.explain_mlb(row, picks.get(("mlb", str(row.get("game_pk"))), []))}
         for row in sorted(mlb_rows, key=lambda r: str(r.get("kickoff_utc")), reverse=True)
     ]
+    nba = [
+        {"row": row, **review.explain_nba(row, picks.get(("nba", str(row.get("game_id"))), []))}
+        for row in sorted(nba_rows, key=lambda r: str(r.get("kickoff_utc")), reverse=True)
+    ]
     return {
         "football": football,
         "mlb": mlb,
+        "nba": nba,
         "summary": review.summarize_football(football_rows),
         "mlb_summary": review.summarize_mlb(mlb_rows),
-        "total": len(football_rows) + len(mlb_rows),
-        "picks": _picks_summary([p for v in football + mlb for p in v["picks"]]),
+        "nba_summary": review.summarize_nba(nba_rows),
+        "total": len(football_rows) + len(mlb_rows) + len(nba_rows),
+        "picks": _picks_summary([p for v in football + mlb + nba for p in v["picks"]]),
     }
 
 

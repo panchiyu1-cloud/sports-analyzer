@@ -24,7 +24,8 @@ BASE_URL = "https://api.odds-api.io/v3"
 MAX_IDS = 10
 
 # Our competitions by their odds-api.io (sport, league slug). MLB has two slugs there:
-# the regular season and the playoffs.
+# the regular season and the playoffs; NBA one (the playoffs' slug, if any, is added
+# when the probe sees it).
 LEAGUES: dict[str, tuple[str, tuple[str, ...]]] = {
     "PL": ("football", ("england-premier-league",)),
     "PD": ("football", ("spain-laliga",)),
@@ -33,6 +34,8 @@ LEAGUES: dict[str, tuple[str, tuple[str, ...]]] = {
     "FL1": ("football", ("france-ligue-1",)),
     "CL": ("football", ("international-clubs-uefa-champions-league",)),
     "MLB": ("baseball", ("usa-mlb", "usa-mlb-playoffs")),
+    # The slug the official SDK's own example uses (odds-api-io/odds-api-node README).
+    "NBA": ("basketball", ("usa-nba",)),
 }
 # The match-winner market's name in the odds answer (1X2 for football).
 MONEYLINE = "ML"

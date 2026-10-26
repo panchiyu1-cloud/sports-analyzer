@@ -4,6 +4,7 @@
 
 - **足球**：英超、西甲、德甲、義甲、法甲、歐冠。模型為 Dixon-Coles（泊松進球 + 低比分修正 + 時間衰減）。
 - **棒球（MLB）**：Phase 3 建置中，目前只抓賽程與先發投手。
+- **籃球（NBA）**：沒有自己的模型（反著押、順著押都沒有找到規律），只做運彩三種盤口對國際公允價的比價；賽程與賽果來自 ESPN 的公開賽程表，不需要金鑰（`fetch/nba.py`）。運彩的讓分、大小線和國際不同時，用常態分佈把國際價換算到運彩的線。
 - **市場**：The Odds API 的國際莊家賠率（去水後取中位數）。這**不是**台灣運彩盤口。
 - **帳本**：每個訊號寫進 `data/ledger.csv`，比賽結束後自動結算，網頁上顯示命中率與損益。
 
@@ -61,13 +62,15 @@
 
 ## 運彩比價（Phase 4）
 
-台灣運彩的賠率資料流只有台灣 IP 連得到（GitHub 的伺服器會被 CloudFront 以國別擋下），所以由 iPhone 的「捷徑」App 每天 08:00 與 20:00 自動抓兩個檔案、上傳到 `data/tw/football/` 與 `data/tw/baseball/`（檔名 `YYYY-MM-DD-HHmm.json`）。設定步驟在另一份文件「運彩賠率自動上傳設定」。
+台灣運彩的賠率資料流只有台灣 IP 連得到（GitHub 的伺服器會被 CloudFront 以國別擋下），所以由 iPhone 的「捷徑」App 每天 08:00 與 20:00 自動抓檔案、上傳到 `data/tw/football/`、`data/tw/baseball/` 與 `data/tw/basketball/`（檔名 `YYYY-MM-DD-HHmm.json`）。設定步驟在另一份文件「運彩賠率自動上傳設定」。
+
+**NBA 的上傳**：把棒球的捷徑複製一份，網址改成運彩籃球的資料流（`apidata/Pre/<籃球的 sport id>-Games.zh.json`；sport id 在運彩網站籃球賽事表頁面的網路請求裡看得到，足球是 34740.1、棒球是 34731.1），上傳路徑改成 `data/tw/basketball/`。NBA 的比賽在台灣時間早上開打，開賽前一小時內上傳一次最有用（傷兵、輪休的消息剛推動國際盤、運彩還沒跟上）；`nba.html` 的首頁方塊和「建議下次上傳」會告訴你時間。
 
 上傳一到 GitHub，`tw.yml` 就會：
 
 1. 解析運彩的格式（`fetch/taiwan.py`：不讓分／讓分／大小；賠率 = 1 + pu ÷ pd）
 2. 用開賽時間 + 中文隊名對照表把每場對上我們的卡片
-3. 算 **EV = 市場公允機率 × 運彩賠率 − 1**，EV ≥ 2% 的標成「價值注」寫進 `data/tw_ledger.csv`
+3. 算 **EV = 市場公允機率 × 運彩賠率 − 1**，EV ≥ 2%（MLB、NBA 3%）的標成「價值注」寫進 `data/tw_ledger.csv`
 4. 晚上 20:25 的 `evening.yml` 再抓一次國際獨贏盤（只花 1 點／聯賽），把早上價值注的 **CLV** 填上；比賽結束後自動結算
 
 網頁最上方的「運彩價值注」就是這個結果。多數日子會是空的——運彩的水錢比國際盤高，賠率高於公允價的注本來就少；有就是有，沒有就不要下。
@@ -81,6 +84,7 @@ pip install -r requirements-dev.txt
 cp .env.example .env            # 填入兩把金鑰；.env 已在 .gitignore 裡
 python -m unittest discover -s tests -v
 python -m sports_analyzer.pipeline football          # 抓資料 + 建模 + 產頁面
+python -m sports_analyzer.pipeline nba               # NBA：賽程 + 國際價 + 預期比分
 python -m sports_analyzer.pipeline render            # 只用上次快照重新產頁面
 python scripts/backtest_football.py data/history/*.csv
 ```
@@ -92,9 +96,9 @@ src/sports_analyzer/
   config.py        聯賽清單、模型參數、環境設定
   http.py          共用 HTTP 連線：重試、依回應標頭自動節流
   teams.py         三個資料來源的隊名對照
-  fetch/           football.py（football-data.org）、odds.py（The Odds API）、mlb.py
-  models/          dixon_coles.py（足球模型）、market.py（去水、edge、T-10 G 值）
-  analysis/        football.py — 賽程 + 模型 + 賠率 → 卡片與訊號
+  fetch/           football.py（football-data.org）、odds.py（The Odds API）、mlb.py、nba.py（ESPN）
+  models/          dixon_coles.py（足球模型）、market.py（去水、edge、T-10 G 值）、margin.py（NBA 讓分／大小換算）
+  analysis/        football.py — 賽程 + 模型 + 賠率 → 卡片與訊號；mlb.py、nba.py — 各自的卡片與運彩決定
   ledger.py        訊號帳本與結算
   render/          HTML 模板
   pipeline.py      每日流程進入點
@@ -106,7 +110,7 @@ tests/             48 個測試，不需要網路
 ## 額度與限制
 
 - football-data.org 免費層：每分鐘 10 次、比分有延遲、沒有陣容名單。程式會讀回應標頭自動等待。
-- The Odds API 免費層：每月 500 點，一次呼叫 = 市場數 × 地區數（預設 3 點）。只對視窗內有比賽的聯賽呼叫，每月大約用 200–300 點。
+- The Odds API 免費層：每月 500 點，一次呼叫 = 市場數 × 地區數（預設 3 點）。只對視窗內有比賽的聯賽呼叫；NBA 球季每天多 3 點（早上）+ 2 點（晚上），預算不夠時程式自己減少市場或沿用舊價。
 - 每日快照是「早上 08:15 的賠率」，不是開賽前的尾盤。T-10 要求的賽前 10 分鐘 G 值需要付費方案或手動查詢。
 - 模型只用比分，不知道傷兵、輪換、天氣。遇到這類資訊請自行調整。
 
@@ -115,6 +119,7 @@ tests/             48 個測試，不需要網路
 - ~~Phase 2：市場基準 + 模型修正~~ 做完，未通過（見上）。混合模型保留在 `models/blend.py`，回測每週自動重跑；哪天 CLV 轉正、`passed` 變 true 再談訊號。
 - Phase 3：MLB 模型（log5 + 先發投手 + 牛棚）。市場公允賠率與 T-10 G 值已先上線（`analysis/mlb.py`）。棒球模型同樣要過 CLV 這關。
 - ~~Phase 4：運彩比價~~ 已上線（見上）。接下來看三個月的運彩帳本：平均 CLV 為正才算真的有價值。
+- NBA（2026-10-26 上線）：只做比價和開賽前的時機；累積一季的 `data/reviews/nba.csv` 和運彩帳本後，再看換算線的 CLV 有沒有比直接比的差。
 
 ## 授權
 

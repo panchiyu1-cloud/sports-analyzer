@@ -4,8 +4,8 @@ data/moves/YYYY-MM.csv (by observation month), one row per observed price:
 
   observed_at   UTC, to the minute: when the consensus was bought / the phone uploaded 運彩
   source        intl | tw
-  sport         football | mlb
-  match_id      football-data.org match id / MLB game_pk
+  sport         football | mlb | nba
+  match_id      football-data.org match id / MLB game_pk / NBA (ESPN) game id
   kickoff_utc, home, away
   market        h2h | totals | spread
   side          home | draw | away | over | under
@@ -146,7 +146,7 @@ def _card_base(card: Mapping[str, Any], sport: str, source: str) -> dict[str, An
     return {
         "source": source,
         "sport": sport,
-        "match_id": str(card.get("match_id") or card.get("game_pk")),
+        "match_id": str(card.get("match_id") or card.get("game_pk") or card.get("game_id")),
         "kickoff_utc": card.get("kickoff_utc", ""),
         "home": card.get("home", ""),
         "away": card.get("away", ""),
@@ -435,8 +435,13 @@ def intl_big_moves(rows: Iterable[Mapping[str, str]], cfg: ModelConfig) -> list[
 
 # ----------------------------------------------------------- 4: 延遲雷達
 def value_threshold(sport: str, cfg: ModelConfig) -> float:
-    """The EV a 運彩 price needs to count as a value bet (MLB keeps a larger cushion)."""
-    return cfg.mlb_value_threshold if sport == "mlb" else cfg.value_threshold
+    """The EV a 運彩 price needs to count as a value bet (MLB and NBA keep a larger
+    cushion than football)."""
+    if sport == "mlb":
+        return cfg.mlb_value_threshold
+    if sport == "nba":
+        return cfg.nba_value_threshold
+    return cfg.value_threshold
 
 
 def price_needed(prob: float, threshold: float) -> float:

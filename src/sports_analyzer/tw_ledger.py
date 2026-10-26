@@ -14,7 +14,9 @@ from pathlib import Path
 from typing import Any
 
 from .analysis.taiwan import derived_prob_for, fair_time, implied_from_market
+from .config import MODEL
 from .ledger import PENDING, PUSH, SETTLED, grade, hit_counts, profit
+from .models import margin as margin_model
 from .models.implied import IDENTITY, Calibration
 
 COLUMNS = [
@@ -81,7 +83,7 @@ def append_values(
         tw = card.get("tw")
         if not tw:
             continue
-        match_id = card.get("match_id") or card.get("game_pk")
+        match_id = card.get("match_id") or card.get("game_pk") or card.get("game_id")
         for v in tw.get("values", []):
             vid = value_id(sport, match_id, v["selection_key"], v.get("line"))
             if vid in existing:
@@ -136,7 +138,7 @@ def update_clv(
         mv = card.get("market")
         if not mv or not _priced_before_kickoff(card, mv, now):
             continue
-        fair_by_match[str(card.get("match_id") or card.get("game_pk"))] = mv
+        fair_by_match[str(card.get("match_id") or card.get("game_pk") or card.get("game_id"))] = mv
     updated = 0
     for row in rows:
         if row["sport"] != sport or row["status"] != PENDING:
@@ -144,7 +146,7 @@ def update_clv(
         mv = fair_by_match.get(str(row["match_id"]))
         if not mv:
             continue
-        prob = _fair_prob_for(mv, row["selection_key"], row["line"], calib)
+        prob = _fair_prob_for(mv, row["selection_key"], row["line"], calib, sport)
         if prob is None:
             continue
         row["closing_fair_prob"] = f"{prob:.4f}"
@@ -164,18 +166,27 @@ def _priced_before_kickoff(card: dict[str, Any], mv: dict[str, Any], now: dateti
 
 
 def _fair_prob_for(
-    mv: dict[str, Any], key: str, line: str, calib: Calibration = IDENTITY
+    mv: dict[str, Any],
+    key: str,
+    line: str,
+    calib: Calibration = IDENTITY,
+    sport: str = "football",
 ) -> float | None:
     """Fair probability for a selection from a *fresh* consensus block (stale blocks are carried
     over from an earlier snapshot and would make CLV equal EV, which proves nothing).
 
     Derived selections (team totals, both teams to score, first half, other totals
     lines...) are re-priced through the market-implied model from a fresh 1X2 and a
-    fresh totals line.
+    fresh totals line; NBA handicap and totals lines away from the main line through the
+    normal margin model from the fresh main block.
     """
     direct = _direct_fair_prob(mv, key, line)
-    if direct is not None or key in ("home", "draw", "away", "spread_home", "spread_away"):
+    if direct is not None:
         return direct
+    if sport == "nba":
+        return _nba_line_prob(mv, key, line)
+    if key in ("home", "draw", "away", "spread_home", "spread_away"):
+        return None
     tot = mv.get("totals") or {}
     if key in ("over", "under") and line and tot and abs(float(line) - tot["line"]) < 1e-9:
         return None  # the market's own line, but stale: re-deriving it would echo the old price
@@ -186,6 +197,34 @@ def _fair_prob_for(
         return None
     g = implied_from_market(mv)
     return derived_prob_for(g, key, float(line) if line else None, calib) if g else None
+
+
+def _nba_line_prob(mv: dict[str, Any], key: str, line: str) -> float | None:
+    """An NBA handicap or totals line the consensus did not quote: translated from its
+    fresh main line with the normal margin model (analysis/taiwan.nba_derived_compare
+    priced the bet the same way)."""
+    if not line:
+        return None
+    wanted = float(line)
+    if key in ("spread_home", "spread_away"):
+        block = mv.get("spread") or {}
+        if not block or block.get("stale") or block.get("line") is None:
+            return None
+        mu = margin_model.mean_from_cover(
+            float(block["line"]), block["home"]["fair"], MODEL.nba_margin_sigma
+        )
+        home, push, away = margin_model.cover_probs(mu, MODEL.nba_margin_sigma, wanted)
+        return margin_model.conditional(home if key == "spread_home" else away, push)
+    if key in ("over", "under"):
+        block = mv.get("totals") or {}
+        if not block or block.get("stale") or block.get("line") is None:
+            return None
+        mu = margin_model.mean_from_over(
+            float(block["line"]), block["over"]["fair"], MODEL.nba_total_sigma
+        )
+        over, push, under = margin_model.over_probs(mu, MODEL.nba_total_sigma, wanted)
+        return margin_model.conditional(over if key == "over" else under, push)
+    return None
 
 
 def _direct_fair_prob(mv: dict[str, Any], key: str, line: str) -> float | None:
@@ -213,7 +252,8 @@ def settle(
     sport: str,
     now: datetime | None = None,
 ) -> int:
-    """Settle pending rows of `sport` with final scores keyed by match_id/game_pk (as strings).
+    """Settle pending rows of `sport` with final scores keyed by match_id / game_pk / game_id
+    (as strings).
 
     A score is (home, away) or, for football, (home, away, home at half-time, away at
     half-time); first-half bets wait until the half-time score is known.

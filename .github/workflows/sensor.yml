@@ -7,10 +7,11 @@ name: 盯盤 (sensor)
 # (src/sports_analyzer/sensor.py; it goes by the time since each reading, so runs that
 # come early or late change nothing). The act job then
 # - buys the consensus of a competition where a side has moved 3 percentage points or
-#   more since it was last bought (h2h; MLB also the run line: 1-2 credits, within the
-#   budget plus the pre-game extra) and judges the last 運彩 upload against it (延遲雷達);
+#   more since it was last bought (h2h; MLB also the run line, NBA also the handicap:
+#   1-2 credits, within the budget plus the pre-game extra) and judges the last 運彩
+#   upload against it (延遲雷達);
 # - reviews the matches that have just finished (review --new-only: football 2 h, MLB
-#   2.5 h after kickoff, asked again each round until the result is in);
+#   and NBA 2.5 h after kickoff, asked again each round until the result is in);
 # then renders and commits. GitHub starts scheduled runs late and skips some: here they
 # came 25-47 minutes apart whether asked for every ten or every five minutes. So a run
 # keeps going: after each round it waits for the next reading or review to fall due

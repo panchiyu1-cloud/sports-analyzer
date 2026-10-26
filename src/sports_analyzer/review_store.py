@@ -159,6 +159,68 @@ MLB_COLUMNS = [
     "reviewed_at",
 ]
 
+NBA_COLUMNS = [
+    "game_id",
+    "kickoff_utc",
+    "local",
+    "home",
+    "away",
+    # pre-game: market fair probabilities, first and last consensus before tip-off
+    "open_home",
+    "open_away",
+    "open_at",
+    "close_home",
+    "close_away",
+    "close_at",
+    "spread_line",
+    "spread_home",
+    "spread_away",
+    "total_line",
+    "over_p",
+    "exp_home_pts",
+    "exp_away_pts",
+    # the last pre-game 運彩 decision (analysis/nba.decision)
+    "value_status",
+    "pick_key",
+    "pick_label",
+    "pick_side",
+    "pick_line",
+    "pick_price",
+    "pick_fair",
+    "pick_ev",
+    "pick_derived",
+    "best_label",
+    "best_ev",
+    "value_at",
+    "value_fair_at",
+    "value_minutes",
+    # 運彩 prices as captured
+    "tw_home",
+    "tw_away",
+    "tw_spread_line",
+    "tw_spread_home",
+    "tw_spread_away",
+    "tw_total_line",
+    "tw_over",
+    "tw_under",
+    "tw_at",
+    # result
+    "final_h",
+    "final_a",
+    "quarters_h",
+    "quarters_a",
+    # assessment (recomputed from the columns above)
+    "winner",
+    "market_ll",
+    "fav",
+    "fav_won",
+    "fav_cover",
+    "total_result",
+    "pick_result",
+    "verdict",
+    "reviewed_at",
+]
+
 
 def read(path: Path) -> list[dict[str, str]]:
     if not path.exists():

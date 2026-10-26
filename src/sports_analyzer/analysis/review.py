@@ -25,9 +25,10 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from typing import Any
 
-from ..config import LOCAL_TZ
+from ..config import LOCAL_TZ, MODEL
 from ..fetch.football import Match
 from ..fetch.mlb import BoxScore, MlbGame, PitcherLine
+from ..fetch.nba import NbaGame
 from ..history import MatchStats
 from ..ledger import HALF_LOSS, HALF_WIN, LOSS, PENDING, PUSH, WIN, grade, profit
 from ..models.implied import IDENTITY, Calibration
@@ -81,11 +82,23 @@ VERDICTS: dict[str, tuple[str, str]] = {
     "t10_pass": ("沒有價值，不下", "neutral"),
     "t10_stale": ("價格相隔太久，未判斷", "neutral"),
     "no_t10": ("沒有運彩比價", "neutral"),
+    # NBA (運彩 value decision on the card: analysis/nba.decision)
+    "value_win": ("價值注 贏", "good"),
+    "value_loss": ("價值注 輸", "bad"),
+    "value_push": ("價值注 走盤", "neutral"),
+    "value_pass": ("沒有價值，不下", "neutral"),
+    "value_stale": ("價格相隔太久，未判斷", "neutral"),
+    "no_value": ("沒有運彩比價", "neutral"),
     # a recommendation whose match result is not in yet
     "pending": ("待結算", "neutral"),
 }
 # Where a recommendation came from (the page's sections).
-PICK_SOURCES = {"value": "運彩價值注", "signal": "模型分歧", "t10": "T-10 可下"}
+PICK_SOURCES = {
+    "value": "運彩價值注",
+    "signal": "模型分歧",
+    "t10": "T-10 可下",
+    "nba": "NBA 可下",
+}
 
 
 # =========================================================================== shared
@@ -311,9 +324,10 @@ def explain_pick(
         "push": "走盤，退回本金。",
         "pending": "比賽結果還沒進來。",
     }[verdict]
+    source_key = "t10" if pick.get("t10") else "nba" if pick.get("nba") else str(pick.get("source"))
     return {
         "source": pick.get("source"),
-        "source_label": PICK_SOURCES.get("t10" if pick.get("t10") else str(pick.get("source")), ""),
+        "source_label": PICK_SOURCES.get(source_key, ""),
         "label": pick.get("label", ""),
         "result": status,
         "result_text": RESULT_TEXT.get(status, "待結算"),
@@ -1318,6 +1332,290 @@ def summarize_mlb(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
         "t10_wins": sum(1 for _, a in bets if a["t10_result"] == WIN),
         "t10_units": round(sum(a["t10_units"] or 0.0 for _, a in bets), 2),
         "t10_avg_ev": round(sum(e for e in evs if e is not None) / len(evs), 4) if evs else None,
+        "market_ll": round(sum(lls) / len(lls), 3) if lls else None,
+    }
+
+
+# ============================================================================== NBA
+def nba_row(entry: Mapping[str, Any], game: NbaGame, now: datetime) -> dict[str, Any]:
+    """One finished NBA game: the last pre-game card, the first and last consensus
+    before tip-off, the last 運彩 comparison and its decision (analysis/nba.decision,
+    recomputed here from the card so the row holds what the page showed), the score."""
+    from .nba import decision as nba_decision  # here to avoid an import cycle
+
+    card = entry["card"]
+    m_open, m_close = entry.get("open") or {}, entry.get("close") or {}
+    tw = entry.get("tw") or {}
+    judged = nba_decision({**card, "tw": tw}, MODEL) if tw else None
+    pick, best = (judged or {}).get("pick") or {}, (judged or {}).get("best") or {}
+    spread = (m_close.get("spread") or m_open.get("spread")) or {}
+    totals = (m_close.get("totals") or m_open.get("totals")) or {}
+    tw_h2h, tw_spread, tw_totals = (
+        tw.get("h2h") or {},
+        tw.get("spread") or {},
+        tw.get("totals") or {},
+    )
+    shape = card.get("shape") or {}
+    # Handicap lines are the HOME handicap everywhere (the tw block, the ledger, grade).
+    pick_line = _num(pick.get("line"))
+    row: dict[str, Any] = {
+        "game_id": str(game.game_id),
+        "kickoff_utc": card.get("kickoff_utc", ""),
+        "local": card.get("local", ""),
+        "home": card.get("home", game.home),
+        "away": card.get("away", game.away),
+        "open_home": side_prob(m_open, "home", None),
+        "open_away": side_prob(m_open, "away", None),
+        "open_at": entry.get("open_at", ""),
+        "close_home": side_prob(m_close, "home", None, fresh_only=True),
+        "close_away": side_prob(m_close, "away", None, fresh_only=True),
+        "close_at": entry.get("close_at", ""),
+        "spread_line": _num(spread.get("line")),
+        "spread_home": _num((spread.get("home") or {}).get("fair")),
+        "spread_away": _num((spread.get("away") or {}).get("fair")),
+        "total_line": _num(totals.get("line")),
+        "over_p": _num((totals.get("over") or {}).get("fair")),
+        "exp_home_pts": _num(shape.get("home_pts")),
+        "exp_away_pts": _num(shape.get("away_pts")),
+        "value_status": (judged or {}).get("status", ""),
+        "pick_key": pick.get("key", ""),
+        "pick_label": pick.get("label", ""),
+        "pick_side": pick.get("side", ""),
+        "pick_line": pick_line,
+        "pick_price": _num(pick.get("price")),
+        "pick_fair": _num(pick.get("fair_odds")),
+        "pick_ev": _num(pick.get("ev")),
+        "pick_derived": _flag(bool(pick.get("derived"))) if pick else "",
+        "best_label": best.get("label", ""),
+        "best_ev": _num(best.get("ev")),
+        "value_at": (judged or {}).get("tw_at") or "",
+        "value_fair_at": (judged or {}).get("fair_at") or "",
+        "value_minutes": (judged or {}).get("minutes_before"),
+        "tw_home": _num((tw_h2h.get("home") or {}).get("price")),
+        "tw_away": _num((tw_h2h.get("away") or {}).get("price")),
+        "tw_spread_line": _num(tw_spread.get("line")),
+        "tw_spread_home": _num((tw_spread.get("home") or {}).get("price")),
+        "tw_spread_away": _num((tw_spread.get("away") or {}).get("price")),
+        "tw_total_line": _num(tw_totals.get("line")),
+        "tw_over": _num((tw_totals.get("over") or {}).get("price")),
+        "tw_under": _num((tw_totals.get("under") or {}).get("price")),
+        "tw_at": tw.get("captured_at", "") if tw else "",
+        "final_h": game.home_score,
+        "final_a": game.away_score,
+        "quarters_h": " ".join(str(q) for q in game.home_quarters),
+        "quarters_a": " ".join(str(q) for q in game.away_quarters),
+        "reviewed_at": now.isoformat(timespec="seconds"),
+    }
+    row.update(assess_nba(row))
+    return row
+
+
+def assess_nba(row: Mapping[str, Any]) -> dict[str, Any]:
+    """Outcome facts plus the verdict on the 運彩 decision. Only a value bet has a
+    result; "不下" stays "不下" whatever the score (a price below the fair price loses
+    money on average however this game ended)."""
+    status = str(row.get("value_status") or "")
+    no_bet = {"value": "no_value", "pass": "value_pass", "stale": "value_stale"}.get(
+        status, "no_value"
+    )
+    fh, fa = _i(row, "final_h"), _i(row, "final_a")
+    if fh is None or fa is None or fh == fa:
+        return {
+            "winner": "",
+            "market_ll": None,
+            "fav": "",
+            "fav_won": "",
+            "fav_cover": "",
+            "total_result": "",
+            "pick_result": "",
+            "pick_units": None,
+            "verdict": no_bet,
+        }
+    winner = "home" if fh > fa else "away"
+    p_home = _f(row, "close_home") or _f(row, "open_home")
+    p_away = _f(row, "close_away") or _f(row, "open_away")
+    p_win = p_home if winner == "home" else p_away
+    fav = ""
+    if p_home is not None and p_away is not None:
+        fav = "home" if p_home >= p_away else "away"
+    line = _f(row, "spread_line")
+    fav_cover = ""
+    if fav and line is not None:
+        # The home side covers when margin + home line > 0; the away side otherwise.
+        home_margin = fh - fa + line
+        if home_margin != 0:
+            fav_cover = _flag((home_margin > 0) == (fav == "home"))
+    total_line = _f(row, "total_line")
+    total_result = ""
+    if total_line is not None:
+        total = fh + fa
+        total_result = (
+            "push" if total == total_line else ("over" if total > total_line else "under")
+        )
+    pick_result, units = "", None
+    key, price = str(row.get("pick_key") or ""), _f(row, "pick_price")
+    if status == "value" and key and price:
+        pick_result = grade(key, _f(row, "pick_line"), fh, fa) or ""
+        units = round(profit(pick_result, price), 3) if pick_result else None
+    verdict = {WIN: "value_win", LOSS: "value_loss", PUSH: "value_push"}.get(pick_result, no_bet)
+    return {
+        "winner": winner,
+        "market_ll": round(-math.log(p_win), 4) if p_win else None,
+        "fav": fav,
+        "fav_won": _flag(winner == fav) if fav else "",
+        "fav_cover": fav_cover,
+        "total_result": total_result,
+        "pick_result": pick_result,
+        "pick_units": units,
+        "verdict": verdict,
+    }
+
+
+def explain_nba(row: Mapping[str, Any], picks: Iterable[Mapping[str, Any]] = ()) -> dict[str, Any]:
+    """The page's words for one final NBA game; `picks` are its 運彩 value bets
+    (pick_from_value), the card's own 可下 pick among them labelled as such."""
+    a = assess_nba(row)
+    picks = [{**p, "nba": _is_nba_pick(p, row)} for p in picks]
+    reviewed = [explain_pick(p, row, "nba") for p in picks]
+    home, away = str(row.get("home") or "主隊"), str(row.get("away") or "客隊")
+    fh, fa = _i(row, "final_h"), _i(row, "final_a")
+    name = {"home": home, "away": away}
+    bullets: list[str] = []
+    if fh is not None and fa is not None:
+        line = f"比分 {away} {fa} : {fh} {home}"
+        qa, qh = str(row.get("quarters_a") or ""), str(row.get("quarters_h") or "")
+        if qa and qh:
+            line += f"（各節 客 {qa.replace(' ', '-')}・主 {qh.replace(' ', '-')}）"
+        bullets.append(line)
+    winner = a["winner"]
+    if winner:
+        p = _f(row, f"close_{winner}") or _f(row, f"open_{winner}")
+        if p is not None:
+            bullets.append(f"{name[winner]} 勝：市場賽前給 {_pct(p)}（{_surprise(p)}）。")
+        o, c = _f(row, "open_home"), _f(row, "close_home")
+        if (
+            o is not None
+            and c is not None
+            and _hours(row.get("open_at"), row.get("close_at")) >= MOVE_MIN_HOURS
+            and abs(c - o) >= MOVE_MIN
+        ):
+            bullets.append(
+                f"賽前市場：{home} 勝率 {_pct(o)} → {_pct(c)}（{(c - o) * 100:+.1f}pp）。"
+            )
+    if not any(p["nba"] for p in picks):  # else the pick is reviewed with the picks
+        bullets.extend(_nba_decision_bullets(row, a))
+    line, fav = _f(row, "spread_line"), a["fav"]
+    if line is not None and fav and fh is not None and fa is not None:
+        own = line if fav == "home" else -line
+        covered = {"1": "過盤", "0": "沒過盤", "": "走盤"}[a["fav_cover"]]
+        bullets.append(
+            f"讓分：{name[fav]} {own:+g}，實際{'贏' if a['fav_won'] == '1' else '輸'} "
+            f"{abs(fh - fa)} 分 → {covered}。"
+        )
+    total_line = _f(row, "total_line")
+    if total_line is not None and fh is not None and fa is not None:
+        word = {"over": "大分", "under": "小分", "push": "走盤"}.get(a["total_result"], "")
+        bullets.append(f"大小：盤口 {total_line:g}，實際總分 {fh + fa} → {word}。")
+    eh, ea = _f(row, "exp_home_pts"), _f(row, "exp_away_pts")
+    if eh is not None and ea is not None and fh is not None and fa is not None:
+        bullets.append(
+            f"市場預期比分 {away} {ea:.0f} : {eh:.0f} {home}，實際 {fa} : {fh}"
+            f"（{home} 淨勝差比預期{'多' if (fh - fa) - (eh - ea) >= 0 else '少'} "
+            f"{abs((fh - fa) - (eh - ea)):.0f} 分）。"
+        )
+    if fh is not None and fa is not None and abs(fh - fa) <= 3:
+        bullets.append("三分內的比賽：勝負接近擲硬幣，單場不必過度解讀。")
+    if row.get("tw_home") or row.get("tw_away"):
+        at = _local(row.get("tw_at"))
+        text = f"運彩賠率 不讓分 客 {_f(row, 'tw_away') or '—'} · 主 {_f(row, 'tw_home') or '—'}"
+        sl = _f(row, "tw_spread_line")
+        if sl is not None and row.get("tw_spread_home"):
+            text += f"；讓分（主 {sl:+g}）主 {_f(row, 'tw_spread_home')} · 客 {_f(row, 'tw_spread_away')}"
+        tl = _f(row, "tw_total_line")
+        if tl is not None and row.get("tw_over"):
+            text += f"；大小 {tl:g} 大 {_f(row, 'tw_over')} · 小 {_f(row, 'tw_under')}"
+        bullets.append(text + (f"（{at} 擷取）" if at else ""))
+    conclusion = {
+        "value_win": "價值注贏了。單場輸贏多半是運氣，看累計的 CLV 和損益才知道方法有沒有用。",
+        "value_loss": "價值注輸了。下注時 EV 為正，輸球是正常波動；收盤 CLV 也為正就代表判斷沒問題，看累計紀錄。",
+        "value_push": "價值注走盤，退回本金。",
+        "value_pass": "運彩沒有比公允價好的價格，不下是對的決定，不論這場結果如何。",
+        "value_stale": "國際價和運彩價時間差太多，這場沒有判斷。開賽前 1 小時內上傳一次運彩就能判斷。",
+        "no_value": "這場沒有運彩和國際價的比價。",
+    }[a["verdict"]]
+    return {
+        "verdict": a["verdict"],
+        "label": VERDICTS[a["verdict"]][0],
+        "tone": VERDICTS[a["verdict"]][1],
+        "bullets": bullets,
+        "conclusion": conclusion,
+        "assess": a,
+        "picks": reviewed,
+    }
+
+
+def _is_nba_pick(pick: Mapping[str, Any], row: Mapping[str, Any]) -> bool:
+    """True for the 運彩 value bet that is the card's own 可下 pick (both keep handicap
+    lines as the home handicap)."""
+    if row.get("value_status") != "value":
+        return False
+    return pick.get("key") == row.get("pick_key") and _same_line(
+        pick.get("line"), _f(row, "pick_line")
+    )
+
+
+def _nba_decision_bullets(row: Mapping[str, Any], a: Mapping[str, Any]) -> list[str]:
+    """The pre-game 運彩 decision in one line, with its result when a bet was made."""
+    status = str(row.get("value_status") or "")
+    at = _local(row.get("value_at"))
+    minutes = _i(row, "value_minutes")
+    when = f"開賽前 {minutes} 分" if minutes is not None and 0 < minutes <= 180 else at
+    if status == "value":
+        text = (
+            f"運彩比價（{when}）：可下 {row.get('pick_label')} @ {_f(row, 'pick_price')}"
+            f"（公允 {_f(row, 'pick_fair')}，EV {(_f(row, 'pick_ev') or 0) * 100:+.1f}%"
+            f"{'，換算線' if str(row.get('pick_derived')) == '1' else ''}）"
+        )
+        if a["pick_result"]:
+            text += f" → {RESULT_TEXT[a['pick_result']]}"
+        return [text + "。"]
+    if status == "pass":
+        best = row.get("best_label")
+        ev = _f(row, "best_ev")
+        tail = f"，最接近的是 {best}（EV {ev * 100:+.1f}%）" if best and ev is not None else ""
+        return [f"運彩比價（{when}）：不下{tail}。"]
+    if status == "stale":
+        return [
+            f"運彩比價：運彩價（{at}）和國際價（{_local(row.get('value_fair_at'))}）相隔太久，沒有判斷。"
+        ]
+    return []
+
+
+def summarize_nba(rows: list[Mapping[str, Any]]) -> dict[str, Any]:
+    done = [(r, assess_nba(r)) for r in rows if _i(r, "final_h") is not None]
+    favs = [(r, a) for r, a in done if a["fav_won"] != ""]
+    expected_fav = sum(
+        (_f(r, f"close_{a['fav']}") or _f(r, f"open_{a['fav']}") or 0.0) for r, a in favs
+    )
+    covers = [a for _, a in done if a["fav_cover"] != ""]
+    totals = [a for _, a in done if a["total_result"] in ("over", "under")]
+    bets = [(r, a) for r, a in done if a["pick_result"]]
+    evs = [_f(r, "pick_ev") for r, _ in bets]
+    lls = [a["market_ll"] for _, a in done if a["market_ll"] is not None]
+    return {
+        "games": len(done),
+        "fav_n": len(favs),
+        "fav_wins": sum(1 for _, a in favs if a["fav_won"] == "1"),
+        "fav_expected": round(expected_fav, 1),
+        "cover_n": len(covers),
+        "fav_covers": sum(1 for a in covers if a["fav_cover"] == "1"),
+        "total_n": len(totals),
+        "overs": sum(1 for a in totals if a["total_result"] == "over"),
+        "judged": sum(1 for r, _ in done if r.get("value_status") in ("value", "pass")),
+        "bets": len(bets),
+        "wins": sum(1 for _, a in bets if a["pick_result"] == WIN),
+        "units": round(sum(a["pick_units"] or 0.0 for _, a in bets), 2),
+        "avg_ev": round(sum(e for e in evs if e is not None) / len(evs), 4) if evs else None,
         "market_ll": round(sum(lls) / len(lls), 3) if lls else None,
     }
 

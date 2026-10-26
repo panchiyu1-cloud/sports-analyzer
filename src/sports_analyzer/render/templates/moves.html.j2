@@ -57,7 +57,7 @@
   </div>
   {% endfor %}
   {% if history %}
-  {{ ui.filters([("all", "全部"), ("tw_only", "運彩大戶"), ("intl_big", "國際大單"), ("football", "足球"), ("mlb", "MLB"), ("value", "進了可下")]) }}
+  {{ ui.filters([("all", "全部"), ("tw_only", "運彩大戶"), ("intl_big", "國際大單"), ("football", "足球"), ("mlb", "MLB"), ("nba", "NBA"), ("value", "進了可下")]) }}
   <div class="cards filtered">{% for m in history %}{{ ui.event_match(m, cfg) }}{% endfor %}</div>
   {% else %}
   {{ ui.empty("還沒有打完的紀錄", "抓到動向的比賽打完後，會在這裡看到之後怎麼走、結果如何。") }}

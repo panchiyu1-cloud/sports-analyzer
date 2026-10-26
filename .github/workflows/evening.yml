@@ -4,8 +4,9 @@ name: Evening football odds
 # kick-offs and before the next MLB first pitches. It gives the 運彩 bets taken in the
 # morning their closing-line value, and the 20:00 phone upload a fresh fair price to
 # compare against. Match-winner prices only (不讓分): football h2h (1 credit a
-# competition), MLB h2h + run line (the run line is half of T-10's G); the morning's
-# totals stay, marked stale. The 盯盤 sensor buys more when something moves.
+# competition), MLB h2h + run line (the run line is half of T-10's G), NBA h2h +
+# handicap; the morning's totals stay, marked stale. The 盯盤 sensor buys more when
+# something moves.
 
 on:
   schedule:
@@ -47,6 +48,11 @@ jobs:
       # is what the 20:00 baseball upload is compared against. 2 credits.
       - name: MLB — refresh odds for the next Taipei morning
         run: python -m sports_analyzer.pipeline mlb --markets h2h,spreads
+      # The same for the NBA games tipping off in the next Taipei morning: match
+      # winner + handicap (運彩's two main basketball markets), 2 credits.
+      - name: NBA — refresh odds for the next Taipei morning
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline nba --markets h2h,spreads
       - name: Compare the latest 運彩 upload against it
         run: python -m sports_analyzer.pipeline tw
       # The morning's MLB game is final by now; afternoon football too on weekends.

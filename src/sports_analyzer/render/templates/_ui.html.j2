@@ -20,8 +20,8 @@
 
 {% macro head(c) %}
 <div class="mt"><span class="comp">{{ c.competition }}</span><span class="kick">{{ c.when.date }} {{ c.when.time }}</span><span>{{ c.when.weekday }}</span><span class="eta">{{ c.when.eta }}</span></div>
-<h3 class="teams">{% if c.sport == 'mlb' %}<span>{{ c.away }}</span><i>@</i><span>{{ c.home }}</span>{% else %}<span>{{ c.home }}</span><i>vs</i><span>{{ c.away }}</span>{% endif %}</h3>
-{% if c.home_intl and c.home_intl != c.home %}<div class="intl-names">{% if c.sport == 'mlb' %}{{ c.away_intl }} @ {{ c.home_intl }}{% else %}{{ c.home_intl }} vs {{ c.away_intl }}{% endif %}</div>{% endif %}
+<h3 class="teams">{% if c.sport != 'football' %}<span>{{ c.away }}</span><i>@</i><span>{{ c.home }}</span>{% else %}<span>{{ c.home }}</span><i>vs</i><span>{{ c.away }}</span>{% endif %}</h3>
+{% if c.home_intl and c.home_intl != c.home %}<div class="intl-names">{% if c.sport != 'football' %}{{ c.away_intl }} @ {{ c.home_intl }}{% else %}{{ c.home_intl }} vs {{ c.away_intl }}{% endif %}</div>{% endif %}
 {% endmacro %}
 
 {% macro status_chip(status) %}

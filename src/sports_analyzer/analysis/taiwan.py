@@ -28,6 +28,7 @@ from typing import Any
 
 from ..config import LOCAL_TZ, ModelConfig
 from ..fetch.taiwan import TwGame, TwMarket
+from ..models import margin as margin_model
 from ..models.implied import IDENTITY, Calibration, ImpliedGoals, fit_implied
 
 log = logging.getLogger(__name__)
@@ -160,7 +161,10 @@ def compare(
             "大小",
             record=fresh["totals"],
         )
-    sp = game.market("spread")  # two-way only; the parser demotes three-way handicaps
+    # Two-way handicaps only (the parser demotes three-way ones); of several 運彩 lines
+    # (NBA) the one at the international line, or nearest it. A different line is not
+    # compared here: the sport's derived pricing (below) translates it, if it can.
+    sp = game.nearest_market("spread", mv["spread"]["line"]) if mv.get("spread") else None
     if sp and mv.get("spread"):
         home_sel = next((s for s in sp.selections if s.side == "home"), None)
         if (
@@ -177,11 +181,15 @@ def compare(
                 block["values"],
                 "讓分",
                 key_prefix="spread_",
+                names={"home": game.home_zh, "away": game.away_zh},
                 record=fresh["spread"],
             )
-    block["derived"] = derived_compare(
-        mv, game, cfg, calib, block["values"], record=fresh["h2h"] and fresh["totals"]
-    )
+    if card.get("sport") == "nba":
+        block["derived"] = nba_derived_compare(mv, game, cfg, block["values"], fresh)
+    else:
+        block["derived"] = derived_compare(
+            mv, game, cfg, calib, block["values"], record=fresh["h2h"] and fresh["totals"]
+        )
     return block
 
 
@@ -219,19 +227,11 @@ def _compare_sides(
         out[side] = entry
         if record and ev >= cfg.value_threshold:
             key = f"{key_prefix}{side}"
-            label = SIDE_LABELS.get(f"{key_prefix}{their}", key)
-            if names and their in names:
-                label += f"（{names[their]}）"
             values.append(
                 {
                     "market": market_name,
                     "selection_key": key,
-                    "selection": label
-                    + (
-                        f" {line:+g}"
-                        if key.startswith("spread_") and line is not None
-                        else (f" {line}" if line is not None and side in ("over", "under") else "")
-                    ),
+                    "selection": selection_text(key_prefix, side, their, line, names),
                     "line": line,
                     "tw_price": price,
                     "fair_odds": fair[side]["fair_odds"],
@@ -240,6 +240,30 @@ def _compare_sides(
                 }
             )
     return out
+
+
+def selection_text(
+    key_prefix: str,
+    side: str,
+    their: str,
+    line: float | None,
+    names: dict[str, str] | None,
+) -> str:
+    """What to pick on 運彩, in 運彩's own terms: '主勝（兵工廠）', '大 2.5', and for a
+    two-way handicap the team with its own handicap ('洛杉磯湖人 -5.5') when the names
+    are known, else '主讓 -5.5' with the home line."""
+    key = f"{key_prefix}{side}"
+    if key_prefix == "spread_" and line is not None:
+        if names and their in names:
+            own = line if their == "home" else -line
+            return f"{names[their]} {own:+g}"
+        return f"{SIDE_LABELS.get(f'spread_{their}', key)} {line:+g}"
+    label = SIDE_LABELS.get(f"{key_prefix}{their}", key)
+    if names and their in names:
+        label += f"（{names[their]}）"
+    if line is not None and side in ("over", "under"):
+        label += f" {line}"
+    return label
 
 
 # ------------------------------------------------------------ derived markets
@@ -430,6 +454,97 @@ def derived_compare(
                 values.append(entry)
     out.sort(key=lambda e: -e["ev"])
     return out
+
+
+# How far from the international line a 運彩 line may be and still be priced by the
+# normal margin model (models/margin.py): checked within these shifts on history.
+NBA_MAX_SPREAD_SHIFT = 8.0
+NBA_MAX_TOTAL_SHIFT = 12.0
+
+
+def nba_derived_compare(
+    mv: dict[str, Any],
+    game: TwGame,
+    cfg: ModelConfig,
+    values: list[dict[str, Any]],
+    fresh: Mapping[str, bool],
+) -> list[dict[str, Any]]:
+    """NBA: EV of 運彩's handicap and totals lines that differ from the international
+    main line, priced by the normal margin model anchored on that main line. Value bets
+    (EV >= derived_value_threshold, the main block fresh) go to `values`. The line the
+    market itself quotes is compared directly in `compare`, so it is skipped here."""
+    out: list[dict[str, Any]] = []
+    spread = mv.get("spread") or {}
+    if spread.get("line") is not None and spread.get("home"):
+        main = float(spread["line"])
+        mu = margin_model.mean_from_cover(main, spread["home"]["fair"], cfg.nba_margin_sigma)
+        for m in game.markets_of("spread"):
+            if (
+                m.line is None
+                or abs(m.line - main) < 1e-9
+                or abs(m.line - main) > NBA_MAX_SPREAD_SHIFT
+            ):
+                continue
+            home_cover, push, away_cover = margin_model.cover_probs(
+                mu, cfg.nba_margin_sigma, m.line
+            )
+            probs = {
+                "home": margin_model.conditional(home_cover, push),
+                "away": margin_model.conditional(away_cover, push),
+            }
+            for side, prob in probs.items():
+                price = m.price(side)
+                if price is None or not 0 < prob < 1:
+                    continue
+                own = m.line if side == "home" else -m.line
+                zh = game.home_zh if side == "home" else game.away_zh
+                out.append(
+                    _derived_entry(m.name, f"spread_{side}", f"{zh} {own:+g}", m.line, price, prob)
+                )
+    totals = mv.get("totals") or {}
+    if totals.get("line") is not None and totals.get("over"):
+        main_t = float(totals["line"])
+        mu_t = margin_model.mean_from_over(main_t, totals["over"]["fair"], cfg.nba_total_sigma)
+        for m in game.markets_of("totals"):
+            if (
+                m.line is None
+                or abs(m.line - main_t) < 1e-9
+                or abs(m.line - main_t) > NBA_MAX_TOTAL_SHIFT
+            ):
+                continue
+            over, push, under = margin_model.over_probs(mu_t, cfg.nba_total_sigma, m.line)
+            probs = {
+                "over": margin_model.conditional(over, push),
+                "under": margin_model.conditional(under, push),
+            }
+            for side, prob in probs.items():
+                price = m.price(side)
+                if price is None or not 0 < prob < 1:
+                    continue
+                label = f"{'大' if side == 'over' else '小'} {m.line:g}"
+                out.append(_derived_entry(m.name, side, label, m.line, price, prob))
+    for entry in out:
+        block = "spread" if entry["selection_key"].startswith("spread_") else "totals"
+        if fresh.get(block) and entry["ev"] >= cfg.derived_value_threshold:
+            values.append(entry)
+    out.sort(key=lambda e: -e["ev"])
+    return out
+
+
+def _derived_entry(
+    market_name: str, key: str, label: str, line: float, price: float, prob: float
+) -> dict[str, Any]:
+    return {
+        "market": market_name,
+        "selection_key": key,
+        "selection": label,
+        "line": line,
+        "tw_price": price,
+        "fair_odds": round(1 / prob, 2),
+        "fair_prob": round(prob, 4),
+        "ev": round(prob * price - 1.0, 4),
+        "derived": True,
+    }
 
 
 def annotate(

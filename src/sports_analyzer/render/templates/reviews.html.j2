@@ -5,18 +5,20 @@
 {% block main %}
 {% set fs = reviews.summary %}
 {% set ms = reviews.mlb_summary %}
+{% set ns = reviews.nba_summary %}
 {{ ui.hero("全部檢討",
   "每一場打完的比賽：賽前每個方法怎麼看、實際發生什麼、哪裡做對哪裡做錯。各方法自己的頁面也有「歷史數據」；這裡是全部放在一起，加上累計的偏差。",
   [
     {"label": "已檢討", "value": reviews.total, "unit": " 場"},
     {"label": "足球", "value": reviews.football|length, "unit": " 場"},
     {"label": "MLB", "value": reviews.mlb|length, "unit": " 場"},
+    {"label": "NBA", "value": reviews.nba|length, "unit": " 場"},
     {"label": "推薦已結算", "value": (reviews.picks.wins|int ~ "/" ~ reviews.picks.settled) if reviews.picks.settled else "—"},
   ]) }}
 {% if waiting %}
-<p class="stamp-line">已開賽、等待賽果：{% for c in waiting %}{{ c.league }} {% if c.recommended %}<b>{{ c.title }}（有推薦）</b>{% else %}{{ c.title }}{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}。比賽一結束就會自動檢討：開賽後足球約 2 小時、MLB 約 2.5 小時開始查結果，查到就產生，通常幾分鐘到半小時內。</p>
+<p class="stamp-line">已開賽、等待賽果：{% for c in waiting %}{{ c.league }} {% if c.recommended %}<b>{{ c.title }}（有推薦）</b>{% else %}{{ c.title }}{% endif %}{% if not loop.last %}、{% endif %}{% endfor %}。比賽一結束就會自動檢討：開賽後足球約 2 小時、MLB 和 NBA 約 2.5 小時開始查結果，查到就產生，通常幾分鐘到半小時內。</p>
 {% endif %}
-{{ ui.tabs([("football", "足球", reviews.football|length), ("mlb", "MLB", reviews.mlb|length), ("summary", "累計", none)]) }}
+{{ ui.tabs([("football", "足球", reviews.football|length), ("mlb", "MLB", reviews.mlb|length), ("nba", "NBA", reviews.nba|length), ("summary", "累計", none)]) }}
 
 <section id="football" class="tabpanel active" role="tabpanel">
   {{ rv.howto() }}
@@ -33,6 +35,15 @@
   <div class="grid">{% for r in reviews.mlb %}{{ rv.mlb_card(r) }}{% endfor %}</div>
   {% else %}
   {{ ui.empty("還沒有已完賽的 MLB 比賽", "比賽一結束就會自動產生檢討（開賽後約 2.5 小時開始查結果）。") }}
+  {% endif %}
+</section>
+
+<section id="nba" class="tabpanel" role="tabpanel">
+  <p class="howto">NBA 只有「可下」的注看輸贏；「不下」是因為運彩價格比公允價差，不管比分如何都是對的決定。讓分和大小的過盤只是紀錄市場的盤口準不準，不是下注依據。</p>
+  {% if reviews.nba %}
+  <div class="grid">{% for r in reviews.nba %}{{ rv.nba_card(r) }}{% endfor %}</div>
+  {% else %}
+  {{ ui.empty("還沒有已完賽的 NBA 比賽", "比賽一結束就會自動產生檢討（開賽後約 2.5 小時開始查結果）。") }}
   {% endif %}
 </section>
 
@@ -78,6 +89,22 @@
   {% else %}
   <p class="none">還沒有已完賽的 MLB 比賽。</p>
   {% endif %}
-  <p class="stamp-line">log-loss = −ln(給實際結果的機率)，越低代表賽前越看好真正發生的結果；市場是多家國際莊家去水後的中位數。比賽數據（xG、射門、紅牌）來自 football-data.co.uk，五大聯賽通常 2–3 天後補上，歐冠沒有免費來源。原始資料：<a href="https://github.com/panchiyu1-cloud/sports-analyzer/blob/main/data/reviews/football.csv">足球</a>、<a href="https://github.com/panchiyu1-cloud/sports-analyzer/blob/main/data/reviews/mlb.csv">MLB</a>（GitHub 會顯示成表格，也可以下載用試算表打開）。</p>
+
+  <h2 class="sect">NBA 累計 <span class="count">{{ ns.games }} 場</span></h2>
+  {% if ns.games %}
+  <div class="kpis">
+    <div class="kpi"><b>{{ ns.fav_wins }} / {{ ns.fav_n }}</b><span>熱門不讓分贏（市場預期 {{ ns.fav_expected }}）</span></div>
+    <div class="kpi"><b>{{ ns.fav_covers }} / {{ ns.cover_n }}</b><span>熱門讓分過盤</span></div>
+    <div class="kpi"><b>{{ ns.overs }} / {{ ns.total_n }}</b><span>大分</span></div>
+    <div class="kpi"><b>{{ ns.bets }} / {{ ns.judged }}</b><span>可下 / 有判斷的場次</span></div>
+    {% if ns.bets %}
+    <div class="kpi"><b>{{ ns.wins }} / {{ ns.bets }}</b><span>可下的注贏（平均 EV {{ '%+.1f%%'|format(ns.avg_ev * 100) if ns.avg_ev is not none else '—' }}）</span></div>
+    <div class="kpi"><b class="{{ 'pos' if ns.units > 0 else ('neg' if ns.units < 0 else '') }}">{{ '%+.2f'|format(ns.units) }}</b><span>損益（每注 1 單位）</span></div>
+    {% endif %}
+  </div>
+  {% else %}
+  <p class="none">還沒有已完賽的 NBA 比賽。</p>
+  {% endif %}
+  <p class="stamp-line">log-loss = −ln(給實際結果的機率)，越低代表賽前越看好真正發生的結果；市場是多家國際莊家去水後的中位數。比賽數據（xG、射門、紅牌）來自 football-data.co.uk，五大聯賽通常 2–3 天後補上，歐冠沒有免費來源。原始資料：<a href="https://github.com/panchiyu1-cloud/sports-analyzer/blob/main/data/reviews/football.csv">足球</a>、<a href="https://github.com/panchiyu1-cloud/sports-analyzer/blob/main/data/reviews/mlb.csv">MLB</a>、<a href="https://github.com/panchiyu1-cloud/sports-analyzer/blob/main/data/reviews/nba.csv">NBA</a>（GitHub 會顯示成表格，也可以下載用試算表打開）。</p>
 </section>
 {% endblock %}
