@@ -344,7 +344,7 @@
 <div class="masthead">
   <div class="bar">
     <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
-    <span class="stamp">更新 <b>10/26 08:01</b> 台灣時間</span>
+    <span class="stamp">更新 <b>10/26 09:02</b> 台灣時間</span>
   </div>
   <nav class="nav" aria-label="分析方法">
 <a href="index.html">總覽</a><a href="value.html">運彩價值</a><a href="t10.html">T-10</a><a href="radar.html">延遲雷達</a><a href="moves.html">盤口移動</a><a href="model.html">模型分歧</a><a href="fade.html" aria-current="page">反者道之動</a><a href="reviews.html">全部檢討</a>  </nav>
@@ -354,42 +354,161 @@
   <h1>反者道之動</h1>
   <p class="lede">你的想法：找出最常失敗的押法，反過來做。這裡的「差」不是輸得多（冷門本來就常輸），而是押中的比例比市場自己算的機率還低。下面是回測找出來最差的幾種、反著做在運彩值不值得，以及每天符合條件的比賽。</p>
   <dl class="bug">
-<div><dt>測試的押法</dt><dd class="">65</dd></div><div><dt>兩段時間都差</dt><dd class="">10</dd></div><div><dt>反著做在運彩賺錢</dt><dd class="bad">0</dd></div><div><dt>今日反指標</dt><dd class="">3</dd></div>  </dl>
+<div><dt>測試的押法</dt><dd class="">65</dd></div><div><dt>兩段時間都差</dt><dd class="">10</dd></div><div><dt>反著做在運彩賺錢</dt><dd class="bad">0</dd></div><div><dt>今日反指標</dt><dd class="">13</dd></div>  </dl>
 </section>
 
 <blockquote class="quote">反者道之動，弱者道之用。<span>《道德經》第四十章</span></blockquote>
 <div class="tabs" role="tablist">
-<a role="tab" href="#upcoming" aria-controls="upcoming" aria-selected="true">今日反指標<span class="num">3</span></a><a role="tab" href="#history" aria-controls="history" aria-selected="false">反向紀錄<span class="num">129</span></a><a role="tab" href="#backtest" aria-controls="backtest" aria-selected="false">回測</a></div>
+<a role="tab" href="#upcoming" aria-controls="upcoming" aria-selected="true">今日反指標<span class="num">13</span></a><a role="tab" href="#history" aria-controls="history" aria-selected="false">反向紀錄<span class="num">129</span></a><a role="tab" href="#backtest" aria-controls="backtest" aria-selected="false">回測</a></div>
 
 
 <section id="upcoming" class="tabpanel active" role="tabpanel">
   <p class="howto">還沒開賽的比賽裡，最差的幾種押法會押哪一邊；這裡列的是<b>反過來那一邊</b>在運彩的價格。EV = 公允機率 × 運彩賠率 − 1；要到門檻（足球 2%、MLB 3%）才值得下，那時它也會出現在運彩價值頁。多數會是負的：反指標也要看價格。卡片下的線圖是這一邊每次抓價時的機率：藍線是國際公允機率，橘線是運彩賠率換算成的機率（含水錢）；藍線高過橘線，EV 才是正的。足球反押一個結果要同時押另外兩個（按比例分注），合起來的賠率可能低於 1，那就是怎麼樣都賠。</p>
   <div class="cards">
-    <article class="match" id="m-football-558556" data-status="stale">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/28 01:30</span><span>週三</span><span class="eta">還有 41 小時 28 分</span></div>
-      <h3 class="teams">薩索羅 vs 拉齊歐</h3>
-      <div class="verdict"><span class="chip warn">不判斷</span>
-<span>反著押 <b>和局＋客勝 拉齊歐</b> @ 1.19</span><span class="neg">EV -19.4%</span></div>
+    <article class="match" id="m-football-559648" data-status="pass">
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/27 03:30</span><span>週二</span><span class="eta">還有 18 小時 27 分</span></div>
+      <h3 class="teams">巴黎聖日耳曼 vs 里昂</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 3.5</b> @ 1.76</span><span class="neg">EV -13.2%</span></div>
       <dl class="facts">
-        <dt>反指標</dt><dd>押主場冷門</dd>
-        <dt>這一邊</dt><dd>公允機率 68%</dd>
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 49%</dd>
       </dl>
-      <figure class="spark" tabindex="0" data-tip='[{"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "80%\uff081.24\uff09"]], "x": 34.0}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "68%"]], "x": 41.7}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "83%\uff081.21\uff09"]], "x": 153.9}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "84%\uff081.19\uff09"]], "x": 274.0}]'>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/23 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "56%\uff081.78\uff09"]], "x": 34.0}, {"t": "10/23 08:52", "v": [["intl", "\u570b\u969b\u516c\u5141", "48%"]], "x": 36.8}, {"t": "10/24 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "56%\uff081.78\uff09"]], "x": 112.9}, {"t": "10/24 08:55", "v": [["intl", "\u570b\u969b\u516c\u5141", "48%"]], "x": 115.9}, {"t": "10/24 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "56%\uff081.78\uff09"]], "x": 152.3}, {"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "56%\uff081.78\uff09"]], "x": 191.8}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "48%"]], "x": 194.3}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "57%\uff081.76\uff09"]], "x": 231.2}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "57%\uff081.76\uff09"]], "x": 270.7}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "49%"]], "x": 274.0}]'>
   <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
-  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/25 08:01 到 10/26 08:00">
-    <g class="grid"><line x1="34.0" x2="274.0" y1="71.8" y2="71.8"/><text x="28.0" y="74.8" text-anchor="end">70</text><line x1="34.0" x2="274.0" y1="33.2" y2="33.2"/><text x="28.0" y="36.2" text-anchor="end">80</text></g>
-<path class="ln intl" d="M41.7,80.5"/><path class="ln tw" d="M34.0,31.7 L153.9,22.5 L274.0,17.5"/><circle class="dot intl" cx="41.7" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="31.7" r="4"/><circle class="dot tw" cx="153.9" cy="22.5" r="4"/><circle class="dot tw" cx="274.0" cy="17.5" r="4"/><text class="end" x="280.0" y="21.5">84%</text><text class="end" x="47.7" y="84.5">68%</text>    <text x="34.0" y="105.0">10/25 08:01</text>
-    <text x="274.0" y="105.0" text-anchor="end">10/26 08:00</text>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/23 08:01 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="65.0" y2="65.0"/><text x="28.0" y="68.0" text-anchor="end">50</text><line x1="34.0" x2="274.0" y1="30.2" y2="30.2"/><text x="28.0" y="33.2" text-anchor="end">55</text></g>
+<path class="ln intl" d="M36.8,80.5 L115.9,79.9 L194.3,78.9 L274.0,69.8"/><path class="ln tw" d="M34.0,22.0 L112.9,22.0 L152.3,22.0 L191.8,22.0 L231.2,17.5 L270.7,17.5"/><circle class="dot intl" cx="36.8" cy="80.5" r="4"/><circle class="dot intl" cx="115.9" cy="79.9" r="4"/><circle class="dot intl" cx="194.3" cy="78.9" r="4"/><circle class="dot intl" cx="274.0" cy="69.8" r="4"/><circle class="dot tw" cx="34.0" cy="22.0" r="4"/><circle class="dot tw" cx="112.9" cy="22.0" r="4"/><circle class="dot tw" cx="152.3" cy="22.0" r="4"/><circle class="dot tw" cx="191.8" cy="22.0" r="4"/><circle class="dot tw" cx="231.2" cy="17.5" r="4"/><circle class="dot tw" cx="270.7" cy="17.5" r="4"/><text class="end" x="276.7" y="21.5">57%</text><text class="end" x="280.0" y="73.8">49%</text>    <text x="34.0" y="105.0">10/23 08:01</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
     <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
   </svg>
 </figure>
 
 <details class="times">
-  <summary>各時段賠率（4 次，新到舊）</summary>
+  <summary>各時段賠率（10 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 大</th><th class="th">運彩 大</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">49</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.76</td><td class="neutral">反著押 EV -13.2%</td></tr>
+    <tr><td class="num">10/25 20:00</td><td class="num"></td><td class="num">1.76</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/25 08:47</td><td class="num">48</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/25 08:01</td><td class="num"></td><td class="num">1.78</td><td class="neutral">反著押 EV -14.6%</td></tr>
+    <tr><td class="num">10/24 20:00</td><td class="num"></td><td class="num">1.78</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/24 08:55</td><td class="num">48</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/24 08:01</td><td class="num"></td><td class="num">1.78</td><td class="neutral">反著押 EV -14.8%</td></tr>
+    <tr><td class="num">10/23 08:52</td><td class="num">48</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/23 08:01</td><td class="num"></td><td class="num">1.78</td><td class="neutral">反著押 EV -15.0%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" data-status="pass">
+      <div class="mt"><span class="comp">法甲</span><span class="kick">10/27 03:30</span><span>週二</span><span class="eta">還有 18 小時 27 分</span></div>
+      <h3 class="teams">巴黎聖日耳曼 vs 里昂</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>主勝 巴黎聖日耳曼＋和局</b> @ 0.99</span><span class="neg">EV -13.4%</span></div>
+<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
+        <dt>反指標</dt><dd>押大冷門（賠率≥8）</dd>
+        <dt>這一邊</dt><dd>公允機率 88%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/23 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "98%\uff081.02\uff09"]], "x": 34.0}, {"t": "10/23 08:52", "v": [["intl", "\u570b\u969b\u516c\u5141", "86%"]], "x": 36.8}, {"t": "10/23 21:07", "v": [["intl", "\u570b\u969b\u516c\u5141", "86%"]], "x": 77.1}, {"t": "10/24 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "98%\uff081.02\uff09"]], "x": 112.9}, {"t": "10/24 08:55", "v": [["intl", "\u570b\u969b\u516c\u5141", "86%"]], "x": 115.9}, {"t": "10/24 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "98%\uff081.02\uff09"]], "x": 152.3}, {"t": "10/24 21:02", "v": [["intl", "\u570b\u969b\u516c\u5141", "86%"]], "x": 155.7}, {"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "98%\uff081.02\uff09"]], "x": 191.8}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "86%"]], "x": 194.3}, {"t": "10/25 13:17", "v": [["intl", "\u570b\u969b\u516c\u5141", "86%"]], "x": 209.1}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "100%\uff081.00\uff09"]], "x": 231.2}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "101%\uff080.99\uff09"]], "x": 270.7}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "88%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/23 08:01 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="82.6" y2="82.6"/><text x="28.0" y="85.6" text-anchor="end">85</text><line x1="34.0" x2="274.0" y1="62.9" y2="62.9"/><text x="28.0" y="65.9" text-anchor="end">90</text><line x1="34.0" x2="274.0" y1="43.1" y2="43.1"/><text x="28.0" y="46.1" text-anchor="end">95</text><line x1="34.0" x2="274.0" y1="23.3" y2="23.3"/><text x="28.0" y="26.3" text-anchor="end">100</text></g>
+<path class="ln intl" d="M36.8,80.5 L77.1,79.9 L115.9,78.8 L155.7,78.8 L194.3,78.3 L209.1,78.5 L274.0,71.1"/><path class="ln tw" d="M34.0,29.4 L112.9,30.6 L152.3,30.6 L191.8,31.7 L231.2,22.6 L270.7,17.5"/><circle class="dot intl" cx="36.8" cy="80.5" r="4"/><circle class="dot intl" cx="77.1" cy="79.9" r="4"/><circle class="dot intl" cx="115.9" cy="78.8" r="4"/><circle class="dot intl" cx="155.7" cy="78.8" r="4"/><circle class="dot intl" cx="194.3" cy="78.3" r="4"/><circle class="dot intl" cx="209.1" cy="78.5" r="4"/><circle class="dot intl" cx="274.0" cy="71.1" r="4"/><circle class="dot tw" cx="34.0" cy="29.4" r="4"/><circle class="dot tw" cx="112.9" cy="30.6" r="4"/><circle class="dot tw" cx="152.3" cy="30.6" r="4"/><circle class="dot tw" cx="191.8" cy="31.7" r="4"/><circle class="dot tw" cx="231.2" cy="22.6" r="4"/><circle class="dot tw" cx="270.7" cy="17.5" r="4"/><text class="end" x="276.7" y="21.5">101%</text><text class="end" x="280.0" y="75.1">88%</text>    <text x="34.0" y="105.0">10/23 08:01</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（13 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 主／和</th><th class="th">運彩 主／和</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">72 / 16</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.27 / 4.40</td><td class="neutral">反著押 EV -13.4%</td></tr>
+    <tr><td class="num">10/25 20:00</td><td class="num"></td><td class="num">1.30 / 4.30</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/25 13:17</td><td class="num">69 / 17</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/25 08:47</td><td class="num">69 / 17</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/25 08:01</td><td class="num"></td><td class="num">1.35 / 4.20</td><td class="neutral">反著押 EV -12.0%</td></tr>
+    <tr><td class="num">10/24 21:02</td><td class="num">69 / 17</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/24 20:00</td><td class="num"></td><td class="num">1.35 / 4.15</td><td class="neutral">反著押 EV -12.4%</td></tr>
+    <tr><td class="num">10/24 08:55</td><td class="num">69 / 17</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/24 08:01</td><td class="num"></td><td class="num">1.35 / 4.15</td><td class="neutral">反著押 EV -12.4%</td></tr>
+    <tr><td class="num">10/23 21:07</td><td class="num">68 / 17</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/23 08:52</td><td class="num">68 / 17</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/23 08:01</td><td class="num"></td><td class="num">1.35 / 4.10</td><td class="neutral">反著押 EV -13.1%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" id="m-football-564721" data-status="pass">
+      <div class="mt"><span class="comp">西甲</span><span class="kick">10/27 04:00</span><span>週二</span><span class="eta">還有 18 小時 57 分</span></div>
+      <h3 class="teams">塞維亞 vs 奧薩蘇納</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>小 2.5</b> @ 1.53</span><span class="neg">EV -14.7%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 56%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/24 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "65%\uff081.55\uff09"]], "x": 34.0}, {"t": "10/24 08:55", "v": [["intl", "\u570b\u969b\u516c\u5141", "56%"]], "x": 38.4}, {"t": "10/24 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "65%\uff081.53\uff09"]], "x": 92.7}, {"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "65%\uff081.53\uff09"]], "x": 151.6}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "56%"]], "x": 155.3}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "65%\uff081.53\uff09"]], "x": 210.2}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "65%\uff081.53\uff09"]], "x": 269.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "56%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/24 08:01 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="85.6" y2="85.6"/><text x="28.0" y="88.6" text-anchor="end">55</text><line x1="34.0" x2="274.0" y1="52.7" y2="52.7"/><text x="28.0" y="55.7" text-anchor="end">60</text><line x1="34.0" x2="274.0" y1="19.9" y2="19.9"/><text x="28.0" y="22.9" text-anchor="end">65</text></g>
+<path class="ln intl" d="M38.4,79.0 L155.3,79.9 L274.0,80.5"/><path class="ln tw" d="M34.0,23.1 L92.7,17.5 L151.6,17.5 L210.2,17.5 L269.0,17.5"/><circle class="dot intl" cx="38.4" cy="79.0" r="4"/><circle class="dot intl" cx="155.3" cy="79.9" r="4"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="23.1" r="4"/><circle class="dot tw" cx="92.7" cy="17.5" r="4"/><circle class="dot tw" cx="151.6" cy="17.5" r="4"/><circle class="dot tw" cx="210.2" cy="17.5" r="4"/><circle class="dot tw" cx="269.0" cy="17.5" r="4"/><text class="end" x="275.0" y="21.5">65%</text><text class="end" x="280.0" y="84.5">56%</text>    <text x="34.0" y="105.0">10/24 08:01</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（8 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 小</th><th class="th">運彩 小</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">56</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.53</td><td class="neutral">反著押 EV -14.7%</td></tr>
+    <tr><td class="num">10/25 20:00</td><td class="num"></td><td class="num">1.53</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/25 08:47</td><td class="num">56</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/25 08:01</td><td class="num"></td><td class="num">1.53</td><td class="neutral">反著押 EV -14.5%</td></tr>
+    <tr><td class="num">10/24 20:00</td><td class="num"></td><td class="num">1.53</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/24 08:55</td><td class="num">56</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/24 08:01</td><td class="num"></td><td class="num">1.55</td><td class="neutral">反著押 EV -13.2%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" id="m-football-558556" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/28 01:30</span><span>週三</span><span class="eta">還有 40 小時 27 分</span></div>
+      <h3 class="teams">薩索羅 vs 拉齊歐</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 拉齊歐</b> @ 1.19</span><span class="neg">EV -15.7%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 71%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "80%\uff081.24\uff09"]], "x": 34.0}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "68%"]], "x": 41.4}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "83%\uff081.21\uff09"]], "x": 149.0}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "84%\uff081.19\uff09"]], "x": 264.2}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "71%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/25 08:01 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="71.8" y2="71.8"/><text x="28.0" y="74.8" text-anchor="end">70</text><line x1="34.0" x2="274.0" y1="33.2" y2="33.2"/><text x="28.0" y="36.2" text-anchor="end">80</text></g>
+<path class="ln intl" d="M41.4,80.5 L274.0,68.4"/><path class="ln tw" d="M34.0,31.7 L149.0,22.5 L264.2,17.5"/><circle class="dot intl" cx="41.4" cy="80.5" r="4"/><circle class="dot intl" cx="274.0" cy="68.4" r="4"/><circle class="dot tw" cx="34.0" cy="31.7" r="4"/><circle class="dot tw" cx="149.0" cy="22.5" r="4"/><circle class="dot tw" cx="264.2" cy="17.5" r="4"/><text class="end" x="270.2" y="21.5">84%</text><text class="end" x="280.0" y="72.4">71%</text>    <text x="34.0" y="105.0">10/25 08:01</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（5 次，新到舊）</summary>
   <div class="scroll"><table class="tbl">
     <thead><tr><th>時間</th><th class="ih">國際 % 和／客</th><th class="th">運彩 和／客</th><th>這個方法怎麼看</th></tr></thead>
     <tbody>
-    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">3.05 / 1.95</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/26 09:01</td><td class="num">27 / 44</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">3.05 / 1.95</td><td class="neutral">反著押 EV -15.7%</td></tr>
     <tr><td class="num">10/25 20:00</td><td class="num"></td><td class="num">3.05 / 2.00</td><td class="warn">國際價隔太久，不判斷</td></tr>
     <tr><td class="num">10/25 08:47</td><td class="num">27 / 41</td><td class="num"></td><td class="neutral">國際更新</td></tr>
     <tr><td class="num">10/25 08:01</td><td class="num"></td><td class="num">3.05 / 2.10</td><td class="neutral">反著押 EV -15.7%</td></tr>
@@ -398,31 +517,32 @@
 </details>
 
     </article>
-    <article class="match" id="m-football-558555" data-status="stale">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/28 03:45</span><span>週三</span><span class="eta">還有 43 小時 43 分</span></div>
+    <article class="match" id="m-football-558555" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/28 03:45</span><span>週三</span><span class="eta">還有 42 小時 42 分</span></div>
       <h3 class="teams">羅馬 vs 卡利亞里</h3>
-      <div class="verdict"><span class="chip warn">不判斷</span>
+      <div class="verdict"><span class="chip neutral">不下</span>
 <span>反著押 <b>主勝 羅馬＋和局</b> @ 0.96</span><span class="neg">EV -13.3%</span></div>
 <p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
         <dt>反指標</dt><dd>押大冷門（賠率≥8）</dd>
-        <dt>這一邊</dt><dd>公允機率 90%</dd>
+        <dt>這一邊</dt><dd>公允機率 91%</dd>
       </dl>
-      <figure class="spark" tabindex="0" data-tip='[{"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "104%\uff080.96\uff09"]], "x": 34.0}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "90%"]], "x": 41.7}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "104%\uff080.96\uff09"]], "x": 153.9}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "104%\uff080.96\uff09"]], "x": 274.0}]'>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/25 08:01", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "104%\uff080.96\uff09"]], "x": 34.0}, {"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "90%"]], "x": 41.4}, {"t": "10/25 20:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "104%\uff080.96\uff09"]], "x": 149.0}, {"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "104%\uff080.96\uff09"]], "x": 264.2}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "91%"]], "x": 274.0}]'>
   <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
-  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/25 08:01 到 10/26 08:00">
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/25 08:01 到 10/26 09:01">
     <g class="grid"><line x1="34.0" x2="274.0" y1="82.7" y2="82.7"/><text x="28.0" y="85.7" text-anchor="end">90</text><line x1="34.0" x2="274.0" y1="60.0" y2="60.0"/><text x="28.0" y="63.0" text-anchor="end">95</text><line x1="34.0" x2="274.0" y1="37.4" y2="37.4"/><text x="28.0" y="40.4" text-anchor="end">100</text><line x1="34.0" x2="274.0" y1="14.8" y2="14.8"/><text x="28.0" y="17.8" text-anchor="end">105</text></g>
-<path class="ln intl" d="M41.7,80.5"/><path class="ln tw" d="M34.0,17.7 L153.9,17.7 L274.0,17.5"/><circle class="dot intl" cx="41.7" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.7" r="4"/><circle class="dot tw" cx="153.9" cy="17.7" r="4"/><circle class="dot tw" cx="274.0" cy="17.5" r="4"/><text class="end" x="280.0" y="21.5">104%</text><text class="end" x="47.7" y="84.5">90%</text>    <text x="34.0" y="105.0">10/25 08:01</text>
-    <text x="274.0" y="105.0" text-anchor="end">10/26 08:00</text>
+<path class="ln intl" d="M41.4,80.5 L274.0,80.3"/><path class="ln tw" d="M34.0,17.7 L149.0,17.7 L264.2,17.5"/><circle class="dot intl" cx="41.4" cy="80.5" r="4"/><circle class="dot intl" cx="274.0" cy="80.3" r="4"/><circle class="dot tw" cx="34.0" cy="17.7" r="4"/><circle class="dot tw" cx="149.0" cy="17.7" r="4"/><circle class="dot tw" cx="264.2" cy="17.5" r="4"/><text class="end" x="270.2" y="21.5">104%</text><text class="end" x="280.0" y="84.3">91%</text>    <text x="34.0" y="105.0">10/25 08:01</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
     <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
   </svg>
 </figure>
 
 <details class="times">
-  <summary>各時段賠率（4 次，新到舊）</summary>
+  <summary>各時段賠率（5 次，新到舊）</summary>
   <div class="scroll"><table class="tbl">
     <thead><tr><th>時間</th><th class="ih">國際 % 主／和</th><th class="th">運彩 主／和</th><th>這個方法怎麼看</th></tr></thead>
     <tbody>
-    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.25 / 4.10</td><td class="warn">國際價隔太久，不判斷</td></tr>
+    <tr><td class="num">10/26 09:01</td><td class="num">73 / 18</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.25 / 4.10</td><td class="neutral">反著押 EV -13.3%</td></tr>
     <tr><td class="num">10/25 20:00</td><td class="num"></td><td class="num">1.26 / 4.00</td><td class="warn">國際價隔太久，不判斷</td></tr>
     <tr><td class="num">10/25 08:47</td><td class="num">73 / 18</td><td class="num"></td><td class="neutral">國際更新</td></tr>
     <tr><td class="num">10/25 08:01</td><td class="num"></td><td class="num">1.26 / 4.00</td><td class="neutral">反著押 EV -13.3%</td></tr>
@@ -432,7 +552,7 @@
 
     </article>
     <article class="match" id="m-football-558557" data-status="none">
-      <div class="mt"><span class="comp">義甲</span><span class="kick">10/28 03:45</span><span>週三</span><span class="eta">還有 43 小時 43 分</span></div>
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/28 03:45</span><span>週三</span><span class="eta">還有 42 小時 42 分</span></div>
       <h3 class="teams">Torino FC vs Como 1907</h3>
       <div class="verdict"><span class="chip ghost">還沒有運彩價</span>
 <span>反著押 <b>和局＋客勝 Como 1907</b></span></div>
@@ -440,14 +560,240 @@
         <dt>反指標</dt><dd>押主場冷門</dd>
         <dt>這一邊</dt><dd>公允機率 80%</dd>
       </dl>
-      <p class="nochart"><span class="cap">這一邊的機率：藍線高過橘線才有 EV</span>目前只有 1 次報價（10/25 08:47），下一次更新後就會畫出變化。</p>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/25 08:47", "v": [["intl", "\u570b\u969b\u516c\u5141", "80%"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "80%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/25 08:47 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="86.3" y2="86.3"/><text x="28.0" y="89.3" text-anchor="end">75</text><line x1="34.0" x2="274.0" y1="47.0" y2="47.0"/><text x="28.0" y="50.0" text-anchor="end">80</text></g>
+<path class="ln intl" d="M34.0,49.1 L274.0,48.9"/><circle class="dot intl" cx="34.0" cy="49.1" r="4"/><circle class="dot intl" cx="274.0" cy="48.9" r="4"/><text class="end" x="280.0" y="52.9">80%</text>    <text x="34.0" y="105.0">10/25 08:47</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
 
 <details class="times">
-  <summary>各時段賠率（1 次，新到舊）</summary>
+  <summary>各時段賠率（2 次，新到舊）</summary>
   <div class="scroll"><table class="tbl">
     <thead><tr><th>時間</th><th class="ih">國際 % 和／客</th><th class="th">運彩 和／客</th><th>這個方法怎麼看</th></tr></thead>
     <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">25 / 55</td><td class="num"></td><td class="neutral">國際更新</td></tr>
     <tr><td class="num">10/25 08:47</td><td class="num">24 / 55</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" id="m-football-558550" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 01:30</span><span>週四</span><span class="eta">還有 64 小時 27 分</span></div>
+      <h3 class="teams">威尼斯 vs 國際米蘭</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 國際米蘭</b> @ 0.97</span><span class="neg">EV -13.3%</span></div>
+<p class="sub neg">合起來的賠率低於 1：不管結果都賠</p>      <dl class="facts">
+        <dt>反指標</dt><dd>押大冷門（賠率≥8）、押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 89%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "103%\uff080.97\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "89%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="76.6" y2="76.6"/><text x="28.0" y="79.6" text-anchor="end">90</text><line x1="34.0" x2="274.0" y1="53.7" y2="53.7"/><text x="28.0" y="56.7" text-anchor="end">95</text><line x1="34.0" x2="274.0" y1="30.7" y2="30.7"/><text x="28.0" y="33.7" text-anchor="end">100</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">103%</text><text class="end" x="280.0" y="84.5">89%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 和／客</th><th class="th">運彩 和／客</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">15 / 74</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">4.50 / 1.24</td><td class="neutral">反著押 EV -13.3%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" id="m-football-558553" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 01:30</span><span>週四</span><span class="eta">還有 64 小時 27 分</span></div>
+      <h3 class="teams">帕爾馬 vs 烏迪內斯</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 烏迪內斯</b> @ 1.22</span><span class="neg">EV -16.6%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 68%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "82%\uff081.22\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "68%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="72.5" y2="72.5"/><text x="28.0" y="75.5" text-anchor="end">70</text><line x1="34.0" x2="274.0" y1="49.2" y2="49.2"/><text x="28.0" y="52.2" text-anchor="end">75</text><line x1="34.0" x2="274.0" y1="26.0" y2="26.0"/><text x="28.0" y="29.0" text-anchor="end">80</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">82%</text><text class="end" x="280.0" y="84.5">68%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 和／客</th><th class="th">運彩 和／客</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">29 / 39</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">2.75 / 2.20</td><td class="neutral">反著押 EV -16.5%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 01:30</span><span>週四</span><span class="eta">還有 64 小時 27 分</span></div>
+      <h3 class="teams">威尼斯 vs 國際米蘭</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>主勝 威尼斯＋和局</b> @ 2.53</span><span class="neg">EV -33.9%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 26%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "39%\uff082.53\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "26%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="85.6" y2="85.6"/><text x="28.0" y="88.6" text-anchor="end">25</text><line x1="34.0" x2="274.0" y1="62.1" y2="62.1"/><text x="28.0" y="65.1" text-anchor="end">30</text><line x1="34.0" x2="274.0" y1="38.6" y2="38.6"/><text x="28.0" y="41.6" text-anchor="end">35</text><line x1="34.0" x2="274.0" y1="15.0" y2="15.0"/><text x="28.0" y="18.0" text-anchor="end">40</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">39%</text><text class="end" x="280.0" y="84.5">26%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 主／和</th><th class="th">運彩 主／和</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">11 / 15</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">5.80 / 4.50</td><td class="neutral">反著押 EV -33.9%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" id="m-football-558552" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 03:45</span><span>週四</span><span class="eta">還有 66 小時 42 分</span></div>
+      <h3 class="teams">熱那亞 vs 尤文圖斯</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 尤文圖斯</b> @ 1.04</span><span class="neg">EV -13.5%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 83%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "96%\uff081.04\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "83%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="72.2" y2="72.2"/><text x="28.0" y="75.2" text-anchor="end">85</text><line x1="34.0" x2="274.0" y1="47.9" y2="47.9"/><text x="28.0" y="50.9" text-anchor="end">90</text><line x1="34.0" x2="274.0" y1="23.7" y2="23.7"/><text x="28.0" y="26.7" text-anchor="end">95</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">96%</text><text class="end" x="280.0" y="84.5">83%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 和／客</th><th class="th">運彩 和／客</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">25 / 59</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">3.15 / 1.55</td><td class="neutral">反著押 EV -13.5%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" id="m-football-558554" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 03:45</span><span>週四</span><span class="eta">還有 66 小時 42 分</span></div>
+      <h3 class="teams">蒙扎 vs 拿坡里</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>和局＋客勝 拿坡里</b> @ 1.09</span><span class="neg">EV -14.6%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>押主場冷門</dd>
+        <dt>這一邊</dt><dd>公允機率 78%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "91%\uff081.09\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "78%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="71.3" y2="71.3"/><text x="28.0" y="74.3" text-anchor="end">80</text><line x1="34.0" x2="274.0" y1="47.7" y2="47.7"/><text x="28.0" y="50.7" text-anchor="end">85</text><line x1="34.0" x2="274.0" y1="24.1" y2="24.1"/><text x="28.0" y="27.1" text-anchor="end">90</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">91%</text><text class="end" x="280.0" y="84.5">78%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 和／客</th><th class="th">運彩 和／客</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">24 / 54</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">3.25 / 1.65</td><td class="neutral">反著押 EV -14.6%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 03:45</span><span>週四</span><span class="eta">還有 66 小時 42 分</span></div>
+      <h3 class="teams">熱那亞 vs 尤文圖斯</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>大 2.5</b> @ 1.86</span><span class="neg">EV -15.5%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 45%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "54%\uff081.86\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "45%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="83.5" y2="83.5"/><text x="28.0" y="86.5" text-anchor="end">45</text><line x1="34.0" x2="274.0" y1="45.9" y2="45.9"/><text x="28.0" y="48.9" text-anchor="end">50</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">54%</text><text class="end" x="280.0" y="84.5">45%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 大</th><th class="th">運彩 大</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">45</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.86</td><td class="neutral">反著押 EV -15.5%</td></tr>
+    </tbody>
+  </table></div>
+</details>
+
+    </article>
+    <article class="match" data-status="pass">
+      <div class="mt"><span class="comp">義甲</span><span class="kick">10/29 03:45</span><span>週四</span><span class="eta">還有 66 小時 42 分</span></div>
+      <h3 class="teams">蒙扎 vs 拿坡里</h3>
+      <div class="verdict"><span class="chip neutral">不下</span>
+<span>反著押 <b>小 2.5</b> @ 1.86</span><span class="neg">EV -16.9%</span></div>
+      <dl class="facts">
+        <dt>反指標</dt><dd>系統的模型分歧</dd>
+        <dt>這一邊</dt><dd>公允機率 45%</dd>
+      </dl>
+      <figure class="spark" tabindex="0" data-tip='[{"t": "10/26 08:00", "v": [["tw", "\u904b\u5f69\u50f9\u63db\u7b97\uff08\u542b\u6c34\uff09", "54%\uff081.86\uff09"]], "x": 34.0}, {"t": "10/26 09:01", "v": [["intl", "\u570b\u969b\u516c\u5141", "45%"]], "x": 274.0}]'>
+  <figcaption><span>這一邊的機率：藍線高過橘線才有 EV</span><span class="keys"><span class="key intl">國際公允</span><span class="key tw">運彩價換算（含水）</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="這一邊的機率：藍線高過橘線才有 EV，10/26 08:00 到 10/26 09:01">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="78.1" y2="78.1"/><text x="28.0" y="81.1" text-anchor="end">45</text><line x1="34.0" x2="274.0" y1="43.6" y2="43.6"/><text x="28.0" y="46.6" text-anchor="end">50</text></g>
+<path class="ln intl" d="M274.0,80.5"/><path class="ln tw" d="M34.0,17.5"/><circle class="dot intl" cx="274.0" cy="80.5" r="4"/><circle class="dot tw" cx="34.0" cy="17.5" r="4"/><text class="end" x="40.0" y="21.5">54%</text><text class="end" x="280.0" y="84.5">45%</text>    <text x="34.0" y="105.0">10/26 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">10/26 09:01</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+<details class="times">
+  <summary>各時段賠率（2 次，新到舊）</summary>
+  <div class="scroll"><table class="tbl">
+    <thead><tr><th>時間</th><th class="ih">國際 % 小</th><th class="th">運彩 小</th><th>這個方法怎麼看</th></tr></thead>
+    <tbody>
+    <tr><td class="num">10/26 09:01</td><td class="num">45</td><td class="num"></td><td class="neutral">國際更新</td></tr>
+    <tr><td class="num">10/26 08:00</td><td class="num"></td><td class="num">1.86</td><td class="neutral">反著押 EV -16.9%</td></tr>
     </tbody>
   </table></div>
 </details>
