@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-26T01:01:44+00:00",
+ "generated_at": "2026-10-26T15:03:14+00:00",
  "date": "2026-10-26",
- "credits_remaining": 138,
+ "credits_remaining": 133,
  "games": [
   {
    "sport": "mlb",
@@ -17,21 +17,21 @@
    "away_probable": "Robert Gasser",
    "venue": "Tropicana Field",
    "market": {
-    "books": 22,
+    "books": 20,
     "h2h": {
      "home": {
-      "fair": 0.5199,
-      "fair_odds": 1.92,
-      "best": 1.93,
-      "book": "unibet_nl"
-     },
-     "away": {
-      "fair": 0.4801,
-      "fair_odds": 2.08,
-      "best": 2.04,
+      "fair": 0.5233,
+      "fair_odds": 1.91,
+      "best": 1.91,
       "book": "betfair_ex_eu"
      },
-     "odds_at": "2026-10-26T01:01+00:00"
+     "away": {
+      "fair": 0.4767,
+      "fair_odds": 2.1,
+      "best": 2.08,
+      "book": "betfair_ex_eu"
+     },
+     "odds_at": "2026-10-26T15:03+00:00"
     },
     "totals": {
      "line": 7.0,
@@ -47,47 +47,89 @@
       "best": 1.96,
       "book": "betonlineag"
      },
-     "odds_at": "2026-10-26T01:01+00:00"
+     "odds_at": "2026-10-26T01:01+00:00",
+     "stale": true
     },
     "spread": {
      "line": -1.5,
      "home": {
-      "fair": 0.3319,
-      "fair_odds": 3.01,
+      "fair": 0.3315,
+      "fair_odds": 3.02,
       "best": 2.9,
-      "book": "unibet_nl"
+      "book": "pinnacle"
      },
      "away": {
-      "fair": 0.6681,
+      "fair": 0.6685,
       "fair_odds": 1.5,
       "best": 1.48,
       "book": "coolbet"
      },
-     "odds_at": "2026-10-26T01:01+00:00"
+     "odds_at": "2026-10-26T15:03+00:00"
     }
    },
    "t10": {
     "favourite": "home",
-    "p_ml": 0.5199,
-    "c_cover": 0.3319,
-    "g": -0.1482,
+    "p_ml": 0.5233,
+    "c_cover": 0.3315,
+    "g": -0.1452,
     "shape": "一分差型",
     "threshold": 0.06
    },
    "notes": [],
+   "tw": {
+    "game_no": "105",
+    "home_zh": "坦帕灣光芒",
+    "away_zh": "密爾瓦基釀酒人",
+    "captured_at": "2026-10-26T20:04+08:00",
+    "fair_at": "2026-10-26T23:03+08:00",
+    "fair_fresh": true,
+    "h2h": {
+     "line": null,
+     "home": {
+      "price": 1.62,
+      "fair_odds": 1.91,
+      "fair_prob": 0.5233,
+      "ev": -0.1523
+     },
+     "away": {
+      "price": 1.88,
+      "fair_odds": 2.1,
+      "fair_prob": 0.4767,
+      "ev": -0.1038
+     }
+    },
+    "totals": null,
+    "spread": {
+     "line": -1.5,
+     "home": {
+      "price": 2.29,
+      "fair_odds": 3.02,
+      "fair_prob": 0.3315,
+      "ev": -0.2409
+     },
+     "away": {
+      "price": 1.4,
+      "fair_odds": 1.5,
+      "fair_prob": 0.6685,
+      "ev": -0.0641
+     }
+    },
+    "values": [],
+    "derived": []
+   },
    "t10v": {
     "favourite": "home",
     "fav_zh": "坦帕灣光芒",
     "dog_zh": "密爾瓦基釀酒人",
-    "g_intl": -0.1482,
+    "g_intl": -0.1452,
     "g_tw": -0.1052,
-    "g_gap": 0.043,
-    "dp": 0.0266,
-    "dc": 0.0165,
+    "g_gap": 0.04,
+    "dp": 0.0232,
+    "dc": 0.0169,
     "shape": "一分差型",
     "hints": [
-     "運彩把坦帕灣光芒贏 2 分以上算得比國際高 1.6pp → 密爾瓦基釀酒人 +1.5 相對划算",
-     "運彩把坦帕灣光芒贏球算得比國際高 2.7pp → 密爾瓦基釀酒人 不讓分相對划算"
+     "運彩把坦帕灣光芒贏 2 分以上算得比國際高 1.7pp → 密爾瓦基釀酒人 +1.5 相對划算",
+     "運彩把坦帕灣光芒贏球算得比國際高 2.3pp → 密爾瓦基釀酒人 不讓分相對划算"
     ],
     "bets": [
      {
@@ -96,10 +138,10 @@
       "side": "home",
       "line": null,
       "price": 1.62,
-      "fair_prob": 0.5199,
-      "fair_odds": 1.92,
-      "ev": -0.1578,
-      "fresh": false
+      "fair_prob": 0.5233,
+      "fair_odds": 1.91,
+      "ev": -0.1523,
+      "fresh": true
      },
      {
       "key": "dog_ml",
@@ -107,10 +149,10 @@
       "side": "away",
       "line": null,
       "price": 1.88,
-      "fair_prob": 0.4801,
-      "fair_odds": 2.08,
-      "ev": -0.0974,
-      "fresh": false
+      "fair_prob": 0.4767,
+      "fair_odds": 2.1,
+      "ev": -0.1038,
+      "fresh": true
      },
      {
       "key": "fav_rl",
@@ -118,10 +160,10 @@
       "side": "home",
       "line": -1.5,
       "price": 2.29,
-      "fair_prob": 0.3319,
-      "fair_odds": 3.01,
-      "ev": -0.2399,
-      "fresh": false
+      "fair_prob": 0.3315,
+      "fair_odds": 3.02,
+      "ev": -0.2409,
+      "fresh": true
      },
      {
       "key": "dog_rl",
@@ -129,10 +171,10 @@
       "side": "away",
       "line": 1.5,
       "price": 1.4,
-      "fair_prob": 0.6681,
+      "fair_prob": 0.6685,
       "fair_odds": 1.5,
-      "ev": -0.0647,
-      "fresh": false
+      "ev": -0.0641,
+      "fresh": true
      }
     ],
     "best": {
@@ -141,59 +183,18 @@
      "side": "away",
      "line": 1.5,
      "price": 1.4,
-     "fair_prob": 0.6681,
+     "fair_prob": 0.6685,
      "fair_odds": 1.5,
-     "ev": -0.0647,
-     "fresh": false
+     "ev": -0.0641,
+     "fresh": true
     },
     "pick": null,
-    "status": "stale",
+    "status": "pass",
     "threshold": 0.03,
     "tw_at": "2026-10-26T20:04+08:00",
-    "fair_at": "2026-10-26T09:01+08:00",
+    "fair_at": "2026-10-26T23:03+08:00",
     "minutes_before": 716,
     "timing": "early"
-   },
-   "tw": {
-    "game_no": "105",
-    "home_zh": "坦帕灣光芒",
-    "away_zh": "密爾瓦基釀酒人",
-    "captured_at": "2026-10-26T20:04+08:00",
-    "fair_at": "2026-10-26T09:01+08:00",
-    "fair_fresh": false,
-    "h2h": {
-     "line": null,
-     "home": {
-      "price": 1.62,
-      "fair_odds": 1.92,
-      "fair_prob": 0.5199,
-      "ev": -0.1578
-     },
-     "away": {
-      "price": 1.88,
-      "fair_odds": 2.08,
-      "fair_prob": 0.4801,
-      "ev": -0.0974
-     }
-    },
-    "totals": null,
-    "spread": {
-     "line": -1.5,
-     "home": {
-      "price": 2.29,
-      "fair_odds": 3.01,
-      "fair_prob": 0.3319,
-      "ev": -0.2399
-     },
-     "away": {
-      "price": 1.4,
-      "fair_odds": 1.5,
-      "fair_prob": 0.6681,
-      "ev": -0.0647
-     }
-    },
-    "values": [],
-    "derived": []
    }
   }
  ],
