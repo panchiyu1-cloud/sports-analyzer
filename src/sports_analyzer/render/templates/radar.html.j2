@@ -6,7 +6,7 @@
 {% set thr_m = (cfg.mlb_value_threshold * 100)|round|int %}
 {% set nxt = plan|rejectattr('done')|first %}
 {{ ui.hero("延遲雷達",
-  "運彩改價比國際盤慢。系統每 " ~ sensor_minutes ~ " 分鐘用兩家國際書商盯著有運彩價、48 小時內開賽的比賽；哪一場的某一邊動了 " ~ sensor_move ~ " 個百分點以上，就替那個聯賽買一次國際共識價，拿去對照你最後一次上傳的運彩賠率：如果運彩那時的賠率還沒變、就已經有 EV（足球 ≥ " ~ thr_f ~ "%、MLB ≥ " ~ thr_m ~ "%），這裡會列出來。",
+  "運彩改價比國際盤慢。系統每 " ~ sensor_minutes ~ " 分鐘用兩家國際書商盯著有運彩價、48 小時內開賽的比賽；哪一場的某一邊動了 " ~ sensor_move ~ " 個百分點以上，就替那個聯賽買一次國際共識價，拿去對照你最後一次上傳的運彩賠率：如果運彩那時的賠率還沒變、就已經有 EV（足球 ≥ " ~ thr_f ~ "%、MLB 和 NBA ≥ " ~ thr_m ~ "%），這裡會列出來。",
   [
     {"label": "候選", "value": kpis.candidates, "tone": "good" if kpis.candidates else ""},
     {"label": "觀察中", "value": kpis.watch},

@@ -75,6 +75,33 @@
 </article>
 {% endmacro %}
 
+{% macro nba_card(r) %}
+{% set row = r.row %}
+<article class="card review" id="m-nba-{{ row.game_id }}">
+  <div class="top"><span>{{ row.local }}</span><span>NBA</span></div>
+  <div class="teams">
+    <div><div class="name">{{ row.away }}</div></div>
+    <div class="score">{{ row.final_a }} – {{ row.final_h }}<div class="sub">客 – 主</div></div>
+    <div class="away"><div class="name">{{ row.home }}</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip {{ r.tone }}">{{ r.label }}</span></div>
+  {% if row.quarters_a %}
+  <div class="scroll"><table class="mini">
+    {% set qa = row.quarters_a.split(' ') %}{% set qh = row.quarters_h.split(' ') %}
+    <tr><th></th>{% for x in qa %}<th>{{ 'OT' ~ (loop.index - 4) if loop.index > 4 else 'Q' ~ loop.index }}</th>{% endfor %}<th>T</th></tr>
+    <tr><td>客</td>{% for x in qa %}<td>{{ x }}</td>{% endfor %}<td><b>{{ row.final_a }}</b></td></tr>
+    <tr><td>主</td>{% for x in qh %}<td>{{ x }}</td>{% endfor %}<td><b>{{ row.final_h }}</b></td></tr>
+  </table></div>
+  {% endif %}
+  {{ picks_block(r.picks) }}
+  <ul class="why">
+    {% for b in r.bullets %}<li>{{ b }}</li>{% endfor %}
+  </ul>
+  <p class="conclusion"><b>結論</b>{{ r.conclusion }}</p>
+  {{ ui.past_chart(r.curve) }}
+</article>
+{% endmacro %}
+
 {% macro football_summary(s) %}
 <div class="kpis">
   <div class="kpi"><b>{{ s.matches }}</b><span>已檢討場次</span></div>

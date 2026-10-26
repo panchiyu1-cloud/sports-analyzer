@@ -22,6 +22,7 @@ TW_DIR = DATA_DIR / "tw"
 REVIEW_DIR = DATA_DIR / "reviews"
 FOOTBALL_REVIEWS_PATH = REVIEW_DIR / "football.csv"
 MLB_REVIEWS_PATH = REVIEW_DIR / "mlb.csv"
+NBA_REVIEWS_PATH = REVIEW_DIR / "nba.csv"
 ODDS_BUDGET_PATH = DATA_DIR / "odds_budget.json"
 # Line-move tape (moves.py): every international and 運彩 price seen, per month.
 MOVES_DIR = DATA_DIR / "moves"
@@ -60,6 +61,10 @@ FOOTBALL_COMPETITIONS: tuple[Competition, ...] = (
 COMPETITION_BY_CODE = {c.code: c for c in FOOTBALL_COMPETITIONS}
 
 MLB_ODDS_KEY = "baseball_mlb"
+# NBA (2026-10-26): the same two-way shape as MLB (match winner, handicap, totals). The
+# schedule and results come from ESPN's public scoreboard (fetch/nba.py), the prices from
+# The Odds API under this key, 運彩's from the phone's basketball upload.
+NBA_ODDS_KEY = "basketball_nba"
 
 
 # ------------------------------------------------------------------- model knobs
@@ -87,6 +92,16 @@ class ModelConfig:
     # MLB (T-10 價值版, 2026-10-14): a 3% cushion. The fair price is a consensus of
     # US-facing books whose de-vig carries ~1pp of error, which is ~2% EV at even odds.
     mlb_value_threshold: float = 0.03
+    # NBA: the same cushion as MLB (two-way markets, a US-facing consensus).
+    nba_value_threshold: float = 0.03
+    # NBA margins and totals around the market's line are close to normal (2007-2025
+    # regular seasons, 22,677 games): the spread of the home margin around the posted
+    # line and of the total around the totals line. These price 運彩's handicap and
+    # totals lines when they differ from the international main line (models/margin.py):
+    # within 1pp of the real frequency for shifts up to 6 points (spreads, 2019-2025) and
+    # 8 points (totals, 2015-2025), checked on pre-game lines assumed to be 50/50.
+    nba_margin_sigma: float = 12.5
+    nba_total_sigma: float = 18.0
     # A 運彩 price is judged only against a fair price bought within this many minutes
     # of it: an older consensus misses the news 運彩 may already have priced in.
     max_price_gap_minutes: int = 180

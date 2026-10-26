@@ -29,7 +29,11 @@ from ..teams import canonical
 
 log = logging.getLogger(__name__)
 
+# The feed's sport ids (`si`), for reference only: the parser reads whatever the phone
+# uploads. Basketball's id is read from the first basketball upload's `si` field.
 SPORT_IDS = {"football": "34740.1", "baseball": "34731.1"}
+# The folders under data/tw/ the phone uploads into, one per sport feed.
+UPLOAD_SPORTS = ("football", "baseball", "basketball")
 
 
 @dataclass(frozen=True)
@@ -86,6 +90,22 @@ class TwGame:
             if line is None or (m.line is not None and abs(m.line - line) < 1e-9):
                 return m
         return None
+
+    def markets_of(self, kind: str) -> list[TwMarket]:
+        """Every market of a kind with selections (NBA handicaps and totals come in several)."""
+        return [m for m in self.markets if m.kind == kind and m.selections]
+
+    def nearest_market(self, kind: str, line: float | None) -> TwMarket | None:
+        """The market of a kind whose line is nearest `line` (the first one without a line)."""
+        candidates = self.markets_of(kind)
+        if not candidates:
+            return None
+        if line is None:
+            return candidates[0]
+        with_line = [m for m in candidates if m.line is not None]
+        if not with_line:
+            return candidates[0]
+        return min(with_line, key=lambda m: abs(m.line - line))
 
 
 @dataclass
@@ -317,6 +337,8 @@ RELEVANT_LEAGUE_KEYWORDS = (
     "法國甲級",
     "歐洲冠軍",
     "美國職棒",
+    "美國職籃",
+    "NBA",
 )
 
 
@@ -411,7 +433,7 @@ def normalize_uploads(tw_dir: Path) -> list[tuple[Path, Path]]:
     from ..config import LOCAL_TZ
 
     moves: list[tuple[Path, Path]] = []
-    for sport_dir in (tw_dir / "football", tw_dir / "baseball"):
+    for sport_dir in (tw_dir / sport for sport in UPLOAD_SPORTS):
         if not sport_dir.exists():
             continue
         files = [p for p in sport_dir.rglob("*") if p.is_file() and p.name != ".gitkeep"]
@@ -550,6 +572,50 @@ for _m in (
     _mlb("San Francisco Giants", "舊金山巨人", "巨人"),
     _mlb("Arizona Diamondbacks", "亞利桑那響尾蛇", "亞歷桑那響尾蛇", "響尾蛇"),
     _mlb("Colorado Rockies", "科羅拉多洛磯", "科羅拉多落磯", "洛磯", "落磯"),
+):
+    TW_ALIASES.update(_m)
+
+# ---- NBA (canonical = normalised English name, as The Odds API and ESPN use it). The
+# feed writes full names ("洛杉磯湖人"); the bare nicknames are kept where no MLB club
+# shares them ("勇士" is already the Braves, so the Warriors need their city).
+for _m in (
+    _mlb("Atlanta Hawks", "亞特蘭大老鷹", "老鷹"),
+    _mlb(
+        "Boston Celtics",
+        "波士頓塞爾提克",
+        "塞爾提克",
+        "波士頓塞爾蒂克",
+        "塞爾蒂克",
+        "波士頓賽爾提克",
+    ),
+    _mlb("Brooklyn Nets", "布魯克林籃網", "籃網"),
+    _mlb("Charlotte Hornets", "夏洛特黃蜂", "黃蜂"),
+    _mlb("Chicago Bulls", "芝加哥公牛", "公牛"),
+    _mlb("Cleveland Cavaliers", "克里夫蘭騎士", "騎士"),
+    _mlb("Dallas Mavericks", "達拉斯獨行俠", "獨行俠", "達拉斯小牛", "小牛"),
+    _mlb("Denver Nuggets", "丹佛金塊", "金塊"),
+    _mlb("Detroit Pistons", "底特律活塞", "活塞"),
+    _mlb("Golden State Warriors", "金州勇士"),
+    _mlb("Houston Rockets", "休士頓火箭", "火箭"),
+    _mlb("Indiana Pacers", "印第安那溜馬", "印第安納溜馬", "印地安那溜馬", "溜馬"),
+    _mlb("Los Angeles Clippers", "洛杉磯快艇", "快艇"),
+    _mlb("Los Angeles Lakers", "洛杉磯湖人", "湖人"),
+    _mlb("Memphis Grizzlies", "曼菲斯灰熊", "孟菲斯灰熊", "灰熊"),
+    _mlb("Miami Heat", "邁阿密熱火", "熱火"),
+    _mlb("Milwaukee Bucks", "密爾瓦基公鹿", "公鹿"),
+    _mlb("Minnesota Timberwolves", "明尼蘇達灰狼", "灰狼", "明尼蘇達木狼"),
+    _mlb("New Orleans Pelicans", "紐奧良鵜鶘", "鵜鶘", "紐奧爾良鵜鶘"),
+    _mlb("New York Knicks", "紐約尼克", "尼克", "紐約尼克斯"),
+    _mlb("Oklahoma City Thunder", "奧克拉荷馬雷霆", "奧克拉荷馬市雷霆", "奧克拉荷馬城雷霆", "雷霆"),
+    _mlb("Orlando Magic", "奧蘭多魔術", "魔術"),
+    _mlb("Philadelphia 76ers", "費城76人", "費城七六人", "76人"),
+    _mlb("Phoenix Suns", "鳳凰城太陽", "菲尼克斯太陽", "太陽"),
+    _mlb("Portland Trail Blazers", "波特蘭拓荒者", "拓荒者"),
+    _mlb("Sacramento Kings", "沙加緬度國王", "沙加緬度帝王", "國王"),
+    _mlb("San Antonio Spurs", "聖安東尼奧馬刺", "聖安東尼馬刺", "馬刺"),
+    _mlb("Toronto Raptors", "多倫多暴龍", "暴龍"),
+    _mlb("Utah Jazz", "猶他爵士", "爵士"),
+    _mlb("Washington Wizards", "華盛頓巫師", "巫師"),
 ):
     TW_ALIASES.update(_m)
 

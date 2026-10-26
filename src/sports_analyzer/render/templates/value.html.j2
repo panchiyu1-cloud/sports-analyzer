@@ -28,7 +28,7 @@
       <div class="verdict">
         {{ ui.status_chip(c.status) }}
         {% if c.status == 'value' %}
-          {% for v in c.values %}<span><b>{{ v.selection }}</b> @ {{ v.tw_price }} <span class="pos">EV {{ '%+.1f%%'|format(v.ev * 100) }}</span>{% if v.derived %} <span class="chip ghost">推算</span>{% endif %}</span>{% endfor %}
+          {% for v in c['values'] %}<span><b>{{ v.selection }}</b> @ {{ v.tw_price }} <span class="pos">EV {{ '%+.1f%%'|format(v.ev * 100) }}</span>{% if v.derived %} <span class="chip ghost">推算</span>{% endif %}</span>{% endfor %}
         {% elif c.status == 'stale' %}
           <span class="sub">國際價 {{ c.fair_at }}、運彩價 {{ c.captured }} 相隔超過 {{ gap_h }} 小時</span>
         {% elif c.best %}

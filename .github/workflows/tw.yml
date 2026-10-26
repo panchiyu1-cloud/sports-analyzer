@@ -1,9 +1,10 @@
 name: 運彩 compare
 
-# Runs whenever the phone uploads a 運彩 feed file (data/tw/**). Compares the upload
-# with the latest snapshots and re-renders. Games starting within the next 3 hours
-# first get freshly bought international prices (T-10 價值版: decide just before
-# first pitch), within the odds credit budget; that is what the API key is for.
+# Runs whenever the phone uploads a 運彩 feed file (data/tw/**: football, baseball or
+# basketball). Compares the upload with the latest snapshots and re-renders. Games
+# starting within the next 3 hours first get freshly bought international prices (T-10
+# 價值版: decide just before first pitch), within the odds credit budget; that is what
+# the API key is for.
 # Matches that finished since the last review are reviewed too (results only, no
 # odds credits), so an upload is also the owner's "review now" button.
 

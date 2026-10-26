@@ -7,8 +7,10 @@ Rules below are distilled from the ECC (`affaan-m/ECC`) `rules/common` and
 ## What this project is
 
 A daily pipeline that
-1. fetches fixtures/results (football-data.org, MLB Stats API) and odds (The Odds API),
-2. fits a model per competition (football: Dixon-Coles; MLB: log5 + starting pitcher),
+1. fetches fixtures/results (football-data.org, MLB Stats API, ESPN's NBA scoreboard) and
+   odds (The Odds API),
+2. fits a model per competition (football: Dixon-Coles; MLB: log5 + starting pitcher;
+   NBA: none, the market only),
 3. compares model probabilities with de-vigged market probabilities,
 4. writes a JSON snapshot + appends signals to `data/ledger.csv`,
 5. renders the site in `docs/`: a front page and one page per analysis method (GitHub Pages).
@@ -42,7 +44,8 @@ formula is not obvious.
   to the next 1st of the month (The Odds API resets every plan's credits on the 1st, UTC;
   nothing carries over); short of it a run buys h2h only, or nothing (prices carried
   over, marked stale). Football buys h2h,totals only (運彩 football handicaps are
-  three-way, so Asian handicap prices compare with nothing); MLB keeps the run line.
+  three-way, so Asian handicap prices compare with nothing); MLB keeps the run line, NBA
+  the handicap (h2h,spreads are its essential markets).
 - Pre-game refreshes (`pipeline tw` after a recent upload, see "T-10 價值版") and the
   延遲雷達 purchases (`pipeline radar`, essential markets only; triggered by the 盯盤
   sensor) may spend `budget.PREGAME_EXTRA` (6) credits a day past that allowance, never
@@ -86,6 +89,7 @@ python -m unittest discover -s tests -v          # tests (no extra deps)
 pytest --cov=src                                 # same, with coverage
 ruff check . && ruff format .                    # lint + format
 python -m sports_analyzer.pipeline football      # daily football run (needs .env)
+python -m sports_analyzer.pipeline nba           # NBA: ESPN schedule + consensus + expected score
 python -m sports_analyzer.pipeline football --offline   # render from last snapshot
 python -m sports_analyzer.pipeline review         # post-match review (football-data token only)
 python -m sports_analyzer.pipeline sensor         # one 盯盤 round (ODDS_API_IO_KEY; state in .sensor/)
@@ -104,12 +108,14 @@ src/sports_analyzer/
   http.py          shared requests session: retries, header-based throttling
   teams.py         team-name normalisation + alias table across data sources
   fetch/           football.py (football-data.org), odds.py (The Odds API), mlb.py,
-                   oddsio.py (odds-api.io: the 盯盤 sensor's two bookmakers)
+                   nba.py (ESPN scoreboard), oddsio.py (odds-api.io: the 盯盤 sensor)
   models/          dixon_coles.py, market.py (de-vig, edge, T-10 G value),
-                   implied.py (market-implied goal model + per-market calibration)
+                   implied.py (market-implied goal model + per-market calibration),
+                   margin.py (NBA: normal margin / total around the market's line)
   analysis/        football.py — fixtures + model + odds -> card dicts + signals
+                   mlb.py, nba.py — cards + the 運彩 decision of each sport
                    review.py — finished match: pre-match card vs result, verdict, wording
-  review_store.py  data/reviews/{football,mlb}.csv (one row per finished match)
+  review_store.py  data/reviews/{football,mlb,nba}.csv (one row per finished match)
   ledger.py        append / settle signals in data/ledger.csv
   moves.py         line-move tape data/moves/YYYY-MM.csv + 大戶 record data/moves/events.csv
                    + 延遲雷達 (radar, radar_events)
@@ -151,7 +157,9 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - `blob3rd.sportslottery.com.tw/apidata/Pre/<sport>-Games.zh.json` is geo-blocked
   outside Taiwan (CloudFront 403 from GitHub runners). The owner's iPhone
   Shortcut uploads the raw file to `data/tw/<football|baseball>/<YYYY-MM-DD-HHmm>.json`;
-  never try to fetch it from Actions. Sport ids: football 34740.1, baseball 34731.1.
+  never try to fetch it from Actions. Sport ids: football 34740.1, baseball 34731.1;
+  basketball: read from the first upload's `si` (the owner points the shortcut at the
+  basketball feed and `data/tw/basketball/`).
 - `fetch/taiwan.py` parses (price = 1 + pu/pd), `analysis/taiwan.py` compares
   with the consensus (EV = fair_prob x price - 1), `tw_ledger.py` records value
   bets, CLV (from a later consensus; stale carried-over blocks never count) and
@@ -483,3 +491,54 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   once reviewed, else "已開賽・等賽果"; the reviews page's waiting list uses them too. Review
   cards carry the match anchor (`m-<sport>-<id>`); no page may repeat an anchor.
 
+## NBA (2026-10-26) — market comparison only, no model
+- Owner's request: NBA analysis on the site. The 2026-10-25 study (scratch; 20,000+
+  games of ESPN pre-game lines 2007-2026, 50 strategies and their opposites) found no
+  side of the closing line off the market by more than noise (worst z -1.8, two of
+  fifty, the multiple-testing rate), so 反者道之動 is not extended to NBA and there is no
+  model: the card is the fair price, what the market expects, and the 運彩 decision.
+- Data: ESPN's public scoreboard (`fetch/nba.py`, `site.api.espn.com/.../scoreboard?dates=`,
+  no key, not a documented contract: parse defensively) for the schedule, finals and the
+  points per quarter; The Odds API `basketball_nba` (h2h, spreads, totals; cost 3, the
+  evening run h2h,spreads); the phone's basketball upload under `data/tw/basketball/`
+  (league keyword 美國職籃 / NBA; the 30 teams' Chinese names in `TW_ALIASES`, the bare
+  "勇士" stays the Braves). ESPN says "LA Clippers" / "LA Lakers": aliases in teams.py.
+- Dates as MLB: `run_nba(today_local)` asks ESPN for the Taipei date as a US date (tip-offs
+  are the next Taipei morning), snapshots data/snapshots/<date>/nba.json hold `games` with
+  `game_id` (ESPN's); `_games_of` / `_games_for_page` join the two newest snapshots; the
+  review asks the US date six hours before the tip-off (`US_DATE_SHIFT`), 2.5 h after it
+  (`NBA_REVIEW_AFTER_HOURS`), quick reviews for 7 h. Everything keyed (sport, id) takes
+  `game_id` next to `match_id` / `game_pk` (`pipeline._card_id`, moves._card_base,
+  tw_ledger, sensor.watched).
+- `analysis/nba.shape_block` (card["shape"]): favourite, handicap and totals lines, the
+  score they imply via `models/margin.py`. `analysis/nba.decision` (at render and review
+  time, not stored on the card): every 運彩 bet with its EV, "value" when one reaches
+  `nba_value_threshold` (3%; a translated line `derived_value_threshold`, 4%) on a fresh
+  comparison, else "pass" / "stale"; `pick`, `best`, `timing` (pregame within
+  pregame_window_hours). tw_ledger rows of NBA value bets carry competition "NBA".
+- Lines: `analysis/taiwan.compare` takes the 運彩 handicap market nearest the
+  international line (`TwGame.nearest_market`) and compares directly only at the same
+  line; `nba_derived_compare` prices 運彩 handicap / totals lines within 8 / 12 points of
+  the main line with the normal model anchored on the main line's fair cover / over
+  probability (sigma 12.5 / 18.0 in config, checked on 22,677 regular-season games: within
+  1pp for shifts up to 6 points, 0.5pp for totals up to 8; whole-number lines push, the
+  fair probability is conditional on no push). `tw_ledger._nba_line_prob` gives such a
+  bet its CLV the same way from the fresh main block. Two-way handicap value bets are
+  labelled with the team and its own handicap (`taiwan.selection_text`, MLB too).
+- Review (`review.nba_row` / `assess_nba` / `explain_nba` / `summarize_nba`,
+  `review_store.NBA_COLUMNS`): the decision recomputed from the last pre-game card and
+  the newest pre-tip 運彩 block, the pick graded with `ledger.grade` (home-line
+  convention), verdicts value_win / value_loss / value_push / value_pass / value_stale /
+  no_value; the market's own record (favourite won, covered, total over) is shown as a
+  record of the market, never a bet.
+- Site: page `nba` (nba.html, after T-10: cards with the shape line, the bets table with
+  換算 chips, the curve of the pick's market when 運彩 was compared directly on it, else the
+  home match winner; history with the review and the pick), the value page lists NBA
+  comparisons too, the front page an NBA tile and the games on the board, the reviews
+  page an NBA tab and summary. `_ui.head` reads away @ home for every non-football sport
+  (`cards.US_SPORTS`). Fixed on the way: value.html's `{% for v in c.values %}` was the
+  dict method (a 可下 card failed the render); it is `c['values']` now, with a test.
+- Sensor: odds-api.io league `usa-nba` (the official SDK's example; a playoff slug is
+  added when seen), purchase cost 2 (h2h + spreads). Workflows: daily.yml runs
+  `pipeline nba` (continue-on-error: ESPN is unofficial), evening.yml
+  `pipeline nba --markets h2h,spreads`; tw.yml already fires on data/tw/**.

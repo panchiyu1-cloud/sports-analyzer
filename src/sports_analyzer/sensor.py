@@ -92,9 +92,9 @@ KEEP_READINGS = timedelta(hours=WINDOW_HOURS + 1)
 class Watch:
     """A match with a 運彩 price, starting within WINDOW_HOURS."""
 
-    sport: str  # football / mlb
+    sport: str  # football / mlb / nba
     match_id: str
-    league: str  # competition code (PL ...) or MLB
+    league: str  # competition code (PL ...), MLB or NBA
     home: str
     away: str
     kickoff: datetime
@@ -106,7 +106,7 @@ class Watch:
 
     @property
     def sides(self) -> tuple[str, ...]:
-        return ("home", "away") if self.sport == "mlb" else ("home", "draw", "away")
+        return ("home", "draw", "away") if self.sport == "football" else ("home", "away")
 
 
 def _iso(dt: datetime) -> str:
@@ -137,10 +137,10 @@ def watched(
         start = kickoff(dict(card))
         if start is None or not now < start <= end or (need_tw and not card.get("tw")):
             continue
-        league = "MLB" if sport == "mlb" else str(card.get("competition", ""))
+        league = {"mlb": "MLB", "nba": "NBA"}.get(sport) or str(card.get("competition", ""))
         if league not in LEAGUES:
             continue
-        mid = str(card.get("game_pk") if sport == "mlb" else card.get("match_id"))
+        mid = str(card.get("match_id") or card.get("game_pk") or card.get("game_id"))
         bought = fair_time((card.get("market") or {}).get("h2h"))
         if bought is not None and bought.tzinfo is None:
             bought = bought.replace(tzinfo=UTC)
@@ -432,8 +432,9 @@ def purchases(moving: Iterable[Watch]) -> list[str]:
 
 
 def purchase_cost(league: str) -> int:
-    """Credits of one triggered purchase: h2h; MLB also the run line (half of G)."""
-    return 2 if league == "MLB" else 1
+    """Credits of one triggered purchase: h2h; MLB also the run line (half of G), NBA
+    also the handicap (運彩's main basketball market)."""
+    return 2 if league in ("MLB", "NBA") else 1
 
 
 def record_triggers(state: dict[str, Any], leagues: Iterable[str], now: datetime) -> None:

@@ -24,6 +24,8 @@ DEFAULT_MARKETS = ("h2h", "spreads", "totals")
 FOOTBALL_MARKETS = ("h2h", "totals")
 # MLB: the -1.5 run line is half of the owner's T-10 G value and a 運彩 market.
 MLB_MARKETS = ("h2h", "spreads", "totals")
+# NBA: 運彩 offers all three (不讓分, 讓分, 大小); the handicap is the main market there.
+NBA_MARKETS = ("h2h", "spreads", "totals")
 
 
 @dataclass(frozen=True)

@@ -371,6 +371,11 @@ ALIASES: dict[str, str] = {
     "athletics": "athletics",
     "st louis cardinals": "st louis cardinals",
     "saint louis cardinals": "st louis cardinals",
+    # ---- NBA: ESPN shortens the two Los Angeles clubs; The Odds API spells them out
+    "la clippers": "los angeles clippers",
+    "los angeles clippers": "los angeles clippers",
+    "la lakers": "los angeles lakers",
+    "los angeles lakers": "los angeles lakers",
 }
 
 

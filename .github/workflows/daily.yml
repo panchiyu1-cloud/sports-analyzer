@@ -48,6 +48,12 @@ jobs:
         continue-on-error: true
         run: python -m sports_analyzer.pipeline mlb
 
+      # The NBA games of the next Taipei morning (ESPN's public scoreboard, no key) with
+      # the Odds API consensus: 3 credits a day in season.
+      - name: NBA — schedule, market consensus, expected score
+        continue-on-error: true
+        run: python -m sports_analyzer.pipeline nba
+
       - name: 運彩 — compare the latest phone upload with fair odds
         continue-on-error: true
         run: python -m sports_analyzer.pipeline tw
