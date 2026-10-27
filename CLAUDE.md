@@ -390,7 +390,8 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - Owner's request: use odds-api.io's free quota to the full, buy the evening's match-winner
   prices only, drop the three fixed radar runs. The Odds API's many-book consensus stays
   the fair price; 500 credits a month buy about one full look a day. odds-api.io's two
-  books (FanDuel + Bet365) can look every ten minutes but are not a consensus (their
+  books (FanDuel + Bet365 until 2026-10-26, see "Books change") can look every ten
+  minutes but are not a consensus (their
   de-vigged average sat 0.6pp median, 1.6pp worst from it on 36 matches): they say WHEN,
   the consensus says HOW MUCH. A move is measured on the two books' own readings, never
   against the consensus (that would read the gap between sources as a move).
@@ -438,6 +439,13 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   cache (.sensor/state.json, de-vigged probabilities); status.json has counts and our own
   team names of unmatched matches; logs print counts and exception type names only.
 - MLB in season (March on) will press on the cap: revisit `TIERS` with real numbers then.
+- Books change (2026-10-27): Bet365 left odds-api.io's free plan on 2026-10-26 19:00 UTC
+  (free keys get a 403 on it; the owner picks another recreational book in the dashboard).
+  Each reading keeps the books it was averaged over (`b`, `sensor.book_probs`) and
+  `moved` compares only readings of the same books as the latest one (a pair's average
+  and one book's sit apart: that is not a move; readings stored before `b` are a set of
+  their own). The selection is asked again every 6 h (`BOOKS_TTL`) and at once after a
+  403 (`run_sensor` clears `books_at`).
 
 ## 網站 (2026-10-16) — one page per analysis method
 - Owner's request: the old single page was too busy. `render/site.py` builds every page from

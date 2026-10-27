@@ -839,15 +839,23 @@ def run_sensor(
             }
             for w in chunk:
                 prices = found.get(mapped[w.key])
-                probs = sensor_mod.two_book_probs(prices, w.sides) if prices else None
-                if probs:
-                    state["readings"].append({"at": report["at"], "key": w.key, "p": probs})
+                read = sensor_mod.book_probs(prices, w.sides) if prices else None
+                if read:
+                    probs, books = read
+                    state["readings"].append(
+                        {"at": report["at"], "key": w.key, "p": probs, "b": books}
+                    )
                     readings += 1
                     extra += w.key not in due_keys
     except requests.RequestException as exc:
         # The type only: the request URL carries the key.
         log.warning("盯盤: odds-api.io unavailable (%s); stopping this round", type(exc).__name__)
         report["error"] = type(exc).__name__
+        if getattr(getattr(exc, "response", None), "status_code", None) == 403:
+            # A selected book left the free plan (Bet365, 2026-10-26): ask the dashboard's
+            # selection again next round instead of failing until BOOKS_TTL runs out.
+            state["books_at"] = None
+            report["error"] = "HTTPError 403 (bookmakers asked again next round)"
     state["usage"] = sensor_mod.record_usage(state["usage"], client.requests, now)
     sensor_mod.prune(state, now)
     upcoming_read = sensor_mod.next_due(readable, sensor_mod.last_readings(state), now)
