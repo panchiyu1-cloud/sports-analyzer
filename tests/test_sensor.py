@@ -10,6 +10,8 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest import mock
 
+import requests
+
 from sports_analyzer import budget, pipeline, sensor
 from sports_analyzer.config import Settings
 from sports_analyzer.fetch.oddsio import IoEvent, IoPrices
@@ -39,9 +41,12 @@ def w(key="football:1", hours=5.0, league="PL", bought=None, sport="football"):
     )
 
 
-def reading(minutes_ago: float, key="football:1", **p):
+def reading(minutes_ago: float, key="football:1", books=None, **p):
     at = NOW - timedelta(minutes=minutes_ago)
-    return {"at": at.isoformat(timespec="seconds"), "key": key, "p": p}
+    r = {"at": at.isoformat(timespec="seconds"), "key": key, "p": p}
+    if books is not None:
+        r["b"] = books
+    return r
 
 
 class WatchTests(unittest.TestCase):
@@ -243,6 +248,25 @@ class MoveTests(unittest.TestCase):
         recent = {"PL": (NOW - timedelta(minutes=10)).isoformat()}
         self.assertEqual(sensor.moved(watch, readings, NOW, recent), [])  # within MIN_GAP
 
+    def test_a_change_of_books_is_not_a_move(self):
+        # Bet365 left the free plan: FanDuel alone reads home 4.5pp higher than the pair
+        # did. Only readings of the same books are compared.
+        pair, alone = ["Bet365", "FanDuel"], ["FanDuel"]
+        watch = [w(bought=NOW - timedelta(minutes=60))]
+        readings = [
+            reading(60, books=pair, home=0.400, draw=0.300, away=0.300),
+            reading(20, books=pair, home=0.405, draw=0.298, away=0.297),
+            reading(10, books=alone, home=0.445, draw=0.285, away=0.270),
+            reading(0, books=alone, home=0.450, draw=0.283, away=0.267),
+        ]
+        self.assertEqual(sensor.moved(watch, readings, NOW), [])  # +0.5 within FanDuel
+        readings[-1] = reading(0, books=alone, home=0.476, draw=0.270, away=0.254)
+        self.assertEqual(sensor.moved(watch, readings, NOW), watch)  # +3.1 within FanDuel
+        # Readings kept before the books were stored are a set of their own.
+        old = [reading(60, home=0.40, draw=0.30, away=0.30),
+               reading(0, books=alone, home=0.50, draw=0.25, away=0.25)]  # fmt: skip
+        self.assertEqual(sensor.moved(watch, old, NOW), [])
+
     def test_two_books_de_vigged_and_averaged(self):
         prices = IoPrices("9", {"FanDuel": {"home": 1.9, "away": 1.9},
                                 "Bet365": {"home": 1.8, "away": 2.0},
@@ -251,6 +275,8 @@ class MoveTests(unittest.TestCase):
         self.assertEqual(sensor.two_book_probs(prices, ("home", "away")),
                          {"home": 0.5143, "away": 0.4857})  # fmt: skip
         self.assertIsNone(sensor.two_book_probs(prices, ("home", "draw", "away")))
+        probs, books = sensor.book_probs(prices, ("home", "away"))
+        self.assertEqual(books, ["Bet365", "FanDuel"])  # "Other" lacks a side
 
     def test_purchases_once_per_competition_soonest_first(self):
         moving = [w("football:1", 30, "SA"), w("mlb:2", 3, "MLB", sport="mlb"),
@@ -274,11 +300,12 @@ class StateTests(unittest.TestCase):
             self.assertEqual(len(back["readings"]), 1)  # 50 h old: gone
             self.assertEqual(list(back["triggers"]), ["SA"])
 
-    def test_books_are_asked_again_once_a_day(self):
+    def test_books_are_asked_again_every_six_hours(self):
         self.assertTrue(sensor.books_due({}, NOW))
         state = {"books": ["FanDuel", "Bet365"], "books_at": (NOW - timedelta(hours=5)).isoformat()}
         self.assertFalse(sensor.books_due(state, NOW))
-        self.assertTrue(sensor.books_due(state, NOW + timedelta(hours=20)))
+        self.assertTrue(sensor.books_due(state, NOW + timedelta(hours=1)))
+        self.assertTrue(sensor.books_due({**state, "books_at": None}, NOW))
 
 
 # ------------------------------------------------------------------ pipeline
@@ -286,8 +313,15 @@ class FakeIoClient:
     """odds-api.io as the sensor sees it: two books, a Premier League list, prices that
     the test moves between rounds."""
 
-    def __init__(self, prices: dict[str, dict[str, float]]) -> None:
+    def __init__(
+        self,
+        prices: dict[str, dict[str, float]],
+        books: list[str] | None = None,
+        refuse: bool = False,
+    ) -> None:
         self.prices = prices
+        self.books = books or ["FanDuel", "Bet365"]
+        self.refuse = refuse  # answer the odds request with a 403 (a paid-only book)
         self.requests = 0
         self.remaining_this_hour = 80
         self.asked: list[str] = []
@@ -295,7 +329,7 @@ class FakeIoClient:
     def selected_books(self):
         self.requests += 1
         self.asked.append("books")
-        return ["FanDuel", "Bet365"]
+        return list(self.books)
 
     def events(self, sport, league, start, end):
         self.requests += 1
@@ -308,6 +342,10 @@ class FakeIoClient:
     def odds(self, ids, books):
         self.requests += 1
         self.asked.append(f"odds {len(ids)}")
+        if self.refuse:
+            response = requests.Response()
+            response.status_code = 403
+            raise requests.HTTPError("HTTP 403", response=response)
         return [IoPrices(i, {b: self.prices[i] for b in books}) for i in ids if i in self.prices]
 
 
@@ -376,6 +414,24 @@ class SensorRoundTests(unittest.TestCase):
         self.assertNotIn(
             "PL", sensor.load_state(self.paths["SENSOR_DIR"] / "state.json")["triggers"]
         )
+
+    def test_a_403_asks_for_the_selected_books_again(self):
+        client = FakeIoClient({"e1": {"home": 2.5, "draw": 3.4, "away": 2.9}})
+        pipeline.run_sensor(self.settings, NOW, client)
+        state = sensor.load_state(self.paths["SENSOR_DIR"] / "state.json")
+        self.assertEqual(state["readings"][0]["b"], ["Bet365", "FanDuel"])
+
+        # Bet365 is paid-only now: the odds request answers 403.
+        refused = FakeIoClient({}, refuse=True)
+        later = NOW + timedelta(minutes=10)
+        report = pipeline.run_sensor(self.settings, later, refused)
+        self.assertIn("403", report["error"])
+        # The next round asks the dashboard's selection again (Bet365 is gone from it).
+        client = FakeIoClient({"e1": {"home": 2.1, "draw": 3.5, "away": 3.6}}, books=["FanDuel"])
+        third = pipeline.run_sensor(self.settings, later + timedelta(minutes=10), client)
+        self.assertEqual(client.asked, ["books", "odds 1"])
+        # FanDuel alone has a single reading so far: no move is measured against the pair.
+        self.assertEqual(third["buy"], [])
 
     def test_without_the_key_nothing_happens(self):
         report = pipeline.run_sensor(Settings(None, None), NOW, FakeIoClient({}))

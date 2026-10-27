@@ -4,13 +4,19 @@ credit; MLB two, its run line being half of G) and the last 運彩 upload is jud
 against it (延遲雷達). The fixed radar runs are gone: credits go where something moved.
 
 Why two sources. The Odds API's many-bookmaker consensus is what the fair price comes
-from, but 500 credits a month buy about one full look a day. odds-api.io (FanDuel and
-Bet365, 100 requests an hour, about 500 a day) can look every ten minutes, but two books
-are not a consensus: their de-vigged average sat 0.6pp (median) from it, 1.6pp at
-worst, on 36 matches checked 2026-10-16. So the two books only say WHEN; the consensus
-still says HOW MUCH. A move is measured on the two books' own prices (now against
-their reading when the consensus was last bought), never against the consensus, which
-would read the gap between the sources as a move.
+from, but 500 credits a month buy about one full look a day. odds-api.io (the two books
+selected in its dashboard, 100 requests an hour, about 500 a day) can look every ten
+minutes, but two books are not a consensus: their de-vigged average sat 0.6pp (median)
+from it, 1.6pp at worst, on 36 matches checked 2026-10-16 (FanDuel and Bet365). So the
+two books only say WHEN; the consensus still says HOW MUCH. A move is measured on the
+books' own prices (now against their reading when the consensus was last bought), never
+against the consensus, which would read the gap between the sources as a move.
+
+The books can change: Bet365 left the free plan on 2026-10-26 19:00 UTC (free keys get a
+403 on it) and the owner picks another in the dashboard. Every reading keeps the books it
+was averaged over, and a move is only measured between readings of the same books: two
+books' average and one book's (or a new pair's) sit up to a couple of points apart, which
+must not read as the market moving.
 
 Quota (free key: 100 an hour, 500 a day): no hour and no 24 hours may go over
 HOURLY_CAP / DAILY_CAP (the API does not say when its day starts, so any 24 hours
@@ -78,8 +84,9 @@ SPARE_MARGIN = 20
 # with matches can take more than the quiet ones.
 BURST = 3.0
 EVENTS_TTL = timedelta(hours=6)
-# The selected bookmakers are asked again this often (the owner may change them).
-BOOKS_TTL = timedelta(days=1)
+# The selected bookmakers are asked again this often (the owner may change them; a 403,
+# a book that left the free plan, asks again at once: pipeline.run_sensor).
+BOOKS_TTL = timedelta(hours=6)
 # A watched match missing from its competition's list: look again at most this often.
 UNMAPPED_RETRY = timedelta(hours=1)
 MATCH_TOLERANCE = timedelta(hours=2)
@@ -377,15 +384,22 @@ def record_usage(usage: Mapping[str, Any], spent: int, now: datetime) -> dict[st
 
 
 # ---------------------------------------------------------------------- reading
-def two_book_probs(prices: IoPrices, sides: tuple[str, ...]) -> dict[str, float] | None:
+def book_probs(
+    prices: IoPrices, sides: tuple[str, ...]
+) -> tuple[dict[str, float], list[str]] | None:
     """Each bookmaker's match-winner prices de-vigged, then averaged over the books that
-    quote every side; None when no book does."""
-    per_book = [
-        devig([p[s] for s in sides]) for p in prices.books.values() if all(s in p for s in sides)
-    ]
-    if not per_book:
+    quote every side, with the names of those books (sorted); None when no book does."""
+    used = sorted(b for b, p in prices.books.items() if all(s in p for s in sides))
+    if not used:
         return None
-    return {s: round(mean(b[i] for b in per_book), 4) for i, s in enumerate(sides)}
+    per_book = [devig([prices.books[b][s] for s in sides]) for b in used]
+    return {s: round(mean(x[i] for x in per_book), 4) for i, s in enumerate(sides)}, used
+
+
+def two_book_probs(prices: IoPrices, sides: tuple[str, ...]) -> dict[str, float] | None:
+    """The averaged probabilities of `book_probs` alone."""
+    found = book_probs(prices, sides)
+    return found[0] if found else None
 
 
 def moved(
@@ -399,15 +413,21 @@ def moved(
     one for their competition (`triggers`: a purchase that never came, e.g. a match
     The Odds API does not list, must not be asked for again every ten minutes). The
     baseline is the reading nearest that moment (the market the purchase saw); with no
-    purchase at all, the first reading."""
-    series: dict[str, list[tuple[datetime, dict[str, float]]]] = defaultdict(list)
+    purchase at all, the first reading. Only readings averaged over the same books as
+    the latest one count (`b`; readings from before it was kept are one set of their
+    own): a change of books is not a move."""
+    series: dict[str, list[tuple[datetime, dict[str, float], tuple[str, ...]]]] = defaultdict(list)
     for r in readings:
         at = _time(r.get("at"))
         if at is not None:
-            series[r["key"]].append((at, r["p"]))
+            series[r["key"]].append((at, r["p"], tuple(r.get("b") or ())))
     out = []
     for w in watch:
-        points = sorted(series.get(w.key, []), key=lambda x: x[0])
+        every = sorted(series.get(w.key, []), key=lambda x: x[0])
+        if not every:
+            continue
+        books = every[-1][2]
+        points = [(at, p) for at, p, b in every if b == books]
         if len(points) < 2 or now - points[-1][0] > FRESH_READING:
             continue
         asked = _time((triggers or {}).get(w.league))
