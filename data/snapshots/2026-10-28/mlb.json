@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-28T01:02:01+00:00",
+ "generated_at": "2026-10-28T13:25:29+00:00",
  "date": "2026-10-28",
- "credits_remaining": 115,
+ "credits_remaining": 106,
  "games": [
   {
    "sport": "mlb",
@@ -14,26 +14,181 @@
    "home_key": "tampa bay rays",
    "away_key": "milwaukee brewers",
    "home_probable": null,
-   "away_probable": null,
+   "away_probable": "Jacob Misiorowski",
    "venue": "Tropicana Field",
-   "market": null,
-   "t10": null,
-   "notes": [
-    "找不到對應賠率（可能尚未開盤）"
-   ],
-   "t10v": null,
-   "tw": null
+   "market": {
+    "books": 21,
+    "h2h": {
+     "home": {
+      "fair": 0.4109,
+      "fair_odds": 2.43,
+      "best": 2.44,
+      "book": "matchbook"
+     },
+     "away": {
+      "fair": 0.5891,
+      "fair_odds": 1.7,
+      "best": 1.68,
+      "book": "betfair_ex_eu"
+     },
+     "odds_at": "2026-10-28T13:25+00:00"
+    },
+    "totals": null,
+    "spread": {
+     "line": 1.5,
+     "home": {
+      "fair": 0.5651,
+      "fair_odds": 1.77,
+      "best": 1.79,
+      "book": "onexbet"
+     },
+     "away": {
+      "fair": 0.4349,
+      "fair_odds": 2.3,
+      "best": 2.22,
+      "book": "matchbook"
+     },
+     "odds_at": "2026-10-28T13:25+00:00"
+    }
+   },
+   "t10": {
+    "favourite": "away",
+    "p_ml": 0.5891,
+    "c_cover": 0.4349,
+    "g": 0.024,
+    "shape": "中性",
+    "threshold": 0.06
+   },
+   "notes": [],
+   "t10v": {
+    "favourite": "away",
+    "fav_zh": "密爾瓦基釀酒人",
+    "dog_zh": "坦帕灣光芒",
+    "g_intl": 0.024,
+    "g_tw": 0.0908,
+    "g_gap": 0.0668,
+    "dp": 0.0358,
+    "dc": 0.031,
+    "shape": "中性",
+    "hints": [
+     "運彩把密爾瓦基釀酒人贏 2 分以上算得比國際高 3.1pp → 坦帕灣光芒 +1.5 相對划算",
+     "運彩把密爾瓦基釀酒人贏球算得比國際高 3.6pp → 坦帕灣光芒 不讓分相對划算"
+    ],
+    "bets": [
+     {
+      "key": "fav_ml",
+      "label": "密爾瓦基釀酒人 不讓分",
+      "side": "away",
+      "line": null,
+      "price": 1.45,
+      "fair_prob": 0.5891,
+      "fair_odds": 1.7,
+      "ev": -0.1458,
+      "fresh": true
+     },
+     {
+      "key": "dog_ml",
+      "label": "坦帕灣光芒 不讓分",
+      "side": "home",
+      "line": null,
+      "price": 2.17,
+      "fair_prob": 0.4109,
+      "fair_odds": 2.43,
+      "ev": -0.1083,
+      "fresh": true
+     },
+     {
+      "key": "fav_rl",
+      "label": "密爾瓦基釀酒人 -1.5",
+      "side": "away",
+      "line": -1.5,
+      "price": 1.84,
+      "fair_prob": 0.4349,
+      "fair_odds": 2.3,
+      "ev": -0.1998,
+      "fresh": true
+     },
+     {
+      "key": "dog_rl",
+      "label": "坦帕灣光芒 +1.5",
+      "side": "home",
+      "line": 1.5,
+      "price": 1.65,
+      "fair_prob": 0.5651,
+      "fair_odds": 1.77,
+      "ev": -0.0676,
+      "fresh": true
+     }
+    ],
+    "best": {
+     "key": "dog_rl",
+     "label": "坦帕灣光芒 +1.5",
+     "side": "home",
+     "line": 1.5,
+     "price": 1.65,
+     "fair_prob": 0.5651,
+     "fair_odds": 1.77,
+     "ev": -0.0676,
+     "fresh": true
+    },
+    "pick": null,
+    "status": "pass",
+    "threshold": 0.03,
+    "tw_at": "2026-10-28T20:00+08:00",
+    "fair_at": "2026-10-28T21:25+08:00",
+    "minutes_before": 720,
+    "timing": "early"
+   },
+   "tw": {
+    "game_no": "102",
+    "home_zh": "坦帕灣光芒",
+    "away_zh": "密爾瓦基釀酒人",
+    "captured_at": "2026-10-28T20:00+08:00",
+    "fair_at": "2026-10-28T21:25+08:00",
+    "fair_fresh": true,
+    "h2h": {
+     "line": null,
+     "home": {
+      "price": 2.17,
+      "fair_odds": 2.43,
+      "fair_prob": 0.4109,
+      "ev": -0.1083
+     },
+     "away": {
+      "price": 1.45,
+      "fair_odds": 1.7,
+      "fair_prob": 0.5891,
+      "ev": -0.1458
+     }
+    },
+    "totals": null,
+    "spread": {
+     "line": 1.5,
+     "home": {
+      "price": 1.65,
+      "fair_odds": 1.77,
+      "fair_prob": 0.5651,
+      "ev": -0.0676
+     },
+     "away": {
+      "price": 1.84,
+      "fair_odds": 2.3,
+      "fair_prob": 0.4349,
+      "ev": -0.1998
+     }
+    },
+    "values": [],
+    "derived": []
+   }
   }
  ],
  "odds_key": "baseball_mlb",
  "tw_report": {
-  "matched": 0,
+  "matched": 1,
   "unmatched_cards": [],
-  "unmatched_games": [
-   "密爾瓦基釀酒人 @ 坦帕灣光芒 (2026-10-29T00:00+00:00)"
-  ],
+  "unmatched_games": [],
   "tw_games": 1,
-  "avg_overround": null,
+  "avg_overround": 0.1505,
   "file": "2026-10-28-2000.json",
   "unknown_teams": [],
   "unknown_markets": {},
