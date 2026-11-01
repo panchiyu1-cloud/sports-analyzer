@@ -1,11 +1,8 @@
 {
- "generated_at": "2026-11-01T01:10:59+00:00",
+ "generated_at": "2026-11-01T13:16:52+00:00",
  "date": "2026-11-01",
- "credits_remaining": 488,
- "odds_markets": [
-  "h2h",
-  "totals"
- ],
+ "credits_remaining": 469,
+ "odds_markets": [],
  "competitions": [
   {
    "code": "PL",
@@ -123,7 +120,8 @@
         "best": 2.56,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -139,32 +137,16 @@
         "best": 2.02,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0753,
-      "draw": 0.0344,
-      "away": 0.0408,
-      "over": -0.1463,
-      "under": 0.1463
-     },
-     "recommendation": {
-      "market": "大小",
-      "selection_key": "under",
-      "selection": "小分 2.5",
-      "line": 2.5,
-      "model_p": 0.6386,
-      "market_p": 0.4923,
-      "price": 2.02,
-      "book": "matchbook",
-      "edge": 0.1463,
-      "ev": 0.29,
-      "kelly": 0.0711,
-      "confidence": "低"
-     },
-     "notes": [],
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1009",
       "home_zh": "利物浦",
@@ -572,7 +554,8 @@
         "best": 3.1,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -588,19 +571,16 @@
         "best": 2.22,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0212,
-      "draw": 0.01,
-      "away": -0.0311,
-      "over": -0.059,
-      "under": 0.059
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1389",
       "home_zh": "紐卡索聯",
@@ -904,30 +884,7 @@
      }
     }
    ],
-   "signals": [
-    {
-     "sport": "football",
-     "competition": "PL",
-     "competition_name": "英超",
-     "match_id": 560631,
-     "kickoff_utc": "2026-11-01T16:30:00+00:00",
-     "kickoff_local": "11/2 (週一) 00:30",
-     "home": "Liverpool FC",
-     "away": "Arsenal FC",
-     "market": "大小",
-     "selection_key": "under",
-     "selection": "小分 2.5",
-     "line": 2.5,
-     "model_p": 0.6386,
-     "market_p": 0.4923,
-     "price": 2.02,
-     "book": "matchbook",
-     "edge": 0.1463,
-     "ev": 0.29,
-     "kelly": 0.0711,
-     "confidence": "低"
-    }
-   ],
+   "signals": [],
    "name_check": {
     "api_only": [],
     "csv_only": [
@@ -936,8 +893,7 @@
      "southampton",
      "west ham",
      "wolves"
-    ],
-    "odds_unmatched": []
+    ]
    }
   },
   {
@@ -951,420 +907,6 @@
     "as_of": "2026-11-01"
    },
    "cards": [
-    {
-     "sport": "football",
-     "competition": "PD",
-     "competition_name": "西甲",
-     "match_id": 564733,
-     "kickoff_utc": "2026-11-01T13:00:00+00:00",
-     "kickoff_local": "11/1 (週日) 21:00",
-     "matchday": 11,
-     "home": "Getafe CF",
-     "away": "Sevilla FC",
-     "home_key": "getafe",
-     "away_key": "sevilla",
-     "model": {
-      "fitted": true,
-      "data_ok": true,
-      "n_matches": 864,
-      "home_matches": 86,
-      "away_matches": 86,
-      "n_teams": 26,
-      "lambda_home": 0.75,
-      "mu_away": 1.01,
-      "p_home": 0.2501,
-      "p_draw": 0.3564,
-      "p_away": 0.3935,
-      "over25": 0.2564,
-      "most_likely": "0-0（19%）",
-      "home_attack_rank": 26,
-      "home_defence_rank": 5,
-      "away_attack_rank": 10,
-      "away_defence_rank": 16,
-      "home_advantage": 0.306
-     },
-     "form": {
-      "home": "",
-      "away": ""
-     },
-     "table": {
-      "home": {
-       "position": 18,
-       "played": 10,
-       "won": 2,
-       "drawn": 3,
-       "lost": 5,
-       "gf": 5,
-       "ga": 15,
-       "points": 9
-      },
-      "away": {
-       "position": 6,
-       "played": 10,
-       "won": 5,
-       "drawn": 2,
-       "lost": 3,
-       "gf": 16,
-       "ga": 16,
-       "points": 17
-      }
-     },
-     "h2h": [
-      {
-       "date": "2026-02-22",
-       "home": "getafe",
-       "away": "sevilla",
-       "score": "0-1"
-      },
-      {
-       "date": "2025-08-25",
-       "home": "sevilla",
-       "away": "getafe",
-       "score": "1-2"
-      },
-      {
-       "date": "2025-02-01",
-       "home": "getafe",
-       "away": "sevilla",
-       "score": "0-0"
-      },
-      {
-       "date": "2024-09-14",
-       "home": "sevilla",
-       "away": "getafe",
-       "score": "1-0"
-      }
-     ],
-     "market": {
-      "books": 21,
-      "h2h": {
-       "home": {
-        "fair": 0.2779,
-        "fair_odds": 3.6,
-        "best": 3.6,
-        "book": "betfair_ex_eu"
-       },
-       "draw": {
-        "fair": 0.3182,
-        "fair_odds": 3.14,
-        "best": 3.12,
-        "book": "onexbet"
-       },
-       "away": {
-        "fair": 0.4039,
-        "fair_odds": 2.48,
-        "best": 2.5,
-        "book": "coolbet"
-       },
-       "odds_at": "2026-11-01T12:00+00:00"
-      },
-      "totals": {
-       "line": 1.5,
-       "over": {
-        "fair": 0.6443,
-        "fair_odds": 1.55,
-        "best": 1.5,
-        "book": "codere_it"
-       },
-       "under": {
-        "fair": 0.3557,
-        "fair_odds": 2.81,
-        "best": 2.62,
-        "book": "marathonbet"
-       },
-       "odds_at": "2026-11-01T12:00+00:00"
-      },
-      "spread": null
-     },
-     "edges": {
-      "home": -0.0438,
-      "draw": 0.0398,
-      "away": 0.0039,
-      "over": -0.0813,
-      "under": 0.0813
-     },
-     "recommendation": null,
-     "notes": [],
-     "tw": {
-      "game_no": "1145",
-      "home_zh": "赫塔菲",
-      "away_zh": "塞維亞",
-      "captured_at": "2026-11-01T20:00+08:00",
-      "fair_at": "2026-11-01T20:00+08:00",
-      "fair_fresh": true,
-      "h2h": {
-       "line": null,
-       "home": {
-        "price": 2.85,
-        "fair_odds": 3.6,
-        "fair_prob": 0.2779,
-        "ev": -0.208
-       },
-       "draw": {
-        "price": 2.65,
-        "fair_odds": 3.14,
-        "fair_prob": 0.3182,
-        "ev": -0.1568
-       },
-       "away": {
-        "price": 2.15,
-        "fair_odds": 2.48,
-        "fair_prob": 0.4039,
-        "ev": -0.1316
-       }
-      },
-      "totals": {
-       "line": 1.5,
-       "over": {
-        "price": 1.42,
-        "fair_odds": 1.55,
-        "fair_prob": 0.6443,
-        "ev": -0.0851
-       },
-       "under": {
-        "price": 2.15,
-        "fair_odds": 2.81,
-        "fair_prob": 0.3557,
-        "ev": -0.2352
-       }
-      },
-      "spread": null,
-      "values": [],
-      "derived": [
-       {
-        "market": "塞維亞 大小 0.5",
-        "selection_key": "team_away_over",
-        "selection": "塞維亞 大 0.5",
-        "line": 0.5,
-        "tw_price": 1.3,
-        "fair_odds": 1.37,
-        "fair_prob": 0.7277,
-        "ev": -0.0539,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
-        "line": null,
-        "tw_price": 1.94,
-        "fair_odds": 2.1,
-        "fair_prob": 0.4769,
-        "ev": -0.0747,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（塞維亞）",
-        "line": -1.0,
-        "tw_price": 1.27,
-        "fair_odds": 1.38,
-        "fair_prob": 0.7221,
-        "ev": -0.0829,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 0.5",
-        "selection_key": "ht_over",
-        "selection": "上半場 大 0.5",
-        "line": 0.5,
-        "tw_price": 1.48,
-        "fair_odds": 1.64,
-        "fair_prob": 0.6107,
-        "ev": -0.0962,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "odd",
-        "selection": "總進球：單",
-        "line": null,
-        "tw_price": 1.76,
-        "fair_odds": 2.01,
-        "fair_prob": 0.4976,
-        "ev": -0.1241,
-        "derived": true
-       },
-       {
-        "market": "赫塔菲 大小 0.5",
-        "selection_key": "team_home_over",
-        "selection": "赫塔菲 大 0.5",
-        "line": 0.5,
-        "tw_price": 1.45,
-        "fair_odds": 1.67,
-        "fair_prob": 0.5988,
-        "ev": -0.1318,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "under",
-        "selection": "小 2.5",
-        "line": 2.5,
-        "tw_price": 1.36,
-        "fair_odds": 1.57,
-        "fair_prob": 0.6377,
-        "ev": -0.1327,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_home",
-        "selection": "讓分0:1 主（赫塔菲）",
-        "line": 1.0,
-        "tw_price": 1.45,
-        "fair_odds": 1.68,
-        "fair_prob": 0.5961,
-        "ev": -0.1357,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 1.75,
-        "fair_odds": 2.05,
-        "fair_prob": 0.4867,
-        "ev": -0.1484,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 2.85,
-        "fair_odds": 3.41,
-        "fair_prob": 0.2936,
-        "ev": -0.1633,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "even",
-        "selection": "總進球：雙",
-        "line": null,
-        "tw_price": 1.66,
-        "fair_odds": 1.99,
-        "fair_prob": 0.5024,
-        "ev": -0.1661,
-        "derived": true
-       },
-       {
-        "market": "赫塔菲 大小 0.5",
-        "selection_key": "team_home_under",
-        "selection": "赫塔菲 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.07,
-        "fair_odds": 2.49,
-        "fair_prob": 0.4012,
-        "ev": -0.1695,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "over",
-        "selection": "大 2.5",
-        "line": 2.5,
-        "tw_price": 2.28,
-        "fair_odds": 2.76,
-        "fair_prob": 0.3623,
-        "ev": -0.174,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分0:1 和",
-        "line": 1.0,
-        "tw_price": 3.4,
-        "fair_odds": 4.26,
-        "fair_prob": 0.2349,
-        "ev": -0.2014,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
-        "line": null,
-        "tw_price": 1.52,
-        "fair_odds": 1.91,
-        "fair_prob": 0.5231,
-        "ev": -0.2049,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 3.6,
-        "fair_odds": 4.55,
-        "fair_prob": 0.2198,
-        "ev": -0.2089,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 0.5",
-        "selection_key": "ht_under",
-        "selection": "上半場 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.0,
-        "fair_odds": 2.57,
-        "fair_prob": 0.3893,
-        "ev": -0.2214,
-        "derived": true
-       },
-       {
-        "market": "讓分 0:1",
-        "selection_key": "hcp3_away",
-        "selection": "讓分0:1 客（塞維亞）",
-        "line": 1.0,
-        "tw_price": 4.5,
-        "fair_odds": 5.92,
-        "fair_prob": 0.169,
-        "ev": -0.2394,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
-        "line": -1.0,
-        "tw_price": 3.85,
-        "fair_odds": 5.13,
-        "fair_prob": 0.1949,
-        "ev": -0.2496,
-        "derived": true
-       },
-       {
-        "market": "塞維亞 大小 0.5",
-        "selection_key": "team_away_under",
-        "selection": "塞維亞 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.5,
-        "fair_odds": 3.67,
-        "fair_prob": 0.2723,
-        "ev": -0.3193,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_home",
-        "selection": "讓分1:0 主（赫塔菲）",
-        "line": -1.0,
-        "tw_price": 6.75,
-        "fair_odds": 12.05,
-        "fair_prob": 0.083,
-        "ev": -0.4398,
-        "derived": true
-       }
-      ]
-     }
-    },
     {
      "sport": "football",
      "competition": "PD",
@@ -1445,7 +987,8 @@
         "best": 1.26,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -1461,19 +1004,16 @@
         "best": 2.4,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0094,
-      "draw": 0.0023,
-      "away": 0.0071,
-      "over": 0.0614,
-      "under": -0.0614
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1255",
       "home_zh": "桑坦德競賽",
@@ -1869,7 +1409,8 @@
         "best": 3.35,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T10:49+00:00"
+       "odds_at": "2026-11-01T10:49+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -1890,28 +1431,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1427,
-      "draw": -0.0163,
-      "away": -0.1264,
-      "over": -0.0212,
-      "under": 0.0212
-     },
-     "recommendation": {
-      "market": "1X2",
-      "selection_key": "home",
-      "selection": "主勝 Elche CF",
-      "line": null,
-      "model_p": 0.5551,
-      "market_p": 0.4124,
-      "price": 2.48,
-      "book": "onexbet",
-      "edge": 0.1427,
-      "ev": 0.3767,
-      "kelly": 0.0636,
-      "confidence": "低"
-     },
-     "notes": [],
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1034",
       "home_zh": "埃爾切",
@@ -2319,7 +1843,8 @@
         "best": 4.1,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T10:49+00:00"
+       "odds_at": "2026-11-01T10:49+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -2340,15 +1865,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0517,
-      "draw": -0.0257,
-      "away": -0.0259,
-      "over": 0.0996,
-      "under": -0.0996
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1130",
       "home_zh": "畢爾包",
@@ -2764,7 +2285,8 @@
         "best": 3.85,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T10:49+00:00"
+       "odds_at": "2026-11-01T10:49+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -2785,16 +2307,10 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1207,
-      "draw": -0.0281,
-      "away": -0.0926,
-      "over": 0.0511,
-      "under": -0.0511
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
-      "模型分歧「主勝 RC Deportivo La Coruña」不列入：RC Deportivo La Coruña 在頂級聯賽只有 10 場資料（需 ≥ 20 場）"
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1388",
@@ -3099,30 +2615,7 @@
      }
     }
    ],
-   "signals": [
-    {
-     "sport": "football",
-     "competition": "PD",
-     "competition_name": "西甲",
-     "match_id": 564728,
-     "kickoff_utc": "2026-11-01T17:30:00+00:00",
-     "kickoff_local": "11/2 (週一) 01:30",
-     "home": "Elche CF",
-     "away": "Valencia CF",
-     "market": "1X2",
-     "selection_key": "home",
-     "selection": "主勝 Elche CF",
-     "line": null,
-     "model_p": 0.5551,
-     "market_p": 0.4124,
-     "price": 2.48,
-     "book": "onexbet",
-     "edge": 0.1427,
-     "ev": 0.3767,
-     "kelly": 0.0636,
-     "confidence": "低"
-    }
-   ],
+   "signals": [],
    "name_check": {
     "api_only": [],
     "csv_only": [
@@ -3132,8 +2625,7 @@
      "mallorca",
      "oviedo",
      "valladolid"
-    ],
-    "odds_unmatched": []
+    ]
    }
   },
   {
@@ -3240,7 +2732,8 @@
         "best": 2.68,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -3256,32 +2749,16 @@
         "best": 2.25,
         "book": "leovegas_se"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1009,
-      "draw": -0.0163,
-      "away": -0.0846,
-      "over": -0.0764,
-      "under": 0.0764
-     },
-     "recommendation": {
-      "market": "1X2",
-      "selection_key": "home",
-      "selection": "主勝 1. FC Union Berlin",
-      "line": null,
-      "model_p": 0.4527,
-      "market_p": 0.3518,
-      "price": 2.88,
-      "book": "betfair_ex_eu",
-      "edge": 0.1009,
-      "ev": 0.3038,
-      "kelly": 0.0404,
-      "confidence": "低"
-     },
-     "notes": [],
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1251",
       "home_zh": "柏林聯",
@@ -3677,7 +3154,8 @@
         "best": 5.9,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -3693,19 +3171,16 @@
         "best": 1.84,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0668,
-      "draw": 0.0147,
-      "away": 0.0523,
-      "over": -0.0869,
-      "under": 0.0869
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1011",
       "home_zh": "法蘭克福",
@@ -4009,30 +3484,7 @@
      }
     }
    ],
-   "signals": [
-    {
-     "sport": "football",
-     "competition": "BL1",
-     "competition_name": "德甲",
-     "match_id": 565841,
-     "kickoff_utc": "2026-11-01T14:30:00+00:00",
-     "kickoff_local": "11/1 (週日) 22:30",
-     "home": "1. FC Union Berlin",
-     "away": "1. FC Köln",
-     "market": "1X2",
-     "selection_key": "home",
-     "selection": "主勝 1. FC Union Berlin",
-     "line": null,
-     "model_p": 0.4527,
-     "market_p": 0.3518,
-     "price": 2.88,
-     "book": "betfair_ex_eu",
-     "edge": 0.1009,
-     "ev": 0.3038,
-     "kelly": 0.0404,
-     "confidence": "低"
-    }
-   ],
+   "signals": [],
    "name_check": {
     "api_only": [],
     "csv_only": [
@@ -4041,459 +3493,20 @@
      "holstein kiel",
      "st pauli",
      "wolfsburg"
-    ],
-    "odds_unmatched": []
+    ]
    }
   },
   {
    "code": "SA",
    "name": "義甲",
    "model": {
-    "n_matches": 850,
+    "n_matches": 853,
     "n_teams": 24,
-    "home_advantage": 0.066,
+    "home_advantage": 0.072,
     "rho": 0.034,
     "as_of": "2026-11-01"
    },
    "cards": [
-    {
-     "sport": "football",
-     "competition": "SA",
-     "competition_name": "義甲",
-     "match_id": 558543,
-     "kickoff_utc": "2026-11-01T11:30:00+00:00",
-     "kickoff_local": "11/1 (週日) 19:30",
-     "matchday": 10,
-     "home": "Como 1907",
-     "away": "Venezia FC",
-     "home_key": "como",
-     "away_key": "venezia",
-     "model": {
-      "fitted": true,
-      "data_ok": true,
-      "n_matches": 850,
-      "home_matches": 85,
-      "away_matches": 47,
-      "n_teams": 24,
-      "lambda_home": 2.23,
-      "mu_away": 0.39,
-      "p_home": 0.7999,
-      "p_draw": 0.1468,
-      "p_away": 0.0533,
-      "over25": 0.4876,
-      "most_likely": "2-0（18%）",
-      "home_attack_rank": 4,
-      "home_defence_rank": 1,
-      "away_attack_rank": 21,
-      "away_defence_rank": 19,
-      "home_advantage": 0.066
-     },
-     "form": {
-      "home": "",
-      "away": ""
-     },
-     "table": {
-      "home": {
-       "position": 5,
-       "played": 9,
-       "won": 6,
-       "drawn": 2,
-       "lost": 1,
-       "gf": 17,
-       "ga": 8,
-       "points": 20
-      },
-      "away": {
-       "position": 20,
-       "played": 9,
-       "won": 1,
-       "drawn": 0,
-       "lost": 8,
-       "gf": 6,
-       "ga": 19,
-       "points": 3
-      }
-     },
-     "h2h": [
-      {
-       "date": "2025-03-08",
-       "home": "como",
-       "away": "venezia",
-       "score": "1-1"
-      },
-      {
-       "date": "2024-12-08",
-       "home": "venezia",
-       "away": "como",
-       "score": "2-2"
-      }
-     ],
-     "market": {
-      "books": 23,
-      "h2h": {
-       "home": {
-        "fair": 0.7533,
-        "fair_odds": 1.33,
-        "best": 1.34,
-        "book": "onexbet"
-       },
-       "draw": {
-        "fair": 0.1498,
-        "fair_odds": 6.68,
-        "best": 6.4,
-        "book": "unibet_se"
-       },
-       "away": {
-        "fair": 0.0969,
-        "fair_odds": 10.32,
-        "best": 10.0,
-        "book": "matchbook"
-       },
-       "odds_at": "2026-11-01T07:25+00:00"
-      },
-      "totals": {
-       "line": 3.5,
-       "over": {
-        "fair": 0.475,
-        "fair_odds": 2.11,
-        "best": 2.08,
-        "book": "onexbet"
-       },
-       "under": {
-        "fair": 0.525,
-        "fair_odds": 1.9,
-        "best": 1.87,
-        "book": "onexbet"
-       },
-       "odds_at": "2026-11-01T01:10+00:00",
-       "stale": true
-      },
-      "spread": null
-     },
-     "edges": {
-      "home": 0.0363,
-      "draw": 0.0032,
-      "away": -0.0395,
-      "over": -0.2057,
-      "under": 0.2057
-     },
-     "recommendation": {
-      "market": "大小",
-      "selection_key": "under",
-      "selection": "小分 3.5",
-      "line": 3.5,
-      "model_p": 0.7307,
-      "market_p": 0.525,
-      "price": 1.87,
-      "book": "onexbet",
-      "edge": 0.2057,
-      "ev": 0.3665,
-      "kelly": 0.1053,
-      "confidence": "高"
-     },
-     "notes": [],
-     "tw": {
-      "game_no": "1137",
-      "home_zh": "科莫",
-      "away_zh": "威尼斯",
-      "captured_at": "2026-11-01T08:01+08:00",
-      "fair_at": "2026-11-01T15:25+08:00",
-      "fair_fresh": false,
-      "h2h": {
-       "line": null,
-       "home": {
-        "price": 1.21,
-        "fair_odds": 1.33,
-        "fair_prob": 0.7533,
-        "ev": -0.0885
-       },
-       "draw": {
-        "price": 4.6,
-        "fair_odds": 6.68,
-        "fair_prob": 0.1498,
-        "ev": -0.3109
-       },
-       "away": {
-        "price": 6.25,
-        "fair_odds": 10.32,
-        "fair_prob": 0.0969,
-        "ev": -0.3944
-       }
-      },
-      "totals": {
-       "line": 3.5,
-       "over": {
-        "price": 1.8,
-        "fair_odds": 2.11,
-        "fair_prob": 0.475,
-        "ev": -0.145
-       },
-       "under": {
-        "price": 1.63,
-        "fair_odds": 1.9,
-        "fair_prob": 0.525,
-        "ev": -0.1442
-       }
-      },
-      "spread": null,
-      "values": [],
-      "derived": [
-       {
-        "market": "威尼斯 大小 0.5",
-        "selection_key": "team_away_over",
-        "selection": "威尼斯 大 0.5",
-        "line": 0.5,
-        "tw_price": 1.48,
-        "fair_odds": 1.6,
-        "fair_prob": 0.624,
-        "ev": -0.0765,
-        "derived": true
-       },
-       {
-        "market": "讓分 2:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分2:0 客（威尼斯）",
-        "line": -2.0,
-        "tw_price": 1.85,
-        "fair_odds": 2.01,
-        "fair_prob": 0.4981,
-        "ev": -0.0784,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 4.5",
-        "selection_key": "under",
-        "selection": "小 4.5",
-        "line": 4.5,
-        "tw_price": 1.26,
-        "fair_odds": 1.4,
-        "fair_prob": 0.7152,
-        "ev": -0.0988,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "over",
-        "selection": "大 2.5",
-        "line": 2.5,
-        "tw_price": 1.3,
-        "fair_odds": 1.45,
-        "fair_prob": 0.6891,
-        "ev": -0.1042,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_home",
-        "selection": "上半場 主勝",
-        "line": null,
-        "tw_price": 1.55,
-        "fair_odds": 1.74,
-        "fair_prob": 0.5749,
-        "ev": -0.1088,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分1:0 和",
-        "line": -1.0,
-        "tw_price": 3.7,
-        "fair_odds": 4.16,
-        "fair_prob": 0.2404,
-        "ev": -0.1104,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_yes",
-        "selection": "兩隊都進球：是",
-        "line": null,
-        "tw_price": 1.58,
-        "fair_odds": 1.78,
-        "fair_prob": 0.5626,
-        "ev": -0.1111,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "odd",
-        "selection": "總進球：單",
-        "line": null,
-        "tw_price": 1.72,
-        "fair_odds": 1.97,
-        "fair_prob": 0.5076,
-        "ev": -0.1269,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_under",
-        "selection": "上半場 小 1.5",
-        "line": 1.5,
-        "tw_price": 1.65,
-        "fair_odds": 1.9,
-        "fair_prob": 0.5264,
-        "ev": -0.1315,
-        "derived": true
-       },
-       {
-        "market": "科莫 大小 2.5",
-        "selection_key": "team_home_over",
-        "selection": "科莫 大 2.5",
-        "line": 2.5,
-        "tw_price": 1.73,
-        "fair_odds": 2.0,
-        "fair_prob": 0.5007,
-        "ev": -0.1339,
-        "derived": true
-       },
-       {
-        "market": "科莫 大小 2.5",
-        "selection_key": "team_home_under",
-        "selection": "科莫 小 2.5",
-        "line": 2.5,
-        "tw_price": 1.7,
-        "fair_odds": 2.0,
-        "fair_prob": 0.4993,
-        "ev": -0.1511,
-        "derived": true
-       },
-       {
-        "market": "[總分]單雙",
-        "selection_key": "even",
-        "selection": "總進球：雙",
-        "line": null,
-        "tw_price": 1.72,
-        "fair_odds": 2.03,
-        "fair_prob": 0.4924,
-        "ev": -0.1531,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_home",
-        "selection": "讓分1:0 主（科莫）",
-        "line": -1.0,
-        "tw_price": 1.65,
-        "fair_odds": 1.95,
-        "fair_prob": 0.5129,
-        "ev": -0.1538,
-        "derived": true
-       },
-       {
-        "market": "[上半場]大小 1.5",
-        "selection_key": "ht_over",
-        "selection": "上半場 大 1.5",
-        "line": 1.5,
-        "tw_price": 1.78,
-        "fair_odds": 2.11,
-        "fair_prob": 0.4736,
-        "ev": -0.157,
-        "derived": true
-       },
-       {
-        "market": "兩隊是否都進球",
-        "selection_key": "btts_no",
-        "selection": "兩隊都進球：否",
-        "line": null,
-        "tw_price": 1.86,
-        "fair_odds": 2.29,
-        "fair_prob": 0.4374,
-        "ev": -0.1865,
-        "derived": true
-       },
-       {
-        "market": "讓分 2:0",
-        "selection_key": "hcp3_draw",
-        "selection": "讓分2:0 和",
-        "line": -2.0,
-        "tw_price": 3.8,
-        "fair_odds": 4.83,
-        "fair_prob": 0.2071,
-        "ev": -0.2132,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_draw",
-        "selection": "上半場 和局",
-        "line": null,
-        "tw_price": 2.6,
-        "fair_odds": 3.32,
-        "fair_prob": 0.3013,
-        "ev": -0.2167,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 2.5",
-        "selection_key": "under",
-        "selection": "小 2.5",
-        "line": 2.5,
-        "tw_price": 2.5,
-        "fair_odds": 3.22,
-        "fair_prob": 0.3109,
-        "ev": -0.2227,
-        "derived": true
-       },
-       {
-        "market": "讓分 1:0",
-        "selection_key": "hcp3_away",
-        "selection": "讓分1:0 客（威尼斯）",
-        "line": -1.0,
-        "tw_price": 3.1,
-        "fair_odds": 4.05,
-        "fair_prob": 0.2467,
-        "ev": -0.2352,
-        "derived": true
-       },
-       {
-        "market": "威尼斯 大小 0.5",
-        "selection_key": "team_away_under",
-        "selection": "威尼斯 小 0.5",
-        "line": 0.5,
-        "tw_price": 2.0,
-        "fair_odds": 2.66,
-        "fair_prob": 0.376,
-        "ev": -0.2479,
-        "derived": true
-       },
-       {
-        "market": "讓分 2:0",
-        "selection_key": "hcp3_home",
-        "selection": "讓分2:0 主（科莫）",
-        "line": -2.0,
-        "tw_price": 2.55,
-        "fair_odds": 3.39,
-        "fair_prob": 0.2948,
-        "ev": -0.2483,
-        "derived": true
-       },
-       {
-        "market": "[上半場]不讓分",
-        "selection_key": "ht_away",
-        "selection": "上半場 客勝",
-        "line": null,
-        "tw_price": 6.0,
-        "fair_odds": 8.08,
-        "fair_prob": 0.1238,
-        "ev": -0.2572,
-        "derived": true
-       },
-       {
-        "market": "[總分]大小 4.5",
-        "selection_key": "over",
-        "selection": "大 4.5",
-        "line": 4.5,
-        "tw_price": 2.6,
-        "fair_odds": 3.51,
-        "fair_prob": 0.2848,
-        "ev": -0.2596,
-        "derived": true
-       }
-      ]
-     }
-    },
     {
      "sport": "football",
      "competition": "SA",
@@ -4509,22 +3522,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 850,
+      "n_matches": 853,
       "home_matches": 9,
       "away_matches": 85,
       "n_teams": 24,
       "lambda_home": 3.08,
-      "mu_away": 1.71,
-      "p_home": 0.6532,
-      "p_draw": 0.1543,
-      "p_away": 0.1925,
-      "over25": 0.8568,
+      "mu_away": 1.7,
+      "p_home": 0.6557,
+      "p_draw": 0.1539,
+      "p_away": 0.1904,
+      "over25": 0.8556,
       "most_likely": "3-1（7%）",
       "home_attack_rank": 1,
       "home_defence_rank": 21,
-      "away_attack_rank": 10,
-      "away_defence_rank": 16,
-      "home_advantage": 0.066
+      "away_attack_rank": 11,
+      "away_defence_rank": 15,
+      "home_advantage": 0.072
      },
      "form": {
       "home": "",
@@ -4574,7 +3587,8 @@
         "best": 3.6,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -4590,20 +3604,15 @@
         "best": 1.92,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1989,
-      "draw": -0.0883,
-      "away": -0.1105,
-      "over": 0.2414,
-      "under": -0.2414
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
-      "模型分歧「大分 3.5」不列入：Frosinone Calcio 在頂級聯賽只有 9 場資料（需 ≥ 20 場）"
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": null
     },
@@ -4622,22 +3631,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 850,
+      "n_matches": 853,
       "home_matches": 85,
       "away_matches": 85,
       "n_teams": 24,
-      "lambda_home": 1.93,
-      "mu_away": 0.73,
-      "p_home": 0.6594,
-      "p_draw": 0.2029,
-      "p_away": 0.1377,
-      "over25": 0.4964,
+      "lambda_home": 1.91,
+      "mu_away": 0.72,
+      "p_home": 0.6606,
+      "p_draw": 0.2036,
+      "p_away": 0.1358,
+      "over25": 0.4899,
       "most_likely": "1-0（14%）",
-      "home_attack_rank": 5,
+      "home_attack_rank": 4,
       "home_defence_rank": 5,
       "away_attack_rank": 17,
       "away_defence_rank": 12,
-      "home_advantage": 0.066
+      "home_advantage": 0.072
      },
      "form": {
       "home": "",
@@ -4712,7 +3721,8 @@
         "best": 7.8,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -4728,19 +3738,16 @@
         "best": 2.12,
         "book": "leovegas_se"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0205,
-      "draw": 0.0032,
-      "away": 0.0173,
-      "over": -0.0301,
-      "under": 0.0301
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1250",
       "home_zh": "拉齊歐",
@@ -5058,22 +4065,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 850,
+      "n_matches": 853,
       "home_matches": 85,
       "away_matches": 85,
       "n_teams": 24,
-      "lambda_home": 0.88,
-      "mu_away": 1.19,
-      "p_home": 0.2758,
-      "p_draw": 0.2883,
-      "p_away": 0.4358,
-      "over25": 0.3415,
+      "lambda_home": 0.87,
+      "mu_away": 1.16,
+      "p_home": 0.2772,
+      "p_draw": 0.2917,
+      "p_away": 0.4311,
+      "over25": 0.3322,
       "most_likely": "0-1（16%）",
       "home_attack_rank": 18,
-      "home_defence_rank": 18,
+      "home_defence_rank": 17,
       "away_attack_rank": 16,
-      "away_defence_rank": 8,
-      "home_advantage": 0.066
+      "away_defence_rank": 9,
+      "home_advantage": 0.072
      },
      "form": {
       "home": "",
@@ -5148,7 +4155,8 @@
         "best": 2.7,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T07:25+00:00"
+       "odds_at": "2026-11-01T07:25+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -5169,15 +4177,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0042,
-      "draw": -0.0212,
-      "away": 0.0253,
-      "over": -0.0469,
-      "under": 0.0469
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1027",
       "home_zh": "萊切",
@@ -5495,22 +4499,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 850,
+      "n_matches": 853,
       "home_matches": 85,
       "away_matches": 85,
       "n_teams": 24,
-      "lambda_home": 0.99,
-      "mu_away": 1.28,
-      "p_home": 0.2925,
-      "p_draw": 0.273,
-      "p_away": 0.4345,
-      "over25": 0.3965,
+      "lambda_home": 1.0,
+      "mu_away": 1.26,
+      "p_home": 0.2978,
+      "p_draw": 0.2745,
+      "p_away": 0.4277,
+      "over25": 0.3932,
       "most_likely": "0-1（14%）",
       "home_attack_rank": 13,
       "home_defence_rank": 4,
       "away_attack_rank": 7,
-      "away_defence_rank": 3,
-      "home_advantage": 0.066
+      "away_defence_rank": 2,
+      "home_advantage": 0.072
      },
      "form": {
       "home": "",
@@ -5585,7 +4589,8 @@
         "best": 3.6,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T07:25+00:00"
+       "odds_at": "2026-11-01T07:25+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -5606,28 +4611,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.1266,
-      "draw": -0.0157,
-      "away": 0.1423,
-      "over": -0.0785,
-      "under": 0.0785
-     },
-     "recommendation": {
-      "market": "1X2",
-      "selection_key": "away",
-      "selection": "客勝 SSC Napoli",
-      "line": null,
-      "model_p": 0.4345,
-      "market_p": 0.2922,
-      "price": 3.4,
-      "book": "onexbet",
-      "edge": 0.1423,
-      "ev": 0.4773,
-      "kelly": 0.0497,
-      "confidence": "低"
-     },
-     "notes": [],
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1126",
       "home_zh": "尤文圖斯",
@@ -5978,22 +4966,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 850,
+      "n_matches": 853,
       "home_matches": 47,
       "away_matches": 85,
       "n_teams": 24,
-      "lambda_home": 1.63,
-      "mu_away": 1.55,
-      "p_home": 0.4016,
-      "p_draw": 0.2277,
-      "p_away": 0.3707,
-      "over25": 0.6161,
+      "lambda_home": 1.64,
+      "mu_away": 1.53,
+      "p_home": 0.4096,
+      "p_draw": 0.2276,
+      "p_away": 0.3627,
+      "over25": 0.6151,
       "most_likely": "1-1（10%）",
-      "home_attack_rank": 12,
+      "home_attack_rank": 10,
       "home_defence_rank": 22,
       "away_attack_rank": 14,
-      "away_defence_rank": 15,
-      "home_advantage": 0.066
+      "away_defence_rank": 14,
+      "home_advantage": 0.072
      },
      "form": {
       "home": "",
@@ -6056,7 +5044,8 @@
         "best": 2.43,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T07:25+00:00"
+       "odds_at": "2026-11-01T07:25+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -6077,15 +5066,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.069,
-      "draw": -0.0295,
-      "away": -0.0395,
-      "over": 0.003,
-      "under": -0.003
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1068",
       "home_zh": "薩索羅",
@@ -6403,22 +5388,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 850,
+      "n_matches": 853,
       "home_matches": 85,
       "away_matches": 85,
       "n_teams": 24,
       "lambda_home": 1.66,
-      "mu_away": 0.68,
-      "p_home": 0.6137,
-      "p_draw": 0.2324,
-      "p_away": 0.1539,
-      "over25": 0.4147,
-      "most_likely": "1-0（16%）",
-      "home_attack_rank": 8,
+      "mu_away": 0.66,
+      "p_home": 0.62,
+      "p_draw": 0.2313,
+      "p_away": 0.1487,
+      "over25": 0.4109,
+      "most_likely": "1-0（17%）",
+      "home_attack_rank": 9,
       "home_defence_rank": 11,
-      "away_attack_rank": 22,
+      "away_attack_rank": 23,
       "away_defence_rank": 10,
-      "home_advantage": 0.066
+      "home_advantage": 0.072
      },
      "form": {
       "home": "",
@@ -6493,7 +5478,8 @@
         "best": 7.0,
         "book": "unibet_se"
        },
-       "odds_at": "2026-11-01T07:25+00:00"
+       "odds_at": "2026-11-01T07:25+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -6514,28 +5500,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0408,
-      "draw": 0.0314,
-      "away": 0.0094,
-      "over": -0.1687,
-      "under": 0.1687
-     },
-     "recommendation": {
-      "market": "大小",
-      "selection_key": "under",
-      "selection": "小分 2.5",
-      "line": 2.5,
-      "model_p": 0.5853,
-      "market_p": 0.4166,
-      "price": 2.44,
-      "book": "matchbook",
-      "edge": 0.1687,
-      "ev": 0.4281,
-      "kelly": 0.0743,
-      "confidence": "中"
-     },
-     "notes": [],
+     "edges": {},
+     "recommendation": null,
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1382",
       "home_zh": "亞特蘭大",
@@ -6839,74 +5808,7 @@
      }
     }
    ],
-   "signals": [
-    {
-     "sport": "football",
-     "competition": "SA",
-     "competition_name": "義甲",
-     "match_id": 558543,
-     "kickoff_utc": "2026-11-01T11:30:00+00:00",
-     "kickoff_local": "11/1 (週日) 19:30",
-     "home": "Como 1907",
-     "away": "Venezia FC",
-     "market": "大小",
-     "selection_key": "under",
-     "selection": "小分 3.5",
-     "line": 3.5,
-     "model_p": 0.7307,
-     "market_p": 0.525,
-     "price": 1.87,
-     "book": "onexbet",
-     "edge": 0.2057,
-     "ev": 0.3665,
-     "kelly": 0.1053,
-     "confidence": "高"
-    },
-    {
-     "sport": "football",
-     "competition": "SA",
-     "competition_name": "義甲",
-     "match_id": 558547,
-     "kickoff_utc": "2026-11-01T19:45:00+00:00",
-     "kickoff_local": "11/2 (週一) 03:45",
-     "home": "Juventus FC",
-     "away": "SSC Napoli",
-     "market": "1X2",
-     "selection_key": "away",
-     "selection": "客勝 SSC Napoli",
-     "line": null,
-     "model_p": 0.4345,
-     "market_p": 0.2922,
-     "price": 3.4,
-     "book": "onexbet",
-     "edge": 0.1423,
-     "ev": 0.4773,
-     "kelly": 0.0497,
-     "confidence": "低"
-    },
-    {
-     "sport": "football",
-     "competition": "SA",
-     "competition_name": "義甲",
-     "match_id": 558545,
-     "kickoff_utc": "2026-11-02T19:45:00+00:00",
-     "kickoff_local": "11/3 (週二) 03:45",
-     "home": "Atalanta BC",
-     "away": "Parma Calcio 1913",
-     "market": "大小",
-     "selection_key": "under",
-     "selection": "小分 2.5",
-     "line": 2.5,
-     "model_p": 0.5853,
-     "market_p": 0.4166,
-     "price": 2.44,
-     "book": "matchbook",
-     "edge": 0.1687,
-     "ev": 0.4281,
-     "kelly": 0.0743,
-     "confidence": "中"
-    }
-   ],
+   "signals": [],
    "name_check": {
     "api_only": [],
     "csv_only": [
@@ -6914,8 +5816,7 @@
      "empoli",
      "pisa",
      "verona"
-    ],
-    "odds_unmatched": []
+    ]
    }
   },
   {
@@ -7034,7 +5935,8 @@
         "best": 4.16,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -7055,15 +5957,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0071,
-      "draw": -0.0092,
-      "away": 0.0021,
-      "over": 0.0694,
-      "under": -0.0694
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1249",
       "home_zh": "史特拉斯堡",
@@ -7504,7 +6402,8 @@
         "best": 8.6,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -7525,15 +6424,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0253,
-      "draw": 0.0143,
-      "away": -0.0396,
-      "over": -0.0847,
-      "under": 0.0847
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1007",
       "home_zh": "里昂",
@@ -7929,7 +6824,8 @@
         "best": 2.92,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -7950,15 +6846,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0159,
-      "draw": 0.0128,
-      "away": -0.0288,
-      "over": -0.0292,
-      "under": 0.0292
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1005",
       "home_zh": "巴黎FC",
@@ -8366,7 +7258,8 @@
         "best": 3.9,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -8387,15 +7280,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0385,
-      "draw": -0.0094,
-      "away": -0.0292,
-      "over": 0.0617,
-      "under": -0.0617
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1129",
       "home_zh": "馬賽",
@@ -8824,7 +7713,8 @@
         "best": 3.15,
         "book": "unibet_se"
        },
-       "odds_at": "2026-11-01T13:04+00:00"
+       "odds_at": "2026-11-01T13:04+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -8845,15 +7735,11 @@
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0785,
-      "draw": 0.0083,
-      "away": -0.0868,
-      "over": -0.0434,
-      "under": 0.0434
-     },
+     "edges": {},
      "recommendation": null,
-     "notes": [],
+     "notes": [
+      "找不到對應賠率（可能尚未開盤）"
+     ],
      "tw": {
       "game_no": "1383",
       "home_zh": "洛里昂",
@@ -9166,18 +8052,17 @@
      "nantes",
      "reims",
      "saint etienne"
-    ],
-    "odds_unmatched": []
+    ]
    }
   },
   {
    "code": "CL",
    "name": "歐冠",
    "model": {
-    "n_matches": 3986,
+    "n_matches": 3989,
     "n_teams": 136,
-    "home_advantage": 0.244,
-    "rho": -0.027,
+    "home_advantage": 0.245,
+    "rho": -0.022,
     "as_of": "2026-11-01"
    },
    "cards": [
@@ -9196,22 +8081,22 @@
      "model": {
       "fitted": true,
       "data_ok": false,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 3,
       "away_matches": 3,
       "n_teams": 136,
-      "lambda_home": 1.0,
-      "mu_away": 0.9,
-      "p_home": 0.3622,
-      "p_draw": 0.3252,
-      "p_away": 0.3126,
-      "over25": 0.2962,
-      "most_likely": "0-0（15%）",
-      "home_attack_rank": 47,
-      "home_defence_rank": 23,
-      "away_attack_rank": 64,
-      "away_defence_rank": 5,
-      "home_advantage": 0.244
+      "lambda_home": 0.89,
+      "mu_away": 0.83,
+      "p_home": 0.3449,
+      "p_draw": 0.3435,
+      "p_away": 0.3116,
+      "over25": 0.2484,
+      "most_likely": "0-0（18%）",
+      "home_attack_rank": 65,
+      "home_defence_rank": 13,
+      "away_attack_rank": 68,
+      "away_defence_rank": 4,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -9261,7 +8146,8 @@
         "best": 2.05,
         "book": "unibet_se"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -9277,22 +8163,18 @@
         "best": 2.33,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.107,
-      "draw": 0.0753,
-      "away": -0.1824,
-      "over": -0.2729,
-      "under": 0.2729
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：FK Shakhtar Donetsk 僅 3 場（建議 ≥ 6）",
-      "資料不足：Sporting Clube de Portugal 僅 3 場（建議 ≥ 6）"
+      "資料不足：Sporting Clube de Portugal 僅 3 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": null
     },
@@ -9311,22 +8193,22 @@
      "model": {
       "fitted": true,
       "data_ok": false,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 3,
       "away_matches": 79,
       "n_teams": 136,
-      "lambda_home": 3.53,
-      "mu_away": 2.27,
-      "p_home": 0.6201,
-      "p_draw": 0.1512,
-      "p_away": 0.2287,
-      "over25": 0.9285,
+      "lambda_home": 3.62,
+      "mu_away": 2.33,
+      "p_home": 0.6244,
+      "p_draw": 0.1483,
+      "p_away": 0.2273,
+      "over25": 0.9354,
       "most_likely": "3-2（6%）",
-      "home_attack_rank": 4,
-      "home_defence_rank": 124,
+      "home_attack_rank": 2,
+      "home_defence_rank": 125,
       "away_attack_rank": 32,
-      "away_defence_rank": 69,
-      "home_advantage": 0.244
+      "away_defence_rank": 66,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -9376,7 +8258,8 @@
         "best": 3.15,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -9392,21 +8275,17 @@
         "best": 1.84,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1782,
-      "draw": -0.0783,
-      "away": -0.0999,
-      "over": 0.369,
-      "under": -0.369
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
-      "資料不足：Galatasaray SK 僅 3 場（建議 ≥ 6）"
+      "資料不足：Galatasaray SK 僅 3 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1069",
@@ -9758,22 +8637,22 @@
      "model": {
       "fitted": true,
       "data_ok": false,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 3,
-      "away_matches": 88,
+      "away_matches": 89,
       "n_teams": 136,
-      "lambda_home": 1.78,
-      "mu_away": 1.88,
-      "p_home": 0.3696,
-      "p_draw": 0.2216,
-      "p_away": 0.4088,
-      "over25": 0.7089,
-      "most_likely": "1-1（9%）",
-      "home_attack_rank": 30,
-      "home_defence_rank": 60,
+      "lambda_home": 1.95,
+      "mu_away": 1.9,
+      "p_home": 0.4028,
+      "p_draw": 0.2149,
+      "p_away": 0.3823,
+      "over25": 0.7384,
+      "most_likely": "1-1（8%）",
+      "home_attack_rank": 26,
+      "home_defence_rank": 63,
       "away_attack_rank": 15,
-      "away_defence_rank": 43,
-      "home_advantage": 0.244
+      "away_defence_rank": 51,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -9823,7 +8702,8 @@
         "best": 1.86,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -9839,21 +8719,17 @@
         "best": 1.84,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.15,
-      "draw": 0.0052,
-      "away": -0.1552,
-      "over": 0.032,
-      "under": -0.032
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
-      "資料不足：Feyenoord Rotterdam 僅 3 場（建議 ≥ 6）"
+      "資料不足：Feyenoord Rotterdam 僅 3 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1151",
@@ -10205,22 +9081,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 90,
       "away_matches": 88,
       "n_teams": 136,
       "lambda_home": 2.95,
-      "mu_away": 1.33,
-      "p_home": 0.702,
-      "p_draw": 0.1546,
-      "p_away": 0.1434,
-      "over25": 0.8001,
+      "mu_away": 1.31,
+      "p_home": 0.707,
+      "p_draw": 0.153,
+      "p_away": 0.14,
+      "over25": 0.7966,
       "most_likely": "2-1（8%）",
       "home_attack_rank": 1,
-      "home_defence_rank": 15,
+      "home_defence_rank": 14,
       "away_attack_rank": 16,
-      "away_defence_rank": 19,
-      "home_advantage": 0.244
+      "away_defence_rank": 21,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -10270,7 +9146,8 @@
         "best": 11.5,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 4.5,
@@ -10286,20 +9163,16 @@
         "best": 1.7,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0884,
-      "draw": 0.0303,
-      "away": 0.0581,
-      "over": 0.0094,
-      "under": -0.0094
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
-      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1140",
@@ -10596,22 +9469,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 90,
       "away_matches": 79,
       "n_teams": 136,
-      "lambda_home": 1.8,
-      "mu_away": 1.51,
-      "p_home": 0.4457,
-      "p_draw": 0.2326,
-      "p_away": 0.3217,
-      "over25": 0.6433,
+      "lambda_home": 1.73,
+      "mu_away": 1.52,
+      "p_home": 0.4276,
+      "p_draw": 0.2354,
+      "p_away": 0.337,
+      "over25": 0.6302,
       "most_likely": "1-1（10%）",
-      "home_attack_rank": 23,
-      "home_defence_rank": 4,
+      "home_attack_rank": 25,
+      "home_defence_rank": 5,
       "away_attack_rank": 3,
-      "away_defence_rank": 33,
-      "home_advantage": 0.244
+      "away_defence_rank": 32,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -10661,7 +9534,8 @@
         "best": 2.38,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -10677,21 +9551,16 @@
         "best": 1.84,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1089,
-      "draw": -0.005,
-      "away": -0.1038,
-      "over": -0.0355,
-      "under": 0.0355
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
-      "模型分歧「主勝 Club Atlético de Madrid」不列入：歐冠的跨聯賽模型不知道各聯賽強弱差距，分歧多半是模型誤差"
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1131",
@@ -11043,22 +9912,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 90,
       "away_matches": 80,
       "n_teams": 136,
-      "lambda_home": 1.64,
-      "mu_away": 1.85,
-      "p_home": 0.3431,
-      "p_draw": 0.2272,
-      "p_away": 0.4297,
-      "over25": 0.6764,
-      "most_likely": "1-1（10%）",
-      "home_attack_rank": 21,
-      "home_defence_rank": 46,
-      "away_attack_rank": 11,
-      "away_defence_rank": 24,
-      "home_advantage": 0.244
+      "lambda_home": 1.62,
+      "mu_away": 1.94,
+      "p_home": 0.3247,
+      "p_draw": 0.2222,
+      "p_away": 0.4532,
+      "over25": 0.6892,
+      "most_likely": "1-1（9%）",
+      "home_attack_rank": 23,
+      "home_defence_rank": 47,
+      "away_attack_rank": 10,
+      "away_defence_rank": 23,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -11108,7 +9977,8 @@
         "best": 1.66,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -11124,21 +9994,16 @@
         "best": 2.0,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.1508,
-      "draw": 0.0267,
-      "away": -0.1774,
-      "over": -0.044,
-      "under": 0.044
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
-      "模型分歧「主勝 Villarreal CF」不列入：歐冠的跨聯賽模型不知道各聯賽強弱差距，分歧多半是模型誤差"
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1134",
@@ -11457,22 +10322,22 @@
      "model": {
       "fitted": true,
       "data_ok": true,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 88,
-      "away_matches": 88,
+      "away_matches": 89,
       "n_teams": 136,
-      "lambda_home": 1.8,
-      "mu_away": 1.45,
-      "p_home": 0.4568,
-      "p_draw": 0.2345,
-      "p_away": 0.3088,
-      "over25": 0.6289,
+      "lambda_home": 1.82,
+      "mu_away": 1.61,
+      "p_home": 0.4297,
+      "p_draw": 0.2283,
+      "p_away": 0.342,
+      "over25": 0.6655,
       "most_likely": "1-1（10%）",
-      "home_attack_rank": 27,
-      "home_defence_rank": 41,
-      "away_attack_rank": 26,
-      "away_defence_rank": 38,
-      "home_advantage": 0.244
+      "home_attack_rank": 31,
+      "home_defence_rank": 40,
+      "away_attack_rank": 18,
+      "away_defence_rank": 43,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -11522,7 +10387,8 @@
         "best": 2.88,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 2.5,
@@ -11538,20 +10404,16 @@
         "best": 2.57,
         "book": "betsson"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.0454,
-      "draw": -0.0035,
-      "away": -0.0418,
-      "over": -0.0073,
-      "under": 0.0073
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
-      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋"
+      "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1132",
@@ -11903,22 +10765,22 @@
      "model": {
       "fitted": true,
       "data_ok": false,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 3,
       "away_matches": 80,
       "n_teams": 136,
-      "lambda_home": 1.8,
-      "mu_away": 1.38,
-      "p_home": 0.4708,
-      "p_draw": 0.2356,
-      "p_away": 0.2935,
-      "over25": 0.6153,
-      "most_likely": "1-1（11%）",
-      "home_attack_rank": 24,
-      "home_defence_rank": 110,
-      "away_attack_rank": 89,
-      "away_defence_rank": 32,
-      "home_advantage": 0.244
+      "lambda_home": 1.9,
+      "mu_away": 1.37,
+      "p_home": 0.4963,
+      "p_draw": 0.2278,
+      "p_away": 0.2759,
+      "over25": 0.6342,
+      "most_likely": "1-1（10%）",
+      "home_attack_rank": 20,
+      "home_defence_rank": 108,
+      "away_attack_rank": 90,
+      "away_defence_rank": 33,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -11968,7 +10830,8 @@
         "best": 4.1,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -11984,21 +10847,17 @@
         "best": 1.72,
         "book": "onexbet"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": -0.0592,
-      "draw": 0.007,
-      "away": 0.052,
-      "over": -0.0365,
-      "under": 0.0365
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
-      "資料不足：FK Bodø/Glimt 僅 3 場（建議 ≥ 6）"
+      "資料不足：FK Bodø/Glimt 僅 3 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1144",
@@ -12350,22 +11209,22 @@
      "model": {
       "fitted": true,
       "data_ok": false,
-      "n_matches": 3986,
+      "n_matches": 3989,
       "home_matches": 3,
       "away_matches": 3,
       "n_teams": 136,
-      "lambda_home": 6.39,
-      "mu_away": 0.56,
-      "p_home": 0.9873,
-      "p_draw": 0.0098,
-      "p_away": 0.0029,
-      "over25": 0.9673,
-      "most_likely": "6-0（10%）",
+      "lambda_home": 5.85,
+      "mu_away": 0.61,
+      "p_home": 0.9794,
+      "p_draw": 0.0155,
+      "p_away": 0.0051,
+      "over25": 0.954,
+      "most_likely": "5-0（9%）",
       "home_attack_rank": 5,
-      "home_defence_rank": 134,
+      "home_defence_rank": 135,
       "away_attack_rank": 136,
-      "away_defence_rank": 135,
-      "home_advantage": 0.244
+      "away_defence_rank": 134,
+      "home_advantage": 0.245
      },
      "form": {
       "home": "",
@@ -12415,7 +11274,8 @@
         "best": 7.4,
         "book": "betfair_ex_eu"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "totals": {
        "line": 3.5,
@@ -12431,22 +11291,18 @@
         "best": 1.81,
         "book": "matchbook"
        },
-       "odds_at": "2026-11-01T01:10+00:00"
+       "odds_at": "2026-11-01T01:10+00:00",
+       "stale": true
       },
       "spread": null
      },
-     "edges": {
-      "home": 0.3004,
-      "draw": -0.1676,
-      "away": -0.1329,
-      "over": 0.4564,
-      "under": -0.4564
-     },
+     "edges": {},
      "recommendation": null,
      "notes": [
       "跨聯賽合併模型：可靠度低於聯賽內比賽，回測尚未涵蓋",
       "資料不足：LASK Linz 僅 3 場（建議 ≥ 6）",
-      "資料不足：ŠK Slovan Bratislava 僅 3 場（建議 ≥ 6）"
+      "資料不足：ŠK Slovan Bratislava 僅 3 場（建議 ≥ 6）",
+      "找不到對應賠率（可能尚未開盤）"
      ],
      "tw": {
       "game_no": "1148",
@@ -12752,13 +11608,11 @@
     }
    ],
    "signals": [],
-   "name_check": {
-    "odds_unmatched": []
-   }
+   "name_check": {}
   }
  ],
  "tw_report": {
-  "matched": 27,
+  "matched": 26,
   "unmatched_cards": [
    "Frosinone Calcio vs Torino FC",
    "FK Shakhtar Donetsk vs Sporting Clube de Portugal"
@@ -12779,6 +11633,7 @@
    "星城FC @ 雪蘭莪 (2026-11-01T13:00+00:00)",
    "捍衛者體育 @ 普羅格雷索 (2026-11-01T13:00+00:00)",
    "聖格奧爾基塞普西 @ 加拉茨鋼鐵 (2026-11-01T13:00+00:00)",
+   "塞維亞 @ 赫塔菲 (2026-11-01T13:00+00:00)",
    "格拉納達 @ 埃登斯 (2026-11-01T13:00+00:00)",
    "哈納卡斯拉維亞 @ SK 克拉德諾 (2026-11-01T13:00+00:00)",
    "哈馬比 @ 馬爾默 (2026-11-01T13:00+00:00)",
@@ -12802,11 +11657,10 @@
    "伯希納 @ 若基諾魚雷 (2026-11-01T14:00+00:00)",
    "比連治高斯普耶 @ 穆拉 (2026-11-01T14:00+00:00)",
    "比爾森勝利 @ 奧斯特拉瓦巴尼克 (2026-11-01T14:00+00:00)",
-   "比薩 @ 阿維利諾 (2026-11-01T14:00+00:00)",
-   "阿斯科利 @ 阿雷佐 (2026-11-01T14:00+00:00)"
+   "比薩 @ 阿維利諾 (2026-11-01T14:00+00:00)"
   ],
   "tw_games": 182,
-  "avg_overround": 0.1995,
+  "avg_overround": 0.1998,
   "file": "2026-11-01-2000.json",
   "unknown_teams": [
    "杜里諾",
@@ -12829,12 +11683,8 @@
    "[角球數]大小 11.5": 5
   },
   "pregame": {
-   "due": 4,
-   "refreshed": 4,
-   "markets": [
-    "h2h",
-    "totals"
-   ]
+   "due": 0,
+   "refreshed": 0
   },
   "values_added": 0
  }
