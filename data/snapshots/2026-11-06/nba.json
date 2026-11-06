@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-11-06T01:12:43+00:00",
+ "generated_at": "2026-11-06T13:32:46+00:00",
  "date": "2026-11-06",
- "credits_remaining": 384,
+ "credits_remaining": 375,
  "games": [
   {
    "sport": "nba",
@@ -17,11 +17,50 @@
    "away_abbr": "WSH",
    "venue": "State Farm Arena",
    "neutral_site": false,
-   "market": null,
-   "shape": null,
-   "notes": [
-    "找不到對應賠率（可能尚未開盤）"
-   ]
+   "market": {
+    "books": 23,
+    "h2h": {
+     "home": {
+      "fair": 0.7169,
+      "fair_odds": 1.39,
+      "best": 1.4,
+      "book": "everygame"
+     },
+     "away": {
+      "fair": 0.2831,
+      "fair_odds": 3.53,
+      "best": 3.55,
+      "book": "betfair_ex_eu"
+     },
+     "odds_at": "2026-11-06T13:32+00:00"
+    },
+    "totals": null,
+    "spread": {
+     "line": -7.5,
+     "home": {
+      "fair": 0.4986,
+      "fair_odds": 2.01,
+      "best": 1.96,
+      "book": "onexbet"
+     },
+     "away": {
+      "fair": 0.5014,
+      "fair_odds": 1.99,
+      "best": 1.93,
+      "book": "tipico_de"
+     },
+     "odds_at": "2026-11-06T13:32+00:00"
+    }
+   },
+   "shape": {
+    "favourite": "home",
+    "p_home": 0.7169,
+    "line": -7.5,
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
+   },
+   "notes": []
   },
   {
    "sport": "nba",
@@ -37,11 +76,50 @@
    "away_abbr": "BOS",
    "venue": "Spectrum Center",
    "neutral_site": false,
-   "market": null,
-   "shape": null,
-   "notes": [
-    "找不到對應賠率（可能尚未開盤）"
-   ]
+   "market": {
+    "books": 23,
+    "h2h": {
+     "home": {
+      "fair": 0.2485,
+      "fair_odds": 4.02,
+      "best": 3.9,
+      "book": "betfair_ex_eu"
+     },
+     "away": {
+      "fair": 0.7515,
+      "fair_odds": 1.33,
+      "best": 1.33,
+      "book": "betfair_ex_eu"
+     },
+     "odds_at": "2026-11-06T13:32+00:00"
+    },
+    "totals": null,
+    "spread": {
+     "line": 8.5,
+     "home": {
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.97,
+      "book": "pinnacle"
+     },
+     "away": {
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.93,
+      "book": "betsson"
+     },
+     "odds_at": "2026-11-06T13:32+00:00"
+    }
+   },
+   "shape": {
+    "favourite": "away",
+    "p_home": 0.2485,
+    "line": 8.5,
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
+   },
+   "notes": []
   },
   {
    "sport": "nba",
@@ -58,21 +136,21 @@
    "venue": "Rocket Arena",
    "neutral_site": false,
    "market": {
-    "books": 20,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.4363,
-      "fair_odds": 2.29,
-      "best": 2.26,
+      "fair": 0.4251,
+      "fair_odds": 2.35,
+      "best": 2.34,
       "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.5637,
-      "fair_odds": 1.77,
-      "best": 1.76,
+      "fair": 0.5749,
+      "fair_odds": 1.74,
+      "best": 1.72,
       "book": "betfair_ex_eu"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
     "totals": {
      "line": 229.5,
@@ -88,33 +166,33 @@
       "best": 1.94,
       "book": "onexbet"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T01:12+00:00",
+     "stale": true
     },
     "spread": {
      "line": 2.5,
      "home": {
       "fair": 0.5,
       "fair_odds": 2.0,
-      "best": 1.94,
-      "book": "pinnacle"
+      "best": 1.95,
+      "book": "onexbet"
      },
      "away": {
       "fair": 0.5,
       "fair_odds": 2.0,
-      "best": 1.94,
+      "best": 1.95,
       "book": "pinnacle"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "away",
-    "p_home": 0.4363,
+    "p_home": 0.4251,
     "line": 2.5,
-    "total": 229.5,
-    "home_pts": 113.5,
-    "away_pts": 116.0,
-    "margin": -2.5
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   },
@@ -133,63 +211,47 @@
    "venue": "American Airlines Center",
    "neutral_site": false,
    "market": {
-    "books": 17,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.7124,
-      "fair_odds": 1.4,
-      "best": 1.39,
-      "book": "onexbet"
+      "fair": 0.7213,
+      "fair_odds": 1.39,
+      "best": 1.41,
+      "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.2876,
-      "fair_odds": 3.48,
-      "best": 3.32,
-      "book": "pinnacle"
+      "fair": 0.2787,
+      "fair_odds": 3.59,
+      "best": 3.35,
+      "book": "marathonbet"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
-    "totals": {
-     "line": 226.5,
-     "over": {
-      "fair": 0.5043,
-      "fair_odds": 1.98,
-      "best": 1.87,
-      "book": "unibet_nl"
-     },
-     "under": {
-      "fair": 0.4957,
-      "fair_odds": 2.02,
-      "best": 1.93,
-      "book": "unibet_nl"
-     },
-     "odds_at": "2026-11-06T01:12+00:00"
-    },
+    "totals": null,
     "spread": {
-     "line": -6.5,
+     "line": -7.5,
      "home": {
-      "fair": 0.5057,
-      "fair_odds": 1.98,
-      "best": 1.93,
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.95,
       "book": "onexbet"
      },
      "away": {
-      "fair": 0.4943,
-      "fair_odds": 2.02,
-      "best": 2.0,
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.96,
       "book": "pinnacle"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "home",
-    "p_home": 0.7124,
-    "line": -6.5,
-    "total": 226.5,
-    "home_pts": 116.7,
-    "away_pts": 110.0,
-    "margin": 6.7
+    "p_home": 0.7213,
+    "line": -7.5,
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   },
@@ -208,63 +270,47 @@
    "venue": "FedExForum",
    "neutral_site": false,
    "market": {
-    "books": 16,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.3822,
-      "fair_odds": 2.62,
-      "best": 2.5,
-      "book": "sport888"
+      "fair": 0.4109,
+      "fair_odds": 2.43,
+      "best": 2.42,
+      "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.6178,
-      "fair_odds": 1.62,
-      "best": 1.61,
-      "book": "onexbet"
+      "fair": 0.5891,
+      "fair_odds": 1.7,
+      "best": 1.69,
+      "book": "betfair_ex_eu"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
-    "totals": {
-     "line": 224.5,
-     "over": {
-      "fair": 0.5037,
-      "fair_odds": 1.99,
-      "best": 1.9,
-      "book": "onexbet"
-     },
-     "under": {
-      "fair": 0.4963,
-      "fair_odds": 2.01,
-      "best": 1.97,
-      "book": "onexbet"
-     },
-     "odds_at": "2026-11-06T01:12+00:00"
-    },
+    "totals": null,
     "spread": {
-     "line": 4.5,
+     "line": 3.5,
      "home": {
-      "fair": 0.5058,
-      "fair_odds": 1.98,
-      "best": 1.88,
-      "book": "onexbet"
+      "fair": 0.5085,
+      "fair_odds": 1.97,
+      "best": 1.89,
+      "book": "pinnacle"
      },
      "away": {
-      "fair": 0.4942,
-      "fair_odds": 2.02,
-      "best": 1.98,
-      "book": "onexbet"
+      "fair": 0.4915,
+      "fair_odds": 2.03,
+      "best": 2.02,
+      "book": "pinnacle"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "away",
-    "p_home": 0.3822,
-    "line": 4.5,
-    "total": 224.5,
-    "home_pts": 110.2,
-    "away_pts": 114.5,
-    "margin": -4.3
+    "p_home": 0.4109,
+    "line": 3.5,
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   },
@@ -283,63 +329,47 @@
    "venue": "Fiserv Forum",
    "neutral_site": false,
    "market": {
-    "books": 18,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.2501,
-      "fair_odds": 4.0,
-      "best": 4.07,
-      "book": "onexbet"
+      "fair": 0.3006,
+      "fair_odds": 3.33,
+      "best": 3.5,
+      "book": "marathonbet"
      },
      "away": {
-      "fair": 0.7499,
-      "fair_odds": 1.33,
-      "best": 1.33,
-      "book": "unibet_se"
+      "fair": 0.6994,
+      "fair_odds": 1.43,
+      "best": 1.44,
+      "book": "betfair_ex_eu"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
-    "totals": {
-     "line": 230.5,
-     "over": {
-      "fair": 0.5061,
-      "fair_odds": 1.98,
-      "best": 1.9,
-      "book": "onexbet"
-     },
-     "under": {
-      "fair": 0.4939,
-      "fair_odds": 2.02,
-      "best": 1.97,
-      "book": "pinnacle"
-     },
-     "odds_at": "2026-11-06T01:12+00:00"
-    },
+    "totals": null,
     "spread": {
-     "line": 8.5,
+     "line": 6.5,
      "home": {
-      "fair": 0.5055,
-      "fair_odds": 1.98,
-      "best": 1.91,
-      "book": "onexbet"
+      "fair": 0.491,
+      "fair_odds": 2.04,
+      "best": 2.0,
+      "book": "sport888"
      },
      "away": {
-      "fair": 0.4945,
-      "fair_odds": 2.02,
-      "best": 2.01,
+      "fair": 0.509,
+      "fair_odds": 1.96,
+      "best": 1.91,
       "book": "pinnacle"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "away",
-    "p_home": 0.2501,
-    "line": 8.5,
-    "total": 230.5,
-    "home_pts": 111.2,
-    "away_pts": 119.6,
-    "margin": -8.3
+    "p_home": 0.3006,
+    "line": 6.5,
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   },
@@ -358,63 +388,47 @@
    "venue": "Smoothie King Center",
    "neutral_site": false,
    "market": {
-    "books": 18,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.3759,
-      "fair_odds": 2.66,
-      "best": 2.58,
-      "book": "pinnacle"
+      "fair": 0.3736,
+      "fair_odds": 2.68,
+      "best": 2.6,
+      "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.6241,
+      "fair": 0.6264,
       "fair_odds": 1.6,
-      "best": 1.62,
-      "book": "unibet_se"
+      "best": 1.6,
+      "book": "pinnacle"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
-    "totals": {
-     "line": 229.5,
-     "over": {
-      "fair": 0.5,
-      "fair_odds": 2.0,
-      "best": 1.96,
-      "book": "gtbets"
-     },
-     "under": {
-      "fair": 0.5,
-      "fair_odds": 2.0,
-      "best": 1.95,
-      "book": "onexbet"
-     },
-     "odds_at": "2026-11-06T01:12+00:00"
-    },
+    "totals": null,
     "spread": {
      "line": 4.5,
      "home": {
       "fair": 0.5,
       "fair_odds": 2.0,
-      "best": 1.94,
-      "book": "pinnacle"
+      "best": 1.93,
+      "book": "unibet_se"
      },
      "away": {
       "fair": 0.5,
       "fair_odds": 2.0,
-      "best": 1.94,
-      "book": "pinnacle"
+      "best": 1.98,
+      "book": "onexbet"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "away",
-    "p_home": 0.3759,
+    "p_home": 0.3736,
     "line": 4.5,
-    "total": 229.5,
-    "home_pts": 112.5,
-    "away_pts": 117.0,
-    "margin": -4.5
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   },
@@ -433,63 +447,47 @@
    "venue": "crypto.com Arena",
    "neutral_site": false,
    "market": {
-    "books": 15,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.576,
+      "fair": 0.5749,
       "fair_odds": 1.74,
-      "best": 1.78,
-      "book": "onexbet"
+      "best": 1.72,
+      "book": "betfair_ex_eu"
      },
      "away": {
-      "fair": 0.424,
-      "fair_odds": 2.36,
-      "best": 2.3,
-      "book": "sport888"
+      "fair": 0.4251,
+      "fair_odds": 2.35,
+      "best": 2.36,
+      "book": "betfair_ex_eu"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
-    "totals": {
-     "line": 233.5,
-     "over": {
-      "fair": 0.4929,
-      "fair_odds": 2.03,
-      "best": 1.94,
-      "book": "onexbet"
-     },
-     "under": {
-      "fair": 0.5071,
-      "fair_odds": 1.97,
-      "best": 1.92,
-      "book": "onexbet"
-     },
-     "odds_at": "2026-11-06T01:12+00:00"
-    },
+    "totals": null,
     "spread": {
      "line": -2.5,
      "home": {
-      "fair": 0.5114,
-      "fair_odds": 1.96,
-      "best": 1.92,
-      "book": "gtbets"
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.91,
+      "book": "unibet_se"
      },
      "away": {
-      "fair": 0.4886,
-      "fair_odds": 2.05,
-      "best": 1.96,
-      "book": "onexbet"
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 2.0,
+      "book": "pinnacle"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "home",
-    "p_home": 0.576,
+    "p_home": 0.5749,
     "line": -2.5,
-    "total": 233.5,
-    "home_pts": 118.0,
-    "away_pts": 115.2,
-    "margin": 2.9
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   },
@@ -508,63 +506,47 @@
    "venue": "Golden 1 Center",
    "neutral_site": false,
    "market": {
-    "books": 17,
+    "books": 23,
     "h2h": {
      "home": {
-      "fair": 0.0885,
-      "fair_odds": 11.3,
-      "best": 9.02,
-      "book": "pinnacle"
+      "fair": 0.0978,
+      "fair_odds": 10.22,
+      "best": 9.5,
+      "book": "marathonbet"
      },
      "away": {
-      "fair": 0.9115,
-      "fair_odds": 1.1,
+      "fair": 0.9022,
+      "fair_odds": 1.11,
       "best": 1.11,
-      "book": "gtbets"
+      "book": "unibet_nl"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     },
-    "totals": {
-     "line": 228.5,
-     "over": {
-      "fair": 0.5,
-      "fair_odds": 2.0,
-      "best": 2.0,
-      "book": "pinnacle"
-     },
-     "under": {
-      "fair": 0.5,
-      "fair_odds": 2.0,
-      "best": 1.92,
-      "book": "gtbets"
-     },
-     "odds_at": "2026-11-06T01:12+00:00"
-    },
+    "totals": null,
     "spread": {
      "line": 15.5,
      "home": {
-      "fair": 0.4979,
-      "fair_odds": 2.01,
-      "best": 1.92,
-      "book": "gtbets"
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.96,
+      "book": "pinnacle"
      },
      "away": {
-      "fair": 0.5021,
-      "fair_odds": 1.99,
-      "best": 1.97,
-      "book": "onexbet"
+      "fair": 0.5,
+      "fair_odds": 2.0,
+      "best": 1.94,
+      "book": "unibet_nl"
      },
-     "odds_at": "2026-11-06T01:12+00:00"
+     "odds_at": "2026-11-06T13:32+00:00"
     }
    },
    "shape": {
     "favourite": "away",
-    "p_home": 0.0885,
+    "p_home": 0.0978,
     "line": 15.5,
-    "total": 228.5,
-    "home_pts": 106.5,
-    "away_pts": 122.0,
-    "margin": -15.6
+    "total": null,
+    "home_pts": null,
+    "away_pts": null
    },
    "notes": []
   }
