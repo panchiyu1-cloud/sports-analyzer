@@ -344,7 +344,7 @@
 <div class="masthead">
   <div class="bar">
     <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
-    <span class="stamp">更新 <b>11/09 04:59</b> 台灣時間</span>
+    <span class="stamp">更新 <b>11/09 06:09</b> 台灣時間</span>
   </div>
   <nav class="nav" aria-label="分析方法">
 <a href="index.html">總覽</a><a href="value.html">運彩價值</a><a href="t10.html">T-10</a><a href="nba.html">NBA</a><a href="radar.html">延遲雷達</a><a href="moves.html">盤口移動</a><a href="model.html" aria-current="page">模型分歧</a><a href="fade.html">反者道之動</a><a href="reviews.html">全部檢討</a>  </nav>
@@ -354,12 +354,12 @@
   <h1>模型分歧</h1>
   <p class="lede">Dixon-Coles 進球模型（各隊攻守強度、主場優勢、越近的比賽越重要）和國際市場看法差 10pp 以上的足球比賽。回測裡模型沒有打敗收盤市場，所以這裡是觀察用，不是下注建議：模型看好、市場後來也往那邊動，才有參考價值。</p>
   <dl class="bug">
-<div><dt>分歧</dt><dd class="">0<small> 場</small></dd></div><div><dt>足球即將開賽</dt><dd class="">0<small> 場</small></dd></div><div><dt>已檢討</dt><dd class="">254<small> 場</small></dd></div><div><dt>分歧帳面損益</dt><dd class="bad">-15.7</dd></div>  </dl>
+<div><dt>分歧</dt><dd class="">0<small> 場</small></dd></div><div><dt>足球即將開賽</dt><dd class="">0<small> 場</small></dd></div><div><dt>已檢討</dt><dd class="">257<small> 場</small></dd></div><div><dt>分歧帳面損益</dt><dd class="bad">-15.7</dd></div>  </dl>
 </section>
 
 <div class="note">回測（2026/11/02 11:49）：模型對收盤線的 CLV -2.3%，模型沒有市場以外的資訊。要找價值，請看<a href="value.html">運彩價值</a>。<a href="backtest.html">看回測報告</a></div>
 <div class="tabs" role="tablist">
-<a role="tab" href="#upcoming" aria-controls="upcoming" aria-selected="true">即將開賽<span class="num">0</span></a><a role="tab" href="#history" aria-controls="history" aria-selected="false">歷史數據<span class="num">254</span></a></div>
+<a role="tab" href="#upcoming" aria-controls="upcoming" aria-selected="true">即將開賽<span class="num">0</span></a><a role="tab" href="#history" aria-controls="history" aria-selected="false">歷史數據<span class="num">257</span></a></div>
 
 
 <section id="upcoming" class="tabpanel active" role="tabpanel">
@@ -369,7 +369,7 @@
 </section>
 
 <section id="history" class="tabpanel" role="tabpanel">
-  <h2>每場檢討 <span class="count">254 場・新到舊</span></h2>
+  <h2>每場檢討 <span class="count">257 場・新到舊</span></h2>
   <p class="howto">
   每場分兩個問題看：<b>結果</b>——實際結果模型給了幾 %、市場給了幾 %，誰比較準；
   <b>判斷</b>——就算輸了，模型的方向有沒有證據支持（開賽前市場有沒有往模型的方向移動、比賽的 xG／射正是不是模型看好的一方佔優）。
@@ -377,17 +377,149 @@
 </p>
 
 <div class="kpis">
-  <div class="kpi"><b>254</b><span>已檢討場次</span></div>
-  <div class="kpi"><b>0.946 / 0.888</b><span>log-loss 模型／市場（越低越準，215 場）</span></div>
-  <div class="kpi"><b>83 : 108</b><span>單場較準 模型:市場</span></div>
-  <div class="kpi"><b>59 / 150</b><span>模型偏向命中（市場預期 64）</span></div>
+  <div class="kpi"><b>257</b><span>已檢討場次</span></div>
+  <div class="kpi"><b>0.95 / 0.89</b><span>log-loss 模型／市場（越低越準，218 場）</span></div>
+  <div class="kpi"><b>83 : 111</b><span>單場較準 模型:市場</span></div>
+  <div class="kpi"><b>59 / 152</b><span>模型偏向命中（市場預期 64.7）</span></div>
 <div class="kpi"><b class="neg">-7.60</b><span>分歧帳面損益（98 注）</span></div></div>
-<div class="note" style="margin:6px 0">市場的平均 log-loss 0.888 低於模型的 0.946：整體來說市場比模型準（215 場），模型分歧不能直接當下注依據。</div><div class="note" style="margin:6px 0">模型偏向的一方實際贏了 59 次，照市場機率應該贏 64 次：分歧的方向沒有帶來額外資訊，比較像雜訊。</div><div class="note" style="margin:6px 0">歐冠的分歧表現低於市場預期（贏 0，市場預期 3.9）：歐冠可以考慮只看市場。</div><div class="note" style="margin:6px 0">西甲的分歧表現低於市場預期（贏 12，市場預期 13.1）：西甲可以考慮只看市場。</div>  <div class="kpis">
+<div class="note" style="margin:6px 0">市場的平均 log-loss 0.890 低於模型的 0.950：整體來說市場比模型準（218 場），模型分歧不能直接當下注依據。</div><div class="note" style="margin:6px 0">模型偏向的一方實際贏了 59 次，照市場機率應該贏 64.7 次：分歧的方向沒有帶來額外資訊，比較像雜訊。</div><div class="note" style="margin:6px 0">歐冠的分歧表現低於市場預期（贏 0，市場預期 3.9）：歐冠可以考慮只看市場。</div><div class="note" style="margin:6px 0">西甲的分歧表現低於市場預期（贏 12，市場預期 13.3）：西甲可以考慮只看市場。</div>  <div class="kpis">
     <div class="kpi"><b>111</b><span>分歧已結算（待結算 0）</span></div>
     <div class="kpi"><b>41%</b><span>命中率</span></div>
     <div class="kpi"><b class="neg">-15.74</b><span>帳面損益（每注 1 單位）</span></div>
   </div>
-  <div class="grid"><article class="card review" id="m-football-565856">
+  <div class="grid"><article class="card review" id="m-football-564746">
+  <div class="top"><span>11/9 (週一) 04:00</span><span>西甲</span></div>
+  <div class="teams">
+    <div><div class="name">Club Atlético de Madrid</div></div>
+    <div class="score">1 – 2<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">FC Barcelona</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip bad">未命中（原因待確認）</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">32%</td>
+      <td class="market-val">25%</td>
+      <td>2.75</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">24%</td>
+      <td class="market-val">21%</td>
+      <td>3.55</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">44%</td>
+      <td class="market-val">53%</td>
+      <td>1.8</td>
+    </tr>
+  </table>
+  
+  <ul class="why">
+<li>模型偏向：主勝 Club Atlético de Madrid（模型 33% vs 市場 25%，分歧 +7pp）→ 未命中 ✗</li><li>實際客勝：市場賽前給 53%（符合預期），模型給 44% → 這場市場比模型準</li><li>模型預期進球 1.6 : 1.9，實際 1 : 2 —— 勝負差距在模型預期範圍內。</li><li>比賽數據（xG、射門、紅牌）通常 2–3 天後才公布，屆時這段分析會自動補上。</li><li>半場 1–1 平手，下半場 0 : 1，勝負在下半場決定。</li><li>運彩賠率 主 2.75 · 和 3.55 · 客 1.8（11/08 20:00 擷取）</li>  </ul>
+  <p class="conclusion"><b>結論</b>這個方向市場只給 25%、模型給 33%，結果站在市場那邊：模型高估了 Club Atlético de Madrid。沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
+  <figure class="spark" tabindex="0" data-tip='[{"t": "11/06 08:00", "v": [["tw", "\u904b\u5f69", "25%\uff083.10\uff09"]], "x": 34.0}, {"t": "11/06 09:12", "v": [["intl", "\u570b\u969b", "25%"]], "x": 38.8}, {"t": "11/06 20:15", "v": [["tw", "\u904b\u5f69", "25%\uff083.20\uff09"]], "x": 83.0}, {"t": "11/06 21:32", "v": [["intl", "\u570b\u969b", "25%"]], "x": 88.1}, {"t": "11/07 08:00", "v": [["tw", "\u904b\u5f69", "24%\uff083.20\uff09"]], "x": 130.0}, {"t": "11/07 09:02", "v": [["intl", "\u570b\u969b", "24%"]], "x": 134.1}, {"t": "11/07 20:02", "v": [["tw", "\u904b\u5f69", "25%\uff083.20\uff09"]], "x": 178.1}, {"t": "11/07 20:52", "v": [["intl", "\u570b\u969b", "24%"]], "x": 181.5}, {"t": "11/08 08:00", "v": [["tw", "\u904b\u5f69", "26%\uff083.05\uff09"]], "x": 226.0}, {"t": "11/08 09:09", "v": [["intl", "\u570b\u969b", "26%"]], "x": 230.6}, {"t": "11/08 12:36", "v": [["intl", "\u570b\u969b", "28%"]], "x": 244.4}, {"t": "11/08 17:07", "v": [["intl", "\u570b\u969b", "29%"]], "x": 262.5}, {"t": "11/08 20:00", "v": [["tw", "\u904b\u5f69", "29%\uff082.75\uff09"]], "x": 274.0}]'>
+  <figcaption><span>主勝 Club Atlético de Madrid：開賽前的隱含機率</span><span class="keys"><span class="key intl">國際</span><span class="key tw">運彩</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="主勝 Club Atlético de Madrid：開賽前的隱含機率，11/06 08:00 到 11/08 20:00">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="73.4" y2="73.4"/><text x="28.0" y="76.4" text-anchor="end">25</text><line x1="34.0" x2="274.0" y1="36.9" y2="36.9"/><text x="28.0" y="39.9" text-anchor="end">30</text></g>
+<line class="ref" x1="34.0" x2="274.0" y1="17.5" y2="17.5"/><text class="reflabel" x="37.0" y="14.5">模型</text><path class="ln intl" d="M38.8,70.8 L88.1,72.1 L134.1,80.5 L181.5,79.0 L230.6,68.0 L244.4,49.3 L262.5,40.8"/><path class="ln tw" d="M34.0,73.2 L83.0,76.9 L130.0,77.8 L178.1,76.9 L226.0,66.0 L274.0,41.5"/><circle class="dot intl" cx="38.8" cy="70.8" r="4"/><circle class="dot intl" cx="88.1" cy="72.1" r="4"/><circle class="dot intl" cx="134.1" cy="80.5" r="4"/><circle class="dot intl" cx="181.5" cy="79.0" r="4"/><circle class="dot intl" cx="230.6" cy="68.0" r="4"/><circle class="dot intl" cx="244.4" cy="49.3" r="4"/><circle class="dot intl" cx="262.5" cy="40.8" r="4"/><circle class="dot tw" cx="34.0" cy="73.2" r="4"/><circle class="dot tw" cx="83.0" cy="76.9" r="4"/><circle class="dot tw" cx="130.0" cy="77.8" r="4"/><circle class="dot tw" cx="178.1" cy="76.9" r="4"/><circle class="dot tw" cx="226.0" cy="66.0" r="4"/><circle class="dot tw" cx="274.0" cy="41.5" r="4"/><text class="end" x="268.5" y="44.8">29%</text>    <text x="34.0" y="105.0">11/06 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">11/08 20:00</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+</article>
+<article class="card review" id="m-football-558529">
+  <div class="top"><span>11/9 (週一) 03:45</span><span>義甲</span></div>
+  <div class="teams">
+    <div><div class="name">ACF Fiorentina</div></div>
+    <div class="score">2 – 2<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">Juventus FC</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip neutral">模型與市場一致</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">25%</td>
+      <td class="market-val">27%</td>
+      <td>2.9</td>
+    </tr>
+    <tr class="hit">
+      <td>和局</td>
+      <td class="model-val">24%</td>
+      <td class="market-val">27%</td>
+      <td>2.9</td>
+    </tr>
+    <tr class="">
+      <td>客勝</td>
+      <td class="model-val">50%</td>
+      <td class="market-val">46%</td>
+      <td>1.95</td>
+    </tr>
+  </table>
+  
+  <ul class="why">
+<li>實際和局：市場賽前給 27%（偏冷），模型給 24% → 這場市場比模型準</li><li>模型預期進球 1.0 : 1.6，實際 2 : 2 —— 勝負差距在模型預期範圍內。</li><li>比賽數據（xG、射門、紅牌）通常 2–3 天後才公布，屆時這段分析會自動補上。</li><li>運彩賠率 主 2.9 · 和 2.9 · 客 1.95（11/08 20:00 擷取）</li>  </ul>
+  <p class="conclusion"><b>結論</b>模型和市場看法一致，結果偏冷。</p>
+  <figure class="spark" tabindex="0" data-tip='[{"t": "11/06 08:00", "v": [["tw", "\u904b\u5f69", "46%\uff081.90\uff09"]], "x": 34.0}, {"t": "11/06 09:12", "v": [["intl", "\u570b\u969b", "47%"]], "x": 38.8}, {"t": "11/06 20:15", "v": [["tw", "\u904b\u5f69", "46%\uff081.90\uff09"]], "x": 83.0}, {"t": "11/06 21:32", "v": [["intl", "\u570b\u969b", "46%"]], "x": 88.1}, {"t": "11/07 08:00", "v": [["tw", "\u904b\u5f69", "46%\uff081.90\uff09"]], "x": 130.0}, {"t": "11/07 09:02", "v": [["intl", "\u570b\u969b", "46%"]], "x": 134.1}, {"t": "11/07 14:11", "v": [["intl", "\u570b\u969b", "46%"]], "x": 154.7}, {"t": "11/07 20:02", "v": [["tw", "\u904b\u5f69", "45%\uff081.95\uff09"]], "x": 178.1}, {"t": "11/08 08:00", "v": [["tw", "\u904b\u5f69", "45%\uff081.95\uff09"]], "x": 226.0}, {"t": "11/08 09:09", "v": [["intl", "\u570b\u969b", "46%"]], "x": 230.6}, {"t": "11/08 14:13", "v": [["intl", "\u570b\u969b", "46%"]], "x": 250.9}, {"t": "11/08 18:52", "v": [["intl", "\u570b\u969b", "45%"]], "x": 269.5}, {"t": "11/08 20:00", "v": [["tw", "\u904b\u5f69", "45%\uff081.95\uff09"]], "x": 274.0}]'>
+  <figcaption><span>客勝 Juventus FC：開賽前的隱含機率</span><span class="keys"><span class="key intl">國際</span><span class="key tw">運彩</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="客勝 Juventus FC：開賽前的隱含機率，11/06 08:00 到 11/08 20:00">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="69.0" y2="69.0"/><text x="28.0" y="72.0" text-anchor="end">45</text><line x1="34.0" x2="274.0" y1="29.7" y2="29.7"/><text x="28.0" y="32.7" text-anchor="end">50</text></g>
+<line class="ref" x1="34.0" x2="274.0" y1="26.4" y2="26.4"/><text class="reflabel" x="37.0" y="23.4">模型</text><path class="ln intl" d="M38.8,54.9 L88.1,59.9 L134.1,59.8 L154.7,61.1 L230.6,62.6 L250.9,62.0 L269.5,69.4"/><path class="ln tw" d="M34.0,59.9 L83.0,59.9 L130.0,59.9 L178.1,70.2 L226.0,70.2 L274.0,71.6"/><circle class="dot intl" cx="38.8" cy="54.9" r="4"/><circle class="dot intl" cx="88.1" cy="59.9" r="4"/><circle class="dot intl" cx="134.1" cy="59.8" r="4"/><circle class="dot intl" cx="154.7" cy="61.1" r="4"/><circle class="dot intl" cx="230.6" cy="62.6" r="4"/><circle class="dot intl" cx="250.9" cy="62.0" r="4"/><circle class="dot intl" cx="269.5" cy="69.4" r="4"/><circle class="dot tw" cx="34.0" cy="59.9" r="4"/><circle class="dot tw" cx="83.0" cy="59.9" r="4"/><circle class="dot tw" cx="130.0" cy="59.9" r="4"/><circle class="dot tw" cx="178.1" cy="70.2" r="4"/><circle class="dot tw" cx="226.0" cy="70.2" r="4"/><circle class="dot tw" cx="274.0" cy="71.6" r="4"/><text class="end" x="275.5" y="73.4">45%</text>    <text x="34.0" y="105.0">11/06 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">11/08 20:00</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+</article>
+<article class="card review" id="m-football-559630">
+  <div class="top"><span>11/9 (週一) 03:45</span><span>法甲</span></div>
+  <div class="teams">
+    <div><div class="name">Racing Club de Lens</div></div>
+    <div class="score">1 – 2<div class="sub">半場 1–1</div></div>
+    <div class="away"><div class="name">Olympique de Marseille</div></div>
+  </div>
+  <div class="verdict-row"><span class="chip bad">未命中（原因待確認）</span></div>
+  <table class="mini">
+    <tr><th></th><th>模型</th><th>市場</th><th>運彩</th></tr>
+    <tr class="">
+      <td>主勝</td>
+      <td class="model-val">51%</td>
+      <td class="market-val">44%</td>
+      <td>2</td>
+    </tr>
+    <tr class="">
+      <td>和局</td>
+      <td class="model-val">22%</td>
+      <td class="market-val">24%</td>
+      <td>3.05</td>
+    </tr>
+    <tr class="hit">
+      <td>客勝</td>
+      <td class="model-val">28%</td>
+      <td class="market-val">32%</td>
+      <td>2.65</td>
+    </tr>
+  </table>
+  
+  <ul class="why">
+<li>模型偏向：主勝 Racing Club de Lens（模型 50% vs 市場 44%，分歧 +6pp）→ 未命中 ✗</li><li>實際客勝：市場賽前給 32%（正常範圍），模型給 28% → 這場市場比模型準</li><li>模型預期進球 2.2 : 1.6，實際 1 : 2 —— Olympique de Marseille 的表現比模型預期好很多（淨勝差多 1.6 球）。</li><li>比賽數據（xG、射門、紅牌）通常 2–3 天後才公布，屆時這段分析會自動補上。</li><li>半場 1–1 平手，下半場 0 : 1，勝負在下半場決定。</li><li>運彩賠率 主 2 · 和 3.05 · 客 2.65（11/08 20:00 擷取）</li>  </ul>
+  <p class="conclusion"><b>結論</b>這個方向市場只給 44%、模型給 50%，結果站在市場那邊：模型高估了 Racing Club de Lens。沒命中，目前也沒有證據顯示判斷合理。同類分歧如果持續輸，就是該調整的訊號。</p>
+  <figure class="spark" tabindex="0" data-tip='[{"t": "11/06 08:00", "v": [["tw", "\u904b\u5f69", "44%\uff081.95\uff09"]], "x": 34.0}, {"t": "11/06 09:12", "v": [["intl", "\u570b\u969b", "45%"]], "x": 38.8}, {"t": "11/06 20:15", "v": [["tw", "\u904b\u5f69", "44%\uff082.00\uff09"]], "x": 83.0}, {"t": "11/06 21:32", "v": [["intl", "\u570b\u969b", "44%"]], "x": 88.1}, {"t": "11/07 08:00", "v": [["tw", "\u904b\u5f69", "42%\uff082.05\uff09"]], "x": 130.0}, {"t": "11/07 09:02", "v": [["intl", "\u570b\u969b", "43%"]], "x": 134.1}, {"t": "11/07 20:02", "v": [["tw", "\u904b\u5f69", "42%\uff082.05\uff09"]], "x": 178.1}, {"t": "11/08 08:00", "v": [["tw", "\u904b\u5f69", "42%\uff082.05\uff09"]], "x": 226.0}, {"t": "11/08 09:09", "v": [["intl", "\u570b\u969b", "42%"]], "x": 230.6}, {"t": "11/08 19:04", "v": [["intl", "\u570b\u969b", "43%"]], "x": 270.3}, {"t": "11/08 20:00", "v": [["tw", "\u904b\u5f69", "43%\uff082.00\uff09"]], "x": 274.0}]'>
+  <figcaption><span>主勝 Racing Club de Lens：開賽前的隱含機率</span><span class="keys"><span class="key intl">國際</span><span class="key tw">運彩</span></span></figcaption>
+  <svg viewBox="0 0 320.0 110.0" role="img" aria-label="主勝 Racing Club de Lens：開賽前的隱含機率，11/06 08:00 到 11/08 20:00">
+    <g class="grid"><line x1="34.0" x2="274.0" y1="57.3" y2="57.3"/><text x="28.0" y="60.3" text-anchor="end">45</text><line x1="34.0" x2="274.0" y1="18.3" y2="18.3"/><text x="28.0" y="21.3" text-anchor="end">50</text></g>
+<line class="ref" x1="34.0" x2="274.0" y1="17.5" y2="17.5"/><text class="reflabel" x="37.0" y="14.5">模型</text><path class="ln intl" d="M38.8,59.7 L88.1,66.9 L134.1,75.9 L230.6,79.3 L270.3,76.3"/><path class="ln tw" d="M34.0,61.5 L83.0,68.5 L130.0,78.3 L178.1,80.5 L226.0,80.5 L274.0,70.9"/><circle class="dot intl" cx="38.8" cy="59.7" r="4"/><circle class="dot intl" cx="88.1" cy="66.9" r="4"/><circle class="dot intl" cx="134.1" cy="75.9" r="4"/><circle class="dot intl" cx="230.6" cy="79.3" r="4"/><circle class="dot intl" cx="270.3" cy="76.3" r="4"/><circle class="dot tw" cx="34.0" cy="61.5" r="4"/><circle class="dot tw" cx="83.0" cy="68.5" r="4"/><circle class="dot tw" cx="130.0" cy="78.3" r="4"/><circle class="dot tw" cx="178.1" cy="80.5" r="4"/><circle class="dot tw" cx="226.0" cy="80.5" r="4"/><circle class="dot tw" cx="274.0" cy="70.9" r="4"/><text class="end" x="280.0" y="74.9">43%</text>    <text x="34.0" y="105.0">11/06 08:00</text>
+    <text x="274.0" y="105.0" text-anchor="end">11/08 20:00</text>
+    <line class="cross" x1="0" x2="0" y1="10.0" y2="88.0" style="display:none"/>
+  </svg>
+</figure>
+
+</article>
+<article class="card review" id="m-football-565856">
   <div class="top"><span>11/9 (週一) 02:30</span><span>德甲</span></div>
   <div class="teams">
     <div><div class="name">TSG 1899 Hoffenheim</div></div>
