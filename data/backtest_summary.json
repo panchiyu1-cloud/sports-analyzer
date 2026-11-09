@@ -1,211 +1,211 @@
 {
- "generated": "2026-11-02T03:49+00:00",
+ "generated": "2026-11-09T03:51+00:00",
  "config": {
   "xi": 0.0065,
   "min_model_prob": 0.25,
   "devig": "power"
  },
  "passed": false,
- "verdict": "未通過：所有門檻的 CLV 都是負的——收盤市場認為這些注是負期望值；看到的正 ROI 在誤差範圍內，是運氣不是能力。 混合模型給純模型的權重 a=-0.193（≤ 0 表示模型相對市場沒有額外資訊）。",
+ "verdict": "未通過：所有門檻的 CLV 都是負的——收盤市場認為這些注是負期望值；看到的正 ROI 在誤差範圍內，是運氣不是能力。 混合模型給純模型的權重 a=-0.187（≤ 0 表示模型相對市場沒有額外資訊）。",
  "logloss": {
-  "n": 2855,
-  "model": 1.0035,
-  "market": 0.9712,
-  "closing": 0.9692,
-  "blend": 0.9709,
-  "market_only": 0.9715
+  "n": 2903,
+  "model": 1.0022,
+  "market": 0.9704,
+  "closing": 0.9686,
+  "blend": 0.9703,
+  "market_only": 0.9707
  },
  "logloss_ou": {
-  "n": 2855,
-  "model": 0.6994,
-  "market": 0.6732,
-  "blend": 0.6743
+  "n": 2903,
+  "model": 0.6989,
+  "market": 0.6739,
+  "blend": 0.6751
  },
  "strategies": {
   "raw_model": {
    "0.04": {
-    "n": 1769,
-    "units": -127.1,
-    "roi": -0.0718,
-    "roi_se": 0.0328,
-    "clv": -0.0311,
+    "n": 1799,
+    "units": -125.69,
+    "roi": -0.0699,
+    "roi_se": 0.0325,
+    "clv": -0.0304,
     "clv_se": 0.002,
     "sel": {
-     "away": 865,
-     "draw": 240,
-     "home": 664
+     "away": 874,
+     "draw": 243,
+     "home": 682
     }
    },
    "0.10": {
-    "n": 662,
-    "units": -77.73,
-    "roi": -0.1174,
-    "roi_se": 0.0532,
-    "clv": -0.0365,
+    "n": 674,
+    "units": -77.29,
+    "roi": -0.1147,
+    "roi_se": 0.0527,
+    "clv": -0.0358,
     "clv_se": 0.0036,
     "sel": {
-     "home": 230,
-     "draw": 34,
-     "away": 398
+     "home": 238,
+     "draw": 35,
+     "away": 401
     }
    }
   },
   "blend_pinnacle": {
    "0.00": {
-    "n": 2509,
-    "units": 63.0,
-    "roi": 0.0251,
-    "roi_se": 0.0279,
-    "clv": -0.0217,
+    "n": 2553,
+    "units": 55.1,
+    "roi": 0.0216,
+    "roi_se": 0.0276,
+    "clv": -0.0215,
     "clv_se": 0.0014,
     "sel": {
-     "draw": 716,
-     "away": 1502,
-     "home": 291
+     "draw": 724,
+     "away": 1532,
+     "home": 297
     }
    },
    "0.02": {
-    "n": 1590,
-    "units": 36.75,
-    "roi": 0.0231,
-    "roi_se": 0.0348,
-    "clv": -0.023,
+    "n": 1609,
+    "units": 37.35,
+    "roi": 0.0232,
+    "roi_se": 0.0345,
+    "clv": -0.0229,
     "clv_se": 0.0018,
     "sel": {
-     "away": 1214,
-     "draw": 295,
-     "home": 81
+     "away": 1231,
+     "draw": 296,
+     "home": 82
     }
    },
    "0.03": {
-    "n": 1004,
-    "units": 48.44,
-    "roi": 0.0482,
-    "roi_se": 0.0426,
+    "n": 1016,
+    "units": 49.91,
+    "roi": 0.0491,
+    "roi_se": 0.0423,
     "clv": -0.0232,
     "clv_se": 0.0024,
     "sel": {
-     "away": 886,
+     "away": 898,
      "draw": 87,
      "home": 31
     }
    },
    "0.04": {
-    "n": 588,
-    "units": 40.27,
-    "roi": 0.0685,
-    "roi_se": 0.0516,
-    "clv": -0.0241,
-    "clv_se": 0.0031,
+    "n": 594,
+    "units": 40.0,
+    "roi": 0.0673,
+    "roi_se": 0.0513,
+    "clv": -0.0239,
+    "clv_se": 0.0032,
     "sel": {
-     "away": 567,
+     "away": 573,
      "draw": 9,
      "home": 12
     }
    },
    "0.06": {
-    "n": 174,
-    "units": 16.53,
-    "roi": 0.095,
-    "roi_se": 0.0896,
-    "clv": -0.0213,
+    "n": 175,
+    "units": 15.53,
+    "roi": 0.0887,
+    "roi_se": 0.0893,
+    "clv": -0.0206,
     "clv_se": 0.0054,
     "sel": {
-     "away": 173,
+     "away": 174,
      "home": 1
     }
    }
   },
   "blend_best": {
    "0.00": {
-    "n": 2509,
-    "units": 84.37,
-    "roi": 0.0336,
-    "roi_se": 0.0282,
-    "clv": -0.0148,
+    "n": 2553,
+    "units": 75.79,
+    "roi": 0.0297,
+    "roi_se": 0.0279,
+    "clv": -0.0151,
     "clv_se": 0.0016,
     "sel": {
-     "draw": 716,
-     "away": 1502,
-     "home": 291
+     "draw": 724,
+     "away": 1532,
+     "home": 297
     }
    },
    "0.02": {
-    "n": 1590,
-    "units": 52.7,
-    "roi": 0.0331,
-    "roi_se": 0.0352,
-    "clv": -0.0148,
+    "n": 1609,
+    "units": 52.92,
+    "roi": 0.0329,
+    "roi_se": 0.0349,
+    "clv": -0.015,
     "clv_se": 0.0022,
     "sel": {
-     "away": 1214,
-     "draw": 295,
-     "home": 81
+     "away": 1231,
+     "draw": 296,
+     "home": 82
     }
    },
    "0.03": {
-    "n": 1004,
-    "units": 57.41,
-    "roi": 0.0572,
-    "roi_se": 0.0432,
-    "clv": -0.0162,
-    "clv_se": 0.0025,
+    "n": 1016,
+    "units": 58.6,
+    "roi": 0.0577,
+    "roi_se": 0.0428,
+    "clv": -0.0165,
+    "clv_se": 0.0024,
     "sel": {
-     "away": 886,
+     "away": 898,
      "draw": 87,
      "home": 31
     }
    },
    "0.04": {
-    "n": 588,
-    "units": 48.54,
-    "roi": 0.0826,
-    "roi_se": 0.0529,
-    "clv": -0.0147,
+    "n": 594,
+    "units": 48.24,
+    "roi": 0.0812,
+    "roi_se": 0.0525,
+    "clv": -0.0148,
     "clv_se": 0.0033,
     "sel": {
-     "away": 567,
+     "away": 573,
      "draw": 9,
      "home": 12
     }
    },
    "0.06": {
-    "n": 174,
-    "units": 19.02,
-    "roi": 0.1093,
-    "roi_se": 0.0918,
-    "clv": -0.0127,
+    "n": 175,
+    "units": 18.02,
+    "roi": 0.103,
+    "roi_se": 0.0915,
+    "clv": -0.0121,
     "clv_se": 0.0055,
     "sel": {
-     "away": 173,
+     "away": 174,
      "home": 1
     }
    }
   },
   "market_only": {
    "0.00": {
-    "n": 2491,
-    "units": -54.12,
-    "roi": -0.0217,
-    "roi_se": 0.0279,
-    "clv": -0.0245,
+    "n": 2537,
+    "units": -60.4,
+    "roi": -0.0238,
+    "roi_se": 0.0276,
+    "clv": -0.0242,
     "clv_se": 0.0015,
     "sel": {
-     "draw": 507,
-     "away": 1878,
-     "home": 106
+     "draw": 514,
+     "away": 1913,
+     "home": 110
     }
    },
    "0.02": {
-    "n": 1360,
-    "units": 7.62,
-    "roi": 0.0056,
-    "roi_se": 0.0343,
-    "clv": -0.0278,
+    "n": 1368,
+    "units": 9.5,
+    "roi": 0.0069,
+    "roi_se": 0.0341,
+    "clv": -0.0277,
     "clv_se": 0.002,
     "sel": {
      "draw": 62,
-     "away": 1298
+     "away": 1306
     }
    },
    "0.03": {
@@ -242,38 +242,38 @@
   },
   "ou_blend": {
    "0.00": {
-    "n": 2855,
-    "units": -135.16,
-    "roi": -0.0473,
-    "roi_se": 0.0194,
-    "clv": -0.0313,
+    "n": 2903,
+    "units": -148.45,
+    "roi": -0.0511,
+    "roi_se": 0.0192,
+    "clv": -0.031,
     "clv_se": 0.0013,
     "sel": {
-     "over": 1403,
-     "under": 1452
+     "over": 1434,
+     "under": 1469
     }
    },
    "0.02": {
-    "n": 583,
-    "units": -32.17,
-    "roi": -0.0552,
-    "roi_se": 0.0423,
+    "n": 588,
+    "units": -34.07,
+    "roi": -0.0579,
+    "roi_se": 0.0422,
     "clv": -0.0311,
     "clv_se": 0.0029,
     "sel": {
-     "over": 393,
-     "under": 190
+     "over": 395,
+     "under": 193
     }
    },
    "0.03": {
-    "n": 203,
-    "units": -14.66,
-    "roi": -0.0722,
-    "roi_se": 0.0674,
-    "clv": -0.0343,
+    "n": 204,
+    "units": -15.66,
+    "roi": -0.0768,
+    "roi_se": 0.0673,
+    "clv": -0.0346,
     "clv_se": 0.0052,
     "sel": {
-     "over": 162,
+     "over": 163,
      "under": 41
     }
    },
@@ -293,29 +293,29 @@
  },
  "baselines": {
   "always_favourite": {
-   "n": 2855,
-   "units": -21.17,
-   "roi": -0.0074,
-   "roi_se": 0.0183,
-   "clv": -0.0197,
+   "n": 2903,
+   "units": -10.85,
+   "roi": -0.0037,
+   "roi_se": 0.0181,
+   "clv": -0.0195,
    "clv_se": 0.0012,
    "sel": {
-    "fav": 2855
+    "fav": 2903
    }
   }
  },
  "line_move_corr": {
-  "home": -0.044,
-  "draw": 0.053,
-  "away": -0.047
+  "home": -0.04,
+  "draw": 0.052,
+  "away": -0.045
  },
  "blend_weights_final": {
-  "week": "2026-10-24",
-  "n_train": 3115,
-  "a_model": -0.193,
-  "b_market": 1.249,
-  "c_draw": 0.101,
-  "c_away": 0.12
+  "week": "2026-10-31",
+  "n_train": 3173,
+  "a_model": -0.187,
+  "b_market": 1.246,
+  "c_draw": 0.1,
+  "c_away": 0.117
  },
  "blend_weights_log": [
   {
@@ -410,19 +410,19 @@
  "by_league": {
   "D1": {
    "name": "德甲",
-   "n": 492,
-   "logloss_model": 1.0271,
-   "logloss_market": 0.9842,
-   "logloss_blend": 0.9714,
+   "n": 501,
+   "logloss_model": 1.0278,
+   "logloss_market": 0.987,
+   "logloss_blend": 0.9749,
    "blend_0.03": {
-    "n": 144,
-    "units": 47.84,
-    "roi": 0.3322,
-    "roi_se": 0.1262,
-    "clv": -0.0346,
+    "n": 149,
+    "units": 46.99,
+    "roi": 0.3154,
+    "roi_se": 0.1231,
+    "clv": -0.0351,
     "clv_se": 0.0068,
     "sel": {
-     "away": 136,
+     "away": 141,
      "home": 3,
      "draw": 5
     }
@@ -430,57 +430,57 @@
   },
   "E0": {
    "name": "英超",
-   "n": 603,
-   "logloss_model": 1.0207,
-   "logloss_market": 0.9988,
-   "logloss_blend": 1.0026,
+   "n": 613,
+   "logloss_model": 1.0203,
+   "logloss_market": 0.9991,
+   "logloss_blend": 1.003,
    "blend_0.03": {
-    "n": 225,
-    "units": -11.5,
-    "roi": -0.0511,
-    "roi_se": 0.0826,
-    "clv": -0.0217,
+    "n": 226,
+    "units": -12.5,
+    "roi": -0.0553,
+    "roi_se": 0.0823,
+    "clv": -0.0208,
     "clv_se": 0.0047,
     "sel": {
-     "away": 212,
+     "away": 213,
      "home": 13
     }
    }
   },
   "F1": {
    "name": "法甲",
-   "n": 498,
-   "logloss_model": 1.0104,
-   "logloss_market": 0.9741,
-   "logloss_blend": 0.9807,
+   "n": 507,
+   "logloss_model": 1.0084,
+   "logloss_market": 0.9706,
+   "logloss_blend": 0.9773,
    "blend_0.03": {
-    "n": 204,
-    "units": 12.41,
-    "roi": 0.0608,
-    "roi_se": 0.0992,
-    "clv": -0.0143,
-    "clv_se": 0.0061,
+    "n": 207,
+    "units": 13.85,
+    "roi": 0.0669,
+    "roi_se": 0.0984,
+    "clv": -0.0146,
+    "clv_se": 0.006,
     "sel": {
-     "away": 179,
+     "away": 182,
      "draw": 25
     }
    }
   },
   "I1": {
    "name": "義甲",
-   "n": 627,
-   "logloss_model": 0.9791,
-   "logloss_market": 0.9521,
-   "logloss_blend": 0.9508,
+   "n": 637,
+   "logloss_model": 0.9767,
+   "logloss_market": 0.9504,
+   "logloss_blend": 0.9495,
    "blend_0.03": {
-    "n": 190,
-    "units": 6.76,
-    "roi": 0.0356,
-    "roi_se": 0.0892,
-    "clv": -0.0186,
+    "n": 191,
+    "units": 5.76,
+    "roi": 0.0302,
+    "roi_se": 0.0889,
+    "clv": -0.0188,
     "clv_se": 0.0049,
     "sel": {
-     "away": 161,
+     "away": 162,
      "draw": 16,
      "home": 13
     }
@@ -488,20 +488,20 @@
   },
   "SP1": {
    "name": "西甲",
-   "n": 635,
-   "logloss_model": 0.9875,
-   "logloss_market": 0.9517,
-   "logloss_blend": 0.9526,
+   "n": 645,
+   "logloss_model": 0.9855,
+   "logloss_market": 0.9497,
+   "logloss_blend": 0.9506,
    "blend_0.03": {
-    "n": 241,
-    "units": -7.07,
-    "roi": -0.0293,
-    "roi_se": 0.0875,
-    "clv": -0.0292,
-    "clv_se": 0.0048,
+    "n": 243,
+    "units": -4.19,
+    "roi": -0.0172,
+    "roi_se": 0.0874,
+    "clv": -0.0289,
+    "clv_se": 0.0047,
     "sel": {
      "draw": 41,
-     "away": 198,
+     "away": 200,
      "home": 2
     }
    }
