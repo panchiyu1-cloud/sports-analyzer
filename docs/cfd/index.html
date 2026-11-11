@@ -205,6 +205,8 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 .card > h2 .btn { font-weight: 400; }
 .t-open > span { grid-area: auto; }
 .pgrid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; } .pgrid.c4 div { padding: 5px 6px; } .pgrid.c4 dd { font-size: 14.5px; letter-spacing: 0; } .pgrid.c4 dt { font-size: 11.5px; white-space: nowrap; }
+.t-src { margin: 8px 0 0; font-size: 12px; color: var(--muted); } .t-src span { font-family: var(--num); }
+.r-lv .src { margin-left: auto; }
 
 </style>
 </head>
@@ -1227,10 +1229,10 @@ const INSTRUMENTS = [
   { id: 'EURJPY', name: '歐元／日圓', code: 'EUR/JPY', cls: 'fx', dp: 3, src: fxSrc('EURJPY', [['kraken', 'EURJPY']]), expo: { EUR: 1, JPY: -1, RISK: 0.4 }, demo: [178.7, 0.00012] },
   { id: 'GBPJPY', name: '英鎊／日圓', code: 'GBP/JPY', cls: 'fx', dp: 3, src: fxSrc('GBPJPY'), expo: { GBP: 1, JPY: -1, RISK: 0.4 }, demo: [202.7, 0.00014] },
   { id: 'EURGBP', name: '歐元／英鎊', code: 'EUR/GBP', cls: 'fx', dp: 5, src: fxSrc('EURGBP', [['kraken', 'EURGBP']]), expo: { EUR: 1, GBP: -1 }, demo: [0.8815, 0.00007] },
-  { id: 'XAUUSD', name: '黃金', code: 'XAU/USD', cls: 'metal', dp: 2, src: [['binancef', 'XAUUSDT'], ['bybit', 'XAUUSDT'], ['okx', 'XAUT-USDT'], ['binance', 'PAXGUSDT'], ['yahoo', 'GC=F']], expo: { GOLD: 1, USD: -0.6, RISK: -0.3 }, demo: [4120, 0.00022] },
-  { id: 'XAGUSD', name: '白銀', code: 'XAG/USD', cls: 'metal', dp: 3, src: [['binancef', 'XAGUSDT'], ['bybit', 'XAGUSDT'], ['yahoo', 'SI=F']], expo: { GOLD: 0.8, USD: -0.5, RISK: 0.1 }, demo: [51.2, 0.0004] },
-  { id: 'XPTUSD', name: '鉑金', code: 'XPT/USD', cls: 'metal', dp: 2, src: [['binancef', 'XPTUSDT'], ['bybit', 'XPTUSDT'], ['yahoo', 'PL=F']], expo: { GOLD: 0.4, USD: -0.4, RISK: 0.3 }, demo: [1540, 0.00035] },
-  { id: 'XPDUSD', name: '鈀金', code: 'XPD/USD', cls: 'metal', dp: 2, src: [['binancef', 'XPDUSDT'], ['bybit', 'XPDUSDT'], ['yahoo', 'PA=F']], expo: { GOLD: 0.3, USD: -0.4, RISK: 0.3 }, demo: [1030, 0.0004] },
+  { id: 'XAUUSD', name: '黃金', code: 'XAU/USD', cls: 'metal', dp: 2, src: [['binancef', 'XAUUSDT'], ['bybit', 'XAUUSDT'], ['yahoo', 'XAUUSD=X'], ['okx', 'XAUT-USDT'], ['binance', 'PAXGUSDT'], ['yahoo', 'GC=F']], expo: { GOLD: 1, USD: -0.6, RISK: -0.3 }, demo: [4120, 0.00022] },
+  { id: 'XAGUSD', name: '白銀', code: 'XAG/USD', cls: 'metal', dp: 3, src: [['binancef', 'XAGUSDT'], ['bybit', 'XAGUSDT'], ['yahoo', 'XAGUSD=X'], ['yahoo', 'SI=F']], expo: { GOLD: 0.8, USD: -0.5, RISK: 0.1 }, demo: [51.2, 0.0004] },
+  { id: 'XPTUSD', name: '鉑金', code: 'XPT/USD', cls: 'metal', dp: 2, src: [['binancef', 'XPTUSDT'], ['bybit', 'XPTUSDT'], ['yahoo', 'XPTUSD=X'], ['yahoo', 'PL=F']], expo: { GOLD: 0.4, USD: -0.4, RISK: 0.3 }, demo: [1540, 0.00035] },
+  { id: 'XPDUSD', name: '鈀金', code: 'XPD/USD', cls: 'metal', dp: 2, src: [['binancef', 'XPDUSDT'], ['bybit', 'XPDUSDT'], ['yahoo', 'XPDUSD=X'], ['yahoo', 'PA=F']], expo: { GOLD: 0.3, USD: -0.4, RISK: 0.3 }, demo: [1030, 0.0004] },
   { id: 'BTCUSD', name: '比特幣', code: 'BTC/USD', cls: 'crypto', dp: 1, src: cSrc('BTC'), expo: { CRYPTO: 1, USD: -0.3, RISK: 0.4 }, demo: [104000, 0.0005] },
   { id: 'ETHUSD', name: '以太幣', code: 'ETH/USD', cls: 'crypto', dp: 2, src: cSrc('ETH'), expo: { CRYPTO: 1, USD: -0.3, RISK: 0.4 }, demo: [3500, 0.0007] },
   { id: 'SOLUSD', name: 'Solana', code: 'SOL/USD', cls: 'crypto', dp: 2, src: cSrc('SOL'), expo: { CRYPTO: 1, USD: -0.3, RISK: 0.5 }, demo: [160, 0.0009] },
@@ -1253,8 +1255,8 @@ const INSTRUMENTS = [
   etf('SPY', '標普 500 ETF', 680), etf('QQQ', '那斯達克 100 ETF', 620), etf('IWM', '羅素 2000 ETF', 250), etf('DIA', '道瓊 ETF', 480), etf('SMH', '半導體 ETF', 380),
   etf('SOXL', '半導體 3 倍做多 ETF', 50), etf('TLT', '美國 20 年期公債 ETF', 90, { USD: -0.6, RISK: -0.3 }), etf('GLD', '黃金 ETF', 380, { GOLD: 1, USD: -0.6, RISK: -0.3 }), etf('EWT', '臺灣 ETF（MSCI）', 65), etf('FXI', '中國大型股 ETF', 40),
   // 指數（以期貨或現貨指數為準）
-  idx('US500', '標普 500 指數', 'ES=F', 6800, 2, { src: [['bybit', 'SPXUSDT'], ['yahoo', 'ES=F']] }), idx('NAS100', '那斯達克 100 指數', 'NQ=F', 25500, 2), idx('US30', '道瓊工業指數', 'YM=F', 48000, 0), idx('US2000', '羅素 2000 指數', 'RTY=F', 2500, 1),
-  idx('JP225', '日經 225 指數', 'NIY=F', 51000, 0, { quote: 'JPY', cur: 'JPY' }), idx('GER40', '德國 DAX 指數', '^GDAXI', 24000, 1, { quote: 'EUR', cur: 'EUR' }), idx('HK50', '香港恆生指數', '^HSI', 26000, 0, { quote: 'HKD', cur: 'CNY' }), idx('TWSE', '臺灣加權指數', '^TWII', 28000, 0, { quote: 'TWD' }),
+  idx('US500', '標普 500 期貨', 'ES=F', 6800, 2, { src: [['bybit', 'SPXUSDT'], ['yahoo', 'ES=F']] }), idx('NAS100', '那斯達克 100 期貨', 'NQ=F', 25500, 2), idx('US30', '道瓊期貨', 'YM=F', 48000, 0), idx('US2000', '羅素 2000 期貨', 'RTY=F', 2500, 1),
+  idx('JP225', '日經 225 期貨', 'NIY=F', 51000, 0, { quote: 'JPY', cur: 'JPY' }), idx('GER40', '德國 DAX 指數', '^GDAXI', 24000, 1, { quote: 'EUR', cur: 'EUR' }), idx('HK50', '香港恆生指數', '^HSI', 26000, 0, { quote: 'HKD', cur: 'CNY' }), idx('TWSE', '臺灣加權指數', '^TWII', 28000, 0, { quote: 'TWD' }),
 ];
 const CLS_NAME = { fx: '外匯', metal: '金屬', cmdty: '商品', stock: '股票', etf: 'ETF', index: '指數', crypto: '加密貨幣' };
 const CLS_ORDER = ['crypto', 'metal', 'fx', 'stock', 'etf', 'cmdty', 'index'];
@@ -1426,7 +1428,7 @@ const Data = {
     opt = opt || {}; const limit = opt.limit || 500, maxAge = opt.maxAge || 0, key = inst.id + '|' + tf, now = Date.now();
     if (this.demo) return { cd: demoSeries(inst, tf, limit), ts: now, src: { key: 'demo', label: '示範資料（非真實行情）' } };
     const c = cache.get(key);
-    if (c && c.src.key === 'yahoo') maxAge = Math.max(maxAge, Math.min(900e3, Math.max(120e3, E.TF[tf] / 2))); // 經代理的來源少抓一點，避免被限流
+    if (c && c.src.key === 'yahoo') maxAge = Math.max(maxAge, opt.fresh ? 30e3 : Math.min(300e3, Math.max(60e3, E.TF[tf] / 4))); // 經代理的來源少抓一點，避免被限流；正在看的那個商品（fresh）例外
     if (c && now - c.ts < maxAge && c.cd.length >= Math.min(limit, c.src.cap) * 0.9) return c;
     if (inflight.has(key)) return inflight.get(key);
     const job = (async () => {
@@ -1447,6 +1449,12 @@ const Data = {
       } finally { inflight.delete(key); }
     })();
     inflight.set(key, job); return job;
+  },
+  async krakenMid(syms) { // Kraken 外匯成交稀疏，最新價改用買賣報價的中間價
+    const d = await http('https://api.kraken.com/0/public/Ticker?pair=' + syms.join(','), { timeout: 12000 }), out = {};
+    if (d.error && d.error.length) throw new Error('Kraken：' + d.error.join(','));
+    for (const k in d.result) { const n = k.length === 8 && /^[XZ]/.test(k) && /[XZ]/.test(k[4]) ? k.slice(1, 4) + k.slice(5) : k, a = +d.result[k].a[0], b = +d.result[k].b[0]; if (a > 0 && b > 0) out[n] = (a + b) / 2; }
+    return out;
   },
   agg(cd, ms) { // 把小週期 K 線併成大週期
     const m = new Map();
@@ -2010,13 +2018,14 @@ async function analyzeScan(inst, tf) {
   const A = E.analyze({ cd: main.cd, tf, cls: inst.cls, dp: inst.dp, mtf, daily, news: ns.score, newsNote: ns.note, inter: is.score, interNote: is.note, cost: costOf(inst) });
   if (A.error) throw new Error(A.error);
   const cx = ctxOf(inst, main.cd, tf), rate = E.rate(A, cx);
-  return { inst, tf, t: Date.now(), price: A.price, chg: A.chg, prob: A.prob, s1: A.levels.supports[0], r1: A.levels.resistances[0], regime: A.regime.label, spark: spark(main.cd, 52, 24), src: main.src.label, stale: cx.stale,
+  return { inst, tf, t: Date.now(), srcKey: main.src.key, pt: main.ts || Date.now(), pdc: A.levels.pivots ? A.levels.pivots.pdc : null, price: A.price, chg: A.chg, prob: A.prob, s1: A.levels.supports[0], r1: A.levels.resistances[0], regime: A.regime.label, spark: spark(main.cd, 52, 24), src: main.src.label, stale: cx.stale,
     rate: { score: rate.score, grade: rate.grade, label: rate.label, action: rate.action, dir: rate.dir, notes: rate.notes }, plan: slim(rate.plan) };
 }
 async function runScan() {
   if (scan.running) return; scan.running = true; const tf = S.scanTf, token = ++scan.token;
   if (scan.tf !== tf) { scan.rows = {}; scan.tf = tf; }
-  const ord = Data.CLS_ORDER, list = pool().sort((a, b) => (ord.indexOf(a.cls) + 99) % 99 - (ord.indexOf(b.cls) + 99) % 99); let idx = 0, fails = 0; scan.done = 0; scan.total = list.length; renderScan();
+  const ord = Data.CLS_ORDER, vis = new Set((S.cls === 'top' ? topList() : Object.values(scan.rows).filter(r => r.inst.cls === S.cls)).map(r => r.inst.id)); // 畫面上正在看的先更新
+  const list = pool().sort((a, b) => (vis.has(b.id) - vis.has(a.id)) || ((ord.indexOf(a.cls) + 99) % 99 - (ord.indexOf(b.cls) + 99) % 99)); let idx = 0, fails = 0; scan.done = 0; scan.total = list.length; renderScan();
   const worker = async () => {
     while (idx < list.length && token === scan.token) {
       const inst = list[idx++];
@@ -2041,11 +2050,12 @@ function topList() {
 function topCard(r, k) {
   const i = r.inst, f = v => E.fmt(v, i.dp), p = r.prob, rt = r.rate, pl = r.plan, d = rt.dir, tracked = pl && TR.list.some(x => Track.active(x) && x.instId === i.id && x.planName === pl.name);
   return `<article class="tcard"><button class="t-open" data-id="${esc(i.id)}"><span class="t-rank num">${k + 1}</span><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}　${Data.CLS_NAME[i.cls] || ''}</small></span><span class="r-spark">${r.spark}</span>
-      <span class="r-price"><b>${f(r.price)}</b><small class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span></button>
+      <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span></button>
     <div class="t-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span><span class="num">${d > 0 ? '上漲' : '下跌'} ${((d > 0 ? p.up : p.down) * 100).toFixed(0)}%</span><span class="num t-sc">${rt.score} 分</span></div>
     <p class="t-act"><b>${esc(rt.action)}</b>${rt.notes.length ? `<small>${esc(rt.notes.join('、'))}</small>` : ''}</p>
     ${pl ? `<dl class="pgrid c4"><div><dt>進場</dt><dd>${f(pl.entry)}</dd></div><div><dt>停損</dt><dd>${f(pl.sl)}<small>−${pl.slPct.toFixed(2)}%</small></dd></div><div><dt>停利</dt><dd>${f(pl.tp1)}<small>+${pl.tpPct.toFixed(2)}%</small></dd></div><div><dt>勝率／期望</dt><dd>${(pl.pWin * 100).toFixed(0)}%<small>${rTxt(pl.ev)}</small></dd></div></dl>
-    <div class="t-btns"><span class="t-plan">${esc(pl.name)}</span>${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm primary" data-ttrack="${esc(i.id)}">${pl.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div>` : ''}</article>`;
+    <div class="t-btns"><span class="t-plan">${esc(pl.name)}</span>${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm primary" data-ttrack="${esc(i.id)}">${pl.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div>` : ''}
+    <p class="t-src">報價來源 ${esc(r.src)}　<span data-pt="${esc(i.id)}">${hms(r.pt)}</span>${r.srcKey === 'yahoo' ? '　約延遲 10–15 分鐘' : ''}</p></article>`;
 }
 function renderScan() {
   const all = Object.values(scan.rows), st = $('#scan-status');
@@ -2065,10 +2075,36 @@ function renderScan() {
     if (r.err) return `<button class="row err" data-id="${esc(i.id)}"><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}</small></span><span class="r-lv">取不到資料（${esc(r.err.slice(0, 60))}）</span></button>`;
     const p = r.prob, side = p.bias < 0 ? `下跌 ${(p.down * 100).toFixed(0)}%` : `上漲 ${(p.up * 100).toFixed(0)}%`;
     return `<button class="row" data-id="${esc(i.id)}"><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}</small></span><span class="r-spark">${r.spark}</span>
-      <span class="r-price"><b>${f(r.price)}</b><small class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span>
+      <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span>
       <span class="r-sig">${badge2(p)}<small>${side}</small></span>
-      <span class="r-lv">${gradeChip(r.rate.grade)}<span>${esc(r.stale ? '休市或延遲' : r.rate.label)}</span><span>撐 <span class="num">${f(r.s1.p)}</span></span><span>阻 <span class="num">${f(r.r1.p)}</span></span><span>${esc(r.regime)}</span></span></button>`;
+      <span class="r-lv">${gradeChip(r.rate.grade)}<span>${esc(r.stale ? '休市或延遲' : r.rate.label)}</span><span>撐 <span class="num">${f(r.s1.p)}</span></span><span>阻 <span class="num">${f(r.r1.p)}</span></span><span>${esc(r.regime)}</span><span class="src">${esc(r.src.split(' ')[0])}${r.srcKey === 'yahoo' ? ' 延遲' : ''}</span></span></button>`;
   }).join('');
+}
+/* 畫面上的商品每 10 秒補抓一次最新價（只限直接連交易所的來源），不必等 60 秒一輪的重新評級 */
+const DIRECT = { binance: 1, binancef: 1, bybit: 1, bybits: 1, okx: 1, krakenf: 1 };
+const quick = { busy: false, last: 0 };
+function paintPrice(r) {
+  const id = r.inst.id, sel = a => $$('[' + a + ']').filter(el => el.getAttribute(a) === id);
+  for (const el of sel('data-px')) el.textContent = E.fmt(r.price, r.inst.dp);
+  for (const el of sel('data-pt')) el.textContent = hms(r.pt);
+  for (const el of sel('data-ch')) { el.className = dirCls(r.chg); el.textContent = isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''; }
+}
+async function quickPrices() {
+  if (quick.busy || Data.demo) return; quick.busy = true; quick.last = Date.now();
+  try {
+    const shown = S.cls === 'top' ? topList() : Object.values(scan.rows).filter(r => !r.err && (S.cls === 'all' || r.inst.cls === S.cls)).sort((a, b) => b.rate.score - a.rate.score).slice(0, 24);
+    await Promise.all(shown.filter(r => DIRECT[r.srcKey]).map(async r => {
+      try {
+        const rec = await Data.get(r.inst, '1m', { limit: 40, maxAge: 8e3 }); if (rec.src.key !== r.srcKey || scan.rows[r.inst.id] !== r) return;
+        r.price = rec.cd[rec.cd.length - 1].c; r.pt = rec.ts; if (isNum(r.pdc) && r.pdc > 0) r.chg = (r.price / r.pdc - 1) * 100; paintPrice(r);
+      } catch (e) { /* 下一輪再試 */ }
+    }));
+    const kr = shown.filter(r => r.srcKey === 'kraken');
+    if (kr.length) try {
+      const sym = r => r.inst.src[Data.winners[r.inst.id]][1], mid = await Data.krakenMid(kr.map(sym)), now = Date.now();
+      for (const r of kr) { const v = mid[sym(r)]; if (!isNum(v) || scan.rows[r.inst.id] !== r) continue; r.price = v; r.pt = now; if (isNum(r.pdc) && r.pdc > 0) r.chg = (v / r.pdc - 1) * 100; paintPrice(r); }
+    } catch (e) { /* 下一輪再試 */ }
+  } finally { quick.busy = false; }
 }
 
 /* ---------- 單一商品分析 ---------- */
@@ -2078,7 +2114,7 @@ async function loadDetail(fresh) {
   if (det.loading && !fresh) return; const token = ++det.token; det.loading = true;
   if (fresh) { det.key = null; $('#d-body').innerHTML = '<p class="loading">正在取得行情並分析…</p>'; $('#d-px').textContent = '—'; $('#d-chg').textContent = ''; }
   try {
-    const main = await Data.get(inst, tf, { limit: 1000 });
+    const main = await Data.get(inst, tf, { limit: 1000, fresh: true });
     const others = E.TF_LIST.filter(t => t !== tf);
     const rs = await Promise.allSettled([...others.map(t => Data.get(inst, t, { limit: 300, maxAge: E.TF[t] <= 900e3 ? 60e3 : 240e3 })), Data.get(inst, '1d', { limit: 60, maxAge: 600e3 })]);
     if (token !== det.token) return;
@@ -2126,7 +2162,7 @@ function renderDetail() {
       $('#c-info').innerHTML = `<span>${active ? '' : '最新　'}${d.getMonth() + 1}/${d.getDate()} ${hm(b.t)}　<b>${b.c >= b.o ? '漲' : '跌'} ${pct(ch)}</b>　RSI <b>${isNum(I.rsi[i]) ? I.rsi[i].toFixed(0) : '—'}</b></span><span>開 <b>${f(b.o)}</b></span><span>高 <b>${f(b.h)}</b></span><span>低 <b>${f(b.l)}</b></span><span>收 <b>${f(b.c)}</b></span>`;
     });
   }
-  $('#d-px').textContent = f(A.price); $('#d-chg').innerHTML = isNum(A.chg) ? `<span class="${dirCls(A.chg)}">${dirGl(A.chg)} ${pct(A.chg)}</span> 較昨收` : '';
+  $('#d-px').textContent = f(A.price); $('#d-chg').innerHTML = isNum(A.chg) ? `<span class="${dirCls(A.chg)}">${dirGl(A.chg)} ${pct(A.chg)}</span> 今日` : '';
   // 研判與評級
   const p = A.prob, up = (p.up * 100).toFixed(0), dn = 100 - up, ev = News.events(inst, 6), soon = ev.filter(e => e.impact === 'High' && e.t - Date.now() < 90 * 60e3), rt = det.rate;
   const warns = [...soon.map(e => `<li class="hot">${e.t > Date.now() ? Math.max(1, Math.round((e.t - Date.now()) / 60e3)) + ' 分鐘後' : '剛剛'}公布「${esc(News.evName(e.title))}」（${esc(News.CUR_NAME[e.cur] || e.cur)}，高影響）。數據前後波動劇烈、點差會放大，建議避開。</li>`), ...A.warnings.map(w => `<li>${esc(w)}</li>`)];
@@ -2170,7 +2206,7 @@ function renderDetail() {
   $('#s-news').innerHTML = `<h2>新聞與關聯市場</h2><p class="pnote" style="margin-top:0">新聞情緒：<b class="${dirCls(Math.abs(ns.score) < 0.1 ? 0 : ns.score)}">${ns.score > 0.1 ? '偏多' : ns.score < -0.1 ? '偏空' : '中性'}</b>　${esc(ns.note)}<br>關聯市場：${esc(is.note)}</p>
     ${evs.length ? `<table class="cal">${evs.slice(0, 4).map(calRow).join('')}</table>` : ''}
     ${ns.items.length ? `<ul class="nlist">${ns.items.slice(0, 5).map(x => newsLi(x, true)).join('')}</ul>` : ''}`;
-  $('#s-foot').textContent = `資料來源：${det.src.label}　${hms(det.last)} 更新　共 ${A.n} 根 K 線。報價來自交易所公開行情，和你的券商會有些微價差，下單請以券商報價為準。本頁為技術分析輔助，機率與評級是依歷史資料的估計，不是投資建議；差價合約有槓桿，可能損失全部本金。`;
+  $('#s-foot').textContent = `資料來源：${det.src.label}　${hms(det.last)} 更新　共 ${A.n} 根 K 線${det.src.key === 'yahoo' ? '（這個來源的報價約延遲 10–15 分鐘）' : ''}。報價來自交易所公開行情，和你的券商會有些微價差，下單請以券商報價為準。本頁為技術分析輔助，機率與評級是依歷史資料的估計，不是投資建議；差價合約有槓桿，可能損失全部本金。`;
 }
 function quoteRate(cur) { // 1 單位該貨幣值多少美元
   if (cur === 'USD' || cur === 'USDT') return 1;
@@ -2248,6 +2284,7 @@ function renderSettings() {
       <li>「精選 10」是當下分數最高的 10 項，不保證每一項都值得進場——請看評級，C 和 D 就是還不到標準。</li>
       <li>支撐、阻力來自：前高前低、較大週期的轉折、昨日高低收、樞紐點、費波那契、均線、布林、VWAP、一目均衡表、整數關卡、成交密集區與趨勢線，價位接近的會合併成一個區間。</li>
       <li>進場計畫的勝率與期望值已扣點差。1 分、5 分 K 的雜訊最多、點差占比最高；想提高勝率，先看 1 小時與 4 小時的方向，再用小週期找進場點。</li>
+      <li>價格和你的券商不會完全一樣，每張卡片下方都寫了報價來源與時間。股票、原油、黃金多半來自交易所的 24 小時合約，會和現貨差一點點，美股休市時差距較大；指數用的是期貨價，和現貨指數通常差幾十點；標示「延遲」的來源慢 10–15 分鐘。「今日」漲跌是從臺北時間 08:00（國際換日）起算，和券商的算法可能不同。</li>
       <li>本頁是分析輔助，不是投資建議。差價合約有槓桿，請務必設停損並控制每筆風險。</li></ul></section>`;
 }
 async function runDiag() {
@@ -2322,7 +2359,7 @@ document.addEventListener('input', e => {
   if (m) { const v = parseFloat(t.value); S[m] = isNum(v) ? v : 0; save(); renderCalc(); }
 });
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.k; if (k) openSt[k] = e.target.open; }, true);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { TR.last = 0; monitor(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { TR.last = 0; monitor(); quick.last = 0; } });
 window.addEventListener('resize', () => { if (det.chart && view === 'detail') det.chart.draw(); });
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => det.chart && det.chart.draw());
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => det.chart && det.chart.draw());
@@ -2333,6 +2370,7 @@ function tick() {
   if (document.hidden || !S.auto || Data.demo) return;
   if (view === 'detail' && det.inst && !det.loading && now - det.last > (E.TF[S.tf] <= 300e3 ? 8e3 : 15e3)) loadDetail(false);
   if (view === 'scan' && !scan.running && scan.last && now - scan.last > 60e3) runScan();
+  if (view === 'scan' && scan.last && now - quick.last > 10e3) quickPrices();
   if (view === 'track' && !scan.running && now - scan.last > 5 * 60e3 && TR.list.some(Track.active)) runScan(); // 讓追蹤單的評級保持更新
   if (!News.loading && now - News.updated > 12 * 60e3) refreshNews(false);
 }
