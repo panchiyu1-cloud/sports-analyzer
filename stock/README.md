@@ -12,8 +12,10 @@ GitHub Actions 與 GitHub Pages 在雲端執行，所以不用開電腦，手機
   - `twscan/` 和電腦版完全相同。
   - `cloud.py` 是雲端執行與輸出資料的部分。
   - `config.json` 是設定（手續費折扣等）。
-- 手機推播：沿用存放庫的 `NTFY_TOPIC` secret。
+- 手機推播：設定存放庫的 `STOCK_NTFY_TOPIC` secret 後才會推播。
+  - 這個 secret 和運動分析的 `NTFY_TOPIC` 分開。
   - 主題名稱等同密碼，不會寫進任何檔案或紀錄。
+- 我的持倉與交易紀錄：只存在手機瀏覽器裡（localStorage），雲端主機看不到。
 
 ## 更新程式
 

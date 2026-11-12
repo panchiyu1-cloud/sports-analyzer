@@ -59,7 +59,8 @@ jobs:
           echo "PUB=$PUB" >> "$GITHUB_ENV"
       - name: Run the scanner
         env:
-          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          # Its own secret, so that setting it does not also turn on the sports pushes (NTFY_TOPIC)
+          NTFY_TOPIC: ${{ secrets.STOCK_NTFY_TOPIC }}
           PYTHONUNBUFFERED: "1"
         run: python stock/cloud.py --publish-dir "$PUB"
       - name: Save the scanner's state

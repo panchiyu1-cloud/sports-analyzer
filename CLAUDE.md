@@ -572,5 +572,10 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - State: `stock/data/` (gitignored) in the Actions cache (key stock-state-<run_id>, restored
   by prefix); close_lists/, daytrade/, review/ are also copied to stock-data/state/ and
   restored from there when the cache is gone.
-- Push: daytrade entry alerts go to the phone through the same `NTFY_TOPIC` secret; cloud.py
-  strips `ntfy_topic` from every published file and the code never logs it.
+- Push: daytrade entry alerts go to the phone through ntfy when the `STOCK_NTFY_TOPIC` secret is
+  set (its own secret: setting the sports `NTFY_TOPIC` must not be what turns these on, nor the
+  reverse; neither was set on 2026-11-13). cloud.py strips `ntfy_topic` from every published
+  file and the code never logs it.
+- Positions and trades are the owner's own: the page keeps them in the browser (localStorage,
+  docs/stock/cloud.js) and prices them from quotes.json; the runner never sees them, so their
+  stop / target / close reminders work only while the page is open.
