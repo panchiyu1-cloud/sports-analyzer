@@ -550,3 +550,27 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   added when seen), purchase cost 2 (h2h + spreads). Workflows: daily.yml runs
   `pipeline nba` (continue-on-error: ESPN is unofficial), evening.yml
   `pipeline nba --markets h2h,spreads`; tw.yml already fires on data/tw/**.
+
+## 臺股強勢掃描 (2026-11-13) — the owner's Taiwan stock scanner, a separate project
+- Owner's request: the stock scanner he ran on his Mac should work without the computer, like
+  the 差價交易 page (docs/cfd/). It is NOT part of the sports pipeline: `stock/twscan/` is the
+  Mac version's package copied as is (its own style: no type annotations, Chinese comments),
+  `stock/cloud.py` runs it headless; the sports rules above (style, tests in tests/, CI) do
+  not apply to `stock/` and CI never imports it (pytest testpaths = tests). Do not "fix" it to
+  the repo's style; changes are made in the Mac version and copied over (stock/README.md).
+- `.github/workflows/stock.yml` (concurrency group stock): weekday runs from 08:05 Taipei
+  (several start times, GitHub starts them late) run the session to 14:10, reading MIS every
+  few seconds; evening runs at 16:45 / 19:15 scan once (institutional data, closing list,
+  review). The runner reached every source from GitHub (probe 2026-11-13: TWSE OpenAPI, TPEx,
+  MIS, www.twse.com.tw, ISIN, Yahoo, Google News, cnyes); MIS refuses r.jina.ai (TWSE WAF), so
+  the browser can never read quotes itself: everything comes from the runner.
+- Output: JSON for the page (status, top, market, daytrade, review, diag, stock/<code>,
+  tf/<code>-30m|60m, meta) force-pushed every minute to the orphan branch `stock-data` (one
+  commit, amended each time: no history). docs/stock/cloud.js reads the branch head SHA from
+  the GitHub API (60 unauthenticated requests/hour per IP: at most one per 75 s) and the files
+  from raw.githubusercontent.com by SHA; without the SHA it falls back to the branch URL.
+- State: `stock/data/` (gitignored) in the Actions cache (key stock-state-<run_id>, restored
+  by prefix); close_lists/, daytrade/, review/ are also copied to stock-data/state/ and
+  restored from there when the cache is gone.
+- Push: daytrade entry alerts go to the phone through the same `NTFY_TOPIC` secret; cloud.py
+  strips `ntfy_topic` from every published file and the code never logs it.

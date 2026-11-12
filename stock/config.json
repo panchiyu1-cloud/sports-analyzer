@@ -1,0 +1,22 @@
+{
+  "port": 8000,
+  "host": "0.0.0.0",
+  "hist_min_trade_value": 3000000,
+  "top_min_avg_value": 50000000,
+  "top_min_price": 10,
+  "include_etf_in_top": false,
+  "news_candidates": 30,
+  "news_refresh_minutes": 30,
+  "rescan_minutes_open": 10,
+  "rescan_minutes_closed": 60,
+  "reanalyze_seconds_open": 60,
+  "mis_interval_sec": 1.5,
+  "rt_priority_count": 40,
+  "yahoo_workers": 4,
+  "insecure_ssl_fallback": true,
+  "model_max_stocks": 400,
+  "volume_estimate": true,
+  "chase_gap_pct": 3.0,
+  "fee_discount": 0.28,
+  "review_days": 105
+}

@@ -1,0 +1,70 @@
+name: 臺股強勢掃描 (stock)
+
+# The owner's Taiwan stock scanner (stock/, a separate project from the sports pipeline,
+# see CLAUDE.md "臺股強勢掃描") runs here so that its page, docs/stock/, works without his
+# computer. A weekday run covers the trading session: it starts before the 09:00 open,
+# reads the exchange's real-time quotes every few seconds, re-ranks every minute and pushes
+# the page's JSON files to the orphan branch stock-data (one commit, replaced every time)
+# until 14:10, after the official closing prices (~13:50). The evening runs pick up the
+# institutional buy/sell data (published ~15:00-16:30) and recompute the closing list and
+# the review.
+#
+# GitHub starts scheduled runs late and skips some, so the session has several start times:
+# the first one that starts runs the session; later ones wait in the concurrency queue and
+# take over if it stops early (a run that starts after 14:10 scans once, publishes, ends).
+# State (price history of ~1,400 stocks, lists, the review) lives in the Actions cache; the
+# small files that cannot be rebuilt are also copied to stock-data/state/.
+
+on:
+  schedule:
+    - cron: "5,20,35,50 0 * * 1-5"   # 08:05-08:50 Taipei
+    - cron: "10,40 1-5 * * 1-5"      # 09:10-13:40 Taipei: backups
+    - cron: "45 8 * * 1-5"           # 16:45 Taipei: institutional data, closing list, review
+    - cron: "15 11 * * 1-5"          # 19:15 Taipei: anything published late
+  workflow_dispatch:
+
+concurrency:
+  group: stock
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore the scanner's state
+        uses: actions/cache/restore@v4
+        with:
+          path: stock/data
+          key: stock-state-${{ github.run_id }}
+          restore-keys: stock-state-
+      - name: Check out the published data (branch stock-data)
+        run: |
+          git config --global user.name "sports-analyzer bot"
+          git config --global user.email "actions@users.noreply.github.com"
+          PUB="$RUNNER_TEMP/stock-pub"
+          if git ls-remote --exit-code --heads origin stock-data > /dev/null; then
+            git fetch --depth 1 origin stock-data
+            git worktree add --detach "$PUB" FETCH_HEAD
+          else
+            git worktree add --orphan -b stock-data "$PUB"
+          fi
+          echo "PUB=$PUB" >> "$GITHUB_ENV"
+      - name: Run the scanner
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          PYTHONUNBUFFERED: "1"
+        run: python stock/cloud.py --publish-dir "$PUB"
+      - name: Save the scanner's state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: stock/data
+          key: stock-state-${{ github.run_id }}
