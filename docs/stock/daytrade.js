@@ -64,7 +64,7 @@ function dtCard(c) {
     <div class="dtc-risk">買滿 ${c.lots} 張：碰到停損約 <b class="down num">${signed(c.loss)} 元</b>，到目標約 <b class="up num">${signed(c.gain)} 元</b>（已扣成本）</div>
     ${c.status === 'avoid' || c.status === 'late' ? '' : dtSpark(c)}
     <ul class="dtc-checks">${checks}</ul>
-    <div class="card-foot">${CLOUD ? '' : opened ? dtBuyForm(c) : `<button class="btn ${c.status === 'go' ? 'primary' : ''}" data-act="buy-open" data-code="${c.code}">${c.status === 'go' ? '我買了，幫我盯' : '我還是買了，幫我盯'}</button>`}
+    <div class="card-foot">${opened ? dtBuyForm(c) : `<button class="btn ${c.status === 'go' ? 'primary' : ''}" data-act="buy-open" data-code="${c.code}">${c.status === 'go' ? '我買了，幫我盯' : '我還是買了，幫我盯'}</button>`}
       <a href="#stock-${c.code}" data-tf="30m">30 分／60 分／日 K 線 →</a></div>
   </article>`;
 }
@@ -173,9 +173,9 @@ function dtRender(force) {
       <div class="t2">額度 <b>${wan(s.budget)}</b>・每筆停損 <b class="num">${fmtInt(s.risk)} 元</b>・提醒 <b>${s.notify ? '開' : '關'}</b>${s.notify && s.ntfy_topic ? '（含手機）' : ''}
         ${CLOUD ? '' : '<button class="btn" data-act="set-toggle">設定</button>'}</div></div>
     ${DT.setOpen ? dtSettings(d) : ''}
-    ${CLOUD ? '' : dtPositions(d)}
+    ${dtPositions(d)}
     ${body}
-    ${CLOUD ? dtAlertsList(d) : `<div class="grid2">${dtAlertsList(d)}${dtTrades(d)}</div>`}
+    <div class="grid2">${dtAlertsList(d)}${dtTrades(d)}</div>
     <div class="muted small" style="margin-top:12px">判斷規則：① 站上開盤價與當日均價；② 沒有追高（開盤跳空 &lt; ${d.rules.gap}%、離均價 &lt; ${d.rules.ext}%、漲幅 &lt; ${d.rules.chg}%）；③ 預估量 ≥ 均量 ${d.rules.vol} 倍；④ 外盤比 ≥ 50%；⑤ 連續在榜 ≥ ${d.rules.stable} 分鐘。五項都符合才是「可進場」。
       停損價＝開盤價與當日均價較高者再往下一檔（距離限制在 ${d.rules.stop_min}%～${d.rules.stop_max}%），目標價＝停損距離的 ${d.rules.rr} 倍；當日均價是程式用即時成交估算的。
       這套規則還沒有經過驗證，程式每天會在 09:05、09:30、10:00、11:00 自動存下名單並對答案，結果在「復盤」頁的「盤中名單驗證」。處置股、注意股等可能不能現股當沖，下單前請在券商 App 確認。<b>以上不是投資建議。</b></div>

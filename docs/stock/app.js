@@ -112,7 +112,7 @@ function cloudInfoHTML() {
   return `<h3 style="margin-top:18px">雲端版</h3>
     <div class="muted small" style="margin-top:0">這個網頁不需要開電腦：程式在 GitHub 的雲端主機上執行，交易日 08:05～14:10 每分鐘把最新結果推上來（盤中報價每幾秒讀一次證交所即時資料），16:45、19:15 再更新三大法人、收盤確認名單與復盤。
       最後更新：<b class="num">${c.published ? esc(c.published.slice(0, 16).replace('T', ' ')) : '—'}</b>。GitHub 排程偶爾會晚幾分鐘啟動；盤中若頂端顯示「資料延遲」，代表雲端這一輪還沒接上。
-      雲端版只能看，持倉與交易紀錄請記在券商 App；當沖「可進場」提醒會推播到手機（ntfy）。</div>`;
+      當沖「可進場」提醒會推播到手機（ntfy）。「我的持倉」與交易紀錄存在這支手機的瀏覽器裡（換手機或清除瀏覽資料就會不見）；持倉碰到停損、目標價的提醒只在網頁開著時有效，停損請同時在券商 App 設定觸價單。</div>`;
 }
 
 // ---------------------------------------------------------------- 路由
@@ -884,7 +884,7 @@ function showReview() {
         <div id="rvRows"></div>
       </div>
       <details class="panel rv-adv" id="rvAdv" style="margin-top:12px"><summary>進階：策略比較與成本設定</summary><div id="rvAdvBody"></div></details>
-      <details class="panel rv-adv" id="rvMine" style="margin-top:12px"${CLOUD ? ' hidden' : ''}><summary>我的交易紀錄</summary><div id="rvMineBody"></div></details>
+      <details class="panel rv-adv" id="rvMine" style="margin-top:12px"><summary>我的交易紀錄</summary><div id="rvMineBody"></div></details>
     </section>`;
   $$('#rvH button').forEach((b) => (b.onclick = () => { S.rv.h = +b.dataset.h; renderReview(); }));
   loadReview();

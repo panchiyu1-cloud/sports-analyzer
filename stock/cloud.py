@@ -128,6 +128,21 @@ class Publisher:
         if ok:
             self.tf.add(code)
 
+    def quotes(self):
+        """全部股票的精簡報價（網頁上「我的持倉」用）：代號 -> [價, 昨收, 推估?, 時間, 開, 低, 高, 漲停, ETF?, 名稱]。"""
+        eng = self.eng
+        out = {}
+        with eng.lock:
+            for code, u in eng.universe.items():
+                s = eng.snap.get(code)
+                if not s or not s.get("price"):
+                    continue
+                out[code] = [s.get("price"), s.get("prev"), 1 if s.get("est") else 0, s.get("time"), s.get("open"),
+                             s.get("low"), s.get("high"), s.get("limit_up"), 1 if u.get("type") == "etf" else 0, u.get("name")]
+            dates = [s.get("date") for s in eng.snap.values() if s.get("date")]
+        n = now_tw()
+        return {"date": max(dates) if dates else None, "now": n.strftime("%Y-%m-%d %H:%M:%S"), "q": out}
+
     # ---------------------------------------------------------------- 一輪輸出
     def tick(self, force=False, final=False):
         eng = self.eng
@@ -139,6 +154,7 @@ class Publisher:
                     self.write("status.json", eng.api_status())
                     self.write("top.json", eng.api_top())
                     self.write("daytrade.json", eng.daytrade.api())
+                    self.write("quotes.json", self.quotes())
                     wrote.append("live")
                 ready = bool(eng.status.get("first_scan_done")) or bool(eng.analysis)
                 if ready and self.due("market", force):
