@@ -1,0 +1,22 @@
+name: twstock probe (temporary)
+
+# Temporary: checks which Taiwan stock data sources answer from a GitHub runner.
+# Lives only on the twstock-probe branch, which is deleted after the check.
+
+on:
+  push:
+    branches: [twstock-probe]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python probe.py
