@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<link rel="icon" href="data:,">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111110">
+<title>臺股強勢掃描（雲端版）</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="臺股掃描">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="brand" href="#top">
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l5-5 4 3 7-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h4v4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>臺股強勢掃描</span>
+    <span id="demoBadge" class="badge warn" hidden>示範模式</span>
+    <span class="badge">雲端</span>
+  </a>
+  <nav class="tabs" aria-label="主選單">
+    <a href="#top" data-tab="top">強勢前十</a>
+    <a href="#market" data-tab="market">全市場行情</a>
+    <a href="#review" data-tab="review">復盤</a>
+    <a href="#about" data-tab="about">模型與資料</a>
+  </nav>
+  <div class="status" id="statusBox" title="資料狀態">
+    <span class="dot" id="phaseDot"></span><span id="phaseText">連線中…</span>
+    <span class="sep">·</span><span id="clock" class="num"></span>
+  </div>
+</header>
+<div class="scanbar" id="scanbar" hidden>
+  <div class="scanbar-text" id="scanText"></div>
+  <div class="scanbar-track"><div class="scanbar-fill" id="scanFill"></div></div>
+</div>
+<main id="view" tabindex="-1"></main>
+<footer class="foot">
+  資料來源：臺灣證券交易所、證券櫃檯買賣中心、Yahoo Finance、Google 新聞、鉅亨網。雲端版在交易時間約每分鐘更新一次。<br>
+  本工具以技術面與籌碼面訊號計分，<b>僅供研究參考，不構成任何投資建議</b>；過去的訊號表現不代表未來結果，投資請自行判斷並控管風險。
+</footer>
+<div id="tooltip" class="tooltip" hidden></div>
+<script src="cloud.js"></script>
+<script src="kchart.js"></script>
+<script src="daytrade.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
