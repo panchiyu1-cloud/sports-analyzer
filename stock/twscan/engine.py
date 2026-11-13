@@ -88,6 +88,7 @@ class Engine:
         self.demo_live = False
         self.model = None
         self.rt_priority = []
+        self.extra_watch = []         # 雲端版：網頁要求優先更新的股票（持倉、正在看的股票）
         self.mis_cursor = 0
         self.last_sweep = None
         self.last_analyze = 0.0
@@ -1200,7 +1201,7 @@ class Engine:
         with self.lock:
             pri, seen = [], set()
             keep = [c["code"] for c in (self.close_payload or {}).get("top", [])]
-            for c in self.daytrade.watch_codes() + keep + cands:   # 當沖候選與持倉優先，報價才會幾秒更新一次
+            for c in list(self.extra_watch) + self.daytrade.watch_codes() + keep + cands:   # 當沖候選與持倉優先，報價才會幾秒更新一次
                 if c not in seen:
                     seen.add(c)
                     pri.append(c)

@@ -14,6 +14,7 @@ window.TWSCAN_CLOUD = (() => {
   // 分支最新一版的代號（SHA）。用 SHA 讀檔一定是最新、完整的同一版；問不到時改用分支名稱（可能慢幾分鐘）。
   async function sha() {
     if (local) return null;
+    if (relayFresh() && relayHead) return relayHead;
     if (Date.now() - headAt < HEAD_TTL) return head;
     headAt = Date.now();
     try {
@@ -43,6 +44,104 @@ window.TWSCAN_CLOUD = (() => {
     metaSha = s;
     return meta;
   }
+
+  // ---------------------------------------------------------------- 10 秒報價（使用者自己的 Google Apps Script 轉播站）
+  // GitHub 一分鐘只能更新一次；設定了轉播站網址，價格改成每 10 秒更新（分析、名單仍是每分鐘）。
+  const RKEY = 'twscan.cloud.relay', RELAY_EVERY = 10000;
+  let relayUrl = '', ticks = null, relayAt = 0, relayErr = 0, relayHead = null, watchSent = '', watchAt = 0;
+  try { relayUrl = localStorage.getItem(RKEY) || ''; } catch (e) { /* 無痕模式 */ }
+  const hms = (t) => typeof t === 'string' && /^\d\d:\d\d:\d\d$/.test(t);
+  function relayFresh() { return !!(ticks && Date.now() / 1000 - ticks.ts < 90); }
+  async function relayPoll() {
+    if (!relayUrl || document.hidden) return;
+    try {
+      const r = await fetch(relayUrl + (relayUrl.includes('?') ? '&' : '?') + 't=' + Date.now());
+      const d = await r.json();
+      relayErr = 0;
+      if (d && d.q && d.ts && (!ticks || d.ts > ticks.ts)) {
+        ticks = d;
+        relayAt = Date.now();
+        if (d.sha) relayHead = d.sha;
+        window.dispatchEvent(new CustomEvent('twscan:tick'));
+      }
+    } catch (e) { relayErr++; }
+    sendWatch();
+  }
+  // 持倉和正在看的股票：請雲端優先更新（每幾秒讀一次證交所）
+  function sendWatch() {
+    if (!relayUrl) return;
+    const m = loadMine();
+    const codes = m.positions.map((p) => p.code);
+    const hs = /^#stock-([0-9A-Z]+)/i.exec(location.hash);
+    if (hs) codes.push(hs[1].toUpperCase());
+    const key = [...new Set(codes)].slice(0, 10).join(',');
+    if (key === watchSent && Date.now() - watchAt < 20 * 60000) return;
+    watchSent = key;
+    watchAt = Date.now();
+    fetch(relayUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ watch: key ? key.split(',') : [] }) }).catch(() => { watchAt = 0; });
+  }
+  setInterval(relayPoll, RELAY_EVERY);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) relayPoll(); });
+  setTimeout(relayPoll, 300);
+
+  // 某檔股票的 10 秒報價：[價, 昨收, 推估?, 時間, 高, 低]；不是今天的、太舊的不用
+  function tickFor(code) {
+    if (!relayFresh() || ticks.date !== tpe().date) return null;
+    const t = ticks.q[code];
+    return t && t[0] && hms(t[3]) ? t : null;
+  }
+  // 物件裡的價格比 10 秒報價舊，就換成新的（名單、當沖候選、個股頁、追蹤表都是這種物件）
+  function patchObj(o) {
+    const t = tickFor(o.code);
+    if (!t || o.time === '收盤' || (hms(o.time) && o.time >= t[3])) return;
+    const prev = t[1] || o.prev;
+    o.price = t[0];
+    if (prev) { o.chgp = r2((t[0] / prev - 1) * 100); if ('chg' in o) o.chg = r2(t[0] - prev); }
+    o.est = !!t[2];
+    o.time = t[3];
+    if (t[4] != null && o.high != null) o.high = Math.max(o.high, t[4]);
+    if (t[5] != null && o.low != null) o.low = Math.min(o.low, t[5]);
+  }
+  function patch(x, depth) {
+    if (!ticks || !x || typeof x !== 'object' || depth > 6) return x;
+    if (Array.isArray(x)) { x.forEach((y) => patch(y, depth + 1)); return x; }
+    if (typeof x.code === 'string' && typeof x.price === 'number') patchObj(x);
+    for (const k in x) {
+      if (k === 'chart' || k === 'spark' || k === 'news') continue;
+      const v = x[k];
+      if (v && typeof v === 'object') patch(v, depth + 1);
+    }
+    return x;
+  }
+  function patchMarket(m) {
+    if (!ticks || !m || !Array.isArray(m.rows) || !Array.isArray(m.fields)) return m;
+    const f = {};
+    m.fields.forEach((k, i) => { f[k] = i; });
+    m.rows.forEach((r) => {
+      const t = tickFor(r[f.code]);
+      const qt = r[f.qtime];
+      if (!t || qt === '收盤' || (hms(qt) && qt >= t[3])) return;
+      const prev = t[1] || r[f.prev];
+      r[f.price] = t[0];
+      if (prev) { r[f.chg] = r2(t[0] - prev); r[f.chgp] = r2((t[0] / prev - 1) * 100); }
+      r[f.est] = t[2] ? 1 : 0;
+      r[f.qtime] = t[3];
+      if (t[4] != null && r[f.high] != null) r[f.high] = Math.max(r[f.high], t[4]);
+      if (t[5] != null && r[f.low] != null) r[f.low] = Math.min(r[f.low], t[5]);
+    });
+    return m;
+  }
+  const relay = {
+    url: () => relayUrl,
+    set(url) {
+      relayUrl = (url || '').trim();
+      try { if (relayUrl) localStorage.setItem(RKEY, relayUrl); else localStorage.removeItem(RKEY); } catch (e) { /* ignore */ }
+      ticks = null; relayHead = null; watchSent = '';
+      relayPoll();
+    },
+    status: () => ({ on: !!relayUrl, fresh: relayFresh(), at: relayAt, now: ticks && ticks.now, err: relayErr, n: ticks ? Object.keys(ticks.q).length : 0 }),
+  };
 
   const notHere = (msg) => ({ error: msg });
 
@@ -98,8 +197,14 @@ window.TWSCAN_CLOUD = (() => {
   async function quotes() {
     try { return (await file('quotes.json')) || { q: {} }; } catch (e) { return { q: {} }; }
   }
+  // 10 秒報價比每分鐘的 quotes.json 新，就用 10 秒的
+  function quoteOf(q, code) {
+    const x = q.q[code], t = tickFor(code);
+    if (t && (!x || !hms(x[3]) || t[3] > x[3])) return [t[0], t[1], t[2], t[3], x ? x[4] : null, t[5], t[4], x ? x[7] : null, x ? x[8] : 0, x ? x[9] : code];
+    return x;
+  }
   function posView(p, q, today) {
-    const x = q.q[p.code], v = Object.assign({}, p);
+    const x = quoteOf(q, p.code), v = Object.assign({}, p);
     if (x && x[0]) {
       const price = x[0], pnl = tradePnl(p.entry, price, p.lots, disc, p.etf, p.date === today);
       Object.assign(v, {
@@ -133,7 +238,7 @@ window.TWSCAN_CLOUD = (() => {
     const todays = [];
     for (const p of mine.positions) {
       if (p.date === now.date) todays.push(p.name);
-      const x = q.q[p.code], price = x && x[0];
+      const x = quoteOf(q, p.code), price = x && x[0];
       if (!price) continue;
       if (p.stop && price <= p.stop) {
         alert('stop', `stop:${p.id}`, `停損：${p.name} ${p.code} 跌到 ${fmtPx(price)}`,
@@ -258,12 +363,13 @@ window.TWSCAN_CLOUD = (() => {
         st.alerts = (st.alerts || []).concat(mine.alerts.slice(-6));
         return st;
       }
-      case '/api/top': return (await file('top.json')) || { pending: true, mode: 'close' };
-      case '/api/market': return (await file('market.json')) || { rows: [], pending: true };
+      case '/api/top': return patch((await file('top.json')) || { pending: true, mode: 'close' }, 0);
+      case '/api/market': return patchMarket((await file('market.json')) || { rows: [], pending: true });
       case '/api/review': return (await file('review.json')) || { pending: true };
       case '/api/daytrade': {
         const d = (await file('daytrade.json')) || { live: false, cands: [], positions: [], alerts: [], trades: [], settings: {}, rules: {}, market: {}, snaps: {} };
         disc = (d.settings && d.settings.fee_discount) || disc;
+        patch(d.cands, 0);
         lastCands = d.cands || [];
         loadMine();
         const q = mine.positions.length ? await quotes() : { q: {} };
@@ -291,7 +397,7 @@ window.TWSCAN_CLOUD = (() => {
         if (m && m.stocks && !m.stocks.includes(code)) {
           return notHere('雲端版沒有這檔股票的分析：只準備有足夠歷史資料與成交量的股票。');
         }
-        return (await file(`stock/${code}.json`)) || notHere('這檔股票的資料還沒產生，請稍後再試。');
+        return patch(await file(`stock/${code}.json`), 0) || notHere('這檔股票的資料還沒產生，請稍後再試。');
       }
       case '/api/stock/tf': {
         const tf = u.searchParams.get('tf') || 'd';
@@ -306,5 +412,5 @@ window.TWSCAN_CLOUD = (() => {
     }
   }
 
-  return { api, file, meta: getMeta };
+  return { api, file, meta: getMeta, relay };
 })();

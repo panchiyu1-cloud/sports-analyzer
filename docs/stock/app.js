@@ -97,7 +97,12 @@ function cloudAge(st) {
   if (!el) { box.insertAdjacentHTML('beforeend', '<span id="cloudAge" class="cloud-age"></span>'); el = $('#cloudAge'); }
   const min = c && c.ts ? Math.floor((Date.now() / 1000 - c.ts) / 60) : null;
   const liveish = ['open', 'preopen'].includes(st.market_phase);
-  if (liveish && min != null && min >= 4) {
+  const rs = window.TWSCAN_CLOUD.relay.status();
+  if (liveish && rs.fresh) {      // 10 秒報價正常：時間顯示到秒（轉播站的時間），看得出每 10 秒在跳
+    if (rs.now) $('#clock').textContent = rs.now.slice(11, 19);
+    el.textContent = '';
+    el.className = 'cloud-age';
+  } else if (liveish && min != null && min >= 4) {
     el.textContent = `・資料延遲 ${min} 分鐘`;
     el.className = 'cloud-age late';
     if (min >= 15) { $('#phaseText').textContent = '雲端更新中斷'; $('#phaseDot').className = 'dot'; }
@@ -110,10 +115,43 @@ function cloudAge(st) {
 function cloudInfoHTML() {
   const c = (S.status && S.status.cloud) || {};
   return `<h3 style="margin-top:18px">雲端版</h3>
-    <div class="muted small" style="margin-top:0">這個網頁不需要開電腦：程式在 GitHub 的雲端主機上執行，交易日 08:05～14:10 每分鐘把最新結果推上來（盤中報價每幾秒讀一次證交所即時資料），16:45、19:15 再更新三大法人、收盤確認名單與復盤。
+    <div class="muted small" style="margin-top:0">這個網頁不需要開電腦：程式在 GitHub 的雲端主機上執行，交易日早上到 14:10 每分鐘把最新結果推上來（盤中報價每幾秒讀一次證交所即時資料），傍晚再更新三大法人、收盤確認名單與復盤。
       最後更新：<b class="num">${c.published ? esc(c.published.slice(0, 16).replace('T', ' ')) : '—'}</b>。GitHub 排程偶爾會晚幾分鐘啟動；盤中若頂端顯示「資料延遲」，代表雲端這一輪還沒接上。
-      當沖「可進場」提醒會推播到手機（ntfy）。「我的持倉」與交易紀錄存在這支手機的瀏覽器裡（換手機或清除瀏覽資料就會不見）；持倉碰到停損、目標價的提醒只在網頁開著時有效，停損請同時在券商 App 設定觸價單。</div>`;
+      當沖「可進場」提醒會推播到手機（ntfy）。「我的持倉」與交易紀錄存在這支手機的瀏覽器裡（換手機或清除瀏覽資料就會不見）；持倉碰到停損、目標價的提醒只在網頁開著時有效，停損請同時在券商 App 設定觸價單。</div>
+    <h3 style="margin-top:18px">10 秒報價（選用）</h3>
+    <div class="muted small" style="margin-top:0">GitHub 一分鐘只能更新一次。貼上你自己的 Google Apps Script 轉播站網址（同一個網址也要設成 GitHub 的 STOCK_RELAY_URL），價格就會每 10 秒更新；名單與分析仍是每分鐘。網址只存在這支手機。</div>
+    <div class="filters" style="margin:6px 0;flex-wrap:wrap"><input id="relayUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false"
+      placeholder="https://script.google.com/macros/s/…/exec" value="${esc(window.TWSCAN_CLOUD.relay.url())}" style="flex:1;min-width:220px">
+      <button class="btn primary" id="relaySave">儲存</button></div>
+    <div class="muted small" id="relayMsg">${relayStatusText()}</div>`;
 }
+function relayStatusText() {
+  const r = window.TWSCAN_CLOUD.relay.status();
+  if (!r.on) return '尚未設定：價格每分鐘更新。';
+  if (r.fresh) return `轉播正常：${r.n} 檔股票的報價，最後更新 ${esc((r.now || '').slice(11))}。`;
+  if (r.err) return '轉播站連不上：請確認網址，或轉播站是否已部署為「所有人」可存取。';
+  return '已設定；雲端在交易時間（08:30～13:30）才送報價，其他時間價格每分鐘更新。';
+}
+function bindRelay() {
+  const b = $('#relaySave');
+  if (!b) return;
+  b.onclick = () => {
+    const v = $('#relayUrl').value.trim();
+    if (v && !/^https:\/\/script\.google(usercontent)?\.com\//.test(v)) { $('#relayMsg').textContent = '網址應該是 https://script.google.com/macros/s/…/exec'; return; }
+    window.TWSCAN_CLOUD.relay.set(v);
+    $('#relayMsg').textContent = v ? '已儲存，正在連線…' : '已清除：價格改回每分鐘更新。';
+    setTimeout(() => { if ($('#relayMsg')) $('#relayMsg').innerHTML = relayStatusText(); }, 4000);
+  };
+}
+// 10 秒報價到了：更新正在看的畫面（只換價格；名單與分析仍是每分鐘）
+let tickAt = 0;
+window.addEventListener('twscan:tick', () => {
+  if (!CLOUD || Date.now() - tickAt < 8000) return;
+  tickAt = Date.now();
+  if (S.view === 'top') { if (S.listMode === 'dt') dtLoad(); else loadTop(); }
+  else if (S.view === 'stock' && S.stock && S.stock.code) loadStock(S.stock.code);
+  if (S.status) cloudAge(S.status);
+});
 
 // ---------------------------------------------------------------- 路由
 function clearView() {
@@ -1281,6 +1319,7 @@ async function showAbout() {
         : '<div class="muted">尚未開始抓取（示範模式不連網）。</div>'}
       ${CLOUD ? cloudInfoHTML() : '<div style="margin-top:12px;display:flex;gap:8px;align-items:center"><button class="btn primary" id="btnRescan">立即重新掃描</button><span class="muted" id="rescanMsg" style="font-size:12.5px"></span></div>'}`;
     if ($('#btnRescan')) $('#btnRescan').onclick = async () => { await api('/api/rescan', { method: 'POST' }); $('#rescanMsg').textContent = '已排入重新掃描，進度會顯示在頁面上方。'; };
+    if (CLOUD) bindRelay();
     const qd = d.quality;
     if (qd) {
       const c = qd.counts || {}, tot = (c.exact || 0) + (c.est || 0) + (c.no_trade || 0) + (c.official || 0);

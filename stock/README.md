@@ -16,6 +16,11 @@ GitHub Actions 與 GitHub Pages 在雲端執行，所以不用開電腦，手機
   - 這個 secret 和運動分析的 `NTFY_TOPIC` 分開。
   - 主題名稱等同密碼，不會寫進任何檔案或紀錄。
 - 我的持倉與交易紀錄：只存在手機瀏覽器裡（localStorage），雲端主機看不到。
+- 10 秒報價（選用）：
+  - GitHub 一分鐘只能更新一次，所以另外用使用者自己的 Google Apps Script 轉播站（`relay/Code.gs`）。
+  - 雲端每 10 秒送報價過去，網頁每 10 秒去讀。
+  - 轉播站網址要設成 GitHub 的 `STOCK_RELAY_URL` secret，也要在網頁「模型與資料 → 10 秒報價」貼一次。
+  - 網址等同密碼。
 
 ## 更新程式
 

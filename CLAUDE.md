@@ -583,3 +583,16 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
 - Positions and trades are the owner's own: the page keeps them in the browser (localStorage,
   docs/stock/cloud.js) and prices them from quotes.json; the runner never sees them, so their
   stop / target / close reminders work only while the page is open.
+- 10-second prices (owner, 2026-11-13: 「價格更新太慢…改成10秒更新一次」): GitHub cannot carry
+  them (a push and a raw/API read a minute at most, 60 unauthenticated API calls an hour), so
+  the runner's `Relay` thread POSTs the latest quotes of ~300 stocks (lists, candidates,
+  rt_priority, the most traded) every 10 s during the session, with the stock-data head SHA,
+  to the owner's own Google Apps Script web app (stock/relay/Code.gs, CacheService; URL in
+  the `STOCK_RELAY_URL` secret and typed once into the page, never in the repo or the logs).
+  The page polls it every 10 s, patches prices of objects whose quote is older
+  (`patch`/`patchMarket` in cloud.js; never over an official 收盤), and takes the SHA from it
+  instead of the GitHub API. The page also POSTs its watch list (positions, the stock open)
+  to the relay; the runner gets it back in the relay's reply and puts those codes first in
+  `eng.extra_watch` / `rt_priority` (MIS every few seconds). No relay: everything stays per
+  minute. MIS refuses r.jina.ai and sends no CORS, and TWSE's realtime data is not to be
+  re-broadcast publicly, so no public relay (ntfy / public MQTT) is used.

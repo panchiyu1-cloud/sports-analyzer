@@ -69,6 +69,8 @@ jobs:
         env:
           # Its own secret, so that setting it does not also turn on the sports pushes (NTFY_TOPIC)
           NTFY_TOPIC: ${{ secrets.STOCK_NTFY_TOPIC }}
+          # The owner's Google Apps Script relay (stock/relay/Code.gs): prices every 10 seconds
+          STOCK_RELAY_URL: ${{ secrets.STOCK_RELAY_URL }}
           PYTHONUNBUFFERED: "1"
         run: python stock/cloud.py --publish-dir "$PUB"
       - name: Hand over to the next run (the session is not over yet)

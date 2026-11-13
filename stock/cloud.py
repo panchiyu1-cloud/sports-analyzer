@@ -20,6 +20,7 @@ import sys
 import threading
 import time
 import traceback
+import urllib.request
 from datetime import timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +38,8 @@ BRANCH = "stock-data"
 EVERY = {"live": 60, "market": 180, "key_stocks": 300, "tf": 600, "slow": 900, "all_stocks": 3600}
 MAX_KEY = 40              # 每 5 分鐘更新的重點股票數
 MAX_TF = 24               # 每 10 分鐘更新 30 分／60 分 K 的股票數
+RELAY_EVERY = 10          # 盤中每 10 秒把最新報價送到轉播站（收盤後每分鐘）
+RELAY_CODES = 300         # 每次送出的股票數上限（名單、候選、網頁要的、成交值最大的）
 
 
 def clean(obj):
@@ -55,6 +58,7 @@ class Publisher:
         self.stocks = set()       # 已輸出個股資料的代號
         self.tf = set()           # 已輸出 30 分／60 分 K 的代號
         self.pushed = 0
+        self.head = None          # stock-data 分支最新一版的代號（轉播站一起送給網頁，網頁就不用問 GitHub）
         self.lock = threading.Lock()
         os.makedirs(out, exist_ok=True)
         old = self._read("meta.json") or {}
@@ -237,6 +241,80 @@ class Publisher:
             log(f"[雲端] 推送失敗：{r.stderr[-300:]}")
         else:
             self.pushed += 1
+            self.head = self.git("rev-parse", "HEAD").stdout.strip() or None
+
+
+class Relay(threading.Thread):
+    """10 秒報價：GitHub 一分鐘只能更新一次，所以另外把最新報價送到使用者自己的
+    Google Apps Script 轉播站（網址放在 GitHub secret STOCK_RELAY_URL），網頁每 10 秒去讀。
+    轉播站也帶回網頁想優先更新的股票（持倉、正在看的股票）。網址等同密碼：不寫進任何檔案或紀錄。"""
+
+    def __init__(self, eng, pub, url):
+        super().__init__(name="relay", daemon=True)
+        self.eng, self.pub, self.url = eng, pub, url
+        self.halt = threading.Event()
+        self.sent = self.fails = 0
+        self.last = 0.0
+
+    def codes(self):
+        eng = self.eng
+        out = list(eng.extra_watch)
+        try:
+            out += [c["code"] for c in eng.top_payload_list()]
+        except Exception:
+            pass
+        with eng.lock:
+            out += list(eng.rt_priority)
+            act = sorted(((s.get("price") or 0) * (s.get("vol") or 0), c) for c, s in eng.snap.items() if s.get("price"))
+        out += [c for _, c in reversed(act[-RELAY_CODES:])]
+        return list(dict.fromkeys(out))[:RELAY_CODES]
+
+    def payload(self):
+        eng = self.eng
+        q, dates = {}, set()
+        codes = self.codes()
+        with eng.lock:
+            for c in codes:
+                s = eng.snap.get(c)
+                if s and s.get("price"):
+                    q[c] = [s.get("price"), s.get("prev"), 1 if s.get("est") else 0, s.get("time"), s.get("high"), s.get("low")]
+                    if s.get("date"):
+                        dates.add(s["date"])
+        n = now_tw()
+        return {"v": 1, "ts": int(time.time()), "now": n.strftime("%Y-%m-%d %H:%M:%S"), "date": max(dates) if dates else None,
+                "phase": eng.phase(), "sha": self.pub.head, "q": q}
+
+    def send(self):
+        body = json.dumps(self.payload(), ensure_ascii=False, separators=(",", ":"), default=str).encode("utf-8")
+        req = urllib.request.Request(self.url, data=body, headers={"Content-Type": "text/plain;charset=utf-8"})
+        with urllib.request.urlopen(req, timeout=20) as r:   # Apps Script 回 302，urllib 會自動跟過去拿回覆
+            reply = json.loads(r.read().decode("utf-8") or "{}")
+        eng = self.eng
+        watch = [str(c).strip().upper() for c in (reply.get("watch") or [])][:10]
+        watch = [c for c in watch if c in eng.universe]
+        if watch != eng.extra_watch:
+            with eng.lock:
+                eng.extra_watch = watch
+                eng.rt_priority = list(dict.fromkeys(watch + list(eng.rt_priority)))[:eng.cfg["rt_priority_count"]]
+            if watch:
+                log(f"[轉播] 網頁要求優先更新：{'、'.join(watch)}")
+
+    def run(self):
+        while not self.halt.wait(1):
+            live = self.eng.phase() in ("open", "preopen")
+            if time.time() - self.last < (RELAY_EVERY if live else 60):
+                continue
+            self.last = time.time()
+            try:
+                self.send()
+                self.sent += 1
+                if self.fails:
+                    log(f"[轉播] 恢復正常（之前失敗 {self.fails} 次）")
+                self.fails = 0
+            except Exception as e:
+                self.fails += 1
+                if self.fails in (1, 10) or self.fails % 60 == 0:
+                    log(f"[轉播] 送出失敗（{type(e).__name__}），連續 {self.fails} 次")
 
 
 def restore_state(eng, out):
@@ -296,6 +374,12 @@ def main():
 
     label = os.environ.get("GITHUB_RUN_ID") or "local"
     pub = Publisher(eng, args.publish_dir, push=not args.no_push, label=label)
+    relay_url = os.environ.get("STOCK_RELAY_URL", "").strip()
+    relay = None
+    if relay_url:
+        relay = Relay(eng, pub, relay_url)
+        relay.start()
+        log("[轉播] 已啟用：盤中每 10 秒送出報價")
     mode, deadline = plan(now_tw(), args.minutes)
     log(f"[雲端] 模式：{'盤中' if mode == 'session' else '掃描一次'}，最晚 {deadline:%H:%M} 結束")
     scans0 = eng.status.get("last_scan")
@@ -315,6 +399,9 @@ def main():
             stop.wait(5)
     finally:
         log("[雲端] 結束前輸出全部資料…")
+        if relay:
+            relay.halt.set()
+            log(f"[轉播] 本輪送出 {relay.sent} 次")
         eng.stop.set()
         pub.tick(force=True, final=True)
         log(f"[雲端] 本輪共推送 {pub.pushed} 次")
