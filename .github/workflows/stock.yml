@@ -9,17 +9,23 @@ name: 臺股強勢掃描 (stock)
 # institutional buy/sell data (published ~15:00-16:30) and recompute the closing list and
 # the review.
 #
-# GitHub starts scheduled runs late and skips some, so the session has several start times:
-# the first one that starts runs the session; later ones wait in the concurrency queue and
-# take over if it stops early (a run that starts after 14:10 scans once, publishes, ends).
+# GitHub starts scheduled runs late (on 2026-11-13 none of 08:05-09:10 had started by 09:13,
+# and the sensor's every-five-minutes runs had a 95-minute gap), so the session has many start
+# times from 05:00: the first one that starts runs the session; later ones wait in the
+# concurrency queue. A run lasts at most ~5h40m (the job limit is 6 h): when it stops before
+# 14:10 it starts its successor itself (workflow_dispatch, step "Hand over"), which restores
+# its cache and carries on. A run that starts after 14:10 scans once, publishes, ends.
 # State (price history of ~1,400 stocks, lists, the review) lives in the Actions cache; the
 # small files that cannot be rebuilt are also copied to stock-data/state/.
 
 on:
   schedule:
-    - cron: "5,20,35,50 0 * * 1-5"   # 08:05-08:50 Taipei
+    # Taipei = UTC+8, so Taipei's weekday mornings before 08:00 are UTC Sunday-Thursday.
+    - cron: "0,20,40 21-23 * * 0-4"  # 05:00-07:40 Taipei, Monday-Friday
+    - cron: "0,15,30,45 0 * * 1-5"   # 08:00-08:45 Taipei
     - cron: "10,40 1-5 * * 1-5"      # 09:10-13:40 Taipei: backups
     - cron: "45 8 * * 1-5"           # 16:45 Taipei: institutional data, closing list, review
+    - cron: "30 9 * * 1-5"           # 17:30 Taipei
     - cron: "15 11 * * 1-5"          # 19:15 Taipei: anything published late
   workflow_dispatch:
 
@@ -28,7 +34,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: write   # push the stock-data branch
+  actions: write    # start the next run (workflow_dispatch) when this one hits its time limit
 
 jobs:
   scan:
@@ -58,11 +65,17 @@ jobs:
           fi
           echo "PUB=$PUB" >> "$GITHUB_ENV"
       - name: Run the scanner
+        id: scan
         env:
           # Its own secret, so that setting it does not also turn on the sports pushes (NTFY_TOPIC)
           NTFY_TOPIC: ${{ secrets.STOCK_NTFY_TOPIC }}
           PYTHONUNBUFFERED: "1"
         run: python stock/cloud.py --publish-dir "$PUB"
+      - name: Hand over to the next run (the session is not over yet)
+        if: steps.scan.outputs.chain == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run stock.yml --ref "${{ github.ref_name }}"
       - name: Save the scanner's state
         if: always()
         uses: actions/cache/save@v4

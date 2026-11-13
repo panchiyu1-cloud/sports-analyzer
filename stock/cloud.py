@@ -302,6 +302,11 @@ def main():
     try:
         while not stop.is_set() and now_tw() < deadline:
             pub.tick()
+            n = now_tw()
+            if mode == "session" and n.hour * 60 + n.minute >= 9 * 60 + 20 and eng.is_holiday():
+                log("[雲端] 今天休市（09:20 指數仍是前一個交易日）：輸出後結束")
+                mode = "once"      # 不交棒
+                break
             if mode == "once":
                 st = eng.status
                 if st.get("first_scan_done") and st.get("last_scan") != scans0 and not st.get("scanning") \
@@ -313,6 +318,16 @@ def main():
         eng.stop.set()
         pub.tick(force=True, final=True)
         log(f"[雲端] 本輪共推送 {pub.pushed} 次")
+    # 一輪最多跑 MAX_MINUTES；盤中還沒結束就請 GitHub 接著開下一輪（stock.yml 的「交棒」步驟）。
+    # GitHub 的排程常常晚一兩個小時才啟動，不能只靠排程把盤中接起來。
+    end = now_tw().replace(hour=SESSION_END[0], minute=SESSION_END[1], second=0, microsecond=0)
+    chain = mode == "session" and not args.minutes and not stop.is_set() and now_tw() < end - timedelta(minutes=3)
+    out = os.environ.get("GITHUB_OUTPUT")
+    if out:
+        with open(out, "a", encoding="utf-8") as f:
+            f.write(f"chain={'true' if chain else 'false'}\n")
+    if chain:
+        log("[雲端] 盤中還沒結束：交棒給下一輪")
 
 
 if __name__ == "__main__":

@@ -558,10 +558,14 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   `stock/cloud.py` runs it headless; the sports rules above (style, tests in tests/, CI) do
   not apply to `stock/` and CI never imports it (pytest testpaths = tests). Do not "fix" it to
   the repo's style; changes are made in the Mac version and copied over (stock/README.md).
-- `.github/workflows/stock.yml` (concurrency group stock): weekday runs from 08:05 Taipei
-  (several start times, GitHub starts them late) run the session to 14:10, reading MIS every
-  few seconds; evening runs at 16:45 / 19:15 scan once (institutional data, closing list,
-  review). The runner reached every source from GitHub (probe 2026-11-13: TWSE OpenAPI, TPEx,
+- `.github/workflows/stock.yml` (concurrency group stock): weekday runs from 05:00 Taipei
+  (many start times: on 2026-11-13 none of the 08:05-09:10 crons had started by 09:13) run
+  the session to 14:10, reading MIS every few seconds; a run stops after 340 minutes (job
+  limit 6 h) and, when the session is not over, starts its successor itself (output
+  `chain`, step "Hand over": workflow_dispatch with GITHUB_TOKEN, `actions: write`), which
+  waits in the concurrency queue and restores the cache. Unscheduled holidays: a session run
+  ends at 09:20 when the index is still the previous day's. Evening runs at 16:45 / 17:30 /
+  19:15 scan once (institutional data, closing list, review). The runner reached every source from GitHub (probe 2026-11-13: TWSE OpenAPI, TPEx,
   MIS, www.twse.com.tw, ISIN, Yahoo, Google News, cnyes); MIS refuses r.jina.ai (TWSE WAF), so
   the browser can never read quotes itself: everything comes from the runner.
 - Output: JSON for the page (status, top, market, daytrade, review, diag, stock/<code>,
