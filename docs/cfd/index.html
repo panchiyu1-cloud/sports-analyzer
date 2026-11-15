@@ -206,6 +206,13 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 .t-open > span { grid-area: auto; }
 .pgrid.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; } .pgrid.c4 div { padding: 5px 6px; } .pgrid.c4 dd { font-size: 14.5px; letter-spacing: 0; } .pgrid.c4 dt { font-size: 11.5px; white-space: nowrap; }
 .t-src { margin: 8px 0 0; font-size: 12px; color: var(--muted); } .t-src span { font-family: var(--num); }
+.t-size { margin: 8px 0 0; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 8px; font-size: 14px; line-height: 1.55; } .t-size small { display: block; color: var(--muted); font-size: 12.5px; } .t-size .warn, .t-size.warn { color: var(--red); } .t-size .btn { margin-left: 6px; }
+.t-also { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
+.st-chip.new { border-style: dashed; }
+.toast.warn { background: var(--surface); color: var(--text); border: 2px solid var(--text); } .toast.exit { background: var(--red); color: #fff; }
+.sug { margin: 8px 0; padding: 8px 10px; border: 1.5px solid var(--text); border-radius: 8px; font-size: 14px; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.sb { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 8px; } .sb th, .sb td { padding: 5px 3px; border-bottom: 1px solid var(--line); text-align: right; font-family: var(--num); white-space: nowrap; } .sb th:first-child, .sb td:first-child { text-align: left; font-family: var(--sans); white-space: normal; } .sb th { color: var(--muted); font-weight: 500; font-size: 12px; }
+.sb-h { font-size: 14.5px; margin: 12px 0 2px; } .sb-note { font-size: 14px; margin: 6px 0; }
 .r-lv .src { margin-left: auto; }
 
 /* IG 報價 */
@@ -1140,6 +1147,7 @@ E.rate = function (A, ctx) {
   if (!bias) { score = Math.min(score, 37); notes.push('多空機率接近'); }
   else if (!plan) { score = Math.min(score, 54); notes.push('沒有期望值為正的進場點'); }
   if (ctx.eventSoon) { score = Math.min(score, 54); notes.push('重大數據即將公布'); }
+  if (ctx.thin) { score = Math.min(score, 54); notes.push('換日時段點差大'); }
   if (ctx.closed) { score = Math.min(score, 37); notes.push(ctx.why || '沒有交易'); }
   else if (ctx.stale) { score = Math.min(score, 37); notes.push('休市或報價延遲'); }
   if (Math.abs(p - 0.5) < 0.08) score = Math.min(score, 71); // 機率優勢不到 8 個百分點，最高只給 B
@@ -1149,7 +1157,7 @@ E.rate = function (A, ctx) {
   if (ctx.closed || ctx.stale) action = ctx.act || '沒有交易，開盤後再評估';
   else if (grade === 'D') action = bias ? '條件不足，先不要進場' : '沒有方向，先不要進場';
   else if (!plan) action = '先觀察，目前沒有划算的進場點';
-  else if (grade === 'C') action = '先觀察，等訊號更明確';
+  else if (grade === 'C') action = ctx.thin ? '換日時段點差大，過了再進場' : '先觀察，等訊號更明確';
   else action = plan.type === 'market' ? '現在可進場' : plan.type === 'limit' ? `等回到 ${f(plan.entry)} 再進場` : `等${dir > 0 ? '突破' : '跌破'} ${f(plan.entry)} 再進場`;
   return { score, grade, label: E.GRADE[grade], action, dir, plan, notes, parts };
 };
@@ -1186,7 +1194,8 @@ T.step = function (pos, candles, price, now) {
       // 同一根 K 線同時碰到停損與停利時，保守地當作先碰到停損
       // 停利 1 發生的那根 K 線不回頭檢查保本價（那根的低點多半出現在到達停利之前）
       const skip = pos.status === 'tp1' && c.t != null && c.t <= pos.tp1At;
-      if (!skip && (d > 0 ? c.l <= pos.slNow : c.h >= pos.slNow)) { const be = pos.status === 'tp1'; T.close(pos, pos.slNow, be ? 'be' : 'sl', tm); ev.push({ kind: be ? 'be' : 'sl', t: tm }); return; }
+      // 停損的位置決定怎麼稱呼這次出場：還在原位＝停損；已移到進場價＝保本；已移到停利 1＝鎖利
+      if (!skip && (d > 0 ? c.l <= pos.slNow : c.h >= pos.slNow)) { const lock = d * (pos.slNow - pos.entry) / pos.risk, k = lock > 0.02 ? 'trail' : lock > -0.02 ? 'be' : 'sl'; T.close(pos, pos.slNow, k, tm); ev.push({ kind: k, t: tm }); return; }
       if (pos.status === 'open' && (d > 0 ? c.h >= pos.tp1 : c.l <= pos.tp1)) { pos.status = 'tp1'; pos.tp1At = tm; pos.slNow = pos.entry; ev.push({ kind: 'tp1', t: tm }); }
       if (pos.status === 'tp1' && (d > 0 ? c.h >= pos.tp2 : c.l <= pos.tp2)) { T.close(pos, pos.tp2, 'tp2', tm); ev.push({ kind: 'tp2', t: tm }); }
     }
@@ -1205,6 +1214,52 @@ T.step = function (pos, candles, price, now) {
   }
   // 下次從最後一根（可能還沒收完）重新看起，但不回頭看建立之前的 K 線
   pos.lastCheck = Math.max(pos.created, lastT == null ? pos.lastCheck : lastT);
+  return ev;
+};
+/* 影子：同一筆單「完全照原計畫走」的版本（不受手動平倉或移動停損影響），用來比較提早出場是多賺還是少賺 */
+T.plan = pos => ({ side: pos.side, type: pos.type, entry: pos.entry, sl: pos.sl, slNow: pos.sl, tp1: pos.tp1, tp2: pos.tp2, risk: pos.risk, created: pos.created, lastCheck: pos.lastCheck,
+  status: pos.status, openedAt: pos.openedAt, expires: pos.expires, flags: { nearSl: 1, nearTp1: 1, nearTp2: 1 } });
+/* 持有中的提醒（純函式）。lvl 1＝注意，lvl 2＝建議出場。每一種都有冷卻時間，避免同一件事一直響。
+   o = { price, now, cd: 1 分 K（由舊到新，可省略）, pSide: 目前「順著部位方向」的機率, tfMs: 這筆計畫的 K 線週期, maxHold: 最長持有（毫秒，0＝不限）,
+         closeIn: 距離休市幾毫秒, rollIn: 距離每日換日時段幾毫秒, ev: 即將公布的重大數據 { t, title } } */
+T.watch = function (pos, o) {
+  const ev = [], d = T.dir(pos), now = o.now, px = o.price;
+  if ((pos.status !== 'open' && pos.status !== 'tp1') || !isNum(px) || !(pos.risk > 0)) return ev;
+  const f = pos.flags = pos.flags || {}, r = d * (px - pos.entry) / pos.risk, held = now - (pos.openedAt || now);
+  if (!(pos.mfe >= r)) pos.mfe = r; if (!(pos.mae <= r)) pos.mae = r; // 持有期間最多賺到、最多賠到幾 R
+  const gap = (k, ms) => !(f[k] && now - f[k] < ms), push = (kind, lvl, x) => ev.push(Object.assign({ kind, lvl, t: now }, x));
+  // 保本：浮盈到停損距離的一半，而停損還在原位
+  if (pos.status === 'open' && r >= 0.5 && d * (pos.slNow - pos.entry) < -0.02 * pos.risk && !f.beSug) { f.beSug = now; push('be_sug', 1); }
+  // 鎖利：過了停利 1 與停利 2 的中點，停損還沒移到停利 1
+  if (pos.status === 'tp1' && d * (px - (pos.tp1 + pos.tp2) / 2) >= 0 && d * (pos.slNow - pos.tp1) < 0 && !f.trSug) { f.trSug = now; push('trail_sug', 1); }
+  // 獲利回吐：曾經賺到 0.6R 以上，現在吐回一半（同一個高點只提醒一次，創新高 0.3R 以上才重新計算）
+  if (pos.mfe >= 0.6 && r <= 0.5 * pos.mfe && r > -0.5 && !(f.gbPeak >= pos.mfe - 0.3)) { f.gbPeak = pos.mfe; push('giveback', 2, { mfe: pos.mfe, r }); }
+  const cd = o.cd, n = cd ? cd.length : 0;
+  if (n >= 20 && now - cd[n - 1].t < 3 * 60e3) {
+    // 急轉：最近 4 分鐘內，從最有利的價格逆向走了「平常一分鐘波動」的 4 倍以上，而且至少是停損距離的三成
+    const rs = []; for (let i = Math.max(0, n - 34); i < n - 4; i++) rs.push(cd[i].h - cd[i].l); rs.sort((a, b) => a - b); const typ = rs[rs.length >> 1];
+    let ext = px; for (let i = n - 4; i < n; i++) ext = d > 0 ? Math.max(ext, cd[i].h) : Math.min(ext, cd[i].l);
+    const cur = d > 0 ? Math.max(px, cd[n - 1].c) : Math.min(px, cd[n - 1].c), drop = d * (ext - cur); // 即時價和 K 線可能差幾秒：取對部位較有利的那個，寧可晚幾秒也不要誤報
+    if (typ > 0 && drop >= 4 * typ && drop >= 0.3 * pos.risk && gap('shock', 10 * 60e3)) { f.shock = now; push('shock', 2, { x: drop / typ, r }); }
+    // 跌破結構：已經在賠，又跌破（做空則是突破）前一小時的低（高）點
+    if (n >= 66 && held >= 15 * 60e3 && r <= -0.3) {
+      let lv = d > 0 ? Infinity : -Infinity; for (let i = n - 66; i < n - 6; i++) lv = d > 0 ? Math.min(lv, cd[i].l) : Math.max(lv, cd[i].h);
+      if (d * (px - lv) < 0 && d * (px - pos.slNow) > 0 && gap('struct', 60 * 60e3)) { f.struct = now; push('struct', 1, { level: lv }); }
+    }
+  }
+  // 方向機率：轉向（建議出場）或優勢縮小（注意）
+  if (isNum(o.pSide)) {
+    if (o.pSide <= 0.43) { if (gap('rev', 60 * 60e3)) { f.rev = now; push('reversal', 2, { p: o.pSide }); } }
+    else if (isNum(pos.prob0) && o.pSide <= pos.prob0 - 0.08 && o.pSide < 0.52 && gap('weak', 120 * 60e3) && gap('rev', 60 * 60e3)) { f.weak = now; push('weak', 1, { p: o.pSide }); }
+  }
+  // 時間：超過預測看的 12 根 K 線（注意），或超過自己設定的最長持有時間（建議出場）
+  const hz = 12 * (o.tfMs || 0), mx = o.maxHold || 0;
+  if (mx && held >= mx) { if (!f.tMax) { f.tMax = now; push('time_max', 2, { held }); } }
+  else if (hz && held >= hz && (!mx || hz < mx) && pos.status === 'open' && !f.tHz) { f.tHz = now; push('time', 1, { held }); }
+  // 休市前、每日換日時段前、重大數據前
+  if (isNum(o.closeIn) && o.closeIn > 0 && o.closeIn <= 30 * 60e3 && gap('cls', 6 * 3600e3)) { f.cls = now; push('close_soon', 2, { min: Math.max(1, Math.round(o.closeIn / 60e3)) }); }
+  if (isNum(o.rollIn) && o.rollIn > 0 && o.rollIn <= 20 * 60e3 && gap('roll', 6 * 3600e3)) { f.roll = now; push('roll', 1, { min: Math.max(1, Math.round(o.rollIn / 60e3)), at: now + o.rollIn }); }
+  if (o.ev && o.ev.t > now && o.ev.t - now <= 15 * 60e3 && f.evT !== o.ev.t) { f.evT = o.ev.t; push('event', 1, { min: Math.max(1, Math.round((o.ev.t - now) / 60e3)), title: o.ev.title }); }
   return ev;
 };
 T.stats = function (list) {
@@ -1227,6 +1282,7 @@ const RULES = {
   fx: [at(5, 17), at(0, 16)], metal: [at(5, 17), at(0, 18)], cmdty: [at(5, 17), at(0, 18)], index: [at(5, 17), at(0, 18)],
   stock: [at(5, 20), at(0, 20)], etf: [at(5, 20), at(0, 20)], crypto: [at(5, 17), at(6, 3)],
 };
+const ROLL = { fx: 1, metal: 1, cmdty: 1, index: 1 };
 let fmt = null; const offCache = new Map();
 function nyOffset(t) { // 紐約時間比 UTC 慢幾分鐘（-300 或 -240）。每 6 小時查一次就夠：夏令時間只在週日凌晨切換，那時所有商品都休市
   const k = Math.floor(t / 21600e3); let v = offCache.get(k); if (v != null) return v;
@@ -1255,6 +1311,12 @@ const M = {
     return { open: false, reopen: re, why: cls === 'crypto' ? '每週固定暫停' : '週末休市' };
   },
   closedAt(cls, t) { return !M.sched(cls, t).open; },
+  /* 距離下一次每週休市還有幾毫秒（現在就休市＝0；這一類沒有規則＝null） */
+  closeIn(cls, t) { const r = RULES[cls]; if (!r) return null; if (!M.sched(cls, t).open) return 0; return ((r[0] - mow(t) + W) % W) * 60e3; },
+  /* 每日換日時段（紐約 16:45–18:15，臺北冬令 05:45–07:15）：外匯點差放大，IG 的金屬、商品、指數暫停約一小時 */
+  thin(cls, t) { if (!ROLL[cls]) return false; const m = mow(t), day = Math.floor(m / D), mm = m % D; return day >= 1 && day <= 5 && mm >= 1005 && mm < 1095; },
+  /* 距離今天的換日（紐約 17:00）還有幾毫秒；週一到週四才有（週五是每週休市），已經過了＝null */
+  rollIn(cls, t) { if (!ROLL[cls]) return null; const m = mow(t), day = Math.floor(m / D), mm = m % D; return day >= 1 && day <= 4 && mm < 1020 ? (1020 - mm) * 60e3 : null; },
 };
 if (typeof module !== 'undefined') module.exports = M; else root.Mkt = M;
 if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Mkt = M;
@@ -2430,10 +2492,12 @@ const E = Engine, { isNum, clip } = E.util;
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const CLS = ['fx', 'metal', 'cmdty', 'stock', 'etf', 'index', 'crypto'];
-const DEF = { inst: 'XAUUSD', tf: '15m', scanTf: '15m', cls: 'top', swap: false, theme: 'auto', auto: true, sound: true, equity: 10000, riskPct: 1, lev: 100,
+const DEF = { inst: 'XAUUSD', tf: '15m', scanTf: '15m', cls: 'top', swap: false, theme: 'auto', auto: true, sound: true, equity: 0, riskPct: 10, lev: 100, maxHold: 6,
   cost: { fx: 0.006, metal: 0.012, cmdty: 0.05, stock: 0.04, etf: 0.03, index: 0.012, crypto: 0.05 }, on: { fx: true, metal: true, cmdty: true, stock: true, etf: true, index: true, crypto: true } };
 const S = Object.assign({}, DEF, LS.get('cfd.set', {})); S.cost = Object.assign({}, DEF.cost, S.cost || {}); S.on = Object.assign({}, DEF.on, S.on || {});
-if (S.v !== 2) { S.cls = 'top'; S.v = 2; }
+if (!(S.v >= 2)) S.cls = 'top';
+if (!(S.v >= 3)) { S.equity = 0; S.riskPct = 10; S.maxHold = 6; } // 第五版：資金要自己填（不再預設一萬），每筆最多賠資金的 10%、最長持有 6 小時（使用者 2026/11/15 指定）
+S.v = 3;
 const save = () => LS.set('cfd.set', S);
 const pct = (v, d) => (isNum(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d == null ? 2 : d) + '%' : '—');
 const hm = t => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
@@ -2489,6 +2553,42 @@ function banner() {
 }
 function setDemo(on) { Data.demo = on; offline = false; Data.resetHosts(); Data.clear(); scan.rows = {}; det.key = null; News.updated = 0; Inter.updated = 0; banner(); refreshNews(true); show(view); }
 
+/* ---------- 建議數量 ----------
+   每筆最多賠「資金 × 風險上限」。賠多少＝數量 × 停損距離，和保證金用掉多少是兩回事（IG 槓桿高，保證金用不到一半，部位也可能是資金的幾十倍）。
+   IG 合約規格（1 張＝幾個單位）只列使用者 2026/11/11–15 的交易紀錄驗算過的，以及外匯迷你合約（1 張＝10,000 單位基礎貨幣）；
+   其餘商品不猜，只顯示「最多賠多少」，由使用者在 IG 下單畫面對照停損金額。 */
+const IGC = { XAUUSD: [1, '現貨黃金 ($1)'], XAGUSD: [100, '現貨白銀 ($1)'], BTCUSD: [0.1, 'Bitcoin ($0.1)'], ETHUSD: [1, 'Ether ($1)'], SOLUSD: [1, 'Solana ($1)'], ADAUSD: [100, 'Cardano ($1)'], LINKUSD: [100, 'Chainlink ($1)'],
+  US500: [1, 'US 500 Cash ($1)'], HK50: [1, '香港 HS50 現貨 ($1)'], NATGAS: [1000, '天然氣 ($1)'] };
+const usd = v => '$' + (v < 100 ? v.toFixed(2) : Math.round(v).toLocaleString('en-US'));
+const durTxt = ms => { const m = Math.max(0, Math.round(ms / 60e3)); return m < 60 ? m + ' 分鐘' : Math.floor(m / 60) + ' 小時' + (m % 60 ? ' ' + (m % 60) + ' 分' : ''); };
+function sizeOf(inst, plan) {
+  if (!inst || !plan || !(plan.entry > 0)) return null; const risk = plan.risk > 0 ? plan.risk : Math.abs(plan.entry - plan.sl); if (!(risk > 0)) return null;
+  const eq = +S.equity, rp = +S.riskPct; if (!(eq > 0) || !(rp > 0)) return { need: true };
+  const money = eq * rp / 100, d = risk / plan.entry, notional = money / d, out = { money, pct: rp, notional, lev: notional / eq, eq };
+  const c = inst.cls === 'fx' ? [10000, '迷你合約'] : IGC[inst.id]; if (!c) return out;
+  const b = IG.basis(inst), pn = b ? plan.entry / b.k : plan.entry; // 換回來源的原始價格（IG 以「點」報價的商品會差 100 或 10000 倍）
+  let per = c[0] * pn; // 1 張合約的名目價值（美元）；非外匯的這幾項都是美元計價
+  if (inst.cls === 'fx') { const qr = quoteRate(((inst.code || '').split('/')[1]) || 'USD'); if (!qr) return out; per *= qr; }
+  if (!(per > 0)) return out;
+  const n = Math.floor(notional / per * 100 + 1e-9) / 100;
+  return Object.assign(out, { n, per, cname: c[1], loss: n * per * d, lev: n * per / eq });
+}
+function sameBets(inst, side) { // 已經持有、和這筆其實是同一個賭注的單（走勢高度連動而且方向一致）
+  const me = scan.rows[inst.id], dm = side === 'long' ? 1 : -1;
+  return TR.list.filter(p => Track.active(p) && p.status !== 'pending' && p.instId !== inst.id).filter(p => {
+    const o = scan.rows[p.instId], c = me && o && !me.err && !o.err ? corrOf(me, o) : null, dp = p.side === 'long' ? 1 : -1, i2 = Data.byId(p.instId);
+    return c != null ? c * dm * dp >= 0.7 : dm === dp && !!i2 && i2.cls === inst.cls && inst.cls === 'crypto';
+  });
+}
+function sizeLine(inst, pl) {
+  const z = sizeOf(inst, pl); if (!z || Data.demo) return '';
+  if (z.need) return `<p class="t-size">建議數量：還沒填帳戶資金<button class="btn sm" data-view="settings">到設定填</button></p>`;
+  const sb = sameBets(inst, pl.side), dup = sb.length ? `<small class="warn">你已持有 ${esc(sb.map(p => p.name).join('、'))}，和這筆走勢連動、方向相同，等於同一個賭注：建議不要再加，或數量減半。</small>` : '';
+  if (z.n == null) return `<p class="t-size">最多賠 <b class="num">${usd(z.money)}</b>（資金的 ${z.pct}%）<small>在 IG 下單時設好停損 ${E.fmt(pl.sl, inst.dp)}，把數量調到「停損金額」不超過這個數字。部位大約 ${usd(z.notional)}，是資金的 ${z.lev.toFixed(0)} 倍。</small>${dup}</p>`;
+  if (z.n < 0.01) return `<p class="t-size"><span class="warn">以目前的資金，這筆連 0.01 張都會超過風險上限（最多賠 ${usd(z.money)}），不建議下。</span>${dup}</p>`;
+  return `<p class="t-size">建議數量 <b class="num">${z.n.toFixed(2)}</b> 張　打到停損約賠 <b class="num">${usd(z.loss)}</b><small>${esc(z.cname)}　上限 ${usd(z.money)}（資金的 ${z.pct}%）　部位約 ${usd(z.n * z.per)}，是資金的 ${z.lev.toFixed(0)} 倍。低於 IG 的最小數量就不要下。</small>${dup}</p>`;
+}
+
 /* ---------- 提醒：畫面訊息、聲音、震動、系統通知 ---------- */
 let actx = null;
 function unlockAudio() { if (actx) return; try { const C = window.AudioContext || window.webkitAudioContext; if (C) actx = new C(); } catch (e) { /* 沒有音效也能用 */ } }
@@ -2496,10 +2596,10 @@ document.addEventListener('pointerdown', unlockAudio);
 function beep(kind) {
   if (S.sound && actx) try {
     if (actx.state === 'suspended') actx.resume();
-    const seq = kind === 'sl' ? [[440, 0], [330, 0.22], [262, 0.44]] : /tp|be/.test(kind) ? [[523, 0], [659, 0.18], [784, 0.36]] : [[660, 0], [660, 0.26]];
+    const seq = kind === 'sl' ? [[440, 0], [330, 0.22], [262, 0.44]] : /^(tp|be$|trail$)/.test(kind) ? [[523, 0], [659, 0.18], [784, 0.36]] : [[660, 0], [660, 0.26]];
     for (const [f, at] of seq) { const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime + at; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2); o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.22); }
   } catch (e) { /* 忽略 */ }
-  if (S.sound && navigator.vibrate) try { navigator.vibrate(kind === 'sl' ? [200, 100, 200, 100, 200] : [150, 80, 150]); } catch (e) { /* 忽略 */ }
+  if (S.sound && navigator.vibrate && (!navigator.userActivation || navigator.userActivation.hasBeenActive)) try { /* 使用者還沒碰過畫面時，瀏覽器不允許震動 */ navigator.vibrate(kind === 'sl' ? [200, 100, 200, 100, 200] : [150, 80, 150]); } catch (e) { /* 忽略 */ }
 }
 function toast(text, kind) {
   const box = $('#toasts'), el = document.createElement('div'); el.className = 'toast ' + (kind || ''); el.setAttribute('role', kind === 'info' ? 'status' : 'alert');
@@ -2513,63 +2613,94 @@ function sysNotify(text, tag) { if (canNotify() && Notification.permission === '
 const TR = { list: LS.get('cfd.track', []), alerts: LS.get('cfd.alerts', []), busy: false, last: 0 };
 const saveTR = () => { LS.set('cfd.track', TR.list.slice(0, 200)); LS.set('cfd.alerts', TR.alerts.slice(0, 60)); };
 function alertText(p, ev) {
-  const f = v => E.fmt(v, p.dp), nm = `${p.name}（${p.side === 'long' ? '做多' : '做空'}）`;
+  const f = v => E.fmt(v, p.dp), nm = `${p.name}（${p.side === 'long' ? '做多' : '做空'}）`, dn = p.side === 'long' ? '上漲' : '下跌';
   switch (ev.kind) {
     case 'entry': return `${nm}到進場價 ${f(p.entry)} 了。要進場的話，請同時掛好停損 ${f(p.sl)}、停利 ${f(p.tp1)}。`;
     case 'tp1': return `${nm}到停利 1（${f(p.tp1)}）了。建議先平掉一半，並把停損移到進場價 ${f(p.entry)} 保本。`;
     case 'tp2': return `${nm}到停利 2（${f(p.tp2)}）了，這筆完成，可以全部平倉。`;
     case 'sl': return `${nm}碰到停損 ${f(p.sl)} 了。請照計畫出場，不要凹單。`;
-    case 'be': return `${nm}回到進場價 ${f(p.entry)}，剩下的一半保本出場。`;
+    case 'be': return `${nm}回到進場價 ${f(p.entry)}，${p.tp1At ? '剩下的一半' : ''}保本出場。`;
+    case 'trail': return `${nm}回到停利 1（${f(p.tp1)}），剩下的一半鎖利出場。`;
+    case 'be_sug': return `${nm}已經賺到停損距離的一半。建議把 IG 的停損移到進場價 ${f(p.entry)}，之後最差打平。移好後到「追蹤」按「已移到進場價」。`;
+    case 'trail_sug': return `${nm}已經過了停利 1 和停利 2 的中點。建議把停損移到停利 1（${f(p.tp1)}）鎖住獲利。`;
+    case 'giveback': return `${nm}獲利回吐：最多賺到 ${rTxt(ev.mfe)}，現在剩 ${rTxt(ev.r)}（現價 ${f(p.price)}）。考慮先出場，或把停損移到進場價。`;
+    case 'shock': return `${nm}急${p.side === 'long' ? '跌' : '漲'}：幾分鐘內逆向走了平常波動的 ${ev.x.toFixed(0)} 倍，現價 ${f(p.price)}。${ev.r > 0.1 ? '考慮先獲利出場。' : '考慮先出場，不要等到停損。'}`;
+    case 'struct': return `${nm}${p.side === 'long' ? '跌破' : '突破'}前一小時的${p.side === 'long' ? '低' : '高'}點 ${f(ev.level)}，走勢對你不利，留意停損 ${f(p.slNow)}。`;
+    case 'weak': return `${nm}的優勢在縮小：${dn}機率從 ${(p.prob0 * 100).toFixed(0)}% 降到 ${(ev.p * 100).toFixed(0)}%。還沒轉向，先留意。`;
+    case 'time': return `${nm}已持有 ${durTxt(ev.held)}，超過這次預測看的時間（12 根 K 線）。還沒到停利的話，建議重新評估或出場。`;
+    case 'time_max': return `${nm}已持有 ${durTxt(ev.held)}，到你設定的最長持有時間了。建議出場。`;
+    case 'close_soon': return `${nm}：再 ${ev.min} 分鐘就休市。不想抱過休市的話，請先平倉。`;
+    case 'roll': return `${nm}：再 ${ev.min} 分鐘（${hm(ev.at)}）是每日換日時段，點差會放大、部分商品暫停約一小時。`;
+    case 'event': return `${nm}：再 ${ev.min} 分鐘公布「${ev.title}」，行情可能急轉。考慮先出場或收緊停損。`;
     case 'near_sl': return `${nm}快到停損 ${f(p.slNow)} 了，現價 ${f(p.price)}。`;
     case 'near_tp': return `${nm}快到停利 ${f(ev.target)} 了，現價 ${f(p.price)}。`;
     case 'expired': return `${nm}的掛單一直沒到價，已超過有效時間，建議取消後重新評估。`;
-    case 'reversal': return `${nm}的訊號轉向了（上漲機率 ${ev.p}%），和你的方向相反，考慮提早出場或收緊停損。`;
+    case 'reversal': return `${nm}的訊號轉向了：${dn}機率只剩 ${(ev.p * 100).toFixed(0)}%，和你的方向相反。考慮現在出場，或把停損收緊。`;
   }
   return nm;
 }
 function fire(p, ev) {
-  const text = alertText(p, ev), late = Date.now() - ev.t > 3 * 60e3;
+  const tag = /_sug$/.test(ev.kind) ? '移動停損｜' : ev.lvl === 2 ? '建議出場｜' : ev.lvl === 1 ? '注意｜' : ''; // 兩級：注意（先看一下）、建議出場
+  const text = tag + alertText(p, ev), late = Date.now() - ev.t > 3 * 60e3, cls = ev.lvl === 2 ? 'exit' : ev.lvl === 1 ? 'warn' : ev.kind;
   TR.alerts.unshift({ t: ev.t, kind: ev.kind, text: (late ? '你不在的時候：' : '') + text, posId: p.id, read: false });
-  toast((late ? `（${mdhm(ev.t)}）` : '') + text, ev.kind); beep(ev.kind); sysNotify(text, p.id + ev.kind);
+  toast((late ? `（${mdhm(ev.t)}）` : '') + text, cls); beep(ev.lvl === 2 ? 'sl' : ev.lvl === 1 ? 'warn' : ev.kind); sysNotify(text, p.id + ev.kind);
 }
-function addTrack(inst, plan, tf) {
+function newPos(inst, plan, tf, meta) { // meta：建立當下的評級、分數、方向機率、在精選裡的名次（成績單用）
+  const now = Date.now(), mk = plan.type === 'market', z = sizeOf(inst, plan), m = meta || {};
+  const p = { id: 'p' + now.toString(36) + Math.random().toString(36).slice(2, 6), instId: inst.id, name: inst.name, dp: inst.dp, cls: inst.cls, side: plan.side, type: plan.type, planName: plan.name, tf,
+    entry: plan.entry, sl: plan.sl, slNow: plan.sl, tp1: plan.tp1, tp2: plan.tp2, risk: Math.abs(plan.entry - plan.sl), created: now, lastCheck: now, price: null,
+    status: mk ? 'open' : 'pending', openedAt: mk ? now : null, expires: mk ? null : now + 48 * E.TF[tf], flags: {}, basis: IG.basis(inst) ? 'ig' : 'src',
+    grade: m.grade || null, score: isNum(m.score) ? m.score : null, prob0: isNum(m.prob) ? m.prob : null, rank: m.rank || 0, from: m.from || 'detail' };
+  if (z && z.money) { p.budget = z.money; if (z.n >= 0.01) p.qty = z.n; }
+  return p;
+}
+function addTrack(inst, plan, tf, meta) {
   if (!inst || !plan) return;
   if (TR.list.some(p => Track.active(p) && p.instId === inst.id && p.planName === plan.name)) return toast(`${inst.name}的「${plan.name}」已經在追蹤了。`, 'info');
-  const now = Date.now(), mk = plan.type === 'market';
-  TR.list.unshift({ id: 'p' + now.toString(36) + Math.random().toString(36).slice(2, 6), instId: inst.id, name: inst.name, dp: inst.dp, side: plan.side, type: plan.type, planName: plan.name, tf,
-    entry: plan.entry, sl: plan.sl, slNow: plan.sl, tp1: plan.tp1, tp2: plan.tp2, risk: Math.abs(plan.entry - plan.sl), created: now, lastCheck: now, price: null,
-    status: mk ? 'open' : 'pending', openedAt: mk ? now : null, expires: mk ? null : now + 48 * E.TF[tf], flags: {}, basis: IG.basis(inst) ? 'ig' : 'src' });
+  const p = newPos(inst, plan, tf, meta), mk = plan.type === 'market'; p.sh = Track.plan(p); TR.list.unshift(p);
   saveTR(); badge(); toast(`已加入追蹤：${inst.name}「${plan.name}」。${mk ? '碰到停利或停損時會提醒你。' : '到進場價時會提醒你。'}`, 'info');
   if (view === 'track') renderTrack(); monitor();
 }
 function syncBasis(p, inst) { // 開或關 IG 報價時，把追蹤中的價位換算到新的基準（之後就固定，不隨比例漂移）
   const cur = IG.basis(inst) ? 'ig' : 'src', was = p.basis || 'src'; if (cur === was) return;
   const m = IG.map[inst.id], k = m && m.k; if (!(k > 0)) return;
-  const f = cur === 'ig' ? k : 1 / k; for (const key of ['entry', 'sl', 'slNow', 'tp1', 'tp2', 'risk', 'price']) if (isNum(p[key])) p[key] *= f;
+  const f = cur === 'ig' ? k : 1 / k; for (const o of [p, p.sh]) if (o) for (const key of ['entry', 'sl', 'slNow', 'tp1', 'tp2', 'risk', 'price', 'exit']) if (isNum(o[key])) o[key] *= f;
   p.basis = cur; p.dp = inst.dp;
 }
 function liveProb(id) { if (det.A && det.inst && det.inst.id === id && Date.now() - det.last < 10 * 60e3) return det.A.prob.up; const r = scan.rows[id]; return r && r.prob && Date.now() - r.t < 10 * 60e3 ? r.prob.up : null; }
+const shLive = p => !!p.sh && Track.active(p.sh) && p.status === 'closed' && !!p.openedAt; // 自己已經出場，但原計畫（影子）還沒走完
+const shadowAt = {};
 async function monitor() {
-  const act = TR.list.filter(Track.active); if (TR.busy || !act.length) return; TR.busy = true; TR.last = Date.now(); let changed = false;
+  const act = TR.list.filter(p => Track.active(p) || shLive(p)); if (TR.busy || !act.length) return; TR.busy = true; TR.last = Date.now(); let changed = false;
   try {
     const by = {}; for (const p of act) (by[p.instId] = by[p.instId] || []).push(p);
     await Promise.all(Object.entries(by).map(async ([id, ps]) => {
       const inst = Data.byId(id); if (!inst) return;
-      const st = mktState(inst);
+      const real = ps.some(Track.active);
+      if (!real) { if (Date.now() - (shadowAt[id] || 0) < 30e3) return; shadowAt[id] = Date.now(); } // 只剩影子要看：30 秒一次就夠
+      const st = mktState(inst), chk = p => (Track.active(p) ? p.lastCheck : p.sh.lastCheck);
       if (st.closed) { // 沒有交易：不拿場外的價格判斷停損停利，這段時間的 K 線之後也不回頭看
         const t0 = Date.now(), txt = st.why + (st.re ? '，' + st.re : '');
-        for (const p of ps) { p.lastCheck = Math.max(p.lastCheck, t0); if (p.off !== txt) { p.off = txt; changed = true; } }
+        for (const p of ps) { p.lastCheck = Math.max(p.lastCheck, t0); if (p.sh) p.sh.lastCheck = Math.max(p.sh.lastCheck, t0); if (Track.active(p) && p.off !== txt) { p.off = txt; changed = true; } }
         return;
       }
-      const gap = Date.now() - Math.min(...ps.map(p => p.lastCheck)), tf = gap <= 12 * 3600e3 ? '1m' : gap <= 60 * 3600e3 ? '5m' : gap <= 9 * 86400e3 ? '15m' : '1h';
-      let rec; try { rec = await Data.get(inst, tf, { limit: Math.min(1000, Math.ceil(gap / E.TF[tf]) + 30), maxAge: 4e3 }); } catch (e) { return; }
+      const gap = Date.now() - Math.min(...ps.map(chk)), tf = gap <= 12 * 3600e3 ? '1m' : gap <= 60 * 3600e3 ? '5m' : gap <= 9 * 86400e3 ? '15m' : '1h';
+      let rec; try { rec = await Data.get(inst, tf, { limit: Math.min(1000, Math.max(Math.ceil(gap / E.TF[tf]) + 30, real && tf === '1m' ? 75 : 0)), maxAge: 4e3 }); } catch (e) { return; }
       const lx = livePrice(inst), price = lx && lx.ig === !!rec.ig && !lx.ig ? lx.p : rec.cd[rec.cd.length - 1].c, now = Date.now();
       const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t)); // 週末的場外 K 線不算
+      const pu = liveProb(id), nev = News.events(inst, 1).filter(e => e.impact === 'High' && e.t > now)[0];
+      const wo = { now, cd: tf === '1m' ? cd : null, maxHold: (+S.maxHold || 0) * 3600e3, closeIn: Mkt.closeIn(inst.cls, now), rollIn: Mkt.rollIn(inst.cls, now), ev: nev ? { t: nev.t, title: News.evName ? News.evName(nev.title) : nev.title } : null };
       for (const p of ps) {
+        syncBasis(p, inst);
+        if (p.sh && Track.active(p.sh) && !Data.demo) { // 影子照原計畫走，不發提醒；自己出場後最多再看 48 根，還沒結果就用當時的價格結算
+          Track.step(p.sh, cd, price, now);
+          if (Track.active(p.sh) && !Track.active(p) && (!p.sh.openedAt || now - p.closedAt > 48 * E.TF[p.tf])) Track.close(p.sh, price, 'time', now);
+          if (!Track.active(p)) changed = true;
+        }
+        if (!Track.active(p)) continue;
         if (p.off) { delete p.off; changed = true; }
-        syncBasis(p, inst); p.price = price; p.priceT = now; const evs = Data.demo ? [] : Track.step(p, cd, price, now);
-        const pu = liveProb(id);
-        if (!Data.demo && Track.active(p) && p.status !== 'pending' && pu != null && (p.side === 'long' ? pu <= 0.43 : pu >= 0.57) && (!p.flags.rev || now - p.flags.rev > 4 * 3600e3)) { p.flags.rev = now; evs.push({ kind: 'reversal', t: now, p: (pu * 100).toFixed(0) }); }
+        p.price = price; p.priceT = now; const evs = Data.demo ? [] : Track.step(p, cd, price, now);
+        if (!Data.demo && Track.active(p)) evs.push(...Track.watch(p, Object.assign({ price, pSide: pu == null ? null : p.side === 'long' ? pu : 1 - pu, tfMs: E.TF[p.tf] }, wo)));
         for (const ev of evs) fire(p, ev); changed = true;
       }
     }));
@@ -2581,18 +2712,75 @@ function badge() {
   document.title = (unread ? `(${unread}) ` : '') + '差價交易分析';
 }
 const ST_NAME = { pending: '等待到價', open: '持有中', tp1: '已到停利 1，剩一半', closed: '已結束' };
-const REASON = { sl: '停損出場', tp2: '停利 2 出場', be: '停利 1 後保本出場', manual: '手動平倉', expired: '掛單逾時' };
+const REASON = { sl: '停損出場', tp2: '停利 2 出場', be: '保本出場', trail: '鎖利出場', manual: '手動平倉', expired: '掛單逾時', time: '時間到，以當時價格結算', lost: '離開太久，無法結算' };
 function posCard(p) {
   const f = v => E.fmt(v, p.dp), d = Track.dir(p), inst = Data.byId(p.instId), px = p.price, has = isNum(px);
   const fr = x => clip(d * (x - p.sl) / (d * (p.tp2 - p.sl)), 0, 1) * 100, r = has && p.status !== 'pending' ? Track.rNow(p, px) : null, row = scan.rows[p.instId];
   const info = p.status === 'pending' ? `等${p.type === 'limit' ? '回到' : (d > 0 ? '突破' : '跌破')} <b class="num">${f(p.entry)}</b>${has ? `，現價 <span class="num">${f(px)}</span>（還差 ${pct((p.entry / px - 1) * 100)}）` : ''}`
     : `現價 <b class="num">${has ? f(px) : '—'}</b>${r != null ? `　目前 <b class="num ${dirCls(Math.abs(r) < 0.05 ? 0 : r)}">${rTxt(r)}</b>（${pct(d * (px / p.entry - 1) * 100)}）` : ''}`;
+  const fl = p.flags || {}, on = p.status === 'open' || p.status === 'tp1';
+  const sug = p.status === 'open' && fl.beSug && d * (p.slNow - p.entry) < -0.02 * p.risk ? `<div class="sug"><span>已賺到停損距離的一半：建議把 IG 的停損移到進場價 <b class="num">${f(p.entry)}</b></span><button class="btn sm primary" data-pos-be="${p.id}">已移到進場價</button></div>`
+    : p.status === 'tp1' && fl.trSug && d * (p.slNow - p.tp1) < 0 ? `<div class="sug"><span>建議把停損移到停利 1 <b class="num">${f(p.tp1)}</b>，鎖住獲利</span><button class="btn sm primary" data-pos-trail="${p.id}">已移到停利 1</button></div>` : '';
+  const ps = row && row.prob && !row.err && Date.now() - row.t < 10 * 60e3 ? (d > 0 ? row.prob.up : row.prob.down) : null, mx = +S.maxHold || 0;
+  const holdTxt = ps == null ? '' : ps <= 0.43 ? '方向已經轉向，建議出場' : ps < 0.5 ? '優勢消失了，可以出場' : isNum(p.prob0) && ps <= p.prob0 - 0.08 ? '優勢在縮小，留意' : '方向仍有利，可以續抱';
+  const hold = on && !p.off ? `<p class="pmeta" style="margin-top:0">${holdTxt ? `續抱判斷：<b>${holdTxt}</b>（${d > 0 ? '上漲' : '下跌'}機率 ${(ps * 100).toFixed(0)}%）　` : ''}已持有 ${durTxt(Date.now() - p.openedAt)}${mx ? '／最長 ' + mx + ' 小時' : ''}${p.mfe > 0.05 ? '　最多曾賺 ' + rTxt(p.mfe) : ''}</p>` : '';
   return `<article class="pos"><header><h3>${esc(p.name)}<span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span></h3>${p.off ? '<span class="nt">沒有交易</span>' : ''}<span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${ST_NAME[p.status]}</span></header>
-    <p class="pinfo">${info}</p>${p.off ? `<p class="pmeta" style="margin-top:0">${esc(p.off)}。這段期間不檢查停損停利，恢復交易後繼續。</p>` : ''}
+    <p class="pinfo">${info}</p>${p.off ? `<p class="pmeta" style="margin-top:0">${esc(p.off)}。這段期間不檢查停損停利，恢復交易後繼續。</p>` : ''}${hold}${sug}
     <div class="gauge" role="img" aria-label="現價在停損與停利之間的位置"><i class="g-fill" style="width:${has ? fr(px) : fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.tp1)}%"></i>${has ? `<i class="g-dot" style="left:${fr(px)}%"></i>` : ''}</div>
-    <div class="g-lab num"><span>停損 ${f(p.slNow)}${p.slNow !== p.sl ? '（已移到進場價）' : ''}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
-    <p class="pmeta">${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${mdhm(p.created)} 建立${row && row.rate && !row.err ? `　目前評級 ${row.rate.grade}（${d > 0 ? '上漲' : '下跌'}機率 ${((d > 0 ? row.prob.up : row.prob.down) * 100).toFixed(0)}%）` : ''}</p>
+    <div class="g-lab num"><span>停損 ${f(p.slNow)}${p.slNow !== p.sl ? (d * (p.slNow - p.entry) > 0.02 * p.risk ? '（已移到停利 1）' : '（已移到進場價）') : ''}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
+    <p class="pmeta">${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${mdhm(p.created)} 建立${p.grade ? `　當時評級 ${p.grade}` : ''}${row && row.rate && !row.err ? `　目前評級 ${row.rate.grade}` : ''}${p.qty ? `　建議數量 ${p.qty.toFixed(2)} 張（最多賠 ${usd(p.budget)}）` : p.budget ? `　最多賠 ${usd(p.budget)}` : ''}</p>
     <div class="t-btns">${inst ? `<button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button>` : ''}${p.status === 'pending' ? `<button class="btn sm" data-pos-del="${p.id}">取消追蹤</button>` : `<button class="btn sm" data-pos-close="${p.id}">我已平倉</button><button class="btn sm" data-pos-del="${p.id}">刪除</button>`}</div></article>`;
+}
+/* ---------- 成績單 ----------
+   你追蹤的單：實際結果，以及同一批單「照原計畫抱到底」的結果（影子），兩者相減就是提早出場、移動停損到底多賺還是少賺。
+   網頁前三名：不管有沒有下單，每次掃描把精選前三名（A 或 B、訊號已經穩定）自動記一筆紙上單，照原計畫走到結束，用來檢驗評級準不準。 */
+const PP = { list: LS.get('cfd.paper', []), dirty: false };
+const savePP = () => { PP.dirty = false; LS.set('cfd.paper', PP.list.slice(0, 400)); };
+function paperStep(inst, cd, price, isIg) { // 每次掃描順便推進紙上單（用掃描抓到的 K 線，不另外抓資料）
+  const act = PP.list.filter(p => p.instId === inst.id && Track.active(p)); if (!act.length || Data.demo) return;
+  const now = Date.now(); PP.dirty = true;
+  if (mktState(inst).closed) { for (const p of act) p.lastCheck = Math.max(p.lastCheck, now); return; }
+  const use = cd.filter(b => !Mkt.closedAt(inst.cls, b.t));
+  for (const p of act) {
+    syncBasis(p, inst); if ((p.basis || 'src') !== (isIg ? 'ig' : 'src')) continue;
+    if (cd.length && cd[0].t > p.lastCheck) { p.status = 'closed'; p.reason = 'lost'; p.closedAt = now; p.r = 0; continue; } // 離開太久，中間的 K 線已經看不到了：不列入統計
+    Track.step(p, use, price, now);
+    if (Track.active(p) && p.openedAt && now - p.openedAt > 48 * E.TF[p.tf]) Track.close(p, price, 'time', now);
+  }
+}
+function paperLog() { // 掃描完：把前三名記成紙上單。同一個商品要等上一筆結束、而且隔 2 小時以上才記下一筆
+  if (Data.demo) return; const now = Date.now(); let add = false;
+  topList().slice(0, 3).forEach((r, k) => {
+    const pl = r.plan; if (!pl || r.rate.score < 55 || !r.sig || !(r.sig.first || now - r.sig.t >= 120e3)) return;
+    if (PP.list.some(p => p.instId === r.inst.id && (Track.active(p) || now - p.created < 2 * 3600e3))) return;
+    PP.list.unshift(newPos(r.inst, pl, r.tf, { grade: r.rate.grade, score: r.rate.score, prob: r.rate.dir > 0 ? r.prob.up : r.prob.down, rank: k + 1, from: 'paper' })); add = true;
+  });
+  if (add || PP.dirty) savePP();
+}
+function sumR(xs) {
+  xs = xs.filter(isNum); const w = xs.filter(x => x > 0.05), l = xs.filter(x => x < -0.05), mean = a => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : NaN);
+  return { n: xs.length, win: w.length, rate: xs.length ? w.length / xs.length : NaN, tot: xs.reduce((s, x) => s + x, 0), avg: mean(xs), aw: mean(w), al: mean(l) };
+}
+const doneOf = list => list.filter(p => p.status === 'closed' && p.openedAt && p.reason !== 'expired' && p.reason !== 'lost' && isNum(p.r));
+const sbRow = (name, z) => `<tr><td>${name}</td><td>${z.n}</td><td>${z.n ? (z.rate * 100).toFixed(0) + '%' : '—'}</td><td>${z.n ? rTxt(z.tot) : '—'}</td><td>${z.n ? rTxt(z.avg) : '—'}</td></tr>`;
+function scoreboard() {
+  const mine = doneOf(TR.list), both = mine.filter(p => p.sh && p.sh.status === 'closed' && isNum(p.sh.r)), paper = doneOf(PP.list), run = PP.list.filter(Track.active).length;
+  const head = '<tr><th></th><th>筆數</th><th>勝率</th><th>累計</th><th>平均</th></tr>', a = sumR(mine.map(p => p.r));
+  let h = '<section class="card" id="s-score"><h2>成績單 <small>以 R 計：1R＝進場到停損的距離</small></h2><h3 class="sb-h">你追蹤的單</h3>';
+  if (!a.n) h += '<p class="none">還沒有結束的追蹤單。照卡片下單時按「追蹤」，結束後這裡會自動算出勝率和平均賺賠。</p>';
+  else {
+    h += `<table class="sb">${head}${sbRow('你實際的結果', a)}${both.length ? sbRow('同一批照原計畫抱到底', sumR(both.map(p => p.sh.r))) : ''}</table>`;
+    if (isNum(a.aw) || isNum(a.al)) h += `<p class="sb-note">${isNum(a.aw) ? `賺的單平均賺 <b class="num">${rTxt(a.aw)}</b>` : '還沒有賺的單'}，${isNum(a.al) ? `賠的單平均賠 <b class="num">${rTxt(a.al)}</b>` : '還沒有賠的單'}。${isNum(a.aw) && isNum(a.al) ? `以這個賺賠比，勝率要超過 <b class="num">${(-a.al / (a.aw - a.al) * 100).toFixed(0)}%</b> 才不賠。` : ''}</p>`;
+    if (both.length) { const df = both.reduce((x, p) => x + p.r - p.sh.r, 0); h += `<p class="sb-note">你的出場方式（提早平倉、移動停損）和照原計畫相比：<b class="num">${Math.abs(df) < 0.05 ? '幾乎一樣' : (df > 0 ? '多賺 ' : '少賺 ') + Math.abs(df).toFixed(2) + 'R'}</b>（比較原計畫也走完的 ${both.length} 筆）。</p>`; }
+    else h += '<p class="sb-note">手動平倉之後，網頁會繼續看原計畫後來走到停利還是停損，走完就會出現對照。</p>';
+  }
+  h += `<h3 class="sb-h">網頁前三名的紙上紀錄 <small>自動記錄，不管你有沒有下單${run ? `；進行中 ${run} 筆` : ''}</small></h3>`;
+  if (!paper.length) h += '<p class="none">掃描頁開著的時候，每次的前三名（A 或 B）會自動記一筆，照原計畫走完後列在這裡。</p>';
+  else {
+    const grp = (name, fn) => { const z = sumR(paper.filter(fn).map(p => p.r)); return z.n ? sbRow(name, z) : ''; };
+    h += `<table class="sb">${head}${sbRow('全部', sumR(paper.map(p => p.r)))}${['A', 'B'].map(g => grp('評級 ' + g, p => p.grade === g)).join('')}${grp('做多', p => p.side === 'long')}${grp('做空', p => p.side === 'short')}${[1, 2, 3].map(k => grp('第 ' + k + ' 名', p => p.rank === k)).join('')}${CLS.map(c => grp(Data.CLS_NAME[c], p => p.cls === c)).join('')}</table>`;
+  }
+  return h + `<p class="hint">不到 30 筆以前，這些數字只能參考。紙上紀錄只在掃描頁開著的時候才會新增；紀錄都存在這台裝置的瀏覽器裡。${paper.length || run ? ' <button class="btn sm" id="paper-clear">清除紙上紀錄</button>' : ''}</p></section>`;
 }
 function renderTrack() {
   const act = TR.list.filter(Track.active), done = TR.list.filter(p => !Track.active(p)), st = Track.stats(TR.list);
@@ -2600,10 +2788,11 @@ function renderTrack() {
   const np = canNotify() ? Notification.permission : 'none';
   $('#v-track').innerHTML = `<section class="card"><h2>追蹤中 <small>${act.length} 筆${TR.last ? '　' + hms(TR.last) + ' 檢查' : ''}</small></h2>
       ${act.length ? act.map(posCard).join('') : '<p class="none">還沒有追蹤任何一筆。到「掃描」的精選卡片或「分析」的進場計畫，按「追蹤，到價提醒我」。</p>'}
-      <p class="hint">規則：到停利 1 先平一半、停損移到進場價；到停利 2 或回到進場價時全部出場。損益以 R 計（1R＝進場到停損的距離）。</p></section>
+      <p class="hint">規則：到停利 1 先平一半、停損移到進場價；到停利 2 或回到進場價時全部出場。損益以 R 計（1R＝進場到停損的距離）。持有中的提醒分兩級：「注意」是先看一下，「建議出場」是該動作了；「移動停損」的建議，你在 IG 移好之後按卡片上的按鈕，網頁才會照新的停損判斷。</p></section>
     <section class="card"><h2>提醒紀錄 ${TR.alerts.length ? '<button class="btn sm" id="alerts-clear">清除</button>' : ''}</h2>${TR.alerts.length ? `<ul class="nlist">${TR.alerts.slice(0, 30).map(a => `<li><span>${esc(a.text)}</span><div class="meta"><span>${mdhm(a.t)}</span></div></li>`).join('')}</ul>` : '<p class="none">目前沒有提醒。</p>'}</section>
+    ${scoreboard()}
     <section class="card"><h2>已結束 <small>${st.n ? `${st.n} 筆　勝率 ${(st.winRate * 100).toFixed(0)}%　累計 ${rTxt(st.total)}　平均 ${rTxt(st.avg)}` : ''}</small></h2>
-      ${done.length ? `<div class="stl">${done.slice(0, 40).map(p => `<div class="st"><div><b>${esc(p.name)}　${p.side === 'long' ? '做多' : '做空'}</b><span class="dir ${p.reason === 'expired' ? 'flat' : dirCls(Math.abs(p.r) < 0.05 ? 0 : p.r)}">${p.reason === 'expired' ? '未成交' : rTxt(p.r)}</span></div><small>${REASON[p.reason] || ''}　${mdhm(p.closedAt)}　${esc(p.planName)}</small></div>`).join('')}</div><p><button class="btn sm" id="hist-clear">清除已結束的紀錄</button></p>` : '<p class="none">結束的追蹤單會留在這裡，累積起來就能看出這套評級準不準。</p>'}</section>
+      ${done.length ? `<div class="stl">${done.slice(0, 40).map(p => `<div class="st"><div><b>${esc(p.name)}　${p.side === 'long' ? '做多' : '做空'}</b><span class="dir ${p.reason === 'expired' ? 'flat' : dirCls(Math.abs(p.r) < 0.05 ? 0 : p.r)}">${p.reason === 'expired' ? '未成交' : rTxt(p.r)}</span></div><small>${REASON[p.reason] || ''}　${mdhm(p.closedAt)}　${esc(p.planName)}${p.grade ? '　評級 ' + p.grade : ''}${p.sh && p.openedAt && p.reason !== 'expired' ? (p.sh.status === 'closed' ? `　原計畫 ${rTxt(p.sh.r)}` : '　原計畫還在走') : ''}</small></div>`).join('')}</div><p><button class="btn sm" id="hist-clear">清除已結束的紀錄</button></p>` : '<p class="none">結束的追蹤單會留在這裡，累積起來就能看出這套評級準不準。</p>'}</section>
     <section class="card"><h2>提醒方式</h2><div class="form">
       <div class="f"><span>聲音與震動</span><div class="seg"><button class="chip" data-set="sound" data-v="true" aria-pressed="${S.sound === true}">開</button><button class="chip" data-set="sound" data-v="false" aria-pressed="${S.sound === false}">關</button><button class="btn sm" id="beep-test">試聽</button></div></div>
       ${canNotify() ? `<div class="f"><span>系統通知</span><div class="seg">${np === 'granted' ? '<span class="st-chip on">已開啟</span>' : np === 'denied' ? '<span class="st-chip">瀏覽器已封鎖，請到瀏覽器設定裡允許</span>' : '<button class="btn sm primary" id="notif-on">開啟系統通知</button>'}</div><small>電腦上即使切到別的分頁也會跳通知。</small></div>` : ''}
@@ -2611,11 +2800,11 @@ function renderTrack() {
 }
 
 /* ---------- 掃描與精選 ---------- */
-const scan = { tf: null, rows: {}, running: false, last: 0, token: 0, timer: 0, done: 0, total: 0, dirty: false };
+const scan = { tf: null, rows: {}, running: false, last: 0, token: 0, timer: 0, done: 0, total: 0, dirty: false, ver: 0 };
 const slim = p => p && ({ side: p.side, type: p.type, name: p.name, entry: p.entry, sl: p.sl, tp1: p.tp1, tp2: p.tp2, rr: p.rr, ev: p.ev, pWin: p.pWin, pTouch: p.pTouch, slPct: p.slPct, tpPct: p.tpPct });
 function ctxOf(inst, cd, tf) {
   const now = Date.now(), lastT = cd[cd.length - 1].t, stale = !Data.demo && now - lastT > E.TF[tf] + Math.max(E.TF[tf] * 0.5, 20 * 60e3), st = mktState(inst, stale);
-  return { dp: inst.dp, stale, closed: st.closed, why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
+  return { dp: inst.dp, stale, closed: st.closed, thin: !st.closed && !Data.demo && Mkt.thin(inst.cls, now), why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
 }
 async function analyzeScan(inst, tf) {
   const main = await Data.get(inst, tf, { limit: 300, maxAge: 25e3 });
@@ -2632,42 +2821,72 @@ async function analyzeScan(inst, tf) {
   const A = E.analyze({ cd: main.cd, tf, cls: inst.cls, dp: inst.dp, mtf, daily, news: ns.score, newsNote: ns.note, inter: is.score, interNote: is.note, cost: costOf(inst) });
   if (A.error) throw new Error(A.error);
   const cx = ctxOf(inst, main.cd, tf), rate = E.rate(A, cx);
-  return { inst, tf, t: Date.now(), srcKey: main.src.key, ig: main.ig ? 1 : 0, pt: main.pt || main.ts || Date.now(), pdc: A.levels.pivots ? A.levels.pivots.pdc : null, price: A.price, chg: A.chg, prob: A.prob, s1: A.levels.supports[0], r1: A.levels.resistances[0], regime: A.regime.label, spark: spark(main.cd, 52, 24), src: main.src.label, stale: cx.stale,
+  paperStep(inst, main.cd, A.price, !!main.ig);
+  return { rc: main.cd.slice(-81).map(b => [b.t, b.c]), inst, tf, t: Date.now(), srcKey: main.src.key, ig: main.ig ? 1 : 0, pt: main.pt || main.ts || Date.now(), pdc: A.levels.pivots ? A.levels.pivots.pdc : null, price: A.price, chg: A.chg, prob: A.prob, s1: A.levels.supports[0], r1: A.levels.resistances[0], regime: A.regime.label, spark: spark(main.cd, 52, 24), src: main.src.label, stale: cx.stale,
     rate: { score: rate.score, grade: rate.grade, label: rate.label, action: rate.action, dir: rate.dir, notes: rate.notes }, plan: slim(rate.plan) };
 }
 async function runScan() {
   if (scan.running) return; scan.running = true; scan.dirty = false; const tf = S.scanTf, token = ++scan.token;
-  if (scan.tf !== tf) { scan.rows = {}; scan.tf = tf; }
+  if (scan.tf !== tf) { scan.rows = {}; scan.tf = tf; scan.ver++; }
   const ord = Data.CLS_ORDER, vis = new Set((S.cls === 'top' ? topList() : Object.values(scan.rows).filter(r => r.inst.cls === S.cls)).map(r => r.inst.id)); // 畫面上正在看的先更新
   const list = pool().sort((a, b) => (vis.has(b.id) - vis.has(a.id)) || ((ord.indexOf(a.cls) + 99) % 99 - (ord.indexOf(b.cls) + 99) % 99)); let idx = 0, fails = 0; scan.done = 0; scan.total = list.length; renderScan();
   const worker = async () => {
     while (idx < list.length && token === scan.token) {
       const inst = list[idx++];
-      try { const r = await analyzeScan(inst, tf); if (token === scan.token) scan.rows[inst.id] = r; }
-      catch (e) { fails++; if (token === scan.token) scan.rows[inst.id] = { inst, err: e.list ? `試了 ${e.list.length} 個來源都連不上` : e.message }; }
+      try {
+        const r = await analyzeScan(inst, tf);
+        if (token === scan.token) { // sig：這個方向的「可進場」訊號從什麼時候開始的（剛打開網頁時無從得知，標 first）
+          const pv = scan.rows[inst.id], ok = r.rate.score >= 55; r.sig = pv && pv.sig && pv.sig.dir === r.rate.dir && pv.sig.ok === ok ? pv.sig : { dir: r.rate.dir, ok, t: Date.now(), first: !pv };
+          scan.rows[inst.id] = r; scan.ver++;
+        }
+      } catch (e) { fails++; if (token === scan.token) { scan.rows[inst.id] = { inst, err: e.list ? `試了 ${e.list.length} 個來源都連不上` : e.message }; scan.ver++; } }
       scan.done++; clearTimeout(scan.timer); scan.timer = setTimeout(renderScan, 150);
     }
   };
   await Promise.all(Array.from({ length: 6 }, worker));
   if (token !== scan.token) { scan.running = false; return runScan(); }
-  scan.running = false; scan.last = Date.now(); clearTimeout(scan.timer); renderScan();
+  scan.running = false; scan.last = Date.now(); clearTimeout(scan.timer); paperLog(); renderScan();
   if (!Data.demo && list.length) { const was = offline; offline = fails === list.length; if (was !== offline) banner(); }
   Inter.refresh().catch(() => {}); if (view === 'track') renderTrack();
 }
 function badge2(p) { const c = dirCls(p.bias), strong = /強烈/.test(p.label); return `<span class="badge ${c}${strong ? ' strong' : ''}">${dirGl(p.bias)} ${p.label.replace('中性', '')}</span>`; }
-function topList() {
-  const rows = Object.values(scan.rows).filter(r => !r.err && !rowOff(r) && S.on[r.inst.cls] !== false).sort((a, b) => b.rate.score - a.rate.score), pick = [], cnt = {};
-  for (const r of rows) { if (pick.length >= 10 || r.rate.score < 55) break; const c = r.inst.cls; if ((cnt[c] || 0) >= 4) continue; cnt[c] = (cnt[c] || 0) + 1; pick.push(r); } // 先求分散：同一類最多 4 個
-  for (const r of rows) { if (pick.length >= 10) break; if (!pick.includes(r)) pick.push(r); }
-  return pick.sort((a, b) => b.rate.score - a.rate.score);
+/* 走勢相關：兩個商品最近 80 根 K 線的漲跌幅有多同步。高度同步（0.7 以上）而且方向一致，就是同一個賭注。 */
+function retMap(r) {
+  if (r._rm) return r._rm; const m = new Map(), a = r.rc || [], w = 1.5 * E.TF[r.tf];
+  for (let i = 1; i < a.length; i++) if (a[i][1] > 0 && a[i - 1][1] > 0 && a[i][0] - a[i - 1][0] <= w) m.set(a[i][0], Math.log(a[i][1] / a[i - 1][1]));
+  return (r._rm = m);
+}
+function corrOf(a, b) {
+  const x = retMap(a), y = retMap(b); let n = 0, sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+  for (const [t, u] of x) { const v = y.get(t); if (v == null) continue; n++; sx += u; sy += v; sxx += u * u; syy += v * v; sxy += u * v; }
+  if (n < 30) return null; const vx = sxx - sx * sx / n, vy = syy - sy * sy / n; return vx > 0 && vy > 0 ? (sxy - sx * sy / n) / Math.sqrt(vx * vy) : null;
+}
+const sameBet = (a, b) => { const c = corrOf(a, b); return c != null && c * a.rate.dir * b.rate.dir >= 0.7; };
+const topMemo = { k: '', v: [] };
+function topList() { // 精選：依分數排序；同一類最多先選 4 個；同一個賭注只留分數最高的一檔（其餘記在 also）
+  const k = scan.ver + '|' + CLS.map(c => (S.on[c] !== false ? 1 : 0)).join('') + '|' + Math.floor(Date.now() / 10e3);
+  if (topMemo.k === k) return topMemo.v.slice();
+  const rows = Object.values(scan.rows).filter(r => !r.err && !rowOff(r) && S.on[r.inst.cls] !== false).sort((a, b) => b.rate.score - a.rate.score), pick = [], cnt = {}, used = new Set();
+  for (const r of rows) r.also = null;
+  const take = r => { used.add(r); const q = pick.find(x => sameBet(x, r)); if (q) { (q.also = q.also || []).push(r); return false; } pick.push(r); return true; };
+  for (const r of rows) { if (pick.length >= 10 || r.rate.score < 55) break; const c = r.inst.cls; if ((cnt[c] || 0) >= 4) continue; if (take(r)) cnt[c] = (cnt[c] || 0) + 1; }
+  for (const r of rows) { if (pick.length >= 10) break; if (!used.has(r)) take(r); }
+  topMemo.k = k; topMemo.v = pick.sort((a, b) => b.rate.score - a.rate.score);
+  return topMemo.v.slice();
+}
+function sigChip(r) { // 訊號持續多久：剛出現的先等一下
+  const g = r.sig; if (!g || !g.ok || rowOff(r)) return ''; const age = Date.now() - g.t;
+  if (age < 3 * 60e3) return g.first ? '' : '<span class="st-chip new">剛出現</span>';
+  return `<span class="st-chip">已持續 ${durTxt(age)}${g.first ? '以上' : ''}</span>`;
 }
 function topCard(r, k) {
   const i = r.inst, f = v => E.fmt(v, i.dp), p = r.prob, rt = r.rate, pl = r.plan, d = rt.dir, tracked = pl && TR.list.some(x => Track.active(x) && x.instId === i.id && x.planName === pl.name);
   return `<article class="tcard"><button class="t-open" data-id="${esc(i.id)}"><span class="t-rank num">${k + 1}</span><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}　${Data.CLS_NAME[i.cls] || ''}</small></span><span class="r-spark">${r.spark}</span>
       <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span></button>
-    <div class="t-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span><span class="num">${d > 0 ? '上漲' : '下跌'} ${((d > 0 ? p.up : p.down) * 100).toFixed(0)}%</span><span class="num t-sc">${rt.score} 分</span></div>
-    <p class="t-act"><b>${esc(rt.action)}</b>${rt.notes.length ? `<small>${esc(rt.notes.join('、'))}</small>` : ''}</p>
-    ${pl ? `<dl class="pgrid c4"><div><dt>進場</dt><dd>${f(pl.entry)}</dd></div><div><dt>停損</dt><dd>${f(pl.sl)}<small>−${pl.slPct.toFixed(2)}%</small></dd></div><div><dt>停利</dt><dd>${f(pl.tp1)}<small>+${pl.tpPct.toFixed(2)}%</small></dd></div><div><dt>勝率／期望</dt><dd>${(pl.pWin * 100).toFixed(0)}%<small>${rTxt(pl.ev)}</small></dd></div></dl>
+    <div class="t-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span><span class="num">${d > 0 ? '上漲' : '下跌'} ${((d > 0 ? p.up : p.down) * 100).toFixed(0)}%</span><span class="num t-sc">${rt.score} 分</span>${sigChip(r)}</div>
+    <p class="t-act"><b>${esc(rt.action)}</b>${rt.notes.length ? `<small>${esc(rt.notes.join('、'))}</small>` : ''}${r.sig && r.sig.ok && !r.sig.first && Date.now() - r.sig.t < 3 * 60e3 ? '<small>這個訊號剛出現，等它維持 3 分鐘以上再進場比較穩。</small>' : ''}</p>
+    ${r.also && r.also.length ? `<p class="t-also">同一個賭注（走勢連動、方向相同，只列這一檔）：${esc(r.also.slice(0, 5).map(x => x.inst.name).join('、'))}${r.also.length > 5 ? ' 等 ' + r.also.length + ' 項' : ''}</p>` : ''}
+    ${pl ? `<dl class="pgrid c4"><div><dt>進場</dt><dd>${f(pl.entry)}</dd></div><div><dt>停損</dt><dd>${f(pl.sl)}<small>−${pl.slPct.toFixed(2)}%</small></dd></div><div><dt>停利</dt><dd>${f(pl.tp1)}<small>+${pl.tpPct.toFixed(2)}%</small></dd></div><div><dt>勝率／期望</dt><dd>${(pl.pWin * 100).toFixed(0)}%<small>${rTxt(pl.ev)}</small></dd></div></dl>${rt.score >= 55 ? sizeLine(i, pl) : ''}
     <div class="t-btns"><span class="t-plan">${esc(pl.name)}</span>${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm primary" data-ttrack="${esc(i.id)}">${pl.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div>` : ''}
     <p class="t-src">${srcLine(r)}</p></article>`;
 }
@@ -2684,7 +2903,7 @@ function renderScan() {
     const top = topList(), offs = all.map(rowOff).filter(Boolean), closed = offs.length, offNote = offLine(offs), bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length;
     if (!top.length) { $('#scan-list').innerHTML = scan.running || !closed ? `<p class="loading">${scan.running ? '正在取得行情並評級…' : '沒有可評級的商品'}</p>` : `${offNote ? `<p class="t-off">${offNote}</p>` : ''}<p class="loading">現在沒有可以交易的商品，所以沒有精選名單。</p>`; return; }
     $('#scan-list').innerHTML = (offNote ? `<p class="t-off">${offNote}</p>` : '') + (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）。` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
-      `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。同一類最多先選 4 個，避免集中在同一種行情。${closed ? `另有 ${closed} 項目前沒有交易（休市或報價延遲），沒有列入，可以到各分類查看。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
+      `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。同一類最多先選 4 個；走勢高度連動、方向相同的商品算同一個賭注，只列分數最高的一檔，所以名單可能不到 10 項。${closed ? `另有 ${closed} 項目前沒有交易（休市或報價延遲），沒有列入，可以到各分類查看。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
     return;
   }
   const rows = all.filter(r => S.cls === 'all' || r.inst.cls === S.cls);
@@ -2808,7 +3027,7 @@ function planCard(p, idx, sel, f) {
     <header><h3>${p.best ? '<span class="star">首選</span>' : ''}<span class="${dirCls(d)}">${dirGl(d)}</span>${esc(p.name)}</h3><span class="ty">${TYPE_NAME[p.type]}</span><span class="vd ${vc}">${esc(p.verdict)}</span></header>
     <dl class="pgrid"><div><dt>進場</dt><dd>${f(p.entry)}<small>${p.type === 'market' ? '現價' : '距現價 ' + pct(dist)}</small></dd></div><div><dt>停損</dt><dd>${f(p.sl)}<small>−${p.slPct.toFixed(2)}%</small></dd></div><div><dt>停利 1</dt><dd>${f(p.tp1)}<small>+${p.tpPct.toFixed(2)}%${p.estTp ? '（推估）' : ''}</small></dd></div><div><dt>停利 2</dt><dd>${f(p.tp2)}<small>+${(Math.abs(p.tp2 - p.entry) / p.entry * 100).toFixed(2)}%</small></dd></div></dl>
     <div class="pstats"><div><b>${isNum(p.pTouch) ? (p.pTouch * 100).toFixed(0) + '%' : '—'}</b><span>到價機率</span></div><div><b>${(p.pWin * 100).toFixed(0)}%</b><span>預估勝率</span></div><div><b>1 : ${p.rr.toFixed(1)}</b><span>風險報酬比</span></div><div><b>${p.ev >= 0 ? '+' : '−'}${Math.abs(p.ev).toFixed(2)}R</b><span>期望值</span></div></div>
-    <p class="pnote">${esc(p.note)}。${p.riskPct > 0 ? `這筆的風險建議不超過本金的 <b class="num">${p.riskPct.toFixed(1)}%</b>。` : '期望值為負，不建議進場。'}${p.against ? '（與目前研判方向相反）' : ''}</p>
+    <p class="pnote">${esc(p.note)}。${p.ev > 0 ? '' : '期望值為負，不建議進場。'}${p.against ? '（與目前研判方向相反）' : ''}</p>${sel && p.ev > 0 ? sizeLine(det.inst, p) : ''}
     <div class="t-btns">${sel ? '' : `<button class="btn sm" data-show="${idx}">在圖上顯示</button>`}${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm${sel && p.ev > 0 ? ' primary' : ''}" data-track="${idx}">${p.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div></article>`;
 }
 function selPlan() { const A = det.A; if (!A || !A.plans.length) return null; return A.plans.find(p => planKey(p) === det.sel) || A.plans.find(p => p.best) || A.plans[0]; }
@@ -2963,10 +3182,23 @@ function liveText() { // 設定頁：即時推送目前的狀況
   const ok = st.filter(x => x.ok), bad = st.filter(x => !x.ok && x.want && x.fails), idle = st.filter(x => !x.ok && !(x.want && x.fails));
   return '即時推送：' + [ok.length ? nm(ok) + ' 正常' : '', bad.length ? nm(bad) + ' 連不上（先改成每 5–10 秒抓一次，會自動重試）' : '', idle.length ? nm(idle) + ' 待命中（畫面上有這些來源的商品時才連線）' : ''].filter(Boolean).join('；') + '。';
 }
+function moneyText() {
+  const eq = +S.equity, rp = +S.riskPct; if (!(eq > 0)) return '還沒填資金：卡片上不會顯示建議數量。';
+  if (!(rp > 0)) return '風險比例是 0：卡片上不會顯示建議數量。';
+  const m = eq * rp / 100, k = Math.floor(Math.log(0.5) / Math.log(1 - Math.min(rp, 99) / 100)) + 1;
+  return `每筆最多賠 ${usd(m)}。照這個比例，連續賠 ${k} 筆，資金就會少掉一半以上。`;
+}
 function renderSettings() {
   const seg = (name, cur, opts) => `<div class="seg">${opts.map(([v, t]) => `<button class="chip" data-set="${name}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${t}</button>`).join('')}</div>`;
   const cnt = c => Data.all().filter(i => i.cls === c).length;
-  $('#v-settings').innerHTML = `<section class="card" id="ig-card"></section><section class="card"><h2>要掃描的類別 <small>精選 10 會從這些裡面挑</small></h2><div class="seg">${CLS.map(c => `<button class="chip" data-on="${c}" aria-pressed="${S.on[c] !== false}">${Data.CLS_NAME[c]} ${cnt(c)}</button>`).join('')}</div>
+  $('#v-settings').innerHTML = `<section class="card" id="ig-card"></section>
+    <section class="card"><h2>資金與風險 <small>用來算每張卡片的建議數量</small></h2><div class="form">
+      <div class="f"><span>帳戶資金（美元）</span><input type="number" id="s-eq" inputmode="decimal" min="0" step="0.01" value="${+S.equity > 0 ? +S.equity : ''}" placeholder="照 IG 帳戶上的「資金」填"></div>
+      <div class="f"><span>每筆最多賠資金的幾 %</span><input type="number" id="s-risk" inputmode="decimal" min="0" max="100" step="0.5" value="${+S.riskPct}"></div>
+      <p class="pnote" id="s-money">${esc(moneyText())}</p>
+      <div class="f"><span>最長持有時間</span>${seg('maxHold', +S.maxHold || 0, [[3, '3 小時'], [6, '6 小時'], [12, '12 小時'], [0, '不限']])}<small>持有超過這個時間會提醒你出場。</small></div>
+      <p class="hint">賠多少＝數量 × 停損距離，和保證金用掉多少是兩回事：IG 的槓桿高，保證金用不到一半，部位也可能是資金的幾十倍。所以卡片上的建議數量是從「打到停損最多賠多少」反推的。資金有變動（入金、出金、賺賠）時記得回來改。</p></div></section>
+    <section class="card"><h2>要掃描的類別 <small>精選 10 會從這些裡面挑</small></h2><div class="seg">${CLS.map(c => `<button class="chip" data-on="${c}" aria-pressed="${S.on[c] !== false}">${Data.CLS_NAME[c]} ${cnt(c)}</button>`).join('')}</div>
       <p class="hint">外匯、金屬、加密貨幣、美股、原油，以及標普 500、那斯達克 100、日經 225、恆生指數，是直接向交易所讀取 24 小時合約的行情，速度快。農產品、道瓊、羅素 2000、德國 DAX、臺灣加權、紐幣與少數 ETF 走 Yahoo 的轉接線路：要排隊所以第一次掃描會慢 1–2 分鐘，期貨與指數報價會慢 10–15 分鐘，休市時不更新。</p></section>
     <section class="card"><h2>顯示</h2><div class="form">
       <div class="f"><span>漲跌顏色</span>${seg('swap', S.swap, [[false, '紅漲綠跌（臺灣習慣）'], [true, '綠漲紅跌（國際習慣）']])}</div>
@@ -2990,6 +3222,9 @@ function renderSettings() {
       <li>進場計畫的勝率與期望值已扣點差。1 分、5 分 K 的雜訊最多、點差占比最高；想提高勝率，先看 1 小時與 4 小時的方向，再用小週期找進場點。</li>
       <li>價格和你的券商不會完全一樣，每張卡片下方都寫了報價來源與時間。股票、原油、黃金、指數多半來自交易所的 24 小時合約，會和券商的報價差一點，美股休市時差距較大；標示「延遲」的來源慢 10–15 分鐘。「今日」漲跌是從臺北時間 08:00（國際換日）起算，和券商的算法可能不同。</li>
       <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。IG 另外有獨立報價的「週末」市場，這一頁沒有分析。</li>
+      <li>建議數量：到上面的「資金與風險」填帳戶資金。精選卡片會顯示「建議數量」和「打到停損約賠多少」，是從每筆最多賠資金的幾 % 反推的。黃金、白銀、主要加密貨幣、標普 500、恆生、天然氣和外匯（迷你合約）會直接算出 IG 的張數；其他商品只顯示最多賠多少，請在 IG 下單畫面把數量調到停損金額不超過那個數字。</li>
+      <li>持有中的提醒：追蹤中的單除了停損停利，還會提醒急轉、獲利回吐、訊號轉向、持有太久、休市前、重大數據前，以及什麼時候該把停損移到進場價。「注意」是先看一下，「建議出場」是該動作了。</li>
+      <li>成績單：在「追蹤」頁。會算你實際的勝率與平均賺賠、和照原計畫抱到底的差別，以及網頁前三名自己的紙上成績。</li>
       <li>價格多快更新：Binance、Bybit、Hyperliquid 來源的商品由交易所即時推送，大約每秒一次（畫面右上角會出現「即時」）；Kraken、Bitget、OKX 每 5 秒抓一次；Yahoo 轉接的來源慢 10–15 分鐘。連接 IG 的商品每 3 秒讀一次 IG 的實際報價，兩次之間依交易所的即時漲跌推算。評級與支撐阻力每 60 秒重算一次。</li>
       <li>如果你用 IG：在本頁最上面連接 IG 後，現價會改用 IG 的買賣報價，所有價位（支撐、阻力、進場、停損、停利）都會換算成 IG 的價位。做法是把整份 K 線乘上「IG 價 ÷ 來源價」的比例，所以型態和機率不變，只有價位對齊到 IG。個股與 ETF 因為 IG 的 API 不提供報價，維持原來源。</li>
       <li>本頁是分析輔助，不是投資建議。差價合約有槓桿，請務必設停損並控制每筆風險。</li></ul></section>`;
@@ -3047,7 +3282,7 @@ IG.onChange = kind => {
     }
     if (ch) { saveTR(); badge(); if (view === 'track') renderTrack(); }
     for (const r of Object.values(scan.rows)) { if (r.err) continue; const c = !!rowOff(r); if (r.offWas != null && r.offWas !== c) flip = true; r.offWas = c; } // IG 回報開盤或收盤了：馬上重排
-    if (flip) { scan.dirty = true; if (view === 'scan') renderScan(); }
+    if (flip) { scan.dirty = true; scan.ver++; if (view === 'scan') renderScan(); }
   }
   if (cn.ok !== igCnt) { igCnt = cn.ok; scan.dirty = true; } // 對應到新的商品：下一輪重新評級，把價位換到 IG
   const sig = [IG.state, IG.msg, IG.mapping, cn.ok, !!IG.sess, IG.cfg.on].join('|');
@@ -3118,6 +3353,7 @@ document.addEventListener('click', e => {
   if (t.id === 'notif-on') { try { Notification.requestPermission().then(() => view === 'track' && renderTrack()); } catch (x) { /* 忽略 */ } return; }
   if (t.id === 'alerts-clear') { TR.alerts = []; saveTR(); badge(); return renderTrack(); }
   if (t.id === 'hist-clear') { TR.list = TR.list.filter(Track.active); saveTR(); return renderTrack(); }
+  if (t.id === 'paper-clear') { PP.list = []; savePP(); return renderTrack(); }
   if (t.id === 'cu-add') {
     const name = $('#cu-name').value.trim(), sym = $('#cu-sym').value.trim(), src = $('#cu-src').value, cls = $('#cu-cls').value, dp = clip(parseInt($('#cu-dp').value, 10) || 0, 0, 8);
     if (!name || !sym) return; const id = 'C_' + src + '_' + sym.replace(/[^A-Za-z0-9]/g, '');
@@ -3133,10 +3369,15 @@ document.addEventListener('click', e => {
     return;
   }
   if (d.cls) { S.cls = d.cls; save(); clsChips(); return renderScan(); }
-  if (d.ttrack) { const r = scan.rows[d.ttrack]; if (r && r.plan) { addTrack(r.inst, r.plan, r.tf); renderScan(); } return; }
-  if (d.track != null) { const p = det.A && det.A.plans[+d.track]; if (p) { addTrack(det.inst, p, det.tf); renderDetail(); } return; }
+  if (d.ttrack) { const r = scan.rows[d.ttrack]; if (r && r.plan) { addTrack(r.inst, r.plan, r.tf, { grade: r.rate.grade, score: r.rate.score, prob: r.rate.dir > 0 ? r.prob.up : r.prob.down, rank: topList().indexOf(r) + 1, from: 'top' }); renderScan(); } return; }
+  if (d.track != null) { const p = det.A && det.A.plans[+d.track]; if (p) { const rt = det.rate, mine = rt && (p.side === 'long') === (rt.dir > 0); addTrack(det.inst, p, det.tf, { grade: mine ? rt.grade : null, score: mine ? rt.score : null, prob: p.side === 'long' ? det.A.prob.up : det.A.prob.down, from: 'detail' }); renderDetail(); } return; }
   if (d.posClose) { const p = TR.list.find(x => x.id === d.posClose); if (p && Track.active(p)) { Track.close(p, isNum(p.price) ? p.price : p.entry, 'manual', Date.now()); saveTR(); badge(); renderTrack(); } return; }
   if (d.posDel) { TR.list = TR.list.filter(x => x.id !== d.posDel); saveTR(); badge(); return renderTrack(); }
+  if (d.posBe || d.posTrail) { // 使用者在 IG 把停損移好了：之後照新的停損判斷（影子仍照原計畫）
+    const p = TR.list.find(x => x.id === (d.posBe || d.posTrail));
+    if (p && Track.active(p)) { p.slNow = d.posBe ? p.entry : p.tp1; saveTR(); renderTrack(); toast(`${p.name}：停損已記為 ${E.fmt(p.slNow, p.dp)}。`, 'info'); }
+    return;
+  }
   if (d.id && (t.classList.contains('row') || t.classList.contains('t-open') || d.go)) { if (!Data.byId(d.id)) return; S.inst = d.id; const pz = d.go && TR.list.find(x => x.instId === d.id && Track.active(x)); S.tf = pz ? pz.tf : (d.go ? S.tf : S.scanTf); save(); return show('detail'); }
   if (d.show != null) { const p = det.A.plans[+d.show]; if (p) { det.sel = planKey(p); renderDetail(); const c = $('#s-chart'); if (c && window.innerWidth < 1020) c.scrollIntoView({ behavior: 'smooth', block: 'start' }); } return; }
   if (d.z) { const c = det.chart; if (c) { if (d.z === 'in') c.zoom(0.75); else if (d.z === 'out') c.zoom(1.33); else c.reset(); } return; }
@@ -3149,8 +3390,8 @@ document.addEventListener('change', e => {
   if (t.dataset && t.dataset.cost) { const v = parseFloat(t.value); if (v >= 0) { S.cost[t.dataset.cost] = v; save(); } }
 });
 document.addEventListener('input', e => {
-  const t = e.target, m = { 'c-eq': 'equity', 'c-risk': 'riskPct', 'c-lev': 'lev' }[t.id];
-  if (m) { const v = parseFloat(t.value); S[m] = isNum(v) ? v : 0; save(); renderCalc(); }
+  const t = e.target, m = { 'c-eq': 'equity', 'c-risk': 'riskPct', 'c-lev': 'lev', 's-eq': 'equity', 's-risk': 'riskPct' }[t.id];
+  if (m) { const v = parseFloat(t.value); S[m] = isNum(v) && v >= 0 ? v : 0; save(); renderCalc(); const o = $('#s-money'); if (o) o.textContent = moneyText(); }
   const g = { 'ig-key': 'key', 'ig-user': 'user', 'ig-pass': 'pass' }[t.id]; if (g) igDraft[g] = t.value;
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'igs-term') { const b = document.querySelector('[data-igs="go"]'); if (b) b.click(); } });
@@ -3179,7 +3420,7 @@ function boot() {
   banner(); show(VIEWS.includes(h) ? h : 'scan');
   refreshNews(true); setInterval(tick, 1000); tick();
 }
-window.__app = { S, det, scan, show, setDemo, TR, addTrack, monitor, mktState, topList, livePrice };
+window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard };
 boot();
 })();
 
