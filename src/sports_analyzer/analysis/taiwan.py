@@ -128,8 +128,15 @@ def compare(
         "totals": None,
         "spread": None,
         "values": [],
+        # 運彩's own game id (the live page reads the same game from 運彩's feed) and the
+        # 最少串關數 of each market, by market name; "h2h" / "totals" / "spread" repeat it
+        # for the three markets compared directly.
+        "id": game.id,
+        "legs": {m.name: m.min_legs for m in game.markets if m.min_legs and m.kind != "other"},
     }
     h2h = game.market("h2h")
+    if h2h and h2h.min_legs:
+        block["legs"]["h2h"] = h2h.min_legs
     if h2h and mv.get("h2h"):
         block["h2h"] = _compare_sides(
             h2h,
@@ -151,6 +158,8 @@ def compare(
         return block
     tot = game.market("totals", line=mv["totals"]["line"]) if mv.get("totals") else None
     if tot:
+        if tot.min_legs:
+            block["legs"]["totals"] = tot.min_legs
         block["totals"] = _compare_sides(
             tot,
             mv["totals"],
@@ -172,6 +181,8 @@ def compare(
             and home_sel.line is not None
             and abs(home_sel.line - mv["spread"]["line"]) < 1e-9
         ):
+            if sp.min_legs:
+                block["legs"]["spread"] = sp.min_legs
             block["spread"] = _compare_sides(
                 sp,
                 mv["spread"],

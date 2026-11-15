@@ -53,6 +53,9 @@
   .nav::-webkit-scrollbar { display: none; }
   .nav a { flex: none; color: var(--ink-2); text-decoration: none; font-size: .88rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, .02); }
   .nav a[aria-current="page"] { color: #fff; background: rgba(42, 147, 216, .28); border-color: rgba(42, 147, 216, .7); }
+  /* the live page (docs/live/, its own app): the one link that leaves these pages */
+  .nav a.nav-live { color: #fff; border-color: rgba(61, 220, 132, .6); background: rgba(23, 122, 71, .32); }
+  .nav a.nav-live::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--good); vertical-align: 1px; }
 
   /* method header: name, what it does, the score bug */
   .hero { padding: 26px 0 6px; }

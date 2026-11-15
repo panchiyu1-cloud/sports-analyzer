@@ -20,7 +20,7 @@
     <span class="stamp">更新 <b>{{ updated }}</b> 台灣時間</span>
   </div>
   <nav class="nav" aria-label="分析方法">
-    {% for key, label, file in pages %}<a href="{{ file }}"{% if key == page %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+    <a href="live/" class="nav-live">即時精選</a>{% for key, label, file in pages %}<a href="{{ file }}"{% if key == page %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
   </nav>
 </div>
 <main class="wrap">
