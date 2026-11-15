@@ -55,6 +55,10 @@ class TwMarket:
     updated: datetime | None
     line: float | None = None
     subject: str | None = None  # the team a team-total is about (Chinese name)
+    # 最少串關數 (the feed's "m": 1 = 單場可投, 2 / 3 = only inside a parlay of that many
+    # legs). None when the feed does not say. A price that needs a parlay cannot be bet
+    # on its own, so the live page states it next to every suggestion.
+    min_legs: int | None = None
 
     def price(self, side: str) -> float | None:
         for s in self.selections:
@@ -230,7 +234,18 @@ def _parse_market(raw: dict[str, Any], report: ParseReport) -> TwMarket | None:
         updated=_parse_dt(str(raw["ss"])) if raw.get("ss") else None,
         line=line,
         subject=_team_total_subject(name) if kind == "team_totals" else None,
+        min_legs=_min_legs(raw.get("m")),
     )
+
+
+def _min_legs(value: Any) -> int | None:
+    """The feed's "m" as a number of parlay legs (seen: "1", "2", "3"); anything else
+    is unknown rather than guessed."""
+    try:
+        legs = int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+    return legs if 1 <= legs <= 8 else None
 
 
 _OWN_HANDICAP = re.compile(r"\s([+-]\d+(?:\.\d+)?)$")

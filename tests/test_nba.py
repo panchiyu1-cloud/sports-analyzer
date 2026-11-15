@@ -400,6 +400,13 @@ class PipelineSmokeTests(unittest.TestCase):
         self.assertTrue((self.paths["SNAPSHOT_DIR"] / "2026-10-27" / "nba.json").exists())
         taped = pipeline.moves_mod.read(self.paths["MOVES_DIR"])
         self.assertTrue(taped and all(r["sport"] == "nba" for r in taped))
+        # run_nba stamps the snapshot with the real clock. The review only reads snapshots
+        # made before tip-off, so the test's snapshot gets the time of its own story
+        # (regression: this test failed on every run after the fixture's games were over).
+        snap_path = self.paths["SNAPSHOT_DIR"] / "2026-10-27" / "nba.json"
+        stored = json.loads(snap_path.read_text(encoding="utf-8"))
+        stored["generated_at"] = "2026-10-27T12:05:00+00:00"
+        snap_path.write_text(json.dumps(stored, ensure_ascii=False), encoding="utf-8")
 
         # The phone uploads the basketball feed 15 minutes after the prices were bought.
         upload = self.paths["TW_DIR"] / "basketball" / "2026-10-27-2015.json"

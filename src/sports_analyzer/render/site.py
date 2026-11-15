@@ -39,6 +39,7 @@ from .cards import (
     side_label,
     taipei_time,
 )
+from .live import write_live
 
 PAGES = (
     ("index", "總覽", "index.html"),
@@ -1853,4 +1854,6 @@ def render_site(site: Site, docs: Path) -> dict[str, Path]:
         env.get_template("moved.html.j2").render(target="moves.html#history"), encoding="utf-8"
     )
     out["bighand"] = moved
+    # The live page's starting data (docs/live/data.json); the page itself is hand-written.
+    out["live"] = write_live(site, docs)
     return out

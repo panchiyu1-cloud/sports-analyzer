@@ -77,6 +77,7 @@ formula is not obvious.
 ### Git workflow
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `chore:`.
 - Generated files that ARE committed: `docs/*.html` (every task renders every page),
+  `docs/live/data.json` (the live page's data; the rest of `docs/live/` is hand-written),
   `data/snapshots/**`, `data/ledger.csv`,
   `data/tw_ledger.csv`, `data/reviews/*.csv`, `data/history/*.csv`, `data/moves/*.csv`,
   `data/fade_summary.json`, `data/combo_summary.json`. Raw dumps under `data/raw/` are not.
@@ -98,6 +99,8 @@ python scripts/backtest_football.py data/history/*.csv  # backtest + docs/backte
 python scripts/validate_implied.py                      # validate + recalibrate the implied model
 python scripts/backtest_fade.py --model-records records.json  # 反者道之動 (needs data/raw/)
 python scripts/backtest_combos.py                       # 組合篩選 (needs data/raw/)
+node tests/js/engine_test.js                            # the live page's maths (also run by tests/test_live.py)
+node tests/js/page_check.js                             # the live page in a browser, sources mocked (needs Playwright)
 ```
 
 ## Layout
@@ -121,6 +124,8 @@ src/sports_analyzer/
                    + 延遲雷達 (radar, radar_events)
   render/          site.py — Site (everything a render needs) -> one view per page -> docs/*.html
                    cards.py — shared helpers (names, times, labels, 大戶 record, review cards)
+                   live.py — docs/live/data.json for the live page (docs/live/: index.html,
+                   engine.js, app.js, hand-written JavaScript, see "即時精選")
                    templates/ base + _style (look), _ui (macros), one .html.j2 per page
   sensor.py        盯盤: what to read when, the quota, when a move asks for a purchase
   pipeline.py      CLI entry point
@@ -550,6 +555,60 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   added when seen), purchase cost 2 (h2h + spreads). Workflows: daily.yml runs
   `pipeline nba` (continue-on-error: ESPN is unofficial), evening.yml
   `pipeline nba --markets h2h,spreads`; tw.yml already fires on data/tw/**.
+
+## 即時精選 (2026-11-15) — docs/live/, a client-side page like docs/cfd/
+- Owner's request: 「變成像差價交易一樣的網站…即時的賠率變化…推薦給我目前最佳的10場可以投資的比賽
+  （包含投資的方式）」. `docs/live/` is a hand-written single-page app (index.html = look,
+  engine.js = maths, app.js = sources + screen; comments in Chinese for the owner), linked first
+  in every page's nav. It does not replace any page; it is the same decision rule (EV =
+  fair probability x 運彩 price - 1, the same thresholds) recomputed in the browser with the
+  newest prices the browser can get. Bump `?v=` on the two script tags when they change
+  (GitHub Pages caches ~10 minutes).
+- `render/live.py` writes `docs/live/data.json` in every render (`render_site`): matches not
+  started with the consensus (`fair`: probability per side, line, `at`), the last uploaded 運彩
+  prices (`tw`: prices, `legs`, `derived` = the pipeline's translated lines with their fair
+  probability), the match-winner tape, thresholds, ESPN paths, Odds API keys, 運彩 feed ids and
+  `zh` (TW_ALIASES). No secret and nothing from odds-api.io may ever go in it (test).
+- 最少串關數: the 運彩 feed's market field `m` ("1" 單場, "2" / "3" = only inside a parlay of
+  that many legs; top leagues mostly 1, lower leagues 3). `TwMarket.min_legs`; `compare` puts
+  `legs` ({market name: n} plus "h2h" / "totals" / "spread" for the three direct markets) and
+  the 運彩 game `id` in the card's `tw` block. Blocks from before 2026-11-15 have neither.
+- Sources the browser reads (all CORS-open, probed 2026-11-15 from a runner with the Pages
+  origin): ESPN scoreboard `site.api.espn.com/apis/site/v2/sports/<path>/scoreboard?dates=YYYYMMDD`
+  (one date per request, ranges answer 400; `competitions[0].odds[0]`: DraftKings moneyline /
+  pointSpread / total with open and close, American odds) every 30 s for matches within 24 h,
+  5 min otherwise, pre-game only (a started event's price is in-play: never used); 運彩's feed
+  directly when the browser may (unknown from here: geo-block + CORS are only testable in the
+  owner's browser; blocked -> retried every 10 min, the page falls back to the upload, typed
+  prices or a pasted file; the basketball feed id is searched once a day near the known ids
+  and kept in localStorage); The Odds API with the owner's own key, typed into the page and kept
+  only in his browser's localStorage. Polymarket (10 MB answers) and Kalshi (403) are not used;
+  odds-api.io never (its quota is the sensor's, its data may not be shown).
+- Browser purchases do not go through `budget.plan_markets()` (the page cannot write the
+  repo): they are manual only (two presses), capped per day in the page (`buyCap`, default 6 =
+  PREGAME_EXTRA) and refused when the month would drop under the reserve (25). The pipeline
+  sees the lower `x-requests-remaining` at its next purchase. Never add automatic buying.
+- One book is not a consensus (CLAUDE.md "盯盤"): the reference says WHEN, the consensus HOW
+  MUCH. `Engine.evaluate` uses the consensus as it is when it is at most 30 min old; older, the
+  LOWER of consensus and reference (never raises a probability on one book's word); with no
+  consensus at all the reference stands in but a bet is at most "先確認". Football two-way
+  handicaps are never listed (運彩's are three-way). NBA lines away from the consensus line go
+  through the same normal model as `models/margin.py` (JS port, tested against Python numbers).
+- Grades: A 可下 (EV >= threshold, 運彩 price <= 30 min old or typed, fair price <= 180 min, a
+  consensus) / B 先確認 (EV >= threshold on an older price, or EV >= 0) / C 差一點 (EV >= -3%) /
+  W 等運彩價 (no 運彩 price: the card names the price to look for, `need` = (1 + threshold) / p,
+  rounded up to 運彩's two decimals) / D 不下. The score (0-100) sits inside the grade's band, so
+  the top 10 can never rank a 不下 above a 可下: EV 55, price and fair freshness 15, consensus
+  vs reference agreement 10, market move toward the side 10, 最少串關數 10. A list with no A
+  says so in the headline; the page must never present a negative-EV bet as an investment.
+- 投資方式 (`Engine.plan`): the bet and price, the lowest acceptable price, 單場 or the parlay it
+  needs (other matches' best non-negative-EV bets; combined EV must still reach the threshold,
+  else the bet is downgraded to C: it cannot be placed as written), stake = bankroll x
+  min(Kelly x fraction, cap) in 100s (defaults 20,000 / quarter Kelly / 2%).
+- 追蹤 is a paper record in localStorage (settled from ESPN finals for match winner, handicap
+  and totals; CLV from the last fair probability before kickoff). It never places a bet.
+- Tests: `tests/test_live.py` (builder, parser, and runs `tests/js/engine_test.js` when Node is
+  there), `tests/js/page_check.js` (manual: real page in Chromium, every source mocked).
 
 ## 臺股強勢掃描 (2026-11-13) — the owner's Taiwan stock scanner, a separate project
 - Owner's request: the stock scanner he ran on his Mac should work without the computer, like
