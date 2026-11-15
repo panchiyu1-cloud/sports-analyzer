@@ -218,12 +218,21 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 ol.plain { padding-left: 22px; }
 #ig-card .form { margin-top: 12px; }
 
+/* 沒有交易、即時報價 */
+.nt { display: inline-flex; align-items: center; font-size: 12.5px; font-weight: 700; color: var(--text); background: var(--surface2); border: 1.5px solid var(--text); border-radius: 5px; padding: 0 6px; white-space: nowrap; }
+.row.off .r-spark, .row.off .r-price, .row.off .r-sig { opacity: .5; }
+.t-off, .closed-note { margin: 2px 0 6px; font-size: 14px; border: 1px solid var(--line); border-left: 4px solid var(--muted); background: var(--surface); border-radius: 6px; padding: 8px 10px; color: var(--text2); }
+.closed-note { margin: 0; } .t-off b, .closed-note b { color: var(--text); }
+.d-price .nt { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; margin-top: 4px; }
+.live-dot { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text2); white-space: nowrap; }
+.live-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
+
 </style>
 </head>
 <body>
 <header class="top">
   <h1>差價交易分析</h1>
-  <div class="top-meta"><span class="num" id="clock"></span><button class="btn sm" id="btn-refresh">更新</button></div>
+  <div class="top-meta"><span class="live-dot" id="live-dot" title="價格由交易所即時推送" hidden>即時</span><span class="num" id="clock"></span><button class="btn sm" id="btn-refresh">更新</button></div>
 </header>
 <div id="toasts" aria-live="assertive"></div>
 <div id="banner" role="status"></div>
@@ -1131,12 +1140,13 @@ E.rate = function (A, ctx) {
   if (!bias) { score = Math.min(score, 37); notes.push('多空機率接近'); }
   else if (!plan) { score = Math.min(score, 54); notes.push('沒有期望值為正的進場點'); }
   if (ctx.eventSoon) { score = Math.min(score, 54); notes.push('重大數據即將公布'); }
-  if (ctx.stale) { score = Math.min(score, 37); notes.push('休市或報價延遲'); }
+  if (ctx.closed) { score = Math.min(score, 37); notes.push(ctx.why || '沒有交易'); }
+  else if (ctx.stale) { score = Math.min(score, 37); notes.push('休市或報價延遲'); }
   if (Math.abs(p - 0.5) < 0.08) score = Math.min(score, 71); // 機率優勢不到 8 個百分點，最高只給 B
   score = Math.round(clip(score, 0, 100));
   const grade = score >= 72 ? 'A' : score >= 55 ? 'B' : score >= 38 ? 'C' : 'D', f = v => E.fmt(v, ctx.dp == null ? 2 : ctx.dp);
   let action;
-  if (ctx.stale) action = '休市中，開盤後再評估';
+  if (ctx.closed || ctx.stale) action = ctx.act || '沒有交易，開盤後再評估';
   else if (grade === 'D') action = bias ? '條件不足，先不要進場' : '沒有方向，先不要進場';
   else if (!plan) action = '先觀察，目前沒有划算的進場點';
   else if (grade === 'C') action = '先觀察，等訊號更明確';
@@ -1204,6 +1214,50 @@ T.stats = function (list) {
 };
 if (typeof module !== 'undefined') module.exports = T; else root.Track = T;
 if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Track = T;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+/* ===== 交易時段：哪些商品現在沒有交易（純函式，方便測試） =====
+   交易所的 24 小時合約在週末照樣有價格，但 IG 的平日市場不能下單，所以要另外判斷。依 IG 公布的時段（以紐約時間計，夏令時間自動跟著走）：
+   外匯：週五 17:00 收、週日 16:00 開；金屬、商品、指數：週五 17:00 收、週日 18:00 開（臺北時間約週六 06:00～週一 07:00，外匯 05:00）。
+   加密貨幣：只在週五 17:00～週六 03:00 暫停。個股與 ETF：只判斷週末（週五 20:00～週日 20:00），平日的盤前盤後不判斷。 */
+(function (root) {
+'use strict';
+const D = 1440, W = 7 * D, at = (d, h) => d * D + h * 60;
+const RULES = {
+  fx: [at(5, 17), at(0, 16)], metal: [at(5, 17), at(0, 18)], cmdty: [at(5, 17), at(0, 18)], index: [at(5, 17), at(0, 18)],
+  stock: [at(5, 20), at(0, 20)], etf: [at(5, 20), at(0, 20)], crypto: [at(5, 17), at(6, 3)],
+};
+let fmt = null; const offCache = new Map();
+function nyOffset(t) { // 紐約時間比 UTC 慢幾分鐘（-300 或 -240）。每 6 小時查一次就夠：夏令時間只在週日凌晨切換，那時所有商品都休市
+  const k = Math.floor(t / 21600e3); let v = offCache.get(k); if (v != null) return v;
+  try {
+    fmt = fmt || new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hourCycle: 'h23', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' });
+    const p = {}; for (const x of fmt.formatToParts(new Date(t))) p[x.type] = +x.value;
+    v = Math.round((Date.UTC(p.year, p.month - 1, p.day, p.hour % 24, p.minute) - Math.floor(t / 60e3) * 60e3) / 60e3);
+  } catch (e) { v = NaN; }
+  if (v !== -300 && v !== -240) { // 瀏覽器沒有時區資料：自己照美國規則算（3 月第 2 個週日～11 月第 1 個週日是夏令時間）
+    const y = new Date(t).getUTCFullYear(), sun = (m, n) => Date.UTC(y, m, 1 + ((7 - new Date(Date.UTC(y, m, 1)).getUTCDay()) % 7) + 7 * (n - 1), 7);
+    v = t >= sun(2, 2) && t < sun(10, 1) - 3600e3 ? -240 : -300;
+  }
+  if (offCache.size > 500) offCache.clear(); offCache.set(k, v); return v;
+}
+/* 紐約時間的「一週第幾分鐘」（週日 00:00 = 0） */
+function mow(t) { const d = new Date(t + nyOffset(t) * 60e3); return d.getUTCDay() * D + d.getUTCHours() * 60 + d.getUTCMinutes(); }
+const M = {
+  RULES, mow, nyOffset,
+  /* 這一類商品在時間 t 有沒有交易；沒有的話，reopen 是預計恢復的時間 */
+  sched(cls, t) {
+    const r = RULES[cls]; if (!r) return { open: true };
+    const m = mow(t), a = r[0], b = r[1], closed = a <= b ? (m >= a && m < b) : (m >= a || m < b);
+    if (!closed) return { open: true };
+    let re = (Math.floor(t / 60e3) + ((b - m + W) % W)) * 60e3;
+    const m2 = mow(re); if (m2 !== b) re += (((b - m2 + W + 720) % W) - 720) * 60e3; // 中間剛好跨過夏令時間切換：修正那一小時
+    return { open: false, reopen: re, why: cls === 'crypto' ? '每週固定暫停' : '週末休市' };
+  },
+  closedAt(cls, t) { return !M.sched(cls, t).open; },
+};
+if (typeof module !== 'undefined') module.exports = M; else root.Mkt = M;
+if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Mkt = M;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 /* ===== 行情資料：直接由瀏覽器向交易所公開 API 取得 K 線 ===== */
@@ -1514,6 +1568,105 @@ const Data = {
   },
   peek(inst, tf) { if (this.demo) return { cd: demoSeries(inst, tf, 500) }; return cache.get(inst.id + '|' + tf) || null; },
 };
+/* ---------- 即時報價：WebSocket 串流 ----------
+   Binance、Bybit、Hyperliquid 會主動把最新價推過來（大約每秒一次），不必等定時抓取。
+   連不上或太久沒有資料時自動重連、換備用網址；這段期間介面會退回定時抓取，所以串流失敗不影響使用。
+   這裡的價格只拿來更新畫面和檢查追蹤單，不寫回 K 線，也不參與 IG 換算比例的校正。 */
+const WSD = {
+  binance: { kind: 'bn', urls: ['wss://data-stream.binance.vision/stream', 'wss://stream.binance.com:9443/stream'] },
+  binancef: { kind: 'bn', urls: ['wss://fstream.binance.com/market/stream', 'wss://fstream.binance.com/stream'] }, // 2026/3 起行情改走 /market，舊網址當備用
+  bybit: { kind: 'bb', urls: ['wss://stream.bybit.com/v5/public/linear'] },
+  bybits: { kind: 'bb', urls: ['wss://stream.bybit.com/v5/public/spot'] },
+  hl: { kind: 'hl', urls: ['wss://api.hyperliquid.xyz/ws'] },
+};
+const Live = {
+  conns: {}, px: {}, map: {}, dirty: new Set(), flushT: 0,
+  WS() { return typeof WebSocket !== 'undefined' ? WebSocket : null; },
+  conn(key) { return this.conns[key] || (this.conns[key] = { key, def: WSD[key], ws: null, state: 'idle', want: new Set(), have: new Set(), haveDex: new Set(), url: 0, fails: 0, retryAt: 0, opened: 0, lastMsg: 0, lastTick: 0, pingAt: 0, idleAt: 0, n: 0, id: 0, got: false }); },
+  /* 介面每秒告訴這裡：現在需要哪些商品的即時價（畫面上看得到的、追蹤中的） */
+  want(insts) {
+    const map = {}, by = {};
+    if (this.WS() && !Data.demo) for (const inst of insts) {
+      const s = Data.status(inst); if (!s || !WSD[s.key]) continue;
+      const k = s.key + '|' + s.sym; (map[k] = map[k] || []).push(inst.id); (by[s.key] = by[s.key] || new Set()).add(s.sym);
+    }
+    this.map = map;
+    for (const key in WSD) { const c = this.conn(key); c.want = by[key] || new Set(); if (c.want.size) c.idleAt = 0; else if (c.ws && !c.idleAt) c.idleAt = Date.now(); }
+    this.tick();
+  },
+  tick() {
+    const now = Date.now();
+    for (const key in this.conns) {
+      const c = this.conns[key];
+      if (!c.want.size) { if (c.ws) { this.sync(c); if (now - c.idleAt > 20e3) this.close(c); } continue; } // 沒有人要看了：先退訂，連線過 20 秒再關，免得切個頁面就重連
+      if (!c.ws) { if (now >= c.retryAt) this.open(c); continue; }
+      if (c.state === 'connecting') { if (now - c.opened > 12e3) this.fail(c); continue; }
+      if (now - Math.max(c.lastMsg, c.opened) > 45e3) { this.fail(c); continue; } // 連著但一直沒有資料：重連
+      this.sync(c);
+      if (c.def.kind !== 'bn' && now - c.pingAt > 20e3) { c.pingAt = now; this.send(c, c.def.kind === 'bb' ? { op: 'ping' } : { method: 'ping' }); }
+    }
+  },
+  open(c) {
+    const WSC = this.WS(); let ws; c.opened = Date.now(); c.state = 'connecting'; c.have = new Set(); c.haveDex = new Set(); c.got = false;
+    try { ws = new WSC(c.def.urls[c.url % c.def.urls.length]); } catch (e) { c.ws = null; return this.fail(c); }
+    c.ws = ws;
+    ws.onopen = () => { if (c.ws !== ws) return; c.state = 'open'; c.lastMsg = c.pingAt = Date.now(); this.sync(c); };
+    ws.onmessage = ev => { if (c.ws !== ws) return; c.lastMsg = Date.now(); let m; try { m = JSON.parse(ev.data); } catch (e) { return; } try { this.read(c, m); } catch (e) { /* 格式不合就略過 */ } };
+    ws.onclose = ws.onerror = () => { if (c.ws === ws) this.fail(c); };
+  },
+  close(c) {
+    const ws = c.ws; c.ws = null; c.state = 'idle'; c.idleAt = 0; c.have = new Set(); c.haveDex = new Set();
+    if (ws) { ws.onopen = ws.onmessage = ws.onclose = ws.onerror = null; try { ws.close(1000, 'done'); } catch (e) { /* 忽略 */ } }
+  },
+  fail(c) {
+    const got = c.got; this.close(c);
+    if (got) { c.fails = 0; c.retryAt = Date.now() + 2000; } // 本來好好的：很快重連
+    else { c.fails++; c.url++; c.retryAt = Date.now() + [3e3, 10e3, 30e3, 60e3, 300e3][Math.min(4, c.fails - 1)]; } // 一直連不上：換備用網址，間隔慢慢拉長
+  },
+  send(c, obj) { try { if (c.ws && c.state === 'open') c.ws.send(JSON.stringify(obj)); } catch (e) { /* 下一輪再試 */ } },
+  sync(c) { // 把「想要的」和「已訂閱的」對齊
+    if (c.state !== 'open') return; const add = [...c.want].filter(s => !c.have.has(s)), del = [...c.have].filter(s => !c.want.has(s)), k = c.def.kind;
+    if (!add.length && !del.length) return;
+    if (k === 'bn') {
+      const nm = s => s.toLowerCase() + '@miniTicker';
+      if (add.length) this.send(c, { method: 'SUBSCRIBE', params: add.map(nm), id: ++c.id });
+      if (del.length) this.send(c, { method: 'UNSUBSCRIBE', params: del.map(nm), id: ++c.id });
+    } else if (k === 'bb') { // Bybit 一次最多訂 10 個
+      for (let i = 0; i < add.length; i += 10) this.send(c, { op: 'subscribe', args: add.slice(i, i + 10).map(s => 'tickers.' + s) });
+      for (let i = 0; i < del.length; i += 10) this.send(c, { op: 'unsubscribe', args: del.slice(i, i + 10).map(s => 'tickers.' + s) });
+    } else { // Hyperliquid：每個市場（dex）訂一次，該市場全部商品的中間價一起推過來
+      const dexOf = s => (s.indexOf(':') > 0 ? s.split(':')[0] : ''), need = new Set([...c.want].map(dexOf)), sub = d => (d ? { type: 'allMids', dex: d } : { type: 'allMids' });
+      for (const d of need) if (!c.haveDex.has(d)) { c.haveDex.add(d); this.send(c, { method: 'subscribe', subscription: sub(d) }); }
+      for (const d of [...c.haveDex]) if (!need.has(d)) { c.haveDex.delete(d); this.send(c, { method: 'unsubscribe', subscription: sub(d) }); }
+    }
+    c.have = new Set(c.want);
+  },
+  read(c, m) {
+    const k = c.def.kind;
+    if (k === 'bn') { const d = m.data || m; if (d && d.e === '24hrMiniTicker') this.tickIn(c, d.s, +d.c, +d.E); return; }
+    if (k === 'bb') { const d = m.data; if (typeof m.topic === 'string' && m.topic.indexOf('tickers.') === 0 && d && d.lastPrice != null) this.tickIn(c, d.symbol || m.topic.slice(8), +d.lastPrice, +m.ts); return; } // 只送有變動的欄位，沒有 lastPrice 就是價格沒變
+    if (m.channel === 'allMids' && m.data && m.data.mids) {
+      const mids = m.data.mids, now = Date.now();
+      for (const s of c.want) { const v = mids[s] != null ? mids[s] : s.indexOf(':') > 0 ? mids[s.split(':')[1]] : null; if (v != null) this.tickIn(c, s, +v, now); }
+    }
+  },
+  tickIn(c, sym, p, t) {
+    if (!(p > 0)) return; const ids = this.map[c.key + '|' + sym]; if (!ids) return; const now = Date.now(); let used = false;
+    for (const id of ids) {
+      const ref = rawLast[id]; if (ref && ref.p > 0 && Math.abs(p / ref.p - 1) > 0.08) continue; // 和定時抓到的價格差太多：多半是對到別的商品，不採用
+      const old = this.px[id]; this.px[id] = { p, t: t > 0 ? t : now, at: now, src: c.key }; used = true;
+      if (!old || old.p !== p || now - old.at > 900) this.dirty.add(id);
+    }
+    if (!used) return; c.got = true; c.fails = 0; c.lastTick = now; c.n++;
+    if (this.dirty.size && !this.flushT) this.flushT = setTimeout(() => { this.flushT = 0; const list = [...this.dirty]; this.dirty.clear(); if (Data.onLive) try { Data.onLive(list); } catch (e) { /* 畫面出錯不影響串流 */ } }, 200); // 一秒最多更新畫面 5 次
+  },
+};
+Object.assign(Data, {
+  onLive: null, _live: Live,
+  liveWant(insts) { Live.want(insts || []); },
+  live(id) { const v = Live.px[id]; return v && Date.now() - v.at < 15e3 ? v : null; }, // 15 秒內的才算即時
+  liveStat() { const now = Date.now(); return Object.values(Live.conns).map(c => ({ key: c.key, name: SRC_NAME[c.key], want: c.want.size, state: c.state, ok: c.state === 'open' && now - c.lastTick < 20e3, fails: c.fails, n: c.n })); },
+});
 root.Data = Data;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
@@ -1526,7 +1679,7 @@ const E = root.Engine, Data = root.Data, LS = root.LS;
 const isNum = v => typeof v === 'number' && isFinite(v), clip = (v, a, b) => Math.max(a, Math.min(b, v));
 const BASE = { demo: 'https://demo-api.ig.com/gateway/deal', live: 'https://api.ig.com/gateway/deal' };
 const GAP = 2400;   // IG 每個帳戶每分鐘 30 次：兩次請求至少隔 2.4 秒
-const POLL = 6000;  // 報價每 6 秒更新一次（一次請求最多 50 個商品）
+const POLL = 3000;  // 報價每 3 秒更新一次（一次請求最多 50 個商品）；IG 回報流量超過時（例如兩台裝置同時開著）自動放慢成 6 秒
 const TOL = { fx: 0.004, metal: 0.012, crypto: 0.03, cmdty: 0.06, index: 0.03 };
 const TYPE = { fx: 'CURRENCIES', crypto: 'CURRENCIES', metal: 'COMMODITIES', cmdty: 'COMMODITIES', index: 'INDICES' };
 const WEEKEND = /WEEKEND|SUNDAY|週末|周末/i;
@@ -1664,7 +1817,7 @@ const IG = {
     catch (e) { const er = new Error(e.name === 'AbortError' ? 'timeout' : 'net'); er.code = er.message; throw er; }
     finally { clearTimeout(tm); }
     let j = null; try { j = await r.json(); } catch (e) { /* 204 沒有內容 */ }
-    if (!r.ok) { const er = new Error((j && j.errorCode) || 'HTTP ' + r.status); er.status = r.status; er.code = er.message; if (/exceeded/.test(er.code)) this.pauseUntil = Date.now() + 65e3; throw er; }
+    if (!r.ok) { const er = new Error((j && j.errorCode) || 'HTTP ' + r.status); er.status = r.status; er.code = er.message; if (/exceeded/.test(er.code)) { this.pauseUntil = Date.now() + 65e3; this.slowUntil = Date.now() + 20 * 60e3; } throw er; }
     return { j: j || {}, r };
   },
   async req(method, path, ver, body, pri) {
@@ -1728,9 +1881,10 @@ const IG = {
 
   /* ---------- 報價 ---------- */
   ready() { return this.cfg.on && !!this.sess && !Data.demo; },
+  pollSec() { return (Date.now() < (this.slowUntil || 0) ? 2 * POLL : POLL) / 1000; },
   tick() {
     if (!this.ready() || this._polling) return; const now = Date.now(); if (now < this.pauseUntil) return;
-    const hidden = root.document && root.document.hidden, every = hidden ? (this.bg ? 20e3 : Infinity) : this.mapping ? 2 * POLL : POLL; // 切到背景時，只有在追蹤單需要時才繼續讀
+    const hidden = root.document && root.document.hidden, every = hidden ? (this.bg ? 20e3 : Infinity) : this.mapping || now < (this.slowUntil || 0) ? 2 * POLL : POLL; // 切到背景時，只有在追蹤單需要時才繼續讀
     if (now - this.lastPoll >= every) this.poll();
   },
   async poll() {
@@ -2297,6 +2451,25 @@ const openSt = {}; const op = k => (openSt[k] ? 'open' : '');
 const pool = () => Data.all().filter(i => S.on[i.cls] !== false);
 let view = 'scan', offline = false;
 
+/* ---------- 有沒有交易 ----------
+   交易所的 24 小時合約週末照樣有價格，但在 IG 不能下單。判斷順序：IG 自己回報的狀態（含假日）→ 固定時段（週末）→ 來源本身停了。
+   沒有交易的商品：標「沒有交易」、不列入精選 10、不推送即時價、追蹤單不判斷停損停利。 */
+const reTxt = t => { const d = new Date(t); return (d.toDateString() === new Date().toDateString() ? '今天' : '週' + '日一二三四五六'[d.getDay()]) + ' ' + hm(t); };
+function mktState(inst, stale) {
+  if (Data.demo) return { closed: false };
+  const now = Date.now(), sc = Mkt.sched(inst.cls, now), m = IG.ready() ? IG.map[inst.id] : null, q = m && m.epic ? IG.quote(inst.id) : null;
+  const re = sc.open ? '' : inst.cls === 'stock' || inst.cls === 'etf' ? '週一恢復' : reTxt(sc.reopen) + ' 恢復';
+  if (q && now - q.t < 120e3) return q.ok ? { closed: false, by: 'ig' } : { closed: true, by: 'ig', why: sc.open ? 'IG 目前沒有開放交易' : sc.why, re, reopen: sc.reopen || 0 };
+  if (!sc.open) return { closed: true, by: 'sched', why: sc.why, re, reopen: sc.reopen };
+  return stale ? { closed: true, by: 'stale', why: '休市或報價延遲', re: '', reopen: 0 } : { closed: false };
+}
+const rowOff = r => { if (!r || r.err) return null; const st = mktState(r.inst, r.stale); return st.closed ? st : null; };
+function offLine(offs) { // 掃描頁最上面那一行：有幾項沒有交易、什麼時候恢復
+  const wk = offs.filter(x => x.by !== 'stale'); if (!wk.length) return '';
+  const re = Math.min(...wk.map(x => x.reopen || Infinity)), why = [...new Set(wk.map(x => x.why))];
+  return `有 <b class="num">${offs.length}</b> 項目前<b>沒有交易</b>（${esc(why.slice(0, 2).join('、'))}），不列入精選${isFinite(re) ? `；最快 ${reTxt(re)} 恢復` : ''}。`;
+}
+
 function applyTheme() {
   const r = document.documentElement; if (S.theme === 'auto') r.removeAttribute('data-theme'); else r.dataset.theme = S.theme;
   if (S.swap) r.dataset.swap = '1'; else r.removeAttribute('data-swap');
@@ -2382,10 +2555,18 @@ async function monitor() {
     const by = {}; for (const p of act) (by[p.instId] = by[p.instId] || []).push(p);
     await Promise.all(Object.entries(by).map(async ([id, ps]) => {
       const inst = Data.byId(id); if (!inst) return;
+      const st = mktState(inst);
+      if (st.closed) { // 沒有交易：不拿場外的價格判斷停損停利，這段時間的 K 線之後也不回頭看
+        const t0 = Date.now(), txt = st.why + (st.re ? '，' + st.re : '');
+        for (const p of ps) { p.lastCheck = Math.max(p.lastCheck, t0); if (p.off !== txt) { p.off = txt; changed = true; } }
+        return;
+      }
       const gap = Date.now() - Math.min(...ps.map(p => p.lastCheck)), tf = gap <= 12 * 3600e3 ? '1m' : gap <= 60 * 3600e3 ? '5m' : gap <= 9 * 86400e3 ? '15m' : '1h';
-      let rec; try { rec = await Data.get(inst, tf, { limit: Math.min(1000, Math.ceil(gap / E.TF[tf]) + 30), maxAge: 10e3 }); } catch (e) { return; }
-      const cd = rec.cd, price = cd[cd.length - 1].c, now = Date.now();
+      let rec; try { rec = await Data.get(inst, tf, { limit: Math.min(1000, Math.ceil(gap / E.TF[tf]) + 30), maxAge: 4e3 }); } catch (e) { return; }
+      const lx = livePrice(inst), price = lx && lx.ig === !!rec.ig && !lx.ig ? lx.p : rec.cd[rec.cd.length - 1].c, now = Date.now();
+      const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t)); // 週末的場外 K 線不算
       for (const p of ps) {
+        if (p.off) { delete p.off; changed = true; }
         syncBasis(p, inst); p.price = price; p.priceT = now; const evs = Data.demo ? [] : Track.step(p, cd, price, now);
         const pu = liveProb(id);
         if (!Data.demo && Track.active(p) && p.status !== 'pending' && pu != null && (p.side === 'long' ? pu <= 0.43 : pu >= 0.57) && (!p.flags.rev || now - p.flags.rev > 4 * 3600e3)) { p.flags.rev = now; evs.push({ kind: 'reversal', t: now, p: (pu * 100).toFixed(0) }); }
@@ -2406,8 +2587,8 @@ function posCard(p) {
   const fr = x => clip(d * (x - p.sl) / (d * (p.tp2 - p.sl)), 0, 1) * 100, r = has && p.status !== 'pending' ? Track.rNow(p, px) : null, row = scan.rows[p.instId];
   const info = p.status === 'pending' ? `等${p.type === 'limit' ? '回到' : (d > 0 ? '突破' : '跌破')} <b class="num">${f(p.entry)}</b>${has ? `，現價 <span class="num">${f(px)}</span>（還差 ${pct((p.entry / px - 1) * 100)}）` : ''}`
     : `現價 <b class="num">${has ? f(px) : '—'}</b>${r != null ? `　目前 <b class="num ${dirCls(Math.abs(r) < 0.05 ? 0 : r)}">${rTxt(r)}</b>（${pct(d * (px / p.entry - 1) * 100)}）` : ''}`;
-  return `<article class="pos"><header><h3>${esc(p.name)}<span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span></h3><span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${ST_NAME[p.status]}</span></header>
-    <p class="pinfo">${info}</p>
+  return `<article class="pos"><header><h3>${esc(p.name)}<span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span></h3>${p.off ? '<span class="nt">沒有交易</span>' : ''}<span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${ST_NAME[p.status]}</span></header>
+    <p class="pinfo">${info}</p>${p.off ? `<p class="pmeta" style="margin-top:0">${esc(p.off)}。這段期間不檢查停損停利，恢復交易後繼續。</p>` : ''}
     <div class="gauge" role="img" aria-label="現價在停損與停利之間的位置"><i class="g-fill" style="width:${has ? fr(px) : fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.tp1)}%"></i>${has ? `<i class="g-dot" style="left:${fr(px)}%"></i>` : ''}</div>
     <div class="g-lab num"><span>停損 ${f(p.slNow)}${p.slNow !== p.sl ? '（已移到進場價）' : ''}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
     <p class="pmeta">${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${mdhm(p.created)} 建立${row && row.rate && !row.err ? `　目前評級 ${row.rate.grade}（${d > 0 ? '上漲' : '下跌'}機率 ${((d > 0 ? row.prob.up : row.prob.down) * 100).toFixed(0)}%）` : ''}</p>
@@ -2433,8 +2614,8 @@ function renderTrack() {
 const scan = { tf: null, rows: {}, running: false, last: 0, token: 0, timer: 0, done: 0, total: 0, dirty: false };
 const slim = p => p && ({ side: p.side, type: p.type, name: p.name, entry: p.entry, sl: p.sl, tp1: p.tp1, tp2: p.tp2, rr: p.rr, ev: p.ev, pWin: p.pWin, pTouch: p.pTouch, slPct: p.slPct, tpPct: p.tpPct });
 function ctxOf(inst, cd, tf) {
-  const now = Date.now(), lastT = cd[cd.length - 1].t;
-  return { dp: inst.dp, stale: !Data.demo && now - lastT > E.TF[tf] + Math.max(E.TF[tf] * 0.5, 20 * 60e3), eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
+  const now = Date.now(), lastT = cd[cd.length - 1].t, stale = !Data.demo && now - lastT > E.TF[tf] + Math.max(E.TF[tf] * 0.5, 20 * 60e3), st = mktState(inst, stale);
+  return { dp: inst.dp, stale, closed: st.closed, why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
 }
 async function analyzeScan(inst, tf) {
   const main = await Data.get(inst, tf, { limit: 300, maxAge: 25e3 });
@@ -2475,7 +2656,7 @@ async function runScan() {
 }
 function badge2(p) { const c = dirCls(p.bias), strong = /強烈/.test(p.label); return `<span class="badge ${c}${strong ? ' strong' : ''}">${dirGl(p.bias)} ${p.label.replace('中性', '')}</span>`; }
 function topList() {
-  const rows = Object.values(scan.rows).filter(r => !r.err && !r.stale && S.on[r.inst.cls] !== false).sort((a, b) => b.rate.score - a.rate.score), pick = [], cnt = {};
+  const rows = Object.values(scan.rows).filter(r => !r.err && !rowOff(r) && S.on[r.inst.cls] !== false).sort((a, b) => b.rate.score - a.rate.score), pick = [], cnt = {};
   for (const r of rows) { if (pick.length >= 10 || r.rate.score < 55) break; const c = r.inst.cls; if ((cnt[c] || 0) >= 4) continue; cnt[c] = (cnt[c] || 0) + 1; pick.push(r); } // 先求分散：同一類最多 4 個
   for (const r of rows) { if (pick.length >= 10) break; if (!pick.includes(r)) pick.push(r); }
   return pick.sort((a, b) => b.rate.score - a.rate.score);
@@ -2497,45 +2678,52 @@ function srcLine(r) { // 卡片最下面那行：價格是哪裡來的、什麼�
   return `報價來源 ${esc(r.src)}　<span data-pt="${id}">${hms(r.pt)}</span>${lagMin(r) >= 3 ? `　這個來源慢約 ${lagMin(r)} 分鐘` : ''}${r.ig ? '　已換算成 IG 價位' : ''}`;
 }
 function renderScan() {
-  const all = Object.values(scan.rows), st = $('#scan-status');
+  const all = Object.values(scan.rows), st = $('#scan-status'); pxIdx = null;
   st.textContent = scan.running ? `掃描中 ${scan.done}／${scan.total}…` : scan.last ? `${E.TF_NAME[S.scanTf]}K　${S.cls === 'top' ? '依評分排序' : '依評級排序'}　${hms(scan.last)} 更新${IG.cfg.on && !Data.demo ? `　價位基準：IG（${all.filter(r => r.ig).length} 項已換算）` : ''}` : '';
   if (S.cls === 'top') {
-    const top = topList(), closed = all.filter(r => !r.err && r.stale).length, bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length;
-    if (!top.length) { $('#scan-list').innerHTML = `<p class="loading">${scan.running ? '正在取得行情並評級…' : '沒有可評級的商品'}</p>`; return; }
-    $('#scan-list').innerHTML = (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）。` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
-      `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。同一類最多先選 4 個，避免集中在同一種行情。${closed ? `另有 ${closed} 項休市或報價延遲，未列入。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
+    const top = topList(), offs = all.map(rowOff).filter(Boolean), closed = offs.length, offNote = offLine(offs), bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length;
+    if (!top.length) { $('#scan-list').innerHTML = scan.running || !closed ? `<p class="loading">${scan.running ? '正在取得行情並評級…' : '沒有可評級的商品'}</p>` : `${offNote ? `<p class="t-off">${offNote}</p>` : ''}<p class="loading">現在沒有可以交易的商品，所以沒有精選名單。</p>`; return; }
+    $('#scan-list').innerHTML = (offNote ? `<p class="t-off">${offNote}</p>` : '') + (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）。` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
+      `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。同一類最多先選 4 個，避免集中在同一種行情。${closed ? `另有 ${closed} 項目前沒有交易（休市或報價延遲），沒有列入，可以到各分類查看。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
     return;
   }
   const rows = all.filter(r => S.cls === 'all' || r.inst.cls === S.cls);
-  rows.sort((a, b) => (a.err ? 1 : 0) - (b.err ? 1 : 0) || (b.rate ? b.rate.score : 0) - (a.rate ? a.rate.score : 0));
+  const offOf = new Map(rows.map(r => [r, rowOff(r)]));
+  rows.sort((a, b) => (a.err ? 1 : 0) - (b.err ? 1 : 0) || (offOf.get(a) ? 1 : 0) - (offOf.get(b) ? 1 : 0) || (b.rate ? b.rate.score : 0) - (a.rate ? a.rate.score : 0));
   if (!rows.length) { $('#scan-list').innerHTML = `<p class="loading">${scan.running ? '正在取得行情…' : '沒有資料'}</p>`; return; }
   $('#scan-list').innerHTML = rows.map(r => {
     const i = r.inst, f = v => E.fmt(v, i.dp);
     if (r.err) return `<button class="row err" data-id="${esc(i.id)}"><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}</small></span><span class="r-lv">取不到資料（${esc(r.err.slice(0, 60))}）</span></button>`;
-    const p = r.prob, side = p.bias < 0 ? `下跌 ${(p.down * 100).toFixed(0)}%` : `上漲 ${(p.up * 100).toFixed(0)}%`;
-    return `<button class="row" data-id="${esc(i.id)}"><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}</small></span><span class="r-spark">${r.spark}</span>
+    const p = r.prob, side = p.bias < 0 ? `下跌 ${(p.down * 100).toFixed(0)}%` : `上漲 ${(p.up * 100).toFixed(0)}%`, off = offOf.get(r);
+    return `<button class="row${off ? ' off' : ''}" data-id="${esc(i.id)}"><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}</small></span><span class="r-spark">${r.spark}</span>
       <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span>
       <span class="r-sig">${badge2(p)}<small>${side}</small></span>
-      <span class="r-lv">${gradeChip(r.rate.grade)}<span>${esc(r.stale ? '休市或延遲' : r.rate.label)}</span><span>撐 <span class="num">${f(r.s1.p)}</span></span><span>阻 <span class="num">${f(r.r1.p)}</span></span><span>${esc(r.regime)}</span><span class="src">${r.ig ? 'IG 價位' : esc(r.src.split(' ')[0]) + (lagMin(r) >= 3 ? ' 延遲' : '')}</span></span></button>`;
+      <span class="r-lv">${off ? `<span class="nt">沒有交易</span><span>${esc(off.why)}${off.re ? '・' + esc(off.re) : ''}</span>` : `${gradeChip(r.rate.grade)}<span>${esc(r.rate.label)}</span>`}<span>撐 <span class="num">${f(r.s1.p)}</span></span><span>阻 <span class="num">${f(r.r1.p)}</span></span><span>${esc(r.regime)}</span><span class="src">${r.ig ? 'IG 價位' : esc(r.src.split(' ')[0]) + (lagMin(r) >= 3 ? ' 延遲' : '')}</span></span></button>`;
   }).join('');
 }
-/* 畫面上的商品每 10 秒補抓一次最新價（只限直接連交易所的來源），不必等 60 秒一輪的重新評級 */
+/* 價格更新：Binance、Bybit、Hyperliquid 的商品由交易所即時推送（見「即時報價」）；
+   沒有推送的來源（或推送暫時中斷時）每 5 秒補抓一次最新價，不必等 60 秒一輪的重新評級 */
 const DIRECT = { binance: 1, binancef: 1, bybit: 1, bybits: 1, okx: 1, okxs: 1, krakenf: 1, hl: 1, bitget: 1 };
-const quick = { busy: false, last: 0 };
+const quick = { busy: false, last: 0, n: 0 };
+const shownRows = () => (S.cls === 'top' ? topList() : Object.values(scan.rows).filter(r => !r.err && (S.cls === 'all' || r.inst.cls === S.cls)));
+let pxIdx = null;
+function pxEls(id) {
+  if (!pxIdx) { pxIdx = {}; for (const a of ['px', 'pt', 'ch', 'bid', 'ask']) for (const el of $$('[data-' + a + ']')) { const k = el.getAttribute('data-' + a), o = pxIdx[k] || (pxIdx[k] = {}); (o[a] || (o[a] = [])).push(el); } }
+  return pxIdx[id] || {};
+}
 function paintPrice(r) {
-  const id = r.inst.id, sel = a => $$('[' + a + ']').filter(el => el.getAttribute(a) === id);
-  for (const el of sel('data-px')) el.textContent = E.fmt(r.price, r.inst.dp);
-  for (const el of sel('data-pt')) el.textContent = hms(r.pt);
-  const q = r.ig ? IG.quote(id) : null; if (q && isNum(q.bid)) { for (const el of sel('data-bid')) el.textContent = E.fmt(q.bid, r.inst.dp); for (const el of sel('data-ask')) el.textContent = E.fmt(q.offer, r.inst.dp); }
-  for (const el of sel('data-ch')) { el.className = dirCls(r.chg); el.textContent = isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''; }
+  const id = r.inst.id, e = pxEls(id), put = (els, v) => { if (els) for (const el of els) if (el.textContent !== v) el.textContent = v; };
+  put(e.px, E.fmt(r.price, r.inst.dp)); put(e.pt, hms(r.pt));
+  const q = r.ig ? IG.quote(id) : null; if (q && isNum(q.bid)) { put(e.bid, E.fmt(q.bid, r.inst.dp)); put(e.ask, E.fmt(q.offer, r.inst.dp)); }
+  if (e.ch) { const c = dirCls(r.chg); for (const el of e.ch) if (el.className !== c) el.className = c; put(e.ch, isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''); }
 }
 async function quickPrices() {
-  if (quick.busy || Data.demo) return; quick.busy = true; quick.last = Date.now();
+  if (quick.busy || Data.demo) return; quick.busy = true; quick.last = Date.now(); quick.n++;
   try {
-    const shown = S.cls === 'top' ? topList() : Object.values(scan.rows).filter(r => !r.err && (S.cls === 'all' || r.inst.cls === S.cls)).sort((a, b) => b.rate.score - a.rate.score).slice(0, 24);
-    await Promise.all(shown.filter(r => DIRECT[r.srcKey]).map(async r => {
+    const shown = shownRows().filter(r => !rowOff(r)).sort((a, b) => b.rate.score - a.rate.score);
+    await Promise.all(shown.filter(r => DIRECT[r.srcKey] && !Data.live(r.inst.id) && (r.srcKey !== 'hl' || quick.n % 2 === 0)).slice(0, 24).map(async r => { // 有即時推送的不用抓；Hyperliquid 的流量額度小，10 秒一次；一輪最多 24 項
       try {
-        const rec = await Data.get(r.inst, '1m', { limit: 40, maxAge: 8e3 }); if (rec.src.key !== r.srcKey || scan.rows[r.inst.id] !== r) return;
+        const rec = await Data.get(r.inst, '1m', { limit: 40, maxAge: 4e3 }); if (rec.src.key !== r.srcKey || scan.rows[r.inst.id] !== r) return;
         if (!!rec.ig !== !!r.ig) return; r.price = rec.cd[rec.cd.length - 1].c; r.pt = rec.pt || rec.ts; r.t = Date.now(); if (isNum(r.pdc) && r.pdc > 0) r.chg = (r.price / r.pdc - 1) * 100; paintPrice(r);
       } catch (e) { /* 下一輪再試 */ }
     }));
@@ -2546,6 +2734,46 @@ async function quickPrices() {
     } catch (e) { /* 下一輪再試 */ }
   } finally { quick.busy = false; }
 }
+
+/* ---------- 即時報價（交易所推送） ----------
+   沒接 IG 的商品：直接用推送的價格。有換算成 IG 價位的商品：每 3 秒讀一次 IG 的實際報價，
+   兩次之間用「上一次的 IG 價 ×（來源現在的價 ÷ 來源當時的價）」推算，所以會跟著行情即時跳動、每 3 秒對回 IG 的實際價格。 */
+const anchor = {}; let chartAt = 0;
+function livePrice(inst) {
+  const lv = Data.live(inst.id); if (!lv) return null; const b = IG.basis(inst); if (!b) return { p: lv.p, t: lv.t, ig: false };
+  const a = anchor[inst.id]; return { p: a && a.src > 0 && Date.now() - a.t < 15e3 ? a.mid * lv.p / a.src : lv.p * b.k, t: lv.t, ig: true };
+}
+function liveWant() { // 現在需要即時價的商品：畫面上看得到的＋追蹤中的；沒有交易的不用
+  const ids = new Set(), on = !document.hidden && S.auto && !Data.demo;
+  if (on && view === 'scan') for (const r of shownRows()) ids.add(r.inst.id);
+  if (on && view === 'detail' && det.inst) ids.add(det.inst.id);
+  if (!Data.demo) for (const p of TR.list) if (Track.active(p)) ids.add(p.instId);
+  Data.liveWant([...ids].map(id => Data.byId(id)).filter(i => i && !mktState(i).closed));
+  const dot = $('#live-dot'); if (dot) dot.hidden = !Data.liveStat().some(x => x.ok && x.want);
+}
+function liveDetail(x) { // 分析頁：現價、今日漲跌、圖上最新一根 K 線跟著跳（指標與評級仍等下一次重新分析）
+  const inst = det.inst, n = det.cd.length, last = det.cd[n - 1], pdc = det.A.levels.pivots ? det.A.levels.pivots.pdc : null;
+  $('#d-px').textContent = E.fmt(x.p, inst.dp);
+  if (isNum(pdc) && pdc > 0) { const ch = (x.p / pdc - 1) * 100; $('#d-chg').innerHTML = `<span class="${dirCls(ch)}">${dirGl(ch)} ${pct(ch)}</span> 今日`; }
+  if (!last || x.t >= last.t + E.TF[det.tf] || Math.abs(x.p / last.c - 1) > 0.05) return; // 已經換到下一根：等重新載入
+  det.cd[n - 1] = { t: last.t, o: last.o, h: Math.max(last.h, x.p), l: Math.min(last.l, x.p), c: x.p, v: last.v };
+  if (det.chart && det.chart.d && det.chart.d.cd === det.cd && Date.now() - chartAt > 400) { chartAt = Date.now(); det.chart.d.price = x.p; det.chart.draw(); }
+}
+Data.onLive = ids => {
+  const now = Date.now(); let ch = false;
+  for (const id of ids) {
+    const inst = Data.byId(id); if (!inst || mktState(inst).closed) continue; const x = livePrice(inst); if (!x) continue;
+    const r = scan.rows[id];
+    if (r && !r.err && !!r.ig === x.ig) { r.price = x.p; r.t = now; if (!x.ig) r.pt = x.t; if (isNum(r.pdc) && r.pdc > 0) r.chg = (x.p / r.pdc - 1) * 100; if (view === 'scan') paintPrice(r); }
+    if (view === 'detail' && det.inst && det.inst.id === id && det.A && det.cd && !det.loading && !!det.ig === x.ig) liveDetail(x);
+    for (const p of TR.list) { // 追蹤單：價格一到就提醒，不必等下一輪檢查
+      if (!Track.active(p) || p.instId !== id || (p.basis || 'src') !== (x.ig ? 'ig' : 'src')) continue;
+      p.price = x.p; p.priceT = now; if (x.ig) continue; // 換算成 IG 價位的單子，等 IG 的實際報價才判斷（見 IG.onChange），不用推算的價格
+      const evs = Track.step(p, [], x.p, now); for (const ev of evs) fire(p, ev); if (evs.length) ch = true;
+    }
+  }
+  if (ch) { saveTR(); badge(); if (view === 'track') renderTrack(); }
+};
 
 /* ---------- 單一商品分析 ---------- */
 const det = { A: null, inst: null, tf: null, loading: false, last: 0, sel: null, token: 0, key: null, chart: null, rate: null };
@@ -2562,7 +2790,8 @@ async function loadDetail(fresh) {
     const dr = rs[others.length], ns = News.score(inst), is = Inter.score(inst);
     const A = E.analyze({ cd: main.cd, tf, cls: inst.cls, dp: inst.dp, mtf, daily: dr.status === 'fulfilled' ? dr.value.cd : null, news: ns.score, newsNote: ns.note, inter: is.score, interNote: is.note, cost: costOf(inst) });
     if (A.error) throw new Error(A.error);
-    Object.assign(det, { A, inst, tf, src: main.src, ig: main.ig || null, pt: main.pt || main.ts, cd: main.cd, ns, is, last: Date.now(), rate: E.rate(A, ctxOf(inst, main.cd, tf)) });
+    const cx = ctxOf(inst, main.cd, tf);
+    Object.assign(det, { A, inst, tf, src: main.src, ig: main.ig || null, pt: main.pt || main.ts, cd: main.cd, ns, is, last: Date.now(), cx, rate: E.rate(A, cx) });
     if (offline) { offline = false; banner(); }
     renderDetail();
   } catch (e) {
@@ -2603,11 +2832,13 @@ function renderDetail() {
       $('#c-info').innerHTML = `<span>${active ? '' : '最新　'}${d.getMonth() + 1}/${d.getDate()} ${hm(b.t)}　<b>${b.c >= b.o ? '漲' : '跌'} ${pct(ch)}</b>　RSI <b>${isNum(I.rsi[i]) ? I.rsi[i].toFixed(0) : '—'}</b></span><span>開 <b>${f(b.o)}</b></span><span>高 <b>${f(b.h)}</b></span><span>低 <b>${f(b.l)}</b></span><span>收 <b>${f(b.c)}</b></span>`;
     });
   }
-  $('#d-px').textContent = f(A.price); $('#d-chg').innerHTML = isNum(A.chg) ? `<span class="${dirCls(A.chg)}">${dirGl(A.chg)} ${pct(A.chg)}</span> 今日` : '';
+  const off = det.cx && det.cx.closed ? mktState(inst, det.cx.stale) : null, lx = off && off.closed ? null : livePrice(inst);
+  $('#d-px').textContent = f(lx && lx.ig === !!det.ig ? lx.p : A.price);
+  $('#d-chg').innerHTML = off && off.closed ? '<span class="nt">沒有交易</span>' : isNum(A.chg) ? `<span class="${dirCls(A.chg)}">${dirGl(A.chg)} ${pct(A.chg)}</span> 今日` : '';
   // 研判與評級
   const p = A.prob, up = (p.up * 100).toFixed(0), dn = 100 - up, ev = News.events(inst, 6), soon = ev.filter(e => e.impact === 'High' && e.t - Date.now() < 90 * 60e3), rt = det.rate;
   const warns = [...soon.map(e => `<li class="hot">${e.t > Date.now() ? Math.max(1, Math.round((e.t - Date.now()) / 60e3)) + ' 分鐘後' : '剛剛'}公布「${esc(News.evName(e.title))}」（${esc(News.CUR_NAME[e.cur] || e.cur)}，高影響）。數據前後波動劇烈、點差會放大，建議避開。</li>`), ...A.warnings.map(w => `<li>${esc(w)}</li>`)];
-  $('#s-verdict').innerHTML = `<div class="v-top"><div class="v-label ${dirCls(p.bias)}"><span class="gl">${dirGl(p.bias)}</span>${p.label}</div><div class="v-reg">${esc(A.regime.label)}<br><span class="num">ADX ${A.regime.adx.toFixed(0)}　ATR ${A.atrPct.toFixed(2)}%</span></div></div>
+  $('#s-verdict').innerHTML = `${off && off.closed ? `<p class="closed-note"><b>沒有交易</b>　${esc(off.why)}${off.re ? '，' + esc(off.re) : ''}。下面的分析用的是休市前${off.by === 'stale' ? '' : '與交易所場外'}的價格，只能當開盤前的參考；這段期間不列入精選，追蹤單也不會判斷停損停利。</p>` : ''}<div class="v-top"><div class="v-label ${dirCls(p.bias)}"><span class="gl">${dirGl(p.bias)}</span>${p.label}</div><div class="v-reg">${esc(A.regime.label)}<br><span class="num">ADX ${A.regime.adx.toFixed(0)}　ATR ${A.atrPct.toFixed(2)}%</span></div></div>
     <div><div class="pbar" role="img" aria-label="上漲機率 ${up}%，下跌機率 ${dn}%"><i class="a" style="width:${up}%"></i><i class="b" style="width:${dn}%"></i></div><div class="pbar-lab"><span>上漲 <b>${up}%</b></span><span><b>${dn}%</b> 下跌</span></div></div>
     <div class="v-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span>${esc(rt.action)}</span><span class="num t-sc">${rt.score} 分</span></div>
     <p class="outlook">${esc(A.outlook)}</p>${warns.length ? `<ul class="warns">${warns.join('')}</ul>` : ''}
@@ -2725,6 +2956,13 @@ async function refreshNews(force) {
 
 /* ---------- 設定 ---------- */
 const diag = { rows: null, running: false };
+function liveText() { // 設定頁：即時推送目前的狀況
+  if (Data.demo) return '示範資料模式下沒有即時推送。';
+  const st = Data.liveStat().filter(x => x.n || x.fails || x.want), nm = a => a.map(x => x.name).join('、');
+  if (!st.length) return '即時推送：Binance、Bybit、Hyperliquid 來源的商品，在掃描或分析頁看到時會由交易所即時推送價格（大約每秒一次）。';
+  const ok = st.filter(x => x.ok), bad = st.filter(x => !x.ok && x.want && x.fails), idle = st.filter(x => !x.ok && !(x.want && x.fails));
+  return '即時推送：' + [ok.length ? nm(ok) + ' 正常' : '', bad.length ? nm(bad) + ' 連不上（先改成每 5–10 秒抓一次，會自動重試）' : '', idle.length ? nm(idle) + ' 待命中（畫面上有這些來源的商品時才連線）' : ''].filter(Boolean).join('；') + '。';
+}
 function renderSettings() {
   const seg = (name, cur, opts) => `<div class="seg">${opts.map(([v, t]) => `<button class="chip" data-set="${name}" data-v="${v}" aria-pressed="${String(cur) === String(v)}">${t}</button>`).join('')}</div>`;
   const cnt = c => Data.all().filter(i => i.cls === c).length;
@@ -2733,7 +2971,7 @@ function renderSettings() {
     <section class="card"><h2>顯示</h2><div class="form">
       <div class="f"><span>漲跌顏色</span>${seg('swap', S.swap, [[false, '紅漲綠跌（臺灣習慣）'], [true, '綠漲紅跌（國際習慣）']])}</div>
       <div class="f"><span>配色</span>${seg('theme', S.theme, [['auto', '跟隨系統'], ['dark', '深色'], ['light', '淺色']])}</div>
-      <div class="f"><span>自動更新</span>${seg('auto', S.auto, [[true, '開'], [false, '關']])}<small>分析頁每 8–15 秒、掃描頁每 60 秒更新一次；切到背景時暫停。追蹤中的單子每 15 秒檢查一次，不受這個開關影響。</small></div></div></section>
+      <div class="f"><span>自動更新</span>${seg('auto', S.auto, [[true, '開'], [false, '關']])}<small>價格由交易所即時推送（沒有推送的來源每 5 秒抓一次）；分析頁每 8–15 秒重新分析、掃描頁每 60 秒重新評級；切到背景時暫停。追蹤中的單子價格一到就提醒，不受這個開關影響。</small></div></div></section>
     <section class="card"><h2>點差成本 <small>占價格的百分比，來回一趟</small></h2><div class="three">${CLS.map(c => `<label>${Data.CLS_NAME[c]}<input type="number" step="0.001" min="0" data-cost="${c}" value="${S.cost[c]}"></label>`).join('')}</div>
       <p class="hint">回測與期望值都會扣掉這個成本。例：歐元／美元 0.006% 約等於 0.7 點。請依你券商的實際點差調整——週期越短，點差吃掉的比例越高。</p></section>
     <section class="card"><h2>自訂商品</h2><div class="form"><div class="three"><label>名稱<input type="text" id="cu-name" placeholder="例：台積電"></label><label>來源<select id="cu-src">${Object.entries(Data.SRC_NAME).filter(([k]) => k !== 'demo').map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></label><label>代號<input type="text" id="cu-sym" placeholder="例：2330.TW"></label></div>
@@ -2741,6 +2979,7 @@ function renderSettings() {
       ${Data.custom.length ? `<table class="diag">${Data.custom.map(c => `<tr><td>${esc(c.name)}</td><td>${esc(Data.SRC_NAME[c.src[0][0]])} ${esc(c.src[0][1])}</td><td style="text-align:right"><button class="btn sm" data-del="${esc(c.id)}">移除</button></td></tr>`).join('')}</table>` : ''}
       <p class="hint">代號請用該來源的寫法。Binance／Bybit 合約：NFLXUSDT、COINUSDT；OKX：BTC-USDT；Kraken：EURUSD；Yahoo：台股 2330.TW、0050.TW，美股 NFLX，期貨 GC=F，指數 ^SOX。</p></div></section>
     <section class="card"><h2>資料來源</h2><p class="pnote" style="margin-top:0">行情由你的瀏覽器直接向交易所（Binance、Bybit、Hyperliquid、Bitget、OKX、Kraken）的公開 API 讀取，不需要帳號。每個商品會依序嘗試多個來源，用第一個連得上的；Yahoo 行情、經濟行事曆與部分新聞則會經過公開的轉接服務（r.jina.ai）。</p>
+      <p class="pnote" id="live-stat">${esc(liveText())}</p>
       <p><button class="btn" id="diag-run">${diag.running ? '檢測中…' : '檢測資料來源'}</button> <button class="btn" id="demo-toggle">${Data.demo ? '改回即時行情' : '用示範資料看介面'}</button></p>
       ${diag.rows ? `<table class="diag">${diag.rows.map(r => `<tr><td>${esc(r.name)}</td><td>${r.ok ? '可用：' + esc(r.msg) : '<b>全部失敗</b>：' + esc(r.msg)}</td></tr>`).join('')}</table>` : ''}</section>
     <section class="card"><h2>怎麼讀這一頁</h2><ul class="plain">
@@ -2750,6 +2989,8 @@ function renderSettings() {
       <li>支撐、阻力來自：前高前低、較大週期的轉折、昨日高低收、樞紐點、費波那契、均線、布林、VWAP、一目均衡表、整數關卡、成交密集區與趨勢線，價位接近的會合併成一個區間。</li>
       <li>進場計畫的勝率與期望值已扣點差。1 分、5 分 K 的雜訊最多、點差占比最高；想提高勝率，先看 1 小時與 4 小時的方向，再用小週期找進場點。</li>
       <li>價格和你的券商不會完全一樣，每張卡片下方都寫了報價來源與時間。股票、原油、黃金、指數多半來自交易所的 24 小時合約，會和券商的報價差一點，美股休市時差距較大；標示「延遲」的來源慢 10–15 分鐘。「今日」漲跌是從臺北時間 08:00（國際換日）起算，和券商的算法可能不同。</li>
+      <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。IG 另外有獨立報價的「週末」市場，這一頁沒有分析。</li>
+      <li>價格多快更新：Binance、Bybit、Hyperliquid 來源的商品由交易所即時推送，大約每秒一次（畫面右上角會出現「即時」）；Kraken、Bitget、OKX 每 5 秒抓一次；Yahoo 轉接的來源慢 10–15 分鐘。連接 IG 的商品每 3 秒讀一次 IG 的實際報價，兩次之間依交易所的即時漲跌推算。評級與支撐阻力每 60 秒重算一次。</li>
       <li>如果你用 IG：在本頁最上面連接 IG 後，現價會改用 IG 的買賣報價，所有價位（支撐、阻力、進場、停損、停利）都會換算成 IG 的價位。做法是把整份 K 線乘上「IG 價 ÷ 來源價」的比例，所以型態和機率不變，只有價位對齊到 IG。個股與 ETF 因為 IG 的 API 不提供報價，維持原來源。</li>
       <li>本頁是分析輔助，不是投資建議。差價合約有槓桿，請務必設停損並控制每筆風險。</li></ul></section>`;
   renderIg();
@@ -2758,7 +2999,7 @@ function renderSettings() {
 const igDraft = { env: IG.cfg.env, key: IG.cfg.key, user: IG.cfg.user, pass: '', remember: IG.cfg.remember };
 function igLiveText() {
   const cn = IG.counts(), stale = IG.lastPoll && Date.now() - IG.lastPoll > 60e3;
-  return `已對應 ${cn.ok} 項商品${IG.mapping ? `，還在找 ${IG.mapLeft} 項…` : ''}。${IG.cfg.on ? `最近一次讀取報價 ${IG.lastPoll ? hms(IG.lastPoll) : '—'}${stale ? '（已超過一分鐘沒更新）' : ''}，每 6 秒更新。` : '目前暫停使用，價位是原本交易所的價格。'}`;
+  return `已對應 ${cn.ok} 項商品${IG.mapping ? `，還在找 ${IG.mapLeft} 項…` : ''}。${IG.cfg.on ? `最近一次讀取報價 ${IG.lastPoll ? hms(IG.lastPoll) : '—'}${stale ? '（已超過一分鐘沒更新）' : ''}，每 ${IG.pollSec()} 秒更新。` : '目前暫停使用，價位是原本交易所的價格。'}`;
 }
 function renderIg() {
   const el = $('#ig-card'); if (!el) return; const c = IG.cfg;
@@ -2797,6 +3038,16 @@ IG.onChange = kind => {
       r.price = q.mid; r.pt = q.t; r.t = Date.now(); if (isNum(r.pdc) && r.pdc > 0) r.chg = (q.mid / r.pdc - 1) * 100; if (view === 'scan') paintPrice(r);
     }
     if (view === 'detail' && det.inst && det.A) { const q = det.ig && IG.quote(det.inst.id); if (q && q.ok) $('#d-px').textContent = E.fmt(q.mid, det.inst.dp); if (!igs.open) igBox(); }
+    const now = Date.now(); let ch = false, flip = false;
+    for (const id in IG.q) { const q = IG.q[id]; if (q && q.ok && now - q.t < 10e3) { const lv = Data.live(id); anchor[id] = { mid: q.mid, t: q.t, src: lv ? lv.p : 0 }; } }
+    for (const p of TR.list) { // 換算成 IG 價位的追蹤單：每次拿到 IG 的實際報價就檢查一次
+      if (!Track.active(p) || (p.basis || 'src') !== 'ig') continue; const q = IG.quote(p.instId), inst = Data.byId(p.instId);
+      if (!q || !q.ok || now - q.t > 10e3 || !inst || !IG.basis(inst)) continue;
+      p.price = q.mid; p.priceT = now; const evs = Track.step(p, [], q.mid, now); for (const ev of evs) fire(p, ev); if (evs.length) ch = true;
+    }
+    if (ch) { saveTR(); badge(); if (view === 'track') renderTrack(); }
+    for (const r of Object.values(scan.rows)) { if (r.err) continue; const c = !!rowOff(r); if (r.offWas != null && r.offWas !== c) flip = true; r.offWas = c; } // IG 回報開盤或收盤了：馬上重排
+    if (flip) { scan.dirty = true; if (view === 'scan') renderScan(); }
   }
   if (cn.ok !== igCnt) { igCnt = cn.ok; scan.dirty = true; } // 對應到新的商品：下一輪重新評級，把價位換到 IG
   const sig = [IG.state, IG.msg, IG.mapping, cn.ok, !!IG.sess, IG.cfg.on].join('|');
@@ -2904,19 +3155,20 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'igs-term') { const b = document.querySelector('[data-igs="go"]'); if (b) b.click(); } });
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.k; if (k) openSt[k] = e.target.open; }, true);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { TR.last = 0; monitor(); quick.last = 0; } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { TR.last = 0; monitor(); quick.last = 0; liveWant(); } });
 window.addEventListener('resize', () => { if (det.chart && view === 'detail') det.chart.draw(); });
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => det.chart && det.chart.draw());
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => det.chart && det.chart.draw());
 
 function tick() {
   $('#clock').textContent = hms(Date.now()); const now = Date.now();
-  if (now - TR.last > 15e3) monitor(); // 追蹤單不受「自動更新」與背景影響
+  if (now - TR.last > 5e3) monitor(); // 追蹤單不受「自動更新」與背景影響
+  liveWant();
   IG.bg = TR.list.some(Track.active); IG.prio = [S.inst, ...TR.list.filter(Track.active).map(p => p.instId), ...(S.cls === 'top' ? topList().map(r => r.inst.id) : [])]; IG.tick();
   if (document.hidden || !S.auto || Data.demo) return;
   if (view === 'detail' && det.inst && !det.loading && now - det.last > (E.TF[S.tf] <= 300e3 ? 8e3 : 15e3)) loadDetail(false);
   if (view === 'scan' && !scan.running && scan.last && (now - scan.last > 60e3 || (scan.dirty && now - scan.last > 20e3))) runScan();
-  if (view === 'scan' && scan.last && now - quick.last > 10e3) quickPrices();
+  if (view === 'scan' && scan.last && now - quick.last > 5e3) quickPrices();
   if (view === 'track' && !scan.running && now - scan.last > 5 * 60e3 && TR.list.some(Track.active)) runScan(); // 讓追蹤單的評級保持更新
   if (!News.loading && now - News.updated > 12 * 60e3) refreshNews(false);
 }
@@ -2927,7 +3179,7 @@ function boot() {
   banner(); show(VIEWS.includes(h) ? h : 'scan');
   refreshNews(true); setInterval(tick, 1000); tick();
 }
-window.__app = { S, det, scan, show, setDemo, TR, addTrack, monitor };
+window.__app = { S, det, scan, show, setDemo, TR, addTrack, monitor, mktState, topList, livePrice };
 boot();
 })();
 
