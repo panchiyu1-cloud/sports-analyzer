@@ -29,10 +29,10 @@ from twscan.engine import Engine, load_config  # noqa: E402
 from twscan.util import log, now_tw  # noqa: E402
 
 SESSION_END = (14, 10)    # 盤中模式結束時間（台北）
-MAX_MINUTES = 340         # GitHub 一個工作最多 6 小時：留時間給存快取
+MAX_MINUTES = 352         # GitHub 一個工作最多 6 小時（stock.yml 設 358 分鐘）：08:18 啟動可以一路跑到 14:10，留幾分鐘存快取
 ONCE_MINUTES = 55         # 非盤中：最多等這麼久讓一輪完整掃描跑完
 # 小而重要、不能重算的資料：除了 Actions 快取，另外在 stock-data 分支存一份，快取被清掉也不會遺失
-STATE_DIRS = ("close_lists", "daytrade", "review")
+STATE_DIRS = ("close_lists", "daytrade", "review", "preopen")
 BRANCH = "stock-data"
 # 推送頻率（秒）
 EVERY = {"live": 60, "market": 180, "key_stocks": 300, "tf": 600, "slow": 900, "all_stocks": 3600}
@@ -159,6 +159,9 @@ class Publisher:
                     self.write("top.json", eng.api_top())
                     self.write("daytrade.json", eng.daytrade.api())
                     self.write("quotes.json", self.quotes())
+                    pre = eng.api_preopen()      # 開盤前試撮（08:30 起）；開盤後留到 09:40 對照實際開盤價
+                    if pre.get("phase") != "none" or self._read("preopen.json") is None:
+                        self.write("preopen.json", pre)
                     wrote.append("live")
                 ready = bool(eng.status.get("first_scan_done")) or bool(eng.analysis)
                 if ready and self.due("market", force):
@@ -218,7 +221,11 @@ class Publisher:
         for sub in STATE_DIRS:
             src_dir = self.eng._p(sub)
             if os.path.isdir(src_dir):
-                shutil.copytree(src_dir, os.path.join(self.out, "state", sub), dirs_exist_ok=True)
+                try:   # 掃描程式正在寫的暫存檔（*.tmp）不複製；複製到一半檔案被換掉也不能讓整輪停下來
+                    shutil.copytree(src_dir, os.path.join(self.out, "state", sub), dirs_exist_ok=True,
+                                    ignore=shutil.ignore_patterns("*.tmp"))
+                except (shutil.Error, OSError) as e:
+                    log(f"[雲端] 備份 {sub} 時有檔案正在更新，下一輪再補（{type(e).__name__}）")
 
     # ---------------------------------------------------------------- git
     def git(self, *args):

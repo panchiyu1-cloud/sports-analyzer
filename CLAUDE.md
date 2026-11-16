@@ -617,9 +617,9 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   `stock/cloud.py` runs it headless; the sports rules above (style, tests in tests/, CI) do
   not apply to `stock/` and CI never imports it (pytest testpaths = tests). Do not "fix" it to
   the repo's style; changes are made in the Mac version and copied over (stock/README.md).
-- `.github/workflows/stock.yml` (concurrency group stock): weekday runs from 05:00 Taipei
+- `.github/workflows/stock.yml` (job `scan`, concurrency group stock): weekday runs from 05:00 Taipei
   (many start times: on 2026-11-13 none of the 08:05-09:10 crons had started by 09:13) run
-  the session to 14:10, reading MIS every few seconds; a run stops after 340 minutes (job
+  the session to 14:10, reading MIS every few seconds; a run stops after 352 minutes (job
   limit 6 h) and, when the session is not over, starts its successor itself (output
   `chain`, step "Hand over": workflow_dispatch with GITHUB_TOKEN, `actions: write`), which
   waits in the concurrency queue and restores the cache. Unscheduled holidays: a session run
@@ -627,7 +627,28 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   19:15 scan once (institutional data, closing list, review). The runner reached every source from GitHub (probe 2026-11-13: TWSE OpenAPI, TPEx,
   MIS, www.twse.com.tw, ISIN, Yahoo, Google News, cnyes); MIS refuses r.jina.ai (TWSE WAF), so
   the browser can never read quotes itself: everything comes from the runner.
-- Output: JSON for the page (status, top, market, daytrade, review, diag, stock/<code>,
+- Started by the phone's 08:00 upload (owner, 2026-11-16: 「交易日的8:30就開始收集股市釋出的價格並且
+  開始分析，讓我可以在九點的時候思考」). The schedule cannot promise 08:30 (2026-11-16: first start
+  08:39; the 11-13 evening crons started eight hours late; sensor.yml runs were 4-7 hours apart),
+  but the owner's phone pushes the 運彩 feed at 08:00 Taipei every day and a push starts a run
+  within seconds: stock.yml also triggers on `data/tw/**`. Job `gate` lets a push through on
+  weekdays 05:00-14:10 only, sleeps until 08:18 (started at 08:00 the 6-hour job would have to
+  hand over at 13:40) and skips when another stock run is already at work (the same minute's
+  other upload = the lower run id goes; a scheduled or handed-over run). Never remove the tw
+  upload path from this trigger without another on-time start; the crons are only the fallback.
+- 開盤前試撮 (`stock/twscan/preopen.py`): TWSE discloses a simulated match (price, lots, best
+  five) every 5 s from 08:30; nothing trades before 09:00. `PreOpen.feed` (called from
+  `apply_quote`, today's quotes timed before 09:00 only) keeps each stock's trial price / lots
+  per minute; trial prices never enter `snap`. `board` -> preopen.json every minute: yesterday's
+  closing top 10 and 試撮轉強 (model top 80, verdict "ok") with the expected opening gap and a
+  verdict (`judge`: 可留意 0.3%..chase_gap_pct, 勿追, 開低, 量太少, 忽高忽低, 漲跌停), the
+  market's mood, and after the open the real opening price next to the last trial; a daily
+  comparison is saved after 09:10 (data/preopen/, also in stock-data/state/). The page shows
+  the panel on weekdays 08:25-09:40 (device clock, Taipei). The thresholds are unvalidated
+  design values, and the meaning of MIS `pz` / `ps` before the open was not observable when this
+  was written (2026-11-16, mid-session): preopen.json carries `samples` (raw MIS fields of four
+  stocks) to check them against after the first morning.
+- Output: JSON for the page (status, top, market, daytrade, review, diag, preopen, stock/<code>,
   tf/<code>-30m|60m, meta) force-pushed every minute to the orphan branch `stock-data` (one
   commit, amended each time: no history). docs/stock/cloud.js reads the branch head SHA from
   the GitHub API (60 unauthenticated requests/hour per IP: at most one per 75 s) and the files

@@ -120,6 +120,10 @@ def _split_levels(s):
     return [v for v in vals if v is not None]
 
 
+# 開盤前留幾檔的原始欄位（核對 pz、ps 這些欄位在試撮時段的意思用；見 preopen.py）
+MIS_RAW_CODES = ("2330", "2317", "0050", "6488")
+
+
 def fetch_mis(http, channels):
     """證交所基本市況報導 API，一次最多約 100 檔。回傳 list[dict]。"""
     if not channels:
@@ -151,6 +155,8 @@ def fetch_mis(http, channels):
             "date": to_iso_date(d) if d else None, "time": m.get("t"),
             # z（當盤成交價）只有揭示那一刻剛好有成交才有值，大多數時候是 "-"；pz 是集合競價的試撮／開盤價
             "trial": num(m.get("pz")), "raw_z": m.get("z"),
+            "trial_vol": num(m.get("ps")),   # 試撮張數（開盤後是開盤那一筆集合競價的張數）
+            "raw": dict(m) if code in MIS_RAW_CODES else None,
         })
     return out
 

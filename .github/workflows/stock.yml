@@ -17,8 +17,21 @@ name: 臺股強勢掃描 (stock)
 # its cache and carries on. A run that starts after 14:10 scans once, publishes, ends.
 # State (price history of ~1,400 stocks, lists, the review) lives in the Actions cache; the
 # small files that cannot be rebuilt are also copied to stock-data/state/.
+#
+# 08:30 (owner, 2026-11-16: the scanner must be collecting the exchange's pre-open trial prices
+# from 08:30, twscan/preopen.py, so that he can decide at 09:00). The schedule cannot promise
+# that: on 2026-11-16 the first of the 05:00-08:45 crons started at 08:39, and the evening crons
+# of 11-13 started eight hours late. What does arrive on time is the owner's phone: it uploads
+# the 運彩 feed at 08:00 Taipei every day (data/tw/**, tw.yml), and a push starts a run within
+# seconds. So that upload also starts this workflow: job `gate` lets it through on a weekday
+# morning only, waits until 08:18 (a job may run 6 hours: started at 08:00 it would have to hand
+# over at 13:40) and skips when another run of this workflow is already at work. The crons stay
+# as the fallback for a day without an upload.
 
 on:
+  push:
+    branches: [main]
+    paths: ["data/tw/**"]
   schedule:
     # Taipei = UTC+8, so Taipei's weekday mornings before 08:00 are UTC Sunday-Thursday.
     - cron: "0,20,40 21-23 * * 0-4"  # 05:00-07:40 Taipei, Monday-Friday
@@ -29,18 +42,57 @@ on:
     - cron: "15 11 * * 1-5"          # 19:15 Taipei: anything published late
   workflow_dispatch:
 
-concurrency:
-  group: stock
-  cancel-in-progress: false
-
 permissions:
   contents: write   # push the stock-data branch
-  actions: write    # start the next run (workflow_dispatch) when this one hits its time limit
+  actions: write    # start the next run (workflow_dispatch) when this one hits its time limit; read the run list (gate)
 
 jobs:
-  scan:
+  # Runs started by the phone's upload: only a weekday morning has work for the scanner.
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+    timeout-minutes: 30
+    outputs:
+      go: ${{ steps.decide.outputs.go }}
+    steps:
+      - name: Decide whether this run scans
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          go=true
+          if [ "$EVENT" = "push" ]; then
+            now() { TZ=Asia/Taipei date +"$1"; }
+            hm=$(( 10#$(now %H) * 60 + 10#$(now %M) ))
+            # Monday-Friday, 05:00-14:10 Taipei: the trading session. Any other upload (20:00, weekends): nothing to do.
+            if [ "$(now %u)" -gt 5 ] || [ "$hm" -lt 300 ] || [ "$hm" -ge 850 ]; then
+              go=false
+            else
+              if [ "$hm" -lt 498 ]; then
+                echo "Upload at $(now %H:%M): waiting until 08:18 Taipei to start the session"
+                sleep $(( (498 - hm) * 60 - 10#$(now %S) ))
+              fi
+              # Another run of this workflow already at work (the other upload of the same minute, which has the
+              # lower run id, or a scheduled / handed-over run): this one is not needed.
+              busy=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow stock.yml --limit 30 \
+                       --json databaseId,status,event \
+                       --jq "[.[] | select(.status != \"completed\" and .databaseId != $GITHUB_RUN_ID and (.databaseId < $GITHUB_RUN_ID or .event != \"push\"))] | length" \
+                     || echo 0)
+              if [ "${busy:-0}" -gt 0 ]; then go=false; fi
+            fi
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
+          echo "event=$EVENT go=$go"
+
+  scan:
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
+    # One scanner at a time; a later run waits here (and takes over when this one ends).
+    concurrency:
+      group: stock
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    timeout-minutes: 358
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

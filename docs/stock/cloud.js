@@ -364,6 +364,7 @@ window.TWSCAN_CLOUD = (() => {
         return st;
       }
       case '/api/top': return patch((await file('top.json')) || { pending: true, mode: 'close' }, 0);
+      case '/api/preopen': return (await file('preopen.json')) || { phase: 'none', n: 0, picks: [], strong: [] };
       case '/api/market': return patchMarket((await file('market.json')) || { rows: [], pending: true });
       case '/api/review': return (await file('review.json')) || { pending: true };
       case '/api/daytrade': {

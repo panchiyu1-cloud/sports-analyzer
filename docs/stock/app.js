@@ -197,6 +197,7 @@ function showTop() {
   S.cardsKey = null;
   $('#view').innerHTML = `
     <section class="section"><div class="index-row" id="idxRow"></div></section>
+    <div id="preBox"></div>
     <section class="section">
       <div class="section-head"><h2 id="listTitle">最有可能上漲的 10 檔</h2><span class="sub" id="topSub"></span></div>
       <div class="listswitch" id="listSwitch"></div>
@@ -211,7 +212,9 @@ function showTop() {
     </section>`;
   if (S.status) { renderIndexRow(S.status); renderModel(S.status); renderMarketNews(S.status); }
   loadTop();
+  loadPre();
   S.timers.push(setInterval(() => { if (fastMode() || Date.now() - S.topLoaded > 120000) loadTop(); }, 20000));
+  S.timers.push(setInterval(loadPre, 20000));
   S.timers.push(setInterval(() => { if (S.listMode === 'dt' && (fastMode() || Date.now() - (DT.loaded || 0) > 60000)) dtLoad(); }, 10000));
 }
 
@@ -222,6 +225,56 @@ async function loadTop() {
   if (S.view !== 'top') return;
   S.top = d;
   renderTop();
+}
+
+// ---------------------------------------------------------------- 開盤前試撮（08:30–09:00）
+// 證交所 08:30 起每 5 秒揭示一次模擬撮合的結果。程式把每檔的試撮價量記下來（twscan/preopen.py），
+// 這裡在平日 08:25–09:40 顯示：昨天選出的前 10 名今天預估怎麼開、哪些股票試撮轉強。
+function tpeHM() {   // 台北時間的星期、日期與「幾點幾分」（換算成分鐘），用這台裝置的時鐘
+  const p = {};
+  new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Taipei', weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
+    .formatToParts(new Date()).forEach((x) => { p[x.type] = x.value; });
+  return { wd: p.weekday, date: `${p.year}-${p.month}-${p.day}`, hm: (+p.hour % 24) * 60 + +p.minute };
+}
+const preWindow = (t) => !['Sat', 'Sun'].includes(t.wd) && t.hm >= 505 && t.hm < 580 && !(S.status && S.status.demo);
+async function loadPre() {
+  if (S.view !== 'top') return;
+  if (!preWindow(tpeHM())) { S.pre = null; renderPre(); return; }
+  try { S.pre = await api('/api/preopen'); } catch (e) { /* 讀不到就維持上一次的 */ }
+  renderPre();
+}
+function renderPre() {
+  const el = $('#preBox');
+  if (!el) return;
+  const t = tpeHM(), d = S.pre;
+  if (!preWindow(t)) { el.innerHTML = ''; return; }
+  if (!d || d.date !== t.date || !d.n) {
+    el.innerHTML = `<section class="section"><div class="panel track pre"><div class="track-head"><h3>開盤前試撮</h3></div>
+      <div class="muted small">${t.hm < 510 ? '08:30 開始蒐集今天的試撮價量，之後每分鐘更新。' : '還沒收到今天的試撮資料。' + (CLOUD ? '雲端主機可能還沒啟動；資料到了會自動出現。' : '')}</div></div></section>`;
+    return;
+  }
+  const opened = d.phase !== 'collect', m = d.mood || {};
+  const fp = (p) => (p == null ? '—' : p < 100 ? p.toFixed(2) : p < 1000 ? p.toFixed(1) : fmtInt(p));
+  const head = `<thead><tr><th>股票</th><th class="n">試撮價</th><th class="n">預估開盤</th>${opened ? '<th class="n">實際開盤</th>' : ''}<th class="n hide-sm">試撮量（張）</th><th>判讀</th></tr></thead>`;
+  const row = (r) => `<tr onclick="location.hash='stock-${r.code}'"><td>${r.rank ? `<span class="cd">${r.rank}.</span>` : ''}<span class="nm">${esc(r.name)}</span> <span class="cd hide-sm">${r.code}</span></td>
+    <td class="n num">${fp(r.trial)}</td><td class="n num ${clsOf(r.gap)}">${pct(r.gap)}</td>${opened ? `<td class="n num ${clsOf(r.open_gap)}">${pct(r.open_gap)}</td>` : ''}
+    <td class="n num hide-sm">${r.vol != null ? fmtInt(r.vol) : '—'}${r.vol_pct != null ? ` <span class="muted">(${r.vol_pct}%)</span>` : ''}</td>
+    <td><span class="st ${r.kind}">${stIcon(r.kind)} ${esc(r.label)}</span></td></tr>`;
+  const table = (rows) => `<div class="table-scroll"><table class="tbl">${head}<tbody>${rows.map(row).join('')}</tbody></table></div>`;
+  const warn = opened
+    ? `已經開盤。下面是 09:00 前最後的試撮和實際開盤價的對照${d.check ? `：全市場 ${fmtInt(d.check.n)} 檔平均相差 ${d.check.avg}%，其中 ${d.check.within}% 的股票相差不到 0.5%` : ''}。`
+    : (d.reliable ? '已經接近開盤，試撮價比較有參考價值。' : '現在還早，試撮價只能看方向，08:55 之後比較可靠。') + '試撮不是成交，開盤前可以撤單：量太少或價格忽高忽低的不要當真。';
+  el.innerHTML = `<section class="section"><div class="panel track pre">
+    <div class="track-head"><h3>開盤前試撮 <span class="muted">${esc((d.last || d.now || '').slice(0, 5))} 更新・已收到 ${fmtInt(d.n)} 檔</span></h3></div>
+    <div class="pre-warn">${warn}</div>
+    <div class="mood">大盤氣氛：預估開高 <b class="up">${fmtInt(m.up)}</b> 檔、開低 <b class="down">${fmtInt(m.down)}</b> 檔、持平 ${fmtInt(m.flat)} 檔${m.median != null ? `，中位數 <b class="${clsOf(m.median)}">${pct(m.median)}</b>` : ''}</div>
+    <h4>${md(d.list_date)} 收盤後選出的前 10 名</h4>
+    ${d.picks.length ? table(d.picks) : '<div class="muted small">還沒有收盤名單。</div>'}
+    <h4>試撮轉強 <span class="muted">模型分數較高、預估小幅開高、量夠、價格穩定</span></h4>
+    ${d.strong.length ? table(d.strong) : '<div class="muted small">目前沒有符合的股票。</div>'}
+    <div class="muted small">判讀規則：預估開高 0.3%～${d.chase_gap}% 而且量夠、價格穩定＝可留意；開高 ${d.chase_gap}% 以上＝勿追；開低 1% 以上＝先觀望；
+      試撮量不到 10 張、或不到近 5 日均量的 0.5%＝量太少；最近 5 分鐘試撮價的高低差 2% 以上＝忽高忽低。括號是試撮量占近 5 日均量的比例。
+      這些規則還沒有用歷史資料驗證，只是幫你在開盤前整理資訊，不是買賣建議。</div></div></section>`;
 }
 
 function renderIndexRow(st) {

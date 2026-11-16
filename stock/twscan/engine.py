@@ -12,6 +12,7 @@ from . import news as nw
 from . import sources as src
 from . import quotes
 from .daytrade import DayTrade
+from .preopen import PreOpen
 from .net import Http
 from .review import Review
 from .util import (DATA_DIR, TW, clamp, log, market_phase, now_tw, r2, read_json,
@@ -105,6 +106,7 @@ class Engine:
         self.intra = {}               # 分時 K 線快取：(code, "30m"|"60m") -> {"t": 抓取時間, "bars": [...]}
         self.live_cands = []          # 盤中即時名單的完整排序（當沖模式用）
         self.daytrade = DayTrade(self)
+        self.preopen = PreOpen(self)   # 開盤前（08:30–09:00）的試撮價量
 
     # ================================================================== 基本
     def _p(self, *parts):
@@ -927,6 +929,10 @@ class Engine:
             if price:
                 self.index[key] = {"name": name, "price": price, "prev": q["prev"], "date": q["date"], "time": q["time"]}
             return
+        try:
+            self.preopen.feed(q)   # 開盤前的試撮價量另外記（不當成成交價，不動下面的快照）
+        except Exception:
+            traceback.print_exc()
         old = self.snap.get(code) or {}
         if not q.get("date") or (old.get("date") or "") > q["date"]:
             return
@@ -1283,6 +1289,9 @@ class Engine:
             traceback.print_exc()
         return {"mode": "live" if live else "close", "close": close, "live": livep if live else None,
                 "track": track, "now": self.clock().strftime("%H:%M")}
+
+    def api_preopen(self):
+        return self.preopen.board()
 
     def top_payload_list(self):
         out = list((self.close_payload or {}).get("top", []))

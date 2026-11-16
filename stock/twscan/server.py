@@ -63,6 +63,8 @@ def make_handler(engine):
                     self._json(engine.api_status())
                 elif u.path == "/api/top":
                     self._json(engine.api_top())
+                elif u.path == "/api/preopen":
+                    self._json(engine.api_preopen())
                 elif u.path == "/api/market":
                     self._json(engine.api_market())
                 elif u.path == "/api/stock":
