@@ -347,7 +347,7 @@
 <div class="masthead">
   <div class="bar">
     <a class="brand" href="index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="13" fill="none" stroke="#2A93D8" stroke-width="2.4"/><path d="M9.5 6.6c3 2.6 4.7 5.9 4.7 9.4s-1.7 6.8-4.7 9.4M22.5 6.6c-3 2.6-4.7 5.9-4.7 9.4s1.7 6.8 4.7 9.4" fill="none" stroke="#CC7F1A" stroke-width="2"/></svg><span>比賽分析</span></a>
-    <span class="stamp">更新 <b>11/16 11:17</b> 台灣時間</span>
+    <span class="stamp">更新 <b>11/16 12:02</b> 台灣時間</span>
   </div>
   <nav class="nav" aria-label="分析方法">
     <a href="live/" class="nav-live">即時精選</a><a href="index.html">總覽</a><a href="value.html">運彩價值</a><a href="t10.html">T-10</a><a href="nba.html">NBA</a><a href="radar.html">延遲雷達</a><a href="moves.html">盤口移動</a><a href="model.html" aria-current="page">模型分歧</a><a href="fade.html">反者道之動</a><a href="reviews.html">全部檢討</a>  </nav>
@@ -355,34 +355,34 @@
 <main class="wrap">
 <section class="hero">
   <h1>足球模型回測</h1>
-  <p class="lede">產生：2026/11/09 11:51・五大聯賽・逐週走勢（嚴格 out-of-sample）・衰減 xi=0.0065。<a href="model.html">回到模型分歧</a></p>
+  <p class="lede">產生：2026/11/16 12:02・五大聯賽・逐週走勢（嚴格 out-of-sample）・衰減 xi=0.0065。<a href="model.html">回到模型分歧</a></p>
 </section>
-<div class="report-verdict fail"><b>結論</b>　未通過：所有門檻的 CLV 都是負的——收盤市場認為這些注是負期望值；看到的正 ROI 在誤差範圍內，是運氣不是能力。 混合模型給純模型的權重 a=-0.187（≤ 0 表示模型相對市場沒有額外資訊）。</div>
+<div class="report-verdict fail"><b>結論</b>　未通過：所有門檻的 CLV 都是負的——收盤市場認為這些注是負期望值；看到的正 ROI 在誤差範圍內，是運氣不是能力。 混合模型給純模型的權重 a=-0.185（≤ 0 表示模型相對市場沒有額外資訊）。</div>
 
 <h2 class="sect">1. 預測品質（log-loss，越低越好）</h2>
 <div class="scroll"><table class="tbl">
 <tr><th>純模型 (Dixon-Coles)</th><th>賽前市場 (Pinnacle 週五)</th><th>收盤市場</th><th>混合 (模型+市場)</th><th>只校準市場 (無模型)</th><th>場數</th></tr>
-<tr><td>1.0022</td><td>0.9704</td><td>0.9686</td><td>0.9703</td><td>0.9707</td><td>2903</td></tr>
+<tr><td>1.0003</td><td>0.9684</td><td>0.9665</td><td>0.9682</td><td>0.9687</td><td>2951</td></tr>
 </table></div>
-<p class="stamp-line">大小 2.5：純模型 0.6989 · 市場 0.6739 · 混合 0.6751（2903 場）。模型能否預測盤口走向（模型偏差 vs 收盤變動的相關係數）：主 -0.04、和 0.052、客 -0.045——接近 0 代表模型看不到市場稍後才納入的資訊。</p>
+<p class="stamp-line">大小 2.5：純模型 0.6993 · 市場 0.674 · 混合 0.6752（2951 場）。模型能否預測盤口走向（模型偏差 vs 收盤變動的相關係數）：主 -0.037、和 0.051、客 -0.043——接近 0 代表模型看不到市場稍後才納入的資訊。</p>
 
 <h2 class="sect">2. 混合機率的下注表現（每注 1 單位，賽前 Pinnacle 價）</h2>
 <p class="stamp-line"><b>CLV</b> = 以收盤公允機率衡量這張注的期望值。這是判斷有沒有真本事的標準；ROI 只有幾百注時誤差 ±5–10%，看 ROI 會被運氣騙。</p>
 <div class="scroll"><table class="tbl"><tr><th>edge 門檻</th><th>注數</th><th>損益</th><th>ROI（±1se）</th><th>CLV（±1se）</th><th>選項分布</th></tr>
-<tr><td>≥ 0pp</td><td>2553</td><td class="pos">+55.1</td><td>+2.2% (±2.8%)</td><td class="neg">-2.15% (±0.14%)</td><td class="muted">主 297・和 724・客 1532</td></tr><tr><td>≥ 2pp</td><td>1609</td><td class="pos">+37.4</td><td>+2.3% (±3.5%)</td><td class="neg">-2.29% (±0.18%)</td><td class="muted">主 82・和 296・客 1231</td></tr><tr><td>≥ 3pp</td><td>1016</td><td class="pos">+49.9</td><td>+4.9% (±4.2%)</td><td class="neg">-2.32% (±0.24%)</td><td class="muted">主 31・和 87・客 898</td></tr><tr><td>≥ 4pp</td><td>594</td><td class="pos">+40.0</td><td>+6.7% (±5.1%)</td><td class="neg">-2.39% (±0.32%)</td><td class="muted">主 12・和 9・客 573</td></tr><tr><td>≥ 6pp</td><td>175</td><td class="pos">+15.5</td><td>+8.9% (±8.9%)</td><td class="neg">-2.06% (±0.54%)</td><td class="muted">主 1・和 0・客 174</td></tr></table></div>
-<p class="stamp-line">同樣的注改用各家最佳賽前價：≥0pp ROI +3.0% / CLV -1.51%；≥2pp ROI +3.3% / CLV -1.50%；≥3pp ROI +5.8% / CLV -1.65%；≥4pp ROI +8.1% / CLV -1.48%；≥6pp ROI +10.3% / CLV -1.21%；</p>
+<tr><td>≥ 0pp</td><td>2599</td><td class="pos">+60.9</td><td>+2.3% (±2.7%)</td><td class="neg">-2.14% (±0.14%)</td><td class="muted">主 305・和 731・客 1563</td></tr><tr><td>≥ 2pp</td><td>1629</td><td class="pos">+41.4</td><td>+2.5% (±3.4%)</td><td class="neg">-2.24% (±0.18%)</td><td class="muted">主 83・和 296・客 1250</td></tr><tr><td>≥ 3pp</td><td>1029</td><td class="pos">+51.3</td><td>+5.0% (±4.2%)</td><td class="neg">-2.24% (±0.24%)</td><td class="muted">主 31・和 87・客 911</td></tr><tr><td>≥ 4pp</td><td>599</td><td class="pos">+40.3</td><td>+6.7% (±5.1%)</td><td class="neg">-2.35% (±0.31%)</td><td class="muted">主 12・和 9・客 578</td></tr><tr><td>≥ 6pp</td><td>175</td><td class="pos">+15.5</td><td>+8.9% (±8.9%)</td><td class="neg">-2.06% (±0.54%)</td><td class="muted">主 1・和 0・客 174</td></tr></table></div>
+<p class="stamp-line">同樣的注改用各家最佳賽前價：≥0pp ROI +3.1% / CLV -1.54%；≥2pp ROI +3.5% / CLV -1.47%；≥3pp ROI +5.8% / CLV -1.58%；≥4pp ROI +8.1% / CLV -1.45%；≥6pp ROI +10.3% / CLV -1.21%；</p>
 
 <h2 class="sect">3. 對照組</h2>
 <div class="scroll"><table class="tbl"><tr><th>策略</th><th>注數</th><th>ROI</th><th>CLV</th></tr>
-<tr><td>純模型 edge ≥ 4pp（Phase 1 作法）</td><td>1799</td><td class="neg">-7.0%</td><td class="neg">-3.04%</td></tr><tr><td>純模型 edge ≥ 10pp（Phase 1 作法）</td><td>674</td><td class="neg">-11.5%</td><td class="neg">-3.58%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 0pp</td><td>2537</td><td class="neg">-2.4%</td><td class="neg">-2.42%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 2pp</td><td>1368</td><td class="pos">+0.7%</td><td class="neg">-2.77%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 3pp</td><td>686</td><td class="neg">-0.6%</td><td class="neg">-2.35%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 4pp</td><td>184</td><td class="pos">+1.4%</td><td class="neg">-2.55%</td></tr><tr><td>永遠買熱門</td><td>2903</td><td class="neg">-0.4%</td><td class="neg">-1.95%</td></tr>
-<tr><td>大小 2.5 混合 edge ≥ 0pp</td><td>2903</td><td class="neg">-5.1%</td><td class="neg">-3.10%</td></tr><tr><td>大小 2.5 混合 edge ≥ 2pp</td><td>588</td><td class="neg">-5.8%</td><td class="neg">-3.11%</td></tr><tr><td>大小 2.5 混合 edge ≥ 3pp</td><td>204</td><td class="neg">-7.7%</td><td class="neg">-3.46%</td></tr><tr><td>大小 2.5 混合 edge ≥ 5pp</td><td>41</td><td class="neg">-18.5%</td><td class="neg">-4.02%</td></tr></table></div>
+<tr><td>純模型 edge ≥ 4pp（Phase 1 作法）</td><td>1823</td><td class="neg">-7.0%</td><td class="neg">-3.00%</td></tr><tr><td>純模型 edge ≥ 10pp（Phase 1 作法）</td><td>678</td><td class="neg">-11.5%</td><td class="neg">-3.51%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 0pp</td><td>2584</td><td class="neg">-2.2%</td><td class="neg">-2.36%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 2pp</td><td>1386</td><td class="pos">+1.0%</td><td class="neg">-2.70%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 3pp</td><td>686</td><td class="neg">-0.6%</td><td class="neg">-2.35%</td></tr><tr><td>只校準市場、不用模型 edge ≥ 4pp</td><td>184</td><td class="pos">+1.4%</td><td class="neg">-2.55%</td></tr><tr><td>永遠買熱門</td><td>2951</td><td class="neg">-0.2%</td><td class="neg">-1.90%</td></tr>
+<tr><td>大小 2.5 混合 edge ≥ 0pp</td><td>2951</td><td class="neg">-5.0%</td><td class="neg">-3.07%</td></tr><tr><td>大小 2.5 混合 edge ≥ 2pp</td><td>592</td><td class="neg">-5.4%</td><td class="neg">-3.12%</td></tr><tr><td>大小 2.5 混合 edge ≥ 3pp</td><td>204</td><td class="neg">-7.7%</td><td class="neg">-3.46%</td></tr><tr><td>大小 2.5 混合 edge ≥ 5pp</td><td>41</td><td class="neg">-18.5%</td><td class="neg">-4.02%</td></tr></table></div>
 
 <h2 class="sect">4. 混合權重（走勢末端）</h2>
-<p class="stamp-line">a = 純模型權重，b = 市場權重（1 = 照市場），c = 和局／客勝截距。最後一次重估（2026/10/31 那一週，用 3,173 場訓練）：a = -0.187、b = 1.246、c 和局 = +0.100、c 客勝 = +0.117。a 小於 0：模型的意見不但沒幫上忙，還要反過來扣掉，等於照市場。</p>
+<p class="stamp-line">a = 純模型權重，b = 市場權重（1 = 照市場），c = 和局／客勝截距。最後一次重估（2026/11/07 那一週，用 3,221 場訓練）：a = -0.185、b = 1.246、c 和局 = +0.087、c 客勝 = +0.110。a 小於 0：模型的意見不但沒幫上忙，還要反過來扣掉，等於照市場。</p>
 
 <h2 class="sect">5. 各聯賽（混合 edge ≥ 3pp）</h2>
 <div class="scroll"><table class="tbl"><tr><th>聯賽</th><th>場數</th><th>模型 ll</th><th>市場 ll</th><th>混合 ll</th><th>注數</th><th>ROI</th><th>CLV</th></tr>
-<tr><td>德甲</td><td>501</td><td>1.0278</td><td>0.987</td><td>0.9749</td><td>149</td><td class="pos">+31.5%</td><td class="neg">-3.51%</td></tr><tr><td>英超</td><td>613</td><td>1.0203</td><td>0.9991</td><td>1.003</td><td>226</td><td class="neg">-5.5%</td><td class="neg">-2.08%</td></tr><tr><td>法甲</td><td>507</td><td>1.0084</td><td>0.9706</td><td>0.9773</td><td>207</td><td class="pos">+6.7%</td><td class="neg">-1.46%</td></tr><tr><td>義甲</td><td>637</td><td>0.9767</td><td>0.9504</td><td>0.9495</td><td>191</td><td class="pos">+3.0%</td><td class="neg">-1.88%</td></tr><tr><td>西甲</td><td>645</td><td>0.9855</td><td>0.9497</td><td>0.9506</td><td>243</td><td class="neg">-1.7%</td><td class="neg">-2.89%</td></tr></table></div>
+<tr><td>德甲</td><td>510</td><td>1.0193</td><td>0.9802</td><td>0.9686</td><td>151</td><td class="pos">+31.1%</td><td class="neg">-3.38%</td></tr><tr><td>英超</td><td>623</td><td>1.0189</td><td>0.9981</td><td>1.0024</td><td>229</td><td class="neg">-6.1%</td><td class="neg">-2.01%</td></tr><tr><td>法甲</td><td>516</td><td>1.0064</td><td>0.9696</td><td>0.9761</td><td>209</td><td class="pos">+6.6%</td><td class="neg">-1.39%</td></tr><tr><td>義甲</td><td>647</td><td>0.9782</td><td>0.9495</td><td>0.948</td><td>193</td><td class="pos">+3.9%</td><td class="neg">-1.85%</td></tr><tr><td>西甲</td><td>655</td><td>0.9849</td><td>0.9487</td><td>0.9491</td><td>247</td><td class="neg">-1.2%</td><td class="neg">-2.78%</td></tr></table></div>
 <p class="stamp-line">資料：football-data.co.uk（賽前與收盤賠率，Pinnacle 優先、Bet365 備援）。</p>
 </main>
 <footer class="foot wrap">回測只用過去的資料，不代表未來；看的是方法有沒有打敗市場（CLV），不是單季的輸贏。</footer>
