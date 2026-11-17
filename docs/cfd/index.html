@@ -1624,15 +1624,17 @@ const TFY = { '1m': '1', '5m': '5', '15m': '15', '30m': '30', '1h': '60', '4h': 
 const TFK = { '1m': 1, '5m': 5, '15m': 15, '30m': 30, '1h': 60, '4h': 240, '1d': 1440 };
 const TFO = { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '1H', '4h': '4H', '1d': '1Dutc' };
 const bRow = r => ({ t: num(r[0]), o: num(r[1]), h: num(r[2]), l: num(r[3]), c: num(r[4]), v: num(r[5]) });
+// Binance（現貨與合約）的 K 線第 10 欄是「主動買進量」：這一根裡由買方主動成交的數量，總量減掉它就是主動賣出量。目前的分析不看它，只在「匯出 K 線」時一起存下來做研究
+const bbRow = r => { const b = bRow(r); b.b = num(r[9]); return b; };
 const ADAPT = {
   async binance(sym, tf, limit) {
     const q = `/api/v3/klines?symbol=${sym}&interval=${TFB[tf]}&limit=${Math.min(limit, 1000)}`;
     let d; try { d = await http('https://data-api.binance.vision' + q); } catch (e) { if (e.http === 400) throw e; d = await http('https://api.binance.com' + q); }
-    return d.map(bRow);
+    return d.map(bbRow);
   },
   async binancef(sym, tf, limit) {
     const d = await http(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${TFB[tf]}&limit=${Math.min(limit, 1500)}`);
-    return d.map(bRow);
+    return d.map(bbRow);
   },
   async bybitK(sym, tf, limit, cat) {
     const d = await http(`https://api.bybit.com/v5/market/kline?category=${cat}&symbol=${sym}&interval=${TFY[tf]}&limit=${Math.min(limit, 1000)}`);
@@ -1690,9 +1692,9 @@ const PAGE = {
   async binance(sym, tf, end) {
     const q = `/api/v3/klines?symbol=${sym}&interval=${TFB[tf]}&limit=1000&endTime=${end}`;
     let d; try { d = await http('https://data-api.binance.vision' + q); } catch (e) { if (e.http === 400) throw e; d = await http('https://api.binance.com' + q); }
-    return d.map(bRow);
+    return d.map(bbRow);
   },
-  async binancef(sym, tf, end) { return (await http(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${TFB[tf]}&limit=1500&endTime=${end}`)).map(bRow); },
+  async binancef(sym, tf, end) { return (await http(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${TFB[tf]}&limit=1500&endTime=${end}`)).map(bbRow); },
   async bybit(sym, tf, end, cat) {
     const d = await http(`https://api.bybit.com/v5/market/kline?category=${cat || 'linear'}&symbol=${sym}&interval=${TFY[tf]}&limit=1000&end=${end}`);
     if (d.retCode !== 0) throw new Error('Bybit：' + (d.retMsg || '查無資料'));
@@ -1787,7 +1789,8 @@ const Data = {
   async history(inst, tf, bars) {
     if (this.demo) return { cd: demoSeries(inst, tf, bars), src: { key: 'demo', sym: '', label: '示範資料（非真實行情）' } };
     const first = await this.fetchFull(inst, tf, bars), pg = PAGE[first.src.key]; let cd = first.cd.slice();
-    for (let k = 0; pg && cd.length < bars && k < 10; k++) {
+    for (let k = 0; pg && cd.length < bars && k < 14; k++) {
+      if (k >= 2) await new Promise(r => setTimeout(r, 400)); // 要翻很多頁（「加長」範圍）時每頁之間停一下，免得一分鐘內向交易所要太多次
       let part; try { part = await pg(first.src.sym, tf, cd[0].t - 1); } catch (e) { break; }
       part = (part || []).filter(b => b.t < cd[0].t && isFinite(b.o) && isFinite(b.c)).sort((a, b) => a.t - b.t); if (!part.length) break;
       cd = part.concat(cd);
@@ -3462,7 +3465,7 @@ function renderSettings() {
   renderIg(); renderBt();
 }
 /* ---------- 回測：檢驗這套分析過去準不準（計算在 BT 模組，這裡只管畫面、下載歷史資料與匯出） ---------- */
-const BTSZ = { fast: ['快速', 1500, 8], std: ['標準', 3000, 8], full: ['完整', 6000, 12] }; // 名稱、要抓幾根 K 線、每隔幾根取樣一次
+const BTSZ = { fast: ['快速', 1500, 8], std: ['標準', 3000, 8], full: ['完整', 6000, 12], long: ['加長', 12000, 16] }; // 名稱、要抓幾根 K 線、每隔幾根取樣一次
 const bt = { running: false, stop: false, done: 0, total: 0, msg: '', kept: false, rows: [], sum: (LS.get('cfd.bt', null) || {}).sum || null, errs: [], tf: null, size: 'std' };
 /* 完整資料有好幾 MB，放不進 localStorage，改存 IndexedDB：就算網頁被重新整理、或手機把分頁收掉，回來還能下載或分享 */
 const btDb = {
@@ -3478,10 +3481,65 @@ async function btRestore() { // 開啟網頁時把上次的完整資料讀回來
     if (view === 'settings') renderBt();
   } catch (e) { /* 讀不到就維持只有摘要 */ }
 }
+/* ---------- 匯出 K 線：把回測會抓的原始 K 線存成一個檔案 ----------
+   傳給 Claude 之後，可以在那邊用同一份資料重播回測（存放庫的 scripts/cfd_replay.js）、一次試很多種分析方法，不必每次用手機重跑。
+   檔案是文字：第一行「#m 」後面接這次匯出的說明（JSON）；每個商品的每個週期先有一行「#i,代號,類別,小數位,來源,週期,根數」，
+   之後每根 K 線一行「時間(秒),開,高,低,收,量,主動買進量」。時間和上一根剛好差一根時留空（省大小）；來源沒有主動買進量時最後一欄留空。
+   抓的方式和回測完全一樣：掃描週期的歷史，加上 1 小時 K（4 小時與日線由它併出）。 */
+const kl = { running: false, stop: false, done: 0, total: 0, msg: '', parts: [], meta: null, rows: 0, errs: [] };
+const klNum = v => (isNum(v) ? String(v) : ''); // 原樣寫出（不四捨五入），離線重播才會和網頁算的一模一樣
+function klLines(inst, tf, srcKey, cd) {
+  const step = E.TF[tf] / 1000, out = [`#i,${inst.id},${inst.cls},${inst.dp0 == null ? inst.dp : inst.dp0},${srcKey},${tf},${cd.length}`]; let pt = null;
+  for (const b of cd) { const t = Math.round(b.t / 1000); out.push(`${pt != null && t === pt + step ? '' : t},${klNum(b.o)},${klNum(b.h)},${klNum(b.l)},${klNum(b.c)},${klNum(b.v)},${klNum(b.b)}`); pt = t; }
+  return out.join('\n') + '\n';
+}
+const klLive = () => `進度 ${kl.done}／${kl.total}　${kl.msg}　已下載 ${kl.rows} 根`;
+function paintKl() { const el = $('#kl-live'); if (el) el.textContent = klLive(); }
+async function runKl() {
+  if (kl.running || bt.running) return; const [, bars, step] = BTSZ[bt.size], tf = bt.tf || S.scanTf, list = Data.all().filter(i => S.on[i.cls] !== false);
+  Object.assign(kl, { running: true, stop: false, done: 0, total: list.length, parts: [], errs: [], msg: '', meta: null, rows: 0 }); renderBt();
+  let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) { /* 不支援就算了 */ }
+  let n = 0;
+  for (const inst of list) {
+    if (kl.stop) break; kl.msg = inst.name + '：下載歷史 K 線'; paintKl();
+    try { // 和 runBt 抓的一模一樣
+      const base = await Data.history(inst, tf, bars), h1 = E.TF[tf] === 3600e3 ? null : await Data.history(inst, '1h', Math.ceil(base.cd.length * E.TF[tf] / 3600e3) + 1000);
+      kl.parts.push(klLines(inst, tf, base.src.key, base.cd) + (h1 ? klLines(inst, '1h', h1.src.key, h1.cd) : '')); kl.rows += base.cd.length + (h1 ? h1.cd.length : 0); n++;
+    } catch (e) { kl.errs.push(inst.name + '：' + String((e && e.message) || e).slice(0, 90)); }
+    kl.done++; await new Promise(r => setTimeout(r, 0));
+  }
+  if (wl) try { wl.release(); } catch (e) { /* 略過 */ }
+  const cost = {}; for (const c of CLS) cost[c] = S.cost[c] != null ? S.cost[c] / 100 : null;
+  const meta = { v: 1, at: Date.now(), tf, size: bt.size, bars, step, cost, inst: n, rows: kl.rows, demo: Data.demo, stopped: kl.stop, errs: kl.errs.slice(0, 20) };
+  kl.parts.unshift('#m ' + JSON.stringify(meta) + '\n'); meta.bytes = kl.parts.reduce((a, s) => a + s.length, 0); kl.meta = meta; kl.running = false;
+  btDb.set('kl', { meta, parts: kl.parts }).catch(() => {}); renderBt(); toast(kl.stop ? 'K 線下載已停止，下面是目前抓到的部分。' : `K 線下載完成，共 ${kl.rows} 根。`, 'info');
+}
+async function klRestore() { // 開啟網頁時把上次匯出的 K 線讀回來（重新整理、或手機把分頁收掉之後還能分享）
+  try { const z = await btDb.get('kl'); if (z && z.meta && Array.isArray(z.parts) && !kl.running && !kl.meta) { kl.parts = z.parts; kl.meta = z.meta; kl.rows = z.meta.rows; if (view === 'settings') renderBt(); } } catch (e) { /* 讀不到就當作沒有 */ }
+}
+const klName = () => `cfd-klines-${kl.meta.tf}-${kl.meta.size}-${new Date(kl.meta.at).toISOString().slice(0, 10)}.csv`;
+let klUrl = null;
+function klSave() { // 和 btSave 一樣：網址留著不收回、用二進位型態
+  if (klUrl) URL.revokeObjectURL(klUrl); klUrl = URL.createObjectURL(new Blob(kl.parts, { type: 'application/octet-stream' }));
+  const a = document.createElement('a'); a.href = klUrl; a.download = klName(); a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
+}
+async function klShare() {
+  try { await navigator.share({ files: [new File(kl.parts, klName(), { type: 'text/csv' })], title: '差價交易 K 線資料' }); }
+  catch (e) { if (e.name !== 'AbortError') toast('分享沒有成功，請改按「下載 K 線檔」。', 'warn'); }
+}
+function klBox() {
+  const m = kl.meta, sh = btCanShare();
+  let h = `<div class="form" id="kl-box"><div class="f"><span>匯出 K 線</span><small>把上面選的週期與範圍的原始 K 線存成一個檔案（不做分析）。傳給 Claude 之後，可以在那邊用同一份資料重播回測、一次試很多種分析方法，不必每次用手機重跑。檔案裡只有行情，沒有任何個人或帳戶資料。範圍越長越有用，但檔案也越大：標準約 14 MB、完整約 25 MB、加長約 45 MB。</small></div>
+    <p><button class="btn" id="kl-run">${m ? '重新下載 K 線' : '下載 K 線'}</button></p>`;
+  if (m) h += `<p class="sb-note">${m.demo ? '<b>示範資料，不是真實行情。</b>' : ''}${mdhm(m.at)} 下載：${E.TF_NAME[m.tf]}K，${m.inst} 個商品，共 ${m.rows} 根，約 ${(m.bytes / 1048576).toFixed(1)} MB${m.stopped ? '（中途停止）' : ''}。這份檔案會留在這台裝置的瀏覽器裡，下次開啟還能分享。</p>
+    <p class="t-btns">${sh ? '<button class="btn primary" id="kl-share">分享或儲存 K 線檔</button><button class="btn" id="kl-save">下載 K 線檔</button>' : '<button class="btn primary" id="kl-save">下載 K 線檔</button>'}</p>
+    ${sh ? '<p class="hint">手機請按「分享或儲存 K 線檔」，在選單裡選 Claude 或「儲存到檔案」。</p>' : ''}${m.errs && m.errs.length ? `<p class="hint">沒抓到的商品：${esc(m.errs.join('；'))}</p>` : ''}`;
+  return h + '</div>';
+}
 const btLive = () => `進度 ${bt.done}／${bt.total}　${bt.msg}　已記錄 ${bt.rows.length} 筆`;
 function paintBt() { const el = $('#bt-live'); if (el) el.textContent = btLive(); }
 async function runBt() {
-  if (bt.running) return; const [, bars, step] = BTSZ[bt.size], tf = bt.tf || S.scanTf, list = Data.all().filter(i => S.on[i.cls] !== false), t0 = Date.now();
+  if (bt.running || kl.running) return; const [, bars, step] = BTSZ[bt.size], tf = bt.tf || S.scanTf, list = Data.all().filter(i => S.on[i.cls] !== false), t0 = Date.now();
   Object.assign(bt, { running: true, stop: false, done: 0, total: list.length, rows: [], errs: [], msg: '', sum: null }); renderBt();
   let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) { /* 不支援就算了：只是讓手機在回測期間不要自動鎖屏 */ }
   for (const inst of list) {
@@ -3546,9 +3604,10 @@ function renderBt() {
   const el = $('#bt-card'); if (!el) return; const tf = bt.tf || S.scanTf, days = k => Math.round(BTSZ[k][1] * E.TF[tf] / 86400e3);
   let h = `<h2>回測 <small>檢驗這套分析過去準不準</small></h2><p class="pnote" style="margin-top:0">用過去的 K 線把現在的分析逐根重播一次，看它當時的判斷後來對不對。只驗技術面與進場計畫（新聞和關聯市場沒有歷史可以重播）。這只是檢驗，不會改動任何分析或設定。</p>`;
   if (bt.running) h += `<p class="pnote" id="bt-live">${esc(btLive())}</p><p class="hint">請讓這個網頁留在畫面上；切到別的 App 或鎖屏時會暫停，回來會接著跑。</p><p><button class="btn" id="bt-stop">停止</button></p>`;
+  else if (kl.running) h += `<p class="pnote" id="kl-live">${esc(klLive())}</p><p class="hint">正在下載 K 線。請讓這個網頁留在畫面上；切到別的 App 或鎖屏時會暫停，回來會接著跑。</p><p><button class="btn" id="kl-stop">停止</button></p>`;
   else h += `<div class="form"><div class="f"><span>K 線週期</span><div class="seg">${['5m', '15m', '30m', '1h'].map(t => `<button class="chip" data-bttf="${t}" aria-pressed="${t === tf}">${E.TF_NAME[t]}</button>`).join('')}</div></div>
     <div class="f"><span>範圍</span><div class="seg">${Object.keys(BTSZ).map(k => `<button class="chip" data-btsz="${k}" aria-pressed="${k === bt.size}">${BTSZ[k][0]}（約 ${days(k)} 天）</button>`).join('')}</div><small>只跑「要掃描的類別」裡開著的類別；有些來源給的歷史比較短。標準範圍在電腦上約需幾分鐘，手機會久一些。</small></div>
-    <p><button class="btn primary" id="bt-run">${bt.sum ? '重新回測' : '開始回測'}</button></p></div>`;
+    <p><button class="btn primary" id="bt-run">${bt.sum ? '重新回測' : '開始回測'}</button></p></div>${klBox()}`;
   if (bt.sum && !bt.running) h += btSummary(bt.sum);
   el.innerHTML = h;
 }
@@ -3652,6 +3711,10 @@ document.addEventListener('click', e => {
   if (t.id === 'bt-save') return btSave();
   if (t.id === 'bt-share') return btShare();
   if (t.id === 'bt-copy') return btCopy();
+  if (t.id === 'kl-run') return runKl();
+  if (t.id === 'kl-stop') { kl.stop = true; kl.msg = '正在停止…'; return paintKl(); }
+  if (t.id === 'kl-save') return klSave();
+  if (t.id === 'kl-share') return klShare();
   if (d.igenv) { igDraft.env = d.igenv; return renderIg(); }
   if (t.id === 'ig-login') {
     if (!igDraft.key.trim() || !igDraft.user.trim() || !igDraft.pass) { IG.msg = '請把 API key、帳號、密碼都填好。'; return renderIg(); }
@@ -3745,7 +3808,7 @@ function tick() {
 function boot() {
   const h = (location.hash || '').replace('#', '');
   if (h === 'demo') Data.demo = true;
-  IG.init(); btRestore(); applyTheme(); fillSelect(); tfChips('#scan-tf', S.scanTf); tfChips('#d-tf', S.tf); clsChips(); badge();
+  IG.init(); btRestore(); klRestore(); applyTheme(); fillSelect(); tfChips('#scan-tf', S.scanTf); tfChips('#d-tf', S.tf); clsChips(); badge();
   banner(); show(VIEWS.includes(h) ? h : 'scan');
   refreshNews(true); setInterval(tick, 1000); tick();
 }
