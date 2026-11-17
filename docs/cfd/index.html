@@ -3402,7 +3402,21 @@ function renderSettings() {
 }
 /* ---------- 回測：檢驗這套分析過去準不準（計算在 BT 模組，這裡只管畫面、下載歷史資料與匯出） ---------- */
 const BTSZ = { fast: ['快速', 1500, 8], std: ['標準', 3000, 8], full: ['完整', 6000, 12] }; // 名稱、要抓幾根 K 線、每隔幾根取樣一次
-const bt = { running: false, stop: false, done: 0, total: 0, msg: '', rows: [], sum: (LS.get('cfd.bt', null) || {}).sum || null, errs: [], tf: null, size: 'std' };
+const bt = { running: false, stop: false, done: 0, total: 0, msg: '', kept: false, rows: [], sum: (LS.get('cfd.bt', null) || {}).sum || null, errs: [], tf: null, size: 'std' };
+/* 完整資料有好幾 MB，放不進 localStorage，改存 IndexedDB：就算網頁被重新整理、或手機把分頁收掉，回來還能下載或分享 */
+const btDb = {
+  open() { return new Promise((res, rej) => { const r = indexedDB.open('cfd-bt', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async set(k, v) { const db = await this.open(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => { db.close(); res(); }; tx.onerror = () => { db.close(); rej(tx.error); }; }); },
+  async get(k) { const db = await this.open(); return new Promise((res, rej) => { const rq = db.transaction('kv').objectStore('kv').get(k); rq.onsuccess = () => { db.close(); res(rq.result); }; rq.onerror = () => { db.close(); rej(rq.error); }; }); },
+};
+async function btRestore() { // 開啟網頁時把上次的完整資料讀回來
+  try {
+    const z = await btDb.get('last'); if (!z || !z.csv || bt.running || bt.rows.length || !bt.sum || z.at !== bt.sum.meta.at) return;
+    const txt = new Set(['id', 'cls', 'rg', 'g', 'pt', 'prs', 'src'].map(k => BT.X[k]));
+    bt.rows = z.csv.trim().split('\n').slice(1).map(l => l.split(',').map((v, i) => (txt.has(i) || v === '' ? v : +v))); bt.kept = true;
+    if (view === 'settings') renderBt();
+  } catch (e) { /* 讀不到就維持只有摘要 */ }
+}
 const btLive = () => `進度 ${bt.done}／${bt.total}　${bt.msg}　已記錄 ${bt.rows.length} 筆`;
 function paintBt() { const el = $('#bt-live'); if (el) el.textContent = btLive(); }
 async function runBt() {
@@ -3423,13 +3437,20 @@ async function runBt() {
   }
   if (wl) try { wl.release(); } catch (e) { /* 略過 */ }
   bt.sum = BT.summarize(bt.rows, { tf, size: bt.size, step, at: Date.now(), secs: Math.round((Date.now() - t0) / 1000), stopped: bt.stop, errs: bt.errs.slice(0, 20), demo: Data.demo, ver: 1 });
-  bt.running = false; LS.set('cfd.bt', { sum: bt.sum }); renderBt(); toast(bt.stop ? '回測已停止，下面是目前跑完的部分。' : `回測完成，共 ${bt.rows.length} 筆判斷。`, 'info');
+  bt.running = false; bt.kept = false; LS.set('cfd.bt', { sum: bt.sum }); btDb.set('last', { at: bt.sum.meta.at, csv: BT.csv(bt.rows) }).then(() => { bt.kept = true; }).catch(() => {}); renderBt(); toast(bt.stop ? '回測已停止，下面是目前跑完的部分。' : `回測完成，共 ${bt.rows.length} 筆判斷。`, 'info');
 }
 const btName = () => `cfd-backtest-${bt.sum.meta.tf}-${new Date().toISOString().slice(0, 10)}.csv`;
-const btBlob = () => new Blob([BT.csv(bt.rows)], { type: 'text/csv' });
-function btSave() { const a = document.createElement('a'); a.href = URL.createObjectURL(btBlob()); a.download = btName(); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000); }
+const btBlob = type => new Blob([BT.csv(bt.rows)], { type: type || 'text/csv' });
+let btUrl = null;
+function btSave() { // 下載。網址留著不收回：iPhone 的 Safari 會先問「要不要下載」，等按了才真的去讀；太早收回就會出現「無法打開網頁」
+  if (btUrl) URL.revokeObjectURL(btUrl); btUrl = URL.createObjectURL(btBlob('application/octet-stream')); // 用二進位型態，Safari 才不會改成直接在這個分頁打開檔案
+  const a = document.createElement('a'); a.href = btUrl; a.download = btName(); a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
+}
 const btCanShare = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['a'], 'a.csv', { type: 'text/csv' })] })); } catch (e) { return false; } };
-async function btShare() { try { await navigator.share({ files: [new File([btBlob()], btName(), { type: 'text/csv' })], title: '差價交易回測資料' }); } catch (e) { if (e.name !== 'AbortError') btSave(); } }
+async function btShare() { // 手機：用系統的分享選單（可以直接傳給 Claude，或「儲存到檔案」）
+  try { await navigator.share({ files: [new File([btBlob()], btName(), { type: 'text/csv' })], title: '差價交易回測資料' }); }
+  catch (e) { if (e.name !== 'AbortError') toast('分享沒有成功，請改按「下載檔案」。', 'warn'); }
+}
 async function btCopy() {
   const txt = '差價交易回測摘要\n' + JSON.stringify(bt.sum);
   try { await navigator.clipboard.writeText(txt); } catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
@@ -3451,9 +3472,10 @@ function btSummary(s) {
     <h3 class="sb-h">時段（臺北時間）</h3><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${['清晨 05–08', '亞洲盤 08–15', '歐洲盤 15–21', '美洲盤 21–05'].filter(k => s.ses[k]).map(k => dirRow(k, s.ses[k])).join('')}</table>
     <h3 class="sb-h">盤勢</h3><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${Object.keys(RG).filter(k => s.rg[k]).map(k => dirRow(RG[k], s.rg[k])).join('')}</table>
     <p class="hint">判斷之間有重疊，幾千筆以下時相差 2–3 個百分點都可能只是運氣。這是過去的結果，不代表未來；回測沒有包含新聞與關聯市場這兩項。</p>`;
-  h += bt.rows.length ? `<p class="t-btns"><button class="btn primary" id="bt-save">下載完整資料檔</button>${btCanShare() ? '<button class="btn" id="bt-share">分享檔案</button>' : ''}<button class="btn" id="bt-copy">複製摘要</button></p>
-    <p class="hint">把資料檔傳給 Claude，就能依結果調整各類商品的分析方式（只傳摘要也可以，但能分析的比較少）。檔案約 ${(bt.rows.length * 0.00025).toFixed(1)} MB，裡面只有行情與分析數值，沒有任何個人或帳戶資料。</p>`
-    : '<p class="t-btns"><button class="btn" id="bt-copy">複製摘要</button></p><p class="hint">完整資料檔不會保留到下次開啟，要下載請重新跑一次。</p>';
+  const sh = btCanShare(), mb = (bt.rows.length * 0.00025).toFixed(1);
+  h += bt.rows.length ? `<p class="t-btns">${sh ? '<button class="btn primary" id="bt-share">分享或儲存檔案</button><button class="btn" id="bt-save">下載檔案</button>' : '<button class="btn primary" id="bt-save">下載完整資料檔</button>'}<button class="btn" id="bt-copy">複製摘要</button></p>
+    <p class="hint">把資料檔傳給 Claude，就能依結果調整各類商品的分析方式（只傳摘要也可以，但能分析的比較少）。${sh ? '手機請按「分享或儲存檔案」，在選單裡選 Claude 或「儲存到檔案」。' : ''}檔案約 ${mb} MB，裡面只有行情與分析數值，沒有任何個人或帳戶資料。這份結果會留在這台裝置的瀏覽器裡，下次開啟還能下載。</p>`
+    : '<p class="t-btns"><button class="btn" id="bt-copy">複製摘要</button></p><p class="hint">這台裝置上沒有留下完整資料檔，要下載請重新跑一次。</p>';
   return h + errs;
 }
 function renderBt() {
@@ -3659,11 +3681,11 @@ function tick() {
 function boot() {
   const h = (location.hash || '').replace('#', '');
   if (h === 'demo') Data.demo = true;
-  IG.init(); applyTheme(); fillSelect(); tfChips('#scan-tf', S.scanTf); tfChips('#d-tf', S.tf); clsChips(); badge();
+  IG.init(); btRestore(); applyTheme(); fillSelect(); tfChips('#scan-tf', S.scanTf); tfChips('#d-tf', S.tf); clsChips(); badge();
   banner(); show(VIEWS.includes(h) ? h : 'scan');
   refreshNews(true); setInterval(tick, 1000); tick();
 }
-window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard, bt, runBt };
+window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard, bt, runBt, btUrl: () => btUrl };
 boot();
 })();
 
