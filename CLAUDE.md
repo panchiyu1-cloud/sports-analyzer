@@ -636,6 +636,9 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   hand over at 13:40) and skips when another stock run is already at work (the same minute's
   other upload = the lower run id goes; a scheduled or handed-over run). Never remove the tw
   upload path from this trigger without another on-time start; the crons are only the fallback.
+  A run that starts before 08:08 hands over at 08:18 (`cloud.plan`, `HANDOVER`): the late
+  evening crons start in the small hours as a session (02:55 on 2026-11-17) and their 352
+  minutes ran out at 08:47, in the middle of the trial period, losing what had been collected.
 - 開盤前試撮 (`stock/twscan/preopen.py`): TWSE discloses a simulated match (price, lots, best
   five) every 5 s from 08:30; nothing trades before 09:00. `PreOpen.feed` (called from
   `apply_quote`, today's quotes timed before 09:00 only) keeps each stock's trial price / lots
@@ -644,10 +647,20 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   verdict (`judge`: 可留意 0.3%..chase_gap_pct, 勿追, 開低, 量太少, 忽高忽低, 漲跌停), the
   market's mood, and after the open the real opening price next to the last trial; a daily
   comparison is saved after 09:10 (data/preopen/, also in stock-data/state/). The page shows
-  the panel on weekdays 08:25-09:40 (device clock, Taipei). The thresholds are unvalidated
-  design values, and the meaning of MIS `pz` / `ps` before the open was not observable when this
-  was written (2026-11-16, mid-session): preopen.json carries `samples` (raw MIS fields of four
-  stocks) to check them against after the first morning.
+  the panel on weekdays 08:25-09:40 (device clock, Taipei). MIS fields checked on the first
+  real morning (2026-11-17, `samples` in preopen.json = raw fields of four stocks): before the
+  open `ts` is "1", `z` "-", `pz` the trial price, `ps` the trial lots, `t` the trial's time,
+  `d` today, `y` the previous close. That morning two of the top 10 showed a limit-up trial
+  until 08:51 and opened flat or lower (orders pulled before the open: the verdict turned to
+  忽高忽低), and across 1,091 stocks the last trial was 0.97% from the real open on average,
+  56% within 0.5%. The thresholds are still unvalidated design values: the daily file keeps
+  `rows` (per stock: previous close, last trial, lots, 5-day average lots, real open) to tune
+  them once a few weeks have accumulated.
+- `Engine.recent_trading_dates` takes the union of the TAIEX history, the daily bars of a few
+  stocks that trade every day (`BELLWETHER`) and the newest quote date. Yahoo's ^TWII series
+  lacked 2026-11-16 during the 11-17 session: with the index alone, "the last finished day"
+  fell back to 11-13 once quotes carried today's date, and the page showed Friday's closing
+  list as Tuesday's.
 - Output: JSON for the page (status, top, market, daytrade, review, diag, preopen, stock/<code>,
   tf/<code>-30m|60m, meta) force-pushed every minute to the orphan branch `stock-data` (one
   commit, amended each time: no history). docs/stock/cloud.js reads the branch head SHA from

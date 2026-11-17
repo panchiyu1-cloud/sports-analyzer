@@ -206,12 +206,20 @@ class Engine:
         sd = max((s.get("date") or "" for s in self.snap.values()), default="")
         return max(x for x in (d or "", sd) if x is not None) or today_iso()
 
+    # 每個交易日一定有成交的幾檔股票：用它們的日線補上加權指數日線缺的日子
+    BELLWETHER = ("2330", "2317", "0050", "2454", "2412")
+
     def recent_trading_dates(self, n):
-        th = self.index_hist.get("TAIEX") or []
-        ds = [b[0] for b in th]
+        ds = {b[0] for b in (self.index_hist.get("TAIEX") or [])}
+        # Yahoo 的加權指數日線有時會缺最近一個交易日（2026/11/17 開盤後缺了 11/16）。只靠它的話，
+        # 「上一個交易日」會退回再前一天，收盤確認名單就變成前天的名單。個股的日線有官方收盤資料補上，比較可靠。
+        codes = [c for c in self.BELLWETHER if self.hist.get(c)] or sorted(self.hist)[:3]
+        for c in codes:
+            ds.update(b[0] for b in self.hist[c][-(n + 10):])
         ltd = self.last_trading_date()
-        if ltd and (not ds or ds[-1] < ltd):
-            ds.append(ltd)
+        if ltd:
+            ds.add(ltd)
+        ds = sorted(ds)
         if not ds:
             d = now_tw().date()
             while len(ds) < n:

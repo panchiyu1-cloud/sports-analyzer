@@ -29,6 +29,7 @@ from twscan.engine import Engine, load_config  # noqa: E402
 from twscan.util import log, now_tw  # noqa: E402
 
 SESSION_END = (14, 10)    # 盤中模式結束時間（台北）
+HANDOVER = (8, 18)        # 清晨就啟動的那一輪在這個時間交棒（見 plan）
 MAX_MINUTES = 352         # GitHub 一個工作最多 6 小時（stock.yml 設 358 分鐘）：08:18 啟動可以一路跑到 14:10，留幾分鐘存快取
 ONCE_MINUTES = 55         # 非盤中：最多等這麼久讓一輪完整掃描跑完
 # 小而重要、不能重算的資料：除了 Actions 快取，另外在 stock-data 分支存一份，快取被清掉也不會遺失
@@ -350,7 +351,14 @@ def plan(n, minutes=None):
         return "session", n + timedelta(minutes=minutes)
     end = n.replace(hour=SESSION_END[0], minute=SESSION_END[1], second=0, microsecond=0)
     if n.weekday() < 5 and n < end:
-        return "session", min(end, n + timedelta(minutes=MAX_MINUTES))
+        stop = min(end, n + timedelta(minutes=MAX_MINUTES))
+        # 清晨就啟動的（常常是前一晚的排程晚了好幾個小時才開始，2026/11/17 是 02:55）：它的 352 分鐘會在
+        # 08:47 用完，剛好在開盤前試撮的中間換手，已經蒐集的試撮紀錄就沒了。所以一律提早在 08:18 交棒，
+        # 接手的那一輪從 08:18 起有完整的 352 分鐘，可以從 08:30 的試撮一路跑到 14:10。
+        cut = n.replace(hour=HANDOVER[0], minute=HANDOVER[1], second=0, microsecond=0)
+        if n < cut - timedelta(minutes=10):
+            stop = min(stop, cut)
+        return "session", stop
     return "once", n + timedelta(minutes=ONCE_MINUTES)
 
 

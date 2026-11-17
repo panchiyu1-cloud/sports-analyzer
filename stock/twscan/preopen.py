@@ -207,10 +207,20 @@ class PreOpen:
         try:
             path = self.eng._p("preopen", f"{out['date']}.json")
             keep = {k: out.get(k) for k in ("date", "n", "first", "last", "list_date", "mood", "check", "picks", "strong")}
+            # 每一檔的 [昨收, 最後試撮價, 試撮張數, 近 5 日均量（張）, 實際開盤價]：之後用來檢查並調整判讀的門檻
+            eng, rows = self.eng, {}
+            with eng.lock:
+                for code, r in self.rows.items():
+                    if r.get("p"):
+                        s = eng.snap.get(code) or {}
+                        avg5 = self._avg5(code)
+                        rows[code] = [r["prev"], r["p"], r.get("v"), round(avg5) if avg5 else None,
+                                      s.get("open") if s.get("date") == out["date"] else None]
+            keep["rows"] = rows
             write_json(path, keep)
             self.saved = out["date"]
             folder = os.path.dirname(path)
-            for f in sorted(x for x in os.listdir(folder) if x.endswith(".json"))[:-120]:
+            for f in sorted(x for x in os.listdir(folder) if x.endswith(".json"))[:-60]:
                 os.remove(os.path.join(folder, f))
         except OSError:
             pass
