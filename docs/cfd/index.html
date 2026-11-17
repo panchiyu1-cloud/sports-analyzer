@@ -1322,6 +1322,139 @@ if (typeof module !== 'undefined') module.exports = M; else root.Mkt = M;
 if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Mkt = M;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
+/* ===== 回測：把歷史 K 線逐根重播，記下「當時的判斷」和「之後實際怎麼走」（純函式，方便測試） =====
+   最重要的規則是不偷看未來：每個取樣點只把「那一根收完以前」的資料交給分析程式，之後的 K 線只拿來對答案。
+   新聞與關聯市場沒有歷史可重播，所以回測驗的是技術面（指標、相似圖形、多週期、型態、策略）和進場計畫。 */
+(function (root) {
+'use strict';
+const E = root.Engine, Track = root.Track, Mkt = root.Mkt, isNum = v => typeof v === 'number' && isFinite(v), H1 = 3600e3;
+const B = { WIN: 300, FWD: 24, LV: [0.5, 1, 1.5, 2, 2.5, 3] }; // 分析用 300 根（和掃描一樣）；之後看 24 根；記錄先走到幾倍波動
+/* 每筆判斷存成一列。數值放大成整數（欄位說明見 B.NOTE），檔案才不會太大 */
+B.COLS = ['id', 'cls', 't', 'px', 'atrp', 'adx', 'bw', 'rg', 'T', 'TR', 'MR', 'cp', 'cn', 'ap', 'an', 'm1', 'm4', 'mtf', 'pat', 'str', 'p', 'bias', 'sc', 'g', 'dir', 'pt', 'pe', 'ps', 'p1', 'p2', 'pw', 'pto', 'ev', 'cr',
+  'er', 'av', 'bar', 'body', 'e20', 'e50', 'rsi', 'di', 'r4', 'r12', 'vr', 'ds', 'dr', 'sp',
+  'f4', 'f8', 'f12', 'f24', 'u05', 'u10', 'u15', 'u20', 'u25', 'u30', 'd05', 'd10', 'd15', 'd20', 'd25', 'd30', 'pr', 'prs', 'pr6', 'pb', 'ph', 'src'];
+B.NOTE = 't=判斷時間(秒) atrp=ATR%x1000 adx x10 bw=布林寬度百分位x100 rg=盤勢 T/TR/MR=技術分數x1000 cp=校準機率x1000 cn=獨立樣本數 ap=相似圖形機率x1000 an=相似段數 m1/m4=1小時/4小時趨勢x1000 mtf/pat/str=多週期/型態/策略x1000 ' +
+  'p=上漲機率x1000 bias=方向 sc=分數 g=評級 dir=評級方向 pt=計畫類型(m市價/l回踩/s突破) pe=進場價離現價(ATR x100,順向為正) ps/p1/p2=停損/停利1/停利2距離(ATR x100) pw=計畫勝率x1000 pto=到價機率x1000 ev x1000 cr=成本(R x1000) ' +
+  'er=趨勢效率x1000 av=波動百分位x100 bar/body=最後一根的高低差/實體(ATR x100) e20/e50=離均線(ATR x100) rsi x10 di=+DI減-DI x10 r4/r12=4/12根漲跌(ATR x100) vr=量比x100 ds/dr=離支撐/阻力(ATR x100) sp=點差(ATR x1000) ' +
+  'f4..f24=之後4/8/12/24根的漲跌(ATR x100) u05..u30=之後24根內第幾根先漲到0.5..3倍ATR(0=沒到) d05..d30=先跌到 pr=照計畫走完的結果(R x100,未扣成本) prs=結束原因 pr6=最多抱6小時的結果 pb=等了幾根才進場 ph=抱了幾根 src=來源';
+const X = {}; B.COLS.forEach((k, i) => { X[k] = i; }); B.X = X;
+const q = (v, k) => (isNum(v) ? Math.round(v * k) : '');
+function agg(cd, ms) { // 把小週期併成大週期（cd 由舊到新）
+  const out = []; let g = null;
+  for (const b of cd) { const k = Math.floor(b.t / ms) * ms; if (!g || g.t !== k) { g = { t: k, o: b.o, h: b.h, l: b.l, c: b.c, v: b.v || 0 }; out.push(g); } else { if (b.h > g.h) g.h = b.h; if (b.l < g.l) g.l = b.l; g.c = b.c; g.v += b.v || 0; } }
+  return out;
+}
+function cnt(ts, lim) { let a = 0, b = ts.length; while (a < b) { const m = (a + b) >> 1; if (ts[m] <= lim) a = m + 1; else b = m; } return a; } // 有幾根的開始時間 ≤ lim
+
+/* 準備一個商品的回測。o：id、cls、dp、tf、cd（掃描週期的歷史 K 線）、h1（1 小時 K，掃描週期小於 1 小時才需要）、cost、step（每隔幾根取樣一次） */
+B.prep = function (o) {
+  const ms = E.TF[o.tf], cd = o.cd, n = cd.length, c = { id: o.id, cls: o.cls, dp: o.dp, tf: o.tf, ms, cd, cost: o.cost, src: o.src || '', win: o.win || B.WIN, hold6: Math.max(1, Math.round(6 * H1 / ms)) };
+  c.open = cd.map(b => !Mkt.closedAt(o.cls, b.t));
+  c.h1 = ms === H1 ? cd : (o.h1 || []); c.h1t = c.h1.map(b => b.t);
+  c.a4 = agg(c.h1, 4 * H1); c.a4t = c.a4.map(b => b.t); c.aD = agg(c.h1, 24 * H1); c.aDt = c.aD.map(b => b.t);
+  // 之後至少還要有 24 根「有交易」的 K 線才取樣，否則沒辦法對答案；休市時的 K 線（24 小時合約的週末盤）不取樣
+  const ok = new Array(n).fill(false); let fwd = 0;
+  for (let i = n - 1; i >= 0; i--) { ok[i] = fwd >= B.FWD; if (c.open[i]) fwd++; }
+  c.idx = []; for (let i = c.win - 1; i < n; i += (o.step || 8)) if (c.open[i] && ok[i]) c.idx.push(i);
+  return c;
+};
+/* 到 tC（第 i 根收完）為止看得到的 1 小時 K：收完的直接用，還沒收完的那一根用掃描週期的 K 線併出來 */
+function h1View(c, i, tC) {
+  if (c.ms === H1) return c.cd.slice(Math.max(0, i - 799), i + 1);
+  const k = cnt(c.h1t, tC - H1), out = c.h1.slice(Math.max(0, k - 800), k); if (c.ms > H1) return out;
+  const from = Math.max(k ? c.h1t[k - 1] + H1 : 0, tC - H1 + 1); let j = i + 1; while (j > 0 && c.cd[j - 1].t >= from) j--;
+  if (j <= i) { const f = agg(c.cd.slice(j, i + 1), H1); out.push(f[f.length - 1]); }
+  return out;
+}
+/* 由 1 小時 K 併出 4 小時或日線：已經收完的整段直接用，還沒收完的那段只用到 tC 為止的資料重併 */
+function upView(done, doneT, ms, hv, tC, keep) {
+  const k = cnt(doneT, tC - ms), out = done.slice(Math.max(0, k - keep), k), from = k ? doneT[k - 1] + ms : 0;
+  let j = hv.length; while (j > 0 && hv[j - 1].t >= from) j--;
+  for (const b of agg(hv.slice(j), ms)) out.push(b);
+  return out.slice(-keep);
+}
+B.views = function (c, i) { // 給測試用：第 i 根收完時交給分析程式的全部資料
+  const tC = c.cd[i].t + c.ms, hv = h1View(c, i, tC), mtf = {};
+  if (c.ms !== H1 && hv.length) mtf['1h'] = hv.slice(-200);
+  if (c.ms < 4 * H1) { const v4 = upView(c.a4, c.a4t, 4 * H1, hv, tC, 200); if (v4.length) mtf['4h'] = v4; }
+  return { tC, win: c.cd.slice(i - c.win + 1, i + 1), mtf, daily: upView(c.aD, c.aDt, 24 * H1, hv, tC, 40) };
+};
+/* 照進場計畫走完：和追蹤單、紙上紀錄同一套規則（到停利 1 平一半並把停損移到進場價；同一根同時碰到停損與停利算停損；進場後最多抱 48 根） */
+B.simPlan = function (pl, tC, bars, ms, hold6) {
+  const mk = pl.type === 'market', pos = { side: pl.side, type: pl.type, entry: pl.entry, sl: pl.sl, slNow: pl.sl, tp1: pl.tp1, tp2: pl.tp2, risk: Math.abs(pl.entry - pl.sl), created: tC, lastCheck: tC,
+    status: mk ? 'open' : 'pending', openedAt: mk ? tC : null, expires: mk ? null : tC + 48 * ms, flags: { nearSl: 1, nearTp1: 1, nearTp2: 1 } };
+  let held = 0, r6 = null, wait = mk ? 0 : null;
+  for (let k = 0; k < bars.length; k++) {
+    const b = bars[k], was = pos.status; Track.step(pos, [b], b.c, b.t + ms);
+    if (was === 'pending' && pos.openedAt) wait = k + 1;
+    if (pos.openedAt) held++;
+    if (pos.status === 'closed') break;
+    if (pos.openedAt && r6 == null && held >= hold6) r6 = Track.rNow(pos, b.c);
+    if (pos.openedAt && held >= 48) { Track.close(pos, b.c, 'time', b.t + ms); break; }
+  }
+  if (pos.status !== 'closed') return { r: null, why: 'open', r6: null, wait, held };
+  if (!pos.openedAt) return { r: null, why: 'expired', r6: null, wait: null, held: 0 };
+  return { r: pos.r, why: pos.reason, r6: r6 == null ? pos.r : r6, wait, held };
+};
+/* 重播第 i 根收完時的分析，回傳一列（依 B.COLS 的順序）；分析不出來就回傳 null */
+B.sample = function (c, i) {
+  const cd = c.cd, V = B.views(c, i), tC = V.tC;
+  const A = E.analyze({ cd: V.win, tf: c.tf, cls: c.cls, dp: c.dp, mtf: V.mtf, daily: V.daily, news: null, inter: null, cost: c.cost, now: tC });
+  if (!A || A.error) return null;
+  const R = E.rate(A, { dp: c.dp, thin: Mkt.thin(c.cls, tC) }), I = A.I, L = I.n - 1, atr = A.atr, p0 = A.price, pl = R.plan, d = R.dir;
+  // 之後可能拿來當過濾條件的觀察值，先一起記下來，之後要試新的過濾方法就不必重跑
+  let path = 0; for (let k = L - 19; k <= L; k++) path += Math.abs(I.c[k] - I.c[k - 1]);
+  let lo = 0, tot = 0; for (let k = L - 119; k <= L; k++) if (isNum(I.atr[k])) { tot++; if (I.atr[k] <= atr) lo++; }
+  let vs = 0; for (let k = L - 20; k < L; k++) vs += I.v[k];
+  const S1 = A.levels.supports[0], R1 = A.levels.resistances[0], tr = t => { const r = A.mtf.rows.find(x => x.tf === t && !x.cur); return r ? r.score : NaN; };
+  // 對答案：之後「有交易」的 K 線
+  const fw = []; for (let j = i + 1; j < cd.length && fw.length < 96; j++) if (c.open[j]) fw.push(cd[j]);
+  const f = k => (fw[k - 1].c - p0) / atr, up = B.LV.map(() => 0), dn = B.LV.map(() => 0);
+  for (let k = 0; k < B.FWD; k++) B.LV.forEach((lv, m) => { if (!up[m] && fw[k].h >= p0 + lv * atr) up[m] = k + 1; if (!dn[m] && fw[k].l <= p0 - lv * atr) dn[m] = k + 1; });
+  const z = pl ? B.simPlan(pl, tC, fw, c.ms, c.hold6) : null;
+  return [c.id, c.cls, Math.round(tC / 1000), +p0.toPrecision(7), q(A.atrPct, 1000), q(A.regime.adx, 10), q(A.regime.bwRank, 100), A.regime.type, q(A.tech.T, 1000), q(A.tech.TR, 1000), q(A.tech.MR, 1000),
+    q(A.cal.p, 1000), A.cal.nEff || 0, q(A.analog.pUp, 1000), A.analog.n || 0, q(tr('1h'), 1000), q(tr('4h'), 1000), q(A.mtf.score, 1000), q(A.patterns.score, 1000), q(A.stratScore, 1000),
+    q(A.prob.up, 1000), A.prob.bias, R.score, R.grade, d, pl ? pl.type[0] : '', pl ? q(d * (pl.entry - p0) / atr, 100) : '', pl ? q(pl.risk / atr, 100) : '', pl ? q(Math.abs(pl.tp1 - pl.entry) / atr, 100) : '', pl ? q(Math.abs(pl.tp2 - pl.entry) / atr, 100) : '',
+    pl ? q(pl.pWin, 1000) : '', pl ? q(pl.pTouch, 1000) : '', pl ? q(pl.ev, 1000) : '', pl ? q(pl.costR, 1000) : '',
+    q(path > 0 ? Math.abs(I.c[L] - I.c[L - 20]) / path : 0, 1000), q(tot ? lo / tot : NaN, 100), q((I.h[L] - I.l[L]) / atr, 100), q((I.c[L] - I.o[L]) / atr, 100), q((p0 - I.ema20[L]) / atr, 100), q((p0 - I.ema50[L]) / atr, 100),
+    q(I.rsi[L], 10), q(I.pdi[L] - I.mdi[L], 10), q((p0 - I.c[L - 4]) / atr, 100), q((p0 - I.c[L - 12]) / atr, 100), q(vs > 0 ? I.v[L] / (vs / 20) : NaN, 100), S1 ? q((p0 - S1.p) / atr, 100) : '', R1 ? q((R1.p - p0) / atr, 100) : '', q((c.cost || 0) * p0 / atr, 1000),
+    q(f(4), 100), q(f(8), 100), q(f(12), 100), q(f(24), 100), ...up, ...dn, z && z.r != null ? q(z.r, 100) : '', z ? z.why : '', z && z.r6 != null ? q(z.r6, 100) : '', z && z.wait != null ? z.wait : '', z ? z.held : '', c.src];
+};
+
+/* ---------- 摘要 ---------- */
+const SES = t => { const h = Math.floor((t + 8 * 3600) / 3600) % 24; return h >= 5 && h < 8 ? '清晨 05–08' : h < 15 && h >= 8 ? '亞洲盤 08–15' : h >= 15 && h < 21 ? '歐洲盤 15–21' : '美洲盤 21–05'; }; // 臺北時間
+B.session = SES;
+function stat(rows) { // 一組判斷的成績：方向命中率（有偏多或偏空的才算）、照計畫走完的勝率與平均 R（已扣成本）
+  const s = { n: rows.length, nb: 0, hit: 0, mv: 0, pn: 0, pwin: 0, pr: 0, pr6: 0 };
+  for (const r of rows) {
+    const b = r[X.bias]; if (b) { s.nb++; if (r[X.f12] * b > 0) s.hit++; s.mv += r[X.f12] * b / 100; }
+    if (r[X.pr] !== '') { const net = (r[X.pr] - (r[X.cr] || 0) / 10) / 100; s.pn++; if (net > 0.05) s.pwin++; s.pr += net; s.pr6 += (r[X.pr6] - (r[X.cr] || 0) / 10) / 100; }
+  }
+  const d = (a, b) => (b ? +(a / b).toFixed(4) : null);
+  return { n: s.n, nb: s.nb, hit: d(s.hit, s.nb), mv: d(s.mv, s.nb), pn: s.pn, pwin: d(s.pwin, s.pn), pr: d(s.pr, s.pn), pr6: d(s.pr6, s.pn) };
+}
+function group(rows, key) { const m = {}; for (const r of rows) { const k = key(r); (m[k] || (m[k] = [])).push(r); } return m; }
+function table(rows, key, min) { const g = group(rows, key), out = {}; for (const k in g) if (g[k].length >= (min || 1)) out[k] = stat(g[k]); return out; }
+const COMP = [['tech', '技術指標（校準後）', r => r[X.cp] - 500, 30], ['analog', '歷史相似圖形', r => r[X.ap] - 500, 50], ['mtf', '多週期', r => r[X.mtf], 300], ['pat', 'K 線與圖形型態', r => r[X.pat], 300], ['str', '策略訊號', r => r[X.str], 300],
+  ['TR', '順勢指標', r => r[X.TR], 450], ['MR', '擺盪指標（反轉）', r => r[X.MR], 300], ['all', '合成後的機率', r => r[X.p] - 500, 50]];
+function comp(rows) { // 每一項分析單獨看：它明確指向一邊時，12 根後有沒有往那邊走
+  const out = {};
+  for (const [k, name, fn, thr] of COMP) { let n = 0, ok = 0; for (const r of rows) { const v = fn(r); if (!isNum(v) || Math.abs(v) < thr) continue; n++; if (v * r[X.f12] > 0) ok++; } out[k] = { name, n, agree: n ? +(ok / n).toFixed(4) : null }; }
+  return out;
+}
+B.summarize = function (rows, meta) {
+  const ts = rows.map(r => r[X.t]), cal = {}, bins = [[0, 400], [400, 450], [450, 500], [500, 550], [550, 600], [600, 1001]];
+  for (const [a, b] of bins) { const g = rows.filter(r => r[X.p] >= a && r[X.p] < b); cal[a + '-' + b] = { n: g.length, up: g.length ? +(g.filter(r => r[X.f12] > 0).length / g.length).toFixed(4) : null }; }
+  const byCls = group(rows, r => r[X.cls]), compCls = {}; for (const k in byCls) compCls[k] = comp(byCls[k]);
+  return { meta: Object.assign({ n: rows.length, inst: new Set(rows.map(r => r[X.id])).size, from: ts.length ? Math.min(...ts) : null, to: ts.length ? Math.max(...ts) : null }, meta || {}),
+    all: stat(rows), cls: table(rows, r => r[X.cls]), grade: table(rows, r => r[X.g]), ses: table(rows, r => SES(r[X.t])), rg: table(rows, r => r[X.rg]), dir: table(rows.filter(r => r[X.bias]), r => (r[X.bias] > 0 ? 'long' : 'short')),
+    cal, comp: comp(rows), compCls, clsSes: table(rows, r => r[X.cls] + '|' + SES(r[X.t]), 40), clsRg: table(rows, r => r[X.cls] + '|' + r[X.rg], 40), clsGrade: table(rows, r => r[X.cls] + '|' + r[X.g], 30),
+    go: stat(rows.filter(r => r[X.sc] >= 55 && r[X.pt] === 'm')) }; // go＝卡片會寫「現在可進場」的那些
+};
+B.csv = rows => B.COLS.join(',') + '\n' + rows.map(r => r.join(',')).join('\n') + '\n';
+if (typeof module !== 'undefined') module.exports = B; else root.BT = B;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
 /* ===== 行情資料：直接由瀏覽器向交易所公開 API 取得 K 線 ===== */
 (function (root) {
 'use strict';
@@ -1506,6 +1639,31 @@ const ADAPT = {
     return out;
   },
 };
+/* 回測用：再往回抓更早的 K 線（end＝只要這個時間以前的）。只有回測會用到，平常的行情不走這裡 */
+const PAGE = {
+  async binance(sym, tf, end) {
+    const q = `/api/v3/klines?symbol=${sym}&interval=${TFB[tf]}&limit=1000&endTime=${end}`;
+    let d; try { d = await http('https://data-api.binance.vision' + q); } catch (e) { if (e.http === 400) throw e; d = await http('https://api.binance.com' + q); }
+    return d.map(bRow);
+  },
+  async binancef(sym, tf, end) { return (await http(`https://fapi.binance.com/fapi/v1/klines?symbol=${sym}&interval=${TFB[tf]}&limit=1500&endTime=${end}`)).map(bRow); },
+  async bybit(sym, tf, end, cat) {
+    const d = await http(`https://api.bybit.com/v5/market/kline?category=${cat || 'linear'}&symbol=${sym}&interval=${TFY[tf]}&limit=1000&end=${end}`);
+    if (d.retCode !== 0) throw new Error('Bybit：' + (d.retMsg || '查無資料'));
+    return d.result.list.map(bRow).reverse();
+  },
+  bybits(sym, tf, end) { return PAGE.bybit(sym, tf, end, 'spot'); },
+  async hl(sym, tf, end) {
+    const d = await http('https://api.hyperliquid.xyz/info', { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'candleSnapshot', req: { coin: sym, interval: TFB[tf], startTime: end - 1500 * E.TF[tf], endTime: end } }) });
+    if (!Array.isArray(d)) throw new Error('Hyperliquid：查無資料');
+    return d.map(r => ({ t: num(r.t), o: num(r.o), h: num(r.h), l: num(r.l), c: num(r.c), v: num(r.v) }));
+  },
+  async bitget(sym, tf, end) {
+    const d = await http(`https://api.bitget.com/api/v2/mix/market/candles?symbol=${sym}&productType=USDT-FUTURES&granularity=${TFO[tf].replace('utc', '')}&limit=1000&endTime=${end}`);
+    if (d.code !== '00000' || !Array.isArray(d.data)) throw new Error('Bitget：' + (d.msg || '查無資料'));
+    return d.data.map(bRow);
+  },
+};
 function valid(cd) { return Array.isArray(cd) && cd.length >= 30 && cd.every(b => isFinite(b.t) && isFinite(b.o) && isFinite(b.c) && b.h >= b.l); }
 
 /* ---------- 示範資料（僅供預覽介面，不是真實行情） ---------- */
@@ -1578,6 +1736,17 @@ const Data = {
       } catch (e) { errs.push(e.message); }
     }
     const er = new Error(errs.join('；') || '沒有可用來源'); er.list = errs; throw er;
+  },
+  /* 回測用：抓比平常更長的歷史（往回多抓幾頁）。不進快取，也不經過 IG 換算；抓不到更早的就用手上有的 */
+  async history(inst, tf, bars) {
+    if (this.demo) return { cd: demoSeries(inst, tf, bars), src: { key: 'demo', sym: '', label: '示範資料（非真實行情）' } };
+    const first = await this.fetchFull(inst, tf, bars), pg = PAGE[first.src.key]; let cd = first.cd.slice();
+    for (let k = 0; pg && cd.length < bars && k < 10; k++) {
+      let part; try { part = await pg(first.src.sym, tf, cd[0].t - 1); } catch (e) { break; }
+      part = (part || []).filter(b => b.t < cd[0].t && isFinite(b.o) && isFinite(b.c)).sort((a, b) => a.t - b.t); if (!part.length) break;
+      cd = part.concat(cd);
+    }
+    return { cd: cd.slice(-bars), src: first.src };
   },
   async getRaw(inst, tf, opt) {
     opt = opt || {}; const limit = opt.limit || 500, key = inst.id + '|' + tf, now = Date.now(); let maxAge = opt.maxAge || 0;
@@ -3210,6 +3379,7 @@ function renderSettings() {
       <div class="three"><label>類別<select id="cu-cls">${CLS.map(c => `<option value="${c}"${c === 'stock' ? ' selected' : ''}>${Data.CLS_NAME[c]}</option>`).join('')}</select></label><label>小數位<input type="number" id="cu-dp" min="0" max="8" value="2"></label><label>&nbsp;<button class="btn primary" id="cu-add">加入</button></label></div>
       ${Data.custom.length ? `<table class="diag">${Data.custom.map(c => `<tr><td>${esc(c.name)}</td><td>${esc(Data.SRC_NAME[c.src[0][0]])} ${esc(c.src[0][1])}</td><td style="text-align:right"><button class="btn sm" data-del="${esc(c.id)}">移除</button></td></tr>`).join('')}</table>` : ''}
       <p class="hint">代號請用該來源的寫法。Binance／Bybit 合約：NFLXUSDT、COINUSDT；OKX：BTC-USDT；Kraken：EURUSD；Yahoo：台股 2330.TW、0050.TW，美股 NFLX，期貨 GC=F，指數 ^SOX。</p></div></section>
+    <section class="card" id="bt-card"></section>
     <section class="card"><h2>資料來源</h2><p class="pnote" style="margin-top:0">行情由你的瀏覽器直接向交易所（Binance、Bybit、Hyperliquid、Bitget、OKX、Kraken）的公開 API 讀取，不需要帳號。每個商品會依序嘗試多個來源，用第一個連得上的；Yahoo 行情、經濟行事曆與部分新聞則會經過公開的轉接服務（r.jina.ai）。</p>
       <p class="pnote" id="live-stat">${esc(liveText())}</p>
       <p><button class="btn" id="diag-run">${diag.running ? '檢測中…' : '檢測資料來源'}</button> <button class="btn" id="demo-toggle">${Data.demo ? '改回即時行情' : '用示範資料看介面'}</button></p>
@@ -3228,7 +3398,73 @@ function renderSettings() {
       <li>價格多快更新：Binance、Bybit、Hyperliquid 來源的商品由交易所即時推送，大約每秒一次（畫面右上角會出現「即時」）；Kraken、Bitget、OKX 每 5 秒抓一次；Yahoo 轉接的來源慢 10–15 分鐘。連接 IG 的商品每 3 秒讀一次 IG 的實際報價，兩次之間依交易所的即時漲跌推算。評級與支撐阻力每 60 秒重算一次。</li>
       <li>如果你用 IG：在本頁最上面連接 IG 後，現價會改用 IG 的買賣報價，所有價位（支撐、阻力、進場、停損、停利）都會換算成 IG 的價位。做法是把整份 K 線乘上「IG 價 ÷ 來源價」的比例，所以型態和機率不變，只有價位對齊到 IG。個股與 ETF 因為 IG 的 API 不提供報價，維持原來源。</li>
       <li>本頁是分析輔助，不是投資建議。差價合約有槓桿，請務必設停損並控制每筆風險。</li></ul></section>`;
-  renderIg();
+  renderIg(); renderBt();
+}
+/* ---------- 回測：檢驗這套分析過去準不準（計算在 BT 模組，這裡只管畫面、下載歷史資料與匯出） ---------- */
+const BTSZ = { fast: ['快速', 1500, 8], std: ['標準', 3000, 8], full: ['完整', 6000, 12] }; // 名稱、要抓幾根 K 線、每隔幾根取樣一次
+const bt = { running: false, stop: false, done: 0, total: 0, msg: '', rows: [], sum: (LS.get('cfd.bt', null) || {}).sum || null, errs: [], tf: null, size: 'std' };
+const btLive = () => `進度 ${bt.done}／${bt.total}　${bt.msg}　已記錄 ${bt.rows.length} 筆`;
+function paintBt() { const el = $('#bt-live'); if (el) el.textContent = btLive(); }
+async function runBt() {
+  if (bt.running) return; const [, bars, step] = BTSZ[bt.size], tf = bt.tf || S.scanTf, list = Data.all().filter(i => S.on[i.cls] !== false), t0 = Date.now();
+  Object.assign(bt, { running: true, stop: false, done: 0, total: list.length, rows: [], errs: [], msg: '', sum: null }); renderBt();
+  let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) { /* 不支援就算了：只是讓手機在回測期間不要自動鎖屏 */ }
+  for (const inst of list) {
+    if (bt.stop) break; bt.msg = inst.name + '：下載歷史 K 線'; paintBt();
+    try {
+      const base = await Data.history(inst, tf, bars), h1 = E.TF[tf] === 3600e3 ? base : await Data.history(inst, '1h', Math.ceil(base.cd.length * E.TF[tf] / 3600e3) + 1000);
+      const c = BT.prep({ id: inst.id, cls: inst.cls, dp: inst.dp0 == null ? inst.dp : inst.dp0, tf, cd: base.cd, h1: h1.cd, cost: S.cost[inst.cls] != null ? S.cost[inst.cls] / 100 : undefined, step, src: base.src.key });
+      for (let k = 0; k < c.idx.length && !bt.stop;) { // 一次算 50 毫秒就讓出來，畫面和追蹤單的提醒才不會卡住
+        const t1 = performance.now(); while (k < c.idx.length && performance.now() - t1 < 50) { const r = BT.sample(c, c.idx[k++]); if (r) bt.rows.push(r); }
+        bt.msg = `${inst.name}：重播 ${k}／${c.idx.length}`; paintBt(); await new Promise(r => setTimeout(r, 0));
+      }
+    } catch (e) { bt.errs.push(inst.name + '：' + String((e && e.message) || e).slice(0, 90)); }
+    bt.done++;
+  }
+  if (wl) try { wl.release(); } catch (e) { /* 略過 */ }
+  bt.sum = BT.summarize(bt.rows, { tf, size: bt.size, step, at: Date.now(), secs: Math.round((Date.now() - t0) / 1000), stopped: bt.stop, errs: bt.errs.slice(0, 20), demo: Data.demo, ver: 1 });
+  bt.running = false; LS.set('cfd.bt', { sum: bt.sum }); renderBt(); toast(bt.stop ? '回測已停止，下面是目前跑完的部分。' : `回測完成，共 ${bt.rows.length} 筆判斷。`, 'info');
+}
+const btName = () => `cfd-backtest-${bt.sum.meta.tf}-${new Date().toISOString().slice(0, 10)}.csv`;
+const btBlob = () => new Blob([BT.csv(bt.rows)], { type: 'text/csv' });
+function btSave() { const a = document.createElement('a'); a.href = URL.createObjectURL(btBlob()); a.download = btName(); document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000); }
+const btCanShare = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['a'], 'a.csv', { type: 'text/csv' })] })); } catch (e) { return false; } };
+async function btShare() { try { await navigator.share({ files: [new File([btBlob()], btName(), { type: 'text/csv' })], title: '差價交易回測資料' }); } catch (e) { if (e.name !== 'AbortError') btSave(); } }
+async function btCopy() {
+  const txt = '差價交易回測摘要\n' + JSON.stringify(bt.sum);
+  try { await navigator.clipboard.writeText(txt); } catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+  toast('摘要已複製，可以直接貼給 Claude。', 'info');
+}
+const pc1 = v => (v == null ? '—' : (v * 100).toFixed(1) + '%');
+function btSummary(s) {
+  const m = s.meta, md = x => { const d = new Date(x * 1000); return (d.getMonth() + 1) + '/' + d.getDate(); }, tr = (name, cols) => `<tr><td>${name}</td>${cols.map(c => `<td>${c}</td>`).join('')}</tr>`;
+  const dirRow = (name, z) => tr(name, [z.nb, pc1(z.hit)]), planRow = (name, z) => tr(name, [z.n, pc1(z.hit), pc1(z.pwin), z.pr == null ? '—' : rTxt(z.pr), z.pr6 == null ? '—' : rTxt(z.pr6)]);
+  const RG = { up: '多頭趨勢', down: '空頭趨勢', squeeze: '窄幅收斂', weakup: '偏多震盪', weakdown: '偏空震盪', range: '區間震盪' }, CAL = { '0-400': '低於 40%', '400-450': '40–45%', '450-500': '45–50%', '500-550': '50–55%', '550-600': '55–60%', '600-1001': '60% 以上' };
+  const errs = m.errs && m.errs.length ? `<p class="hint">沒跑到的商品：${esc(m.errs.join('；'))}</p>` : '';
+  let h = `<h3 class="sb-h">${bt.rows.length ? '這次' : '上次'}的回測結果</h3><p class="sb-note">${m.demo ? '<b>示範資料，不是真實行情。</b>' : ''}${E.TF_NAME[m.tf]}K，${m.inst} 個商品，共 ${m.n} 筆判斷${m.n ? `，期間 ${md(m.from)}–${md(m.to)}` : ''}，${mdhm(m.at)} 跑完${m.stopped ? '（中途停止）' : ''}。</p>`;
+  if (!m.n) return h + '<p class="none">沒有可用的資料。</p>' + errs;
+  h += `<h3 class="sb-h">方向準不準</h3><p class="sb-note">網頁判斷偏多或偏空時，12 根 K 線後方向對的比例。50% 等於丟銅板。</p><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${dirRow('全部', s.all)}${CLS.filter(c => s.cls[c]).map(c => dirRow(Data.CLS_NAME[c], s.cls[c])).join('')}${s.dir.long ? dirRow('偏多的判斷', s.dir.long) : ''}${s.dir.short ? dirRow('偏空的判斷', s.dir.short) : ''}</table>
+    <h3 class="sb-h">評級準不準</h3><p class="sb-note">「勝率」和「平均」是照卡片的進場、停損、停利走完的結果，已扣點差，以 R 計（1R＝進場到停損的距離）。「6 小時」是最多抱 6 小時就出場的版本。</p>
+    <table class="sb"><tr><th></th><th>筆數</th><th>方向</th><th>勝率</th><th>平均</th><th>6 小時</th></tr>${['A', 'B', 'C', 'D'].filter(g => s.grade[g]).map(g => planRow('評級 ' + g, s.grade[g])).join('')}${s.go && s.go.n ? planRow('現在可進場', s.go) : ''}</table>
+    <h3 class="sb-h">機率可不可信</h3><table class="sb"><tr><th>網頁說的上漲機率</th><th>筆數</th><th>實際上漲</th></tr>${Object.keys(CAL).map(k => tr(CAL[k], [s.cal[k].n, pc1(s.cal[k].up)])).join('')}</table>
+    <h3 class="sb-h">各項分析單獨看</h3><p class="sb-note">某一項明確指向一邊時，12 根後有沒有往那邊走。</p><table class="sb"><tr><th></th><th>筆數</th><th>一致</th></tr>${Object.values(s.comp).map(z => tr(esc(z.name), [z.n, pc1(z.agree)])).join('')}</table>
+    <h3 class="sb-h">時段（臺北時間）</h3><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${['清晨 05–08', '亞洲盤 08–15', '歐洲盤 15–21', '美洲盤 21–05'].filter(k => s.ses[k]).map(k => dirRow(k, s.ses[k])).join('')}</table>
+    <h3 class="sb-h">盤勢</h3><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${Object.keys(RG).filter(k => s.rg[k]).map(k => dirRow(RG[k], s.rg[k])).join('')}</table>
+    <p class="hint">判斷之間有重疊，幾千筆以下時相差 2–3 個百分點都可能只是運氣。這是過去的結果，不代表未來；回測沒有包含新聞與關聯市場這兩項。</p>`;
+  h += bt.rows.length ? `<p class="t-btns"><button class="btn primary" id="bt-save">下載完整資料檔</button>${btCanShare() ? '<button class="btn" id="bt-share">分享檔案</button>' : ''}<button class="btn" id="bt-copy">複製摘要</button></p>
+    <p class="hint">把資料檔傳給 Claude，就能依結果調整各類商品的分析方式（只傳摘要也可以，但能分析的比較少）。檔案約 ${(bt.rows.length * 0.00025).toFixed(1)} MB，裡面只有行情與分析數值，沒有任何個人或帳戶資料。</p>`
+    : '<p class="t-btns"><button class="btn" id="bt-copy">複製摘要</button></p><p class="hint">完整資料檔不會保留到下次開啟，要下載請重新跑一次。</p>';
+  return h + errs;
+}
+function renderBt() {
+  const el = $('#bt-card'); if (!el) return; const tf = bt.tf || S.scanTf, days = k => Math.round(BTSZ[k][1] * E.TF[tf] / 86400e3);
+  let h = `<h2>回測 <small>檢驗這套分析過去準不準</small></h2><p class="pnote" style="margin-top:0">用過去的 K 線把現在的分析逐根重播一次，看它當時的判斷後來對不對。只驗技術面與進場計畫（新聞和關聯市場沒有歷史可以重播）。這只是檢驗，不會改動任何分析或設定。</p>`;
+  if (bt.running) h += `<p class="pnote" id="bt-live">${esc(btLive())}</p><p class="hint">請讓這個網頁留在畫面上；切到別的 App 或鎖屏時會暫停，回來會接著跑。</p><p><button class="btn" id="bt-stop">停止</button></p>`;
+  else h += `<div class="form"><div class="f"><span>K 線週期</span><div class="seg">${['5m', '15m', '30m', '1h'].map(t => `<button class="chip" data-bttf="${t}" aria-pressed="${t === tf}">${E.TF_NAME[t]}</button>`).join('')}</div></div>
+    <div class="f"><span>範圍</span><div class="seg">${Object.keys(BTSZ).map(k => `<button class="chip" data-btsz="${k}" aria-pressed="${k === bt.size}">${BTSZ[k][0]}（約 ${days(k)} 天）</button>`).join('')}</div><small>只跑「要掃描的類別」裡開著的類別；有些來源給的歷史比較短。標準範圍在電腦上約需幾分鐘，手機會久一些。</small></div>
+    <p><button class="btn primary" id="bt-run">${bt.sum ? '重新回測' : '開始回測'}</button></p></div>`;
+  if (bt.sum && !bt.running) h += btSummary(bt.sum);
+  el.innerHTML = h;
 }
 /* ---------- IG 連線設定 ---------- */
 const igDraft = { env: IG.cfg.env, key: IG.cfg.key, user: IG.cfg.user, pass: '', remember: IG.cfg.remember };
@@ -3323,6 +3559,13 @@ document.addEventListener('click', e => {
   if (t.id === 'retry') { offline = false; banner(); Data.resetHosts(); Data.clear(); scan.last = 0; return show(view); }
   if (t.id === 'd-retry') return loadDetail(true);
   if (t.id === 'diag-run') return runDiag();
+  if (t.id === 'bt-run') return runBt();
+  if (t.id === 'bt-stop') { bt.stop = true; bt.msg = '正在停止…'; return paintBt(); }
+  if (d.bttf) { bt.tf = d.bttf; return renderBt(); }
+  if (d.btsz) { bt.size = d.btsz; return renderBt(); }
+  if (t.id === 'bt-save') return btSave();
+  if (t.id === 'bt-share') return btShare();
+  if (t.id === 'bt-copy') return btCopy();
   if (d.igenv) { igDraft.env = d.igenv; return renderIg(); }
   if (t.id === 'ig-login') {
     if (!igDraft.key.trim() || !igDraft.user.trim() || !igDraft.pass) { IG.msg = '請把 API key、帳號、密碼都填好。'; return renderIg(); }
@@ -3420,7 +3663,7 @@ function boot() {
   banner(); show(VIEWS.includes(h) ? h : 'scan');
   refreshNews(true); setInterval(tick, 1000); tick();
 }
-window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard };
+window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard, bt, runBt };
 boot();
 })();
 
