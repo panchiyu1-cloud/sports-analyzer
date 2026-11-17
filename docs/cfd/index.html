@@ -209,6 +209,10 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 .t-size { margin: 8px 0 0; padding: 8px 10px; border: 1px dashed var(--line); border-radius: 8px; font-size: 14px; line-height: 1.55; } .t-size small { display: block; color: var(--muted); font-size: 12.5px; } .t-size .warn, .t-size.warn { color: var(--red); } .t-size .btn { margin-left: 6px; }
 .t-also { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
 .st-chip.new { border-style: dashed; }
+.t-gate, .v-gate { margin: 8px 0; padding: 6px 10px; border: 1.5px solid var(--text); border-radius: 8px; font-size: 14px; line-height: 1.5; }
+.t-gate.no, .v-gate.no { border: 1.5px dashed var(--line); color: var(--text2); }
+.t-gate small, .v-gate small { display: block; color: var(--muted); font-size: 12.5px; }
+.v-gate ul { list-style: none; margin: 4px 0; padding: 0; font-size: 13.5px; } .v-gate li { margin: 1px 0; }
 .toast.warn { background: var(--surface); color: var(--text); border: 2px solid var(--text); } .toast.exit { background: var(--red); color: #fff; }
 .sug { margin: 8px 0; padding: 8px 10px; border: 1.5px solid var(--text); border-radius: 8px; font-size: 14px; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .sb { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 8px; } .sb th, .sb td { padding: 5px 3px; border-bottom: 1px solid var(--line); text-align: right; font-family: var(--num); white-space: nowrap; } .sb th:first-child, .sb td:first-child { text-align: left; font-family: var(--sans); white-space: normal; } .sb th { color: var(--muted); font-weight: 500; font-size: 12px; }
@@ -972,9 +976,12 @@ E.plans = function (ctx) {
     const against = (bias > 0 && d < 0) || (bias < 0 && d > 0);
     if (against && verdict === '可考慮') verdict = '逆勢・邊際';
     if (risk > 3.5 * atr && verdict === '可考慮') verdict = '邊際';
+    // 第七版：等突破才進場的計畫，回測（2026/11，1,822 筆）平均 −0.15R，前後兩段都是賠的：最多給「邊際」、不當首選、不拿來評級
+    const weak = type === 'stop';
+    if (weak) { if (verdict === '可考慮') verdict = '邊際'; note += '；回測裡這種等突破才進場的計畫平均是賠的，不列為可進場'; }
     // 建議風險：凱利公式的一成，再依評等設上限（模型有誤差，寧可保守）
     const riskPct = ev > 0 ? clip(kelly * 0.1 * 100, 0.2, verdict === '可考慮' ? 2 : 1) : 0;
-    plans.push({ side, type, name, entry, sl, tp1, tp2, risk, rr, pTouch: pt, pWin, pBase: base.p, nBase: base.n, ev, costR, riskPct, verdict, against, estTp: est, note, slPct: risk / entry * 100, tpPct: reward / entry * 100, distAtr: dAtr });
+    plans.push({ side, type, name, entry, sl, tp1, tp2, risk, rr, pTouch: pt, pWin, pBase: base.p, nBase: base.n, ev, costR, riskPct, verdict, against, weak, estTp: est, note, slPct: risk / entry * 100, tpPct: reward / entry * 100, distAtr: dAtr });
   };
   const slBelow = z => { const k = sup.indexOf(z), nx = sup[k + 1]; let s = z.lo - 0.5 * atr; if (nx && !nx.est && z.lo - nx.hi < 0.8 * atr) s = nx.lo - 0.3 * atr; return s; };
   const slAbove = z => { const k = res.indexOf(z), nx = res[k + 1]; let s = z.hi + 0.5 * atr; if (nx && !nx.est && nx.lo - z.hi < 0.8 * atr) s = nx.hi + 0.3 * atr; return s; };
@@ -1004,7 +1011,7 @@ E.plans = function (ctx) {
     if (p.ev < 0.1 || p.rr < 1.1 || p.against) continue;
     const sc = p.ev * (0.4 + 0.6 * p.pTouch); if (sc > bs) { bs = sc; best = p; }
   }
-  if (best) best.best = true;
+  if (best) { best.pick = true; if (!best.weak) best.best = true; } // pick：依期望值排第一的計畫（評級用）；它如果是等突破才進場的，就不標「首選」（第七版）
   const ord = p => (p.best ? 0 : 1) * 10 + (p.against ? 5 : 0) + (p.verdict === '可考慮' ? 0 : p.verdict === '邊際' ? 1 : p.verdict === '逆勢・邊際' ? 2 : 3);
   plans.sort((a, b) => ord(a) - ord(b) || b.ev - a.ev);
   return plans;
@@ -1047,6 +1054,10 @@ E.indicatorList = function (I, dp) {
 };
 
 /* ---------- 綜合研判 ---------- */
+/* 各項分析在機率裡的權重（對數勝算相加）。
+   第七版把型態改成 0：回測（2026/11，11,636 筆）裡看漲型態之後實際上漲 45.5%、看跌型態之後 49.2%，方向是反的，前後兩段都一樣。
+   型態仍會算出來、列在畫面和回測檔裡，只是不再影響機率。 */
+E.W = { tech: 0.8, analog: 0.35, mtf: 0.32, pat: 0, strat: 0.18, news: 0.14, inter: 0.14 };
 E.analyze = function (inp) {
   const cd = inp.cd, tf = inp.tf, dp = inp.dp == null ? 2 : inp.dp, now = inp.now || Date.now(), H = E.HORIZON;
   if (!cd || cd.length < 120) return { error: 'K線資料不足（至少需要 120 根）' };
@@ -1087,13 +1098,13 @@ E.analyze = function (inp) {
   const NEWS = isNum(inp.news) ? clip(inp.news, -1, 1) : 0, INTER = isNum(inp.inter) ? clip(inp.inter, -1, 1) : 0;
   // 機率合成（對數勝算相加）
   const parts = [
-    { name: '技術指標（歷史校準）', v: 0.8 * logit(cal.p), detail: cal.n ? `相近指標狀態 ${cal.n} 根（約 ${cal.nEff} 段獨立行情），之後 ${H} 根收高 ${(cal.raw * 100).toFixed(0)}%` : '樣本不足' },
-    { name: '歷史相似圖形', v: 0.35 * logit(an.pUp), detail: an.n ? `找到 ${an.n} 段相似走勢，之後收高 ${(an.raw * 100).toFixed(0)}%` : '相似樣本不足' },
-    { name: '多週期共振', v: 0.32 * MTF, detail: mrows.filter(r => !r.cur && isNum(r.score)).map(r => E.TF_NAME[r.tf] + r.label).join('、') || '尚無其他週期資料' },
-    { name: 'K線與圖形型態', v: 0.18 * PAT, detail: [...ch.list.map(x => x.name), ...cp.filter(x => x.dir).map(x => x.name), ...dv.map(x => x.name)].slice(0, 4).join('、') || '無明顯型態' },
-    { name: '策略訊號（依回測績效加權）', v: 0.18 * STRAT, detail: strat.filter(s => s.state && s.wt > 0).map(s => s.name + (s.state > 0 ? '做多' : '做空')).join('、') || '無有效訊號' },
-    { name: '新聞情緒', v: 0.14 * NEWS, detail: inp.newsNote || '未取得新聞' },
-    { name: '關聯市場／指數', v: 0.14 * INTER, detail: inp.interNote || '無' },
+    { name: '技術指標（歷史校準）', v: E.W.tech * logit(cal.p), detail: cal.n ? `相近指標狀態 ${cal.n} 根（約 ${cal.nEff} 段獨立行情），之後 ${H} 根收高 ${(cal.raw * 100).toFixed(0)}%` : '樣本不足' },
+    { name: '歷史相似圖形', v: E.W.analog * logit(an.pUp), detail: an.n ? `找到 ${an.n} 段相似走勢，之後收高 ${(an.raw * 100).toFixed(0)}%` : '相似樣本不足' },
+    { name: '多週期共振', v: E.W.mtf * MTF, detail: mrows.filter(r => !r.cur && isNum(r.score)).map(r => E.TF_NAME[r.tf] + r.label).join('、') || '尚無其他週期資料' },
+    { name: 'K線與圖形型態' + (E.W.pat ? '' : '（只列出，不計入機率）'), v: E.W.pat * PAT, detail: [...ch.list.map(x => x.name), ...cp.filter(x => x.dir).map(x => x.name), ...dv.map(x => x.name)].slice(0, 4).join('、') || '無明顯型態' },
+    { name: '策略訊號（依回測績效加權）', v: E.W.strat * STRAT, detail: strat.filter(s => s.state && s.wt > 0).map(s => s.name + (s.state > 0 ? '做多' : '做空')).join('、') || '無有效訊號' },
+    { name: '新聞情緒', v: E.W.news * NEWS, detail: inp.newsNote || '未取得新聞' },
+    { name: '關聯市場／指數', v: E.W.inter * INTER, detail: inp.interNote || '無' },
   ];
   let lg = 0; for (const p of parts) { lg += p.v; p.pts = p.v * 25; }
   const pUp = clip(sigmoid(lg), 0.2, 0.8);
@@ -1134,7 +1145,10 @@ E.rate = function (A, ctx) {
   ctx = ctx || {}; const p = A.prob.up, bias = A.prob.bias, dir = bias || (p >= 0.5 ? 1 : -1), last = A.n - 1;
   const mine = A.plans.filter(x => (x.side === 'long') === (dir > 0) && !x.against && x.ev > 0);
   const w = x => x.ev * (0.4 + 0.6 * (isNum(x.pTouch) ? x.pTouch : 0.5));
-  const plan = mine.find(x => x.best) || mine.sort((a, b) => w(b) - w(a))[0] || null;
+  const top = mine.find(x => x.pick) || mine.sort((a, b) => w(b) - w(a))[0] || null; // 依期望值排第一的計畫
+  // 第七版：排第一的如果是「等突破才進場」的計畫，就當作沒有進場點，不退而求其次改用現價單。
+  // 回測（2026/11）裡突破計畫平均 −0.15R；而在它排第一的那些時候，改用現價進場也沒有比較好（55 分以上 402 筆，方向只對 47.8%，平均約 −0.06R）。
+  const plan = top && top.type !== 'stop' ? top : null;
   const parts = {
     edge: clip(Math.abs(p - 0.5) / 0.12, 0, 1) * 40,
     ev: plan ? clip(w(plan) / 0.5, 0, 1) * 25 : 0,
@@ -1145,9 +1159,10 @@ E.rate = function (A, ctx) {
   let score = parts.edge + parts.ev + parts.mtf + parts.strat + parts.trend; const notes = [], rsi = A.I.rsi[last];
   if ((dir > 0 && rsi >= 72) || (dir < 0 && rsi <= 28)) { score -= 8; notes.push(dir > 0 ? 'RSI 超買，追價風險高' : 'RSI 超賣，追空風險高'); }
   if (!bias) { score = Math.min(score, 37); notes.push('多空機率接近'); }
-  else if (!plan) { score = Math.min(score, 54); notes.push('沒有期望值為正的進場點'); }
+  else if (!plan) { score = Math.min(score, 54); notes.push(top ? '排第一的進場方式是等突破，這種計畫在回測裡是賠的' : '沒有期望值為正的進場點'); }
   if (ctx.eventSoon) { score = Math.min(score, 54); notes.push('重大數據即將公布'); }
   if (ctx.thin) { score = Math.min(score, 54); notes.push('換日時段點差大'); }
+  if (ctx.dawn) { score = Math.min(score, 54); notes.push('清晨 05–08 的單在回測裡是賠的'); } // 第七版：市價單平均 −0.16R，前後兩段都是
   if (ctx.closed) { score = Math.min(score, 37); notes.push(ctx.why || '沒有交易'); }
   else if (ctx.stale) { score = Math.min(score, 37); notes.push('休市或報價延遲'); }
   if (Math.abs(p - 0.5) < 0.08) score = Math.min(score, 71); // 機率優勢不到 8 個百分點，最高只給 B
@@ -1157,9 +1172,30 @@ E.rate = function (A, ctx) {
   if (ctx.closed || ctx.stale) action = ctx.act || '沒有交易，開盤後再評估';
   else if (grade === 'D') action = bias ? '條件不足，先不要進場' : '沒有方向，先不要進場';
   else if (!plan) action = '先觀察，目前沒有划算的進場點';
-  else if (grade === 'C') action = ctx.thin ? '換日時段點差大，過了再進場' : '先觀察，等訊號更明確';
+  else if (grade === 'C') action = ctx.thin ? '換日時段點差大，過了再進場' : ctx.dawn ? '清晨時段先不進場，08:00 後再評估' : '先觀察，等訊號更明確';
   else action = plan.type === 'market' ? '現在可進場' : plan.type === 'limit' ? `等回到 ${f(plan.entry)} 再進場` : `等${dir > 0 ? '突破' : '跌破'} ${f(plan.entry)} 再進場`;
   return { score, grade, label: E.GRADE[grade], action, dir, plan, notes, parts };
+};
+
+/* ---------- 門檻（第七版：只標示，不擋單） ----------
+   2026/11/17 的回測（15 分 K、約 28 天、11,636 筆）：同時符合下面三項的判斷，網頁看多之後實際上漲 50.2%、看空之後上漲 39.4%，
+   相差 11 個百分點，前後兩段都一樣；不符合的，看多和看空之後沒有差別。但照前三名下單的損益，後段沒有贏過不設門檻，
+   所以先只標示「通過／未通過」，讓成績單、紙上紀錄和回測分開統計，之後再用真實行情決定要不要真的擋。
+   ① 類別：加密貨幣（沒有穩定的方向資訊）與外匯（資料來源太冷清）不通過
+   ② 時段（臺北時間，和回測的切法一樣，不隨夏令時間調整）：清晨 05–08 不通過；股票、ETF、指數只在美洲盤 21–05 通過
+   ③ 方向順著 4 小時趨勢：4 小時趨勢分數 × 方向 > 0.2 */
+E.tpeHour = t => Math.floor((t + 8 * 3600e3) / 3600e3) % 24; // 臺北時間的「時」（t 是毫秒）
+E.isDawn = t => { const h = E.tpeHour(t); return h >= 5 && h < 8; };
+E.gate = function (A, dir, cls, t) {
+  const h = E.tpeHour(t), dawn = h >= 5 && h < 8, us = cls === 'stock' || cls === 'etf' || cls === 'index', usOk = h >= 21 || h < 5;
+  const r4 = A.mtf.rows.find(x => x.tf === '4h'), s4 = r4 && isNum(r4.score) ? r4.score : NaN, al = s4 * dir;
+  const checks = [
+    { key: 'cls', name: '類別', ok: cls !== 'crypto' && cls !== 'fx', why: cls === 'crypto' ? '加密貨幣在回測裡沒有穩定的方向資訊' : cls === 'fx' ? '外匯的資料來源太冷清，訊號不可靠' : '' },
+    { key: 'ses', name: '時段', ok: !dawn && (!us || usOk), why: dawn ? '現在是清晨 05–08' : us && !usOk ? '股票、ETF、指數只在美洲盤（21–05）有訊號' : '' },
+    { key: 'h4', name: '順著 4 小時趨勢', ok: al > 0.2, why: !isNum(s4) ? '沒有 4 小時的資料' : al > 0.2 ? '' : al < -0.2 ? '方向和 4 小時趨勢相反' : '4 小時沒有明確趨勢' },
+  ];
+  const fail = checks.filter(c => !c.ok);
+  return { pass: !fail.length, checks, why: fail.map(c => c.why) };
 };
 
 if (typeof module !== 'undefined') module.exports = E;
@@ -1332,11 +1368,11 @@ const B = { WIN: 300, FWD: 24, LV: [0.5, 1, 1.5, 2, 2.5, 3] }; // 分析用 300 
 /* 每筆判斷存成一列。數值放大成整數（欄位說明見 B.NOTE），檔案才不會太大 */
 B.COLS = ['id', 'cls', 't', 'px', 'atrp', 'adx', 'bw', 'rg', 'T', 'TR', 'MR', 'cp', 'cn', 'ap', 'an', 'm1', 'm4', 'mtf', 'pat', 'str', 'p', 'bias', 'sc', 'g', 'dir', 'pt', 'pe', 'ps', 'p1', 'p2', 'pw', 'pto', 'ev', 'cr',
   'er', 'av', 'bar', 'body', 'e20', 'e50', 'rsi', 'di', 'r4', 'r12', 'vr', 'ds', 'dr', 'sp',
-  'f4', 'f8', 'f12', 'f24', 'u05', 'u10', 'u15', 'u20', 'u25', 'u30', 'd05', 'd10', 'd15', 'd20', 'd25', 'd30', 'pr', 'prs', 'pr6', 'pb', 'ph', 'src'];
+  'f4', 'f8', 'f12', 'f24', 'u05', 'u10', 'u15', 'u20', 'u25', 'u30', 'd05', 'd10', 'd15', 'd20', 'd25', 'd30', 'pr', 'prs', 'pr6', 'pb', 'ph', 'src', 'gt'];
 B.NOTE = 't=判斷時間(秒) atrp=ATR%x1000 adx x10 bw=布林寬度百分位x100 rg=盤勢 T/TR/MR=技術分數x1000 cp=校準機率x1000 cn=獨立樣本數 ap=相似圖形機率x1000 an=相似段數 m1/m4=1小時/4小時趨勢x1000 mtf/pat/str=多週期/型態/策略x1000 ' +
   'p=上漲機率x1000 bias=方向 sc=分數 g=評級 dir=評級方向 pt=計畫類型(m市價/l回踩/s突破) pe=進場價離現價(ATR x100,順向為正) ps/p1/p2=停損/停利1/停利2距離(ATR x100) pw=計畫勝率x1000 pto=到價機率x1000 ev x1000 cr=成本(R x1000) ' +
   'er=趨勢效率x1000 av=波動百分位x100 bar/body=最後一根的高低差/實體(ATR x100) e20/e50=離均線(ATR x100) rsi x10 di=+DI減-DI x10 r4/r12=4/12根漲跌(ATR x100) vr=量比x100 ds/dr=離支撐/阻力(ATR x100) sp=點差(ATR x1000) ' +
-  'f4..f24=之後4/8/12/24根的漲跌(ATR x100) u05..u30=之後24根內第幾根先漲到0.5..3倍ATR(0=沒到) d05..d30=先跌到 pr=照計畫走完的結果(R x100,未扣成本) prs=結束原因 pr6=最多抱6小時的結果 pb=等了幾根才進場 ph=抱了幾根 src=來源';
+  'f4..f24=之後4/8/12/24根的漲跌(ATR x100) u05..u30=之後24根內第幾根先漲到0.5..3倍ATR(0=沒到) d05..d30=先跌到 pr=照計畫走完的結果(R x100,未扣成本) prs=結束原因 pr6=最多抱6小時的結果 pb=等了幾根才進場 ph=抱了幾根 src=來源 gt=門檻(1通過/0未通過，第七版起)';
 const X = {}; B.COLS.forEach((k, i) => { X[k] = i; }); B.X = X;
 const q = (v, k) => (isNum(v) ? Math.round(v * k) : '');
 function agg(cd, ms) { // 把小週期併成大週期（cd 由舊到新）
@@ -1401,7 +1437,7 @@ B.sample = function (c, i) {
   const cd = c.cd, V = B.views(c, i), tC = V.tC;
   const A = E.analyze({ cd: V.win, tf: c.tf, cls: c.cls, dp: c.dp, mtf: V.mtf, daily: V.daily, news: null, inter: null, cost: c.cost, now: tC });
   if (!A || A.error) return null;
-  const R = E.rate(A, { dp: c.dp, thin: Mkt.thin(c.cls, tC) }), I = A.I, L = I.n - 1, atr = A.atr, p0 = A.price, pl = R.plan, d = R.dir;
+  const R = E.rate(A, { dp: c.dp, thin: Mkt.thin(c.cls, tC), dawn: E.isDawn(tC) }), I = A.I, L = I.n - 1, atr = A.atr, p0 = A.price, pl = R.plan, d = R.dir;
   // 之後可能拿來當過濾條件的觀察值，先一起記下來，之後要試新的過濾方法就不必重跑
   let path = 0; for (let k = L - 19; k <= L; k++) path += Math.abs(I.c[k] - I.c[k - 1]);
   let lo = 0, tot = 0; for (let k = L - 119; k <= L; k++) if (isNum(I.atr[k])) { tot++; if (I.atr[k] <= atr) lo++; }
@@ -1418,7 +1454,7 @@ B.sample = function (c, i) {
     pl ? q(pl.pWin, 1000) : '', pl ? q(pl.pTouch, 1000) : '', pl ? q(pl.ev, 1000) : '', pl ? q(pl.costR, 1000) : '',
     q(path > 0 ? Math.abs(I.c[L] - I.c[L - 20]) / path : 0, 1000), q(tot ? lo / tot : NaN, 100), q((I.h[L] - I.l[L]) / atr, 100), q((I.c[L] - I.o[L]) / atr, 100), q((p0 - I.ema20[L]) / atr, 100), q((p0 - I.ema50[L]) / atr, 100),
     q(I.rsi[L], 10), q(I.pdi[L] - I.mdi[L], 10), q((p0 - I.c[L - 4]) / atr, 100), q((p0 - I.c[L - 12]) / atr, 100), q(vs > 0 ? I.v[L] / (vs / 20) : NaN, 100), S1 ? q((p0 - S1.p) / atr, 100) : '', R1 ? q((R1.p - p0) / atr, 100) : '', q((c.cost || 0) * p0 / atr, 1000),
-    q(f(4), 100), q(f(8), 100), q(f(12), 100), q(f(24), 100), ...up, ...dn, z && z.r != null ? q(z.r, 100) : '', z ? z.why : '', z && z.r6 != null ? q(z.r6, 100) : '', z && z.wait != null ? z.wait : '', z ? z.held : '', c.src];
+    q(f(4), 100), q(f(8), 100), q(f(12), 100), q(f(24), 100), ...up, ...dn, z && z.r != null ? q(z.r, 100) : '', z ? z.why : '', z && z.r6 != null ? q(z.r6, 100) : '', z && z.wait != null ? z.wait : '', z ? z.held : '', c.src, E.gate(A, d, c.cls, tC).pass ? 1 : 0];
 };
 
 /* ---------- 摘要 ---------- */
@@ -1442,6 +1478,13 @@ function comp(rows) { // 每一項分析單獨看：它明確指向一邊時，1
   for (const [k, name, fn, thr] of COMP) { let n = 0, ok = 0; for (const r of rows) { const v = fn(r); if (!isNum(v) || Math.abs(v) < thr) continue; n++; if (v * r[X.f12] > 0) ok++; } out[k] = { name, n, agree: n ? +(ok / n).toFixed(4) : null }; }
   return out;
 }
+function sepOf(rows) { // 區別力：網頁看多之後實際上漲的比例 − 看空之後實際上漲的比例（看 12 根後）。0＝看多看空沒差別；不受整段行情偏漲或偏跌影響
+  let nl = 0, ul = 0, ns = 0, us = 0;
+  for (const r of rows) { const up = r[X.f12] > 0 ? 1 : 0; if (r[X.dir] > 0) { nl++; ul += up; } else { ns++; us += up; } }
+  const d = (a, b) => (b ? +(a / b).toFixed(4) : null);
+  return { nl, ns, upL: d(ul, nl), upS: d(us, ns), sep: nl && ns ? +(ul / nl - us / ns).toFixed(4) : null };
+}
+B.sepOf = sepOf;
 B.summarize = function (rows, meta) {
   const ts = rows.map(r => r[X.t]), cal = {}, bins = [[0, 400], [400, 450], [450, 500], [500, 550], [550, 600], [600, 1001]];
   for (const [a, b] of bins) { const g = rows.filter(r => r[X.p] >= a && r[X.p] < b); cal[a + '-' + b] = { n: g.length, up: g.length ? +(g.filter(r => r[X.f12] > 0).length / g.length).toFixed(4) : null }; }
@@ -1449,7 +1492,10 @@ B.summarize = function (rows, meta) {
   return { meta: Object.assign({ n: rows.length, inst: new Set(rows.map(r => r[X.id])).size, from: ts.length ? Math.min(...ts) : null, to: ts.length ? Math.max(...ts) : null }, meta || {}),
     all: stat(rows), cls: table(rows, r => r[X.cls]), grade: table(rows, r => r[X.g]), ses: table(rows, r => SES(r[X.t])), rg: table(rows, r => r[X.rg]), dir: table(rows.filter(r => r[X.bias]), r => (r[X.bias] > 0 ? 'long' : 'short')),
     cal, comp: comp(rows), compCls, clsSes: table(rows, r => r[X.cls] + '|' + SES(r[X.t]), 40), clsRg: table(rows, r => r[X.cls] + '|' + r[X.rg], 40), clsGrade: table(rows, r => r[X.cls] + '|' + r[X.g], 30),
-    go: stat(rows.filter(r => r[X.sc] >= 55 && r[X.pt] === 'm')) }; // go＝卡片會寫「現在可進場」的那些
+    go: stat(rows.filter(r => r[X.sc] >= 55 && r[X.pt] === 'm')), // go＝卡片會寫「現在可進場」的那些
+    // 第七版：門檻通過與未通過分開看（舊版的資料檔沒有 gt 這一欄，就不會有這幾項）
+    gate: table(rows.filter(r => r[X.gt] === 1 || r[X.gt] === 0), r => (r[X.gt] === 1 ? 'pass' : 'fail')), goGate: stat(rows.filter(r => r[X.sc] >= 55 && r[X.pt] === 'm' && r[X.gt] === 1)),
+    sep: { all: sepOf(rows), pass: sepOf(rows.filter(r => r[X.gt] === 1)), fail: sepOf(rows.filter(r => r[X.gt] === 0)) } };
 };
 B.csv = rows => B.COLS.join(',') + '\n' + rows.map(r => r.join(',')).join('\n') + '\n';
 if (typeof module !== 'undefined') module.exports = B; else root.BT = B;
@@ -2819,7 +2865,7 @@ function newPos(inst, plan, tf, meta) { // meta：建立當下的評級、分數
   const p = { id: 'p' + now.toString(36) + Math.random().toString(36).slice(2, 6), instId: inst.id, name: inst.name, dp: inst.dp, cls: inst.cls, side: plan.side, type: plan.type, planName: plan.name, tf,
     entry: plan.entry, sl: plan.sl, slNow: plan.sl, tp1: plan.tp1, tp2: plan.tp2, risk: Math.abs(plan.entry - plan.sl), created: now, lastCheck: now, price: null,
     status: mk ? 'open' : 'pending', openedAt: mk ? now : null, expires: mk ? null : now + 48 * E.TF[tf], flags: {}, basis: IG.basis(inst) ? 'ig' : 'src',
-    grade: m.grade || null, score: isNum(m.score) ? m.score : null, prob0: isNum(m.prob) ? m.prob : null, rank: m.rank || 0, from: m.from || 'detail' };
+    grade: m.grade || null, score: isNum(m.score) ? m.score : null, prob0: isNum(m.prob) ? m.prob : null, rank: m.rank || 0, from: m.from || 'detail', gate: m.gate == null ? null : m.gate ? 1 : 0 }; // gate：建立當下有沒有通過門檻（第七版起；舊的紀錄沒有）
   if (z && z.money) { p.budget = z.money; if (z.n >= 0.01) p.qty = z.n; }
   return p;
 }
@@ -2897,7 +2943,7 @@ function posCard(p) {
     <p class="pinfo">${info}</p>${p.off ? `<p class="pmeta" style="margin-top:0">${esc(p.off)}。這段期間不檢查停損停利，恢復交易後繼續。</p>` : ''}${hold}${sug}
     <div class="gauge" role="img" aria-label="現價在停損與停利之間的位置"><i class="g-fill" style="width:${has ? fr(px) : fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.tp1)}%"></i>${has ? `<i class="g-dot" style="left:${fr(px)}%"></i>` : ''}</div>
     <div class="g-lab num"><span>停損 ${f(p.slNow)}${p.slNow !== p.sl ? (d * (p.slNow - p.entry) > 0.02 * p.risk ? '（已移到停利 1）' : '（已移到進場價）') : ''}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
-    <p class="pmeta">${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${mdhm(p.created)} 建立${p.grade ? `　當時評級 ${p.grade}` : ''}${row && row.rate && !row.err ? `　目前評級 ${row.rate.grade}` : ''}${p.qty ? `　建議數量 ${p.qty.toFixed(2)} 張（最多賠 ${usd(p.budget)}）` : p.budget ? `　最多賠 ${usd(p.budget)}` : ''}</p>
+    <p class="pmeta">${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${mdhm(p.created)} 建立${p.grade ? `　當時評級 ${p.grade}` : ''}${p.gate != null ? `　當時門檻${p.gate ? '通過' : '未通過'}` : ''}${row && row.rate && !row.err ? `　目前評級 ${row.rate.grade}` : ''}${p.qty ? `　建議數量 ${p.qty.toFixed(2)} 張（最多賠 ${usd(p.budget)}）` : p.budget ? `　最多賠 ${usd(p.budget)}` : ''}</p>
     <div class="t-btns">${inst ? `<button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button>` : ''}${p.status === 'pending' ? `<button class="btn sm" data-pos-del="${p.id}">取消追蹤</button>` : `<button class="btn sm" data-pos-close="${p.id}">我已平倉</button><button class="btn sm" data-pos-del="${p.id}">刪除</button>`}</div></article>`;
 }
 /* ---------- 成績單 ----------
@@ -2922,7 +2968,7 @@ function paperLog() { // 掃描完：把前三名記成紙上單。同一個商�
   topList().slice(0, 3).forEach((r, k) => {
     const pl = r.plan; if (!pl || r.rate.score < 55 || !r.sig || !(r.sig.first || now - r.sig.t >= 120e3)) return;
     if (PP.list.some(p => p.instId === r.inst.id && (Track.active(p) || now - p.created < 2 * 3600e3))) return;
-    PP.list.unshift(newPos(r.inst, pl, r.tf, { grade: r.rate.grade, score: r.rate.score, prob: r.rate.dir > 0 ? r.prob.up : r.prob.down, rank: k + 1, from: 'paper' })); add = true;
+    PP.list.unshift(newPos(r.inst, pl, r.tf, { grade: r.rate.grade, score: r.rate.score, prob: r.rate.dir > 0 ? r.prob.up : r.prob.down, rank: k + 1, from: 'paper', gate: r.gate ? r.gate.pass : null })); add = true;
   });
   if (add || PP.dirty) savePP();
 }
@@ -2938,7 +2984,8 @@ function scoreboard() {
   let h = '<section class="card" id="s-score"><h2>成績單 <small>以 R 計：1R＝進場到停損的距離</small></h2><h3 class="sb-h">你追蹤的單</h3>';
   if (!a.n) h += '<p class="none">還沒有結束的追蹤單。照卡片下單時按「追蹤」，結束後這裡會自動算出勝率和平均賺賠。</p>';
   else {
-    h += `<table class="sb">${head}${sbRow('你實際的結果', a)}${both.length ? sbRow('同一批照原計畫抱到底', sumR(both.map(p => p.sh.r))) : ''}</table>`;
+    const gm = (name, v) => { const z = sumR(mine.filter(p => p.gate === v).map(p => p.r)); return z.n ? sbRow(name, z) : ''; };
+    h += `<table class="sb">${head}${sbRow('你實際的結果', a)}${both.length ? sbRow('同一批照原計畫抱到底', sumR(both.map(p => p.sh.r))) : ''}${gm('其中門檻通過', 1)}${gm('其中門檻未通過', 0)}</table>`;
     if (isNum(a.aw) || isNum(a.al)) h += `<p class="sb-note">${isNum(a.aw) ? `賺的單平均賺 <b class="num">${rTxt(a.aw)}</b>` : '還沒有賺的單'}，${isNum(a.al) ? `賠的單平均賠 <b class="num">${rTxt(a.al)}</b>` : '還沒有賠的單'}。${isNum(a.aw) && isNum(a.al) ? `以這個賺賠比，勝率要超過 <b class="num">${(-a.al / (a.aw - a.al) * 100).toFixed(0)}%</b> 才不賠。` : ''}</p>`;
     if (both.length) { const df = both.reduce((x, p) => x + p.r - p.sh.r, 0); h += `<p class="sb-note">你的出場方式（提早平倉、移動停損）和照原計畫相比：<b class="num">${Math.abs(df) < 0.05 ? '幾乎一樣' : (df > 0 ? '多賺 ' : '少賺 ') + Math.abs(df).toFixed(2) + 'R'}</b>（比較原計畫也走完的 ${both.length} 筆）。</p>`; }
     else h += '<p class="sb-note">手動平倉之後，網頁會繼續看原計畫後來走到停利還是停損，走完就會出現對照。</p>';
@@ -2947,9 +2994,9 @@ function scoreboard() {
   if (!paper.length) h += '<p class="none">掃描頁開著的時候，每次的前三名（A 或 B）會自動記一筆，照原計畫走完後列在這裡。</p>';
   else {
     const grp = (name, fn) => { const z = sumR(paper.filter(fn).map(p => p.r)); return z.n ? sbRow(name, z) : ''; };
-    h += `<table class="sb">${head}${sbRow('全部', sumR(paper.map(p => p.r)))}${['A', 'B'].map(g => grp('評級 ' + g, p => p.grade === g)).join('')}${grp('做多', p => p.side === 'long')}${grp('做空', p => p.side === 'short')}${[1, 2, 3].map(k => grp('第 ' + k + ' 名', p => p.rank === k)).join('')}${CLS.map(c => grp(Data.CLS_NAME[c], p => p.cls === c)).join('')}</table>`;
+    h += `<table class="sb">${head}${sbRow('全部', sumR(paper.map(p => p.r)))}${['A', 'B'].map(g => grp('評級 ' + g, p => p.grade === g)).join('')}${grp('門檻通過', p => p.gate === 1)}${grp('門檻未通過', p => p.gate === 0)}${grp('做多', p => p.side === 'long')}${grp('做空', p => p.side === 'short')}${[1, 2, 3].map(k => grp('第 ' + k + ' 名', p => p.rank === k)).join('')}${CLS.map(c => grp(Data.CLS_NAME[c], p => p.cls === c)).join('')}</table>`;
   }
-  return h + `<p class="hint">不到 30 筆以前，這些數字只能參考。紙上紀錄只在掃描頁開著的時候才會新增；紀錄都存在這台裝置的瀏覽器裡。${paper.length || run ? ' <button class="btn sm" id="paper-clear">清除紙上紀錄</button>' : ''}</p></section>`;
+  return h + `<p class="hint">「門檻通過／未通過」是第七版起才記的，之前的紀錄不會出現在這兩列。不到 30 筆以前，這些數字只能參考。紙上紀錄只在掃描頁開著的時候才會新增；紀錄都存在這台裝置的瀏覽器裡。${paper.length || run ? ' <button class="btn sm" id="paper-clear">清除紙上紀錄</button>' : ''}</p></section>`;
 }
 function renderTrack() {
   const act = TR.list.filter(Track.active), done = TR.list.filter(p => !Track.active(p)), st = Track.stats(TR.list);
@@ -2973,7 +3020,7 @@ const scan = { tf: null, rows: {}, running: false, last: 0, token: 0, timer: 0, 
 const slim = p => p && ({ side: p.side, type: p.type, name: p.name, entry: p.entry, sl: p.sl, tp1: p.tp1, tp2: p.tp2, rr: p.rr, ev: p.ev, pWin: p.pWin, pTouch: p.pTouch, slPct: p.slPct, tpPct: p.tpPct });
 function ctxOf(inst, cd, tf) {
   const now = Date.now(), lastT = cd[cd.length - 1].t, stale = !Data.demo && now - lastT > E.TF[tf] + Math.max(E.TF[tf] * 0.5, 20 * 60e3), st = mktState(inst, stale);
-  return { dp: inst.dp, stale, closed: st.closed, thin: !st.closed && !Data.demo && Mkt.thin(inst.cls, now), why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
+  return { dp: inst.dp, stale, closed: st.closed, thin: !st.closed && !Data.demo && Mkt.thin(inst.cls, now), dawn: !st.closed && !Data.demo && E.isDawn(now), why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
 }
 async function analyzeScan(inst, tf) {
   const main = await Data.get(inst, tf, { limit: 300, maxAge: 25e3 });
@@ -2989,10 +3036,10 @@ async function analyzeScan(inst, tf) {
   const ns = News.score(inst), is = Inter.score(inst);
   const A = E.analyze({ cd: main.cd, tf, cls: inst.cls, dp: inst.dp, mtf, daily, news: ns.score, newsNote: ns.note, inter: is.score, interNote: is.note, cost: costOf(inst) });
   if (A.error) throw new Error(A.error);
-  const cx = ctxOf(inst, main.cd, tf), rate = E.rate(A, cx);
+  const cx = ctxOf(inst, main.cd, tf), rate = E.rate(A, cx), gate = E.gate(A, rate.dir, inst.cls, Date.now());
   paperStep(inst, main.cd, A.price, !!main.ig);
   return { rc: main.cd.slice(-81).map(b => [b.t, b.c]), inst, tf, t: Date.now(), srcKey: main.src.key, ig: main.ig ? 1 : 0, pt: main.pt || main.ts || Date.now(), pdc: A.levels.pivots ? A.levels.pivots.pdc : null, price: A.price, chg: A.chg, prob: A.prob, s1: A.levels.supports[0], r1: A.levels.resistances[0], regime: A.regime.label, spark: spark(main.cd, 52, 24), src: main.src.label, stale: cx.stale,
-    rate: { score: rate.score, grade: rate.grade, label: rate.label, action: rate.action, dir: rate.dir, notes: rate.notes }, plan: slim(rate.plan) };
+    rate: { score: rate.score, grade: rate.grade, label: rate.label, action: rate.action, dir: rate.dir, notes: rate.notes }, plan: slim(rate.plan), gate: { pass: gate.pass, why: gate.why } };
 }
 async function runScan() {
   if (scan.running) return; scan.running = true; scan.dirty = false; const tf = S.scanTf, token = ++scan.token;
@@ -3048,12 +3095,18 @@ function sigChip(r) { // 訊號持續多久：剛出現的先等一下
   if (age < 3 * 60e3) return g.first ? '' : '<span class="st-chip new">剛出現</span>';
   return `<span class="st-chip">已持續 ${durTxt(age)}${g.first ? '以上' : ''}</span>`;
 }
+function gateLine(g) { // 門檻（見 E.gate）：只標示，不影響排名，也不擋單
+  if (!g) return '';
+  return g.pass ? '<p class="t-gate ok"><b>門檻 ✓ 通過</b><small>類別、時段、4 小時趨勢三項都符合；回測裡只有這種時候，看多和看空之後的走勢才有差別。</small></p>'
+    : `<p class="t-gate no"><b>門檻 ✗ 未通過</b><small>${esc(g.why.join('；'))}。回測裡這種時候看多和看空之後沒有差別，不做也是選項。</small></p>`;
+}
 function topCard(r, k) {
   const i = r.inst, f = v => E.fmt(v, i.dp), p = r.prob, rt = r.rate, pl = r.plan, d = rt.dir, tracked = pl && TR.list.some(x => Track.active(x) && x.instId === i.id && x.planName === pl.name);
   return `<article class="tcard"><button class="t-open" data-id="${esc(i.id)}"><span class="t-rank num">${k + 1}</span><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}　${Data.CLS_NAME[i.cls] || ''}</small></span><span class="r-spark">${r.spark}</span>
       <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span></button>
     <div class="t-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span><span class="num">${d > 0 ? '上漲' : '下跌'} ${((d > 0 ? p.up : p.down) * 100).toFixed(0)}%</span><span class="num t-sc">${rt.score} 分</span>${sigChip(r)}</div>
     <p class="t-act"><b>${esc(rt.action)}</b>${rt.notes.length ? `<small>${esc(rt.notes.join('、'))}</small>` : ''}${r.sig && r.sig.ok && !r.sig.first && Date.now() - r.sig.t < 3 * 60e3 ? '<small>這個訊號剛出現，等它維持 3 分鐘以上再進場比較穩。</small>' : ''}</p>
+    ${gateLine(r.gate)}
     ${r.also && r.also.length ? `<p class="t-also">同一個賭注（走勢連動、方向相同，只列這一檔）：${esc(r.also.slice(0, 5).map(x => x.inst.name).join('、'))}${r.also.length > 5 ? ' 等 ' + r.also.length + ' 項' : ''}</p>` : ''}
     ${pl ? `<dl class="pgrid c4"><div><dt>進場</dt><dd>${f(pl.entry)}</dd></div><div><dt>停損</dt><dd>${f(pl.sl)}<small>−${pl.slPct.toFixed(2)}%</small></dd></div><div><dt>停利</dt><dd>${f(pl.tp1)}<small>+${pl.tpPct.toFixed(2)}%</small></dd></div><div><dt>勝率／期望</dt><dd>${(pl.pWin * 100).toFixed(0)}%<small>${rTxt(pl.ev)}</small></dd></div></dl>${rt.score >= 55 ? sizeLine(i, pl) : ''}
     <div class="t-btns"><span class="t-plan">${esc(pl.name)}</span>${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm primary" data-ttrack="${esc(i.id)}">${pl.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div>` : ''}
@@ -3069,10 +3122,10 @@ function renderScan() {
   const all = Object.values(scan.rows), st = $('#scan-status'); pxIdx = null;
   st.textContent = scan.running ? `掃描中 ${scan.done}／${scan.total}…` : scan.last ? `${E.TF_NAME[S.scanTf]}K　${S.cls === 'top' ? '依評分排序' : '依評級排序'}　${hms(scan.last)} 更新${IG.cfg.on && !Data.demo ? `　價位基準：IG（${all.filter(r => r.ig).length} 項已換算）` : ''}` : '';
   if (S.cls === 'top') {
-    const top = topList(), offs = all.map(rowOff).filter(Boolean), closed = offs.length, offNote = offLine(offs), bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length;
+    const top = topList(), offs = all.map(rowOff).filter(Boolean), closed = offs.length, offNote = offLine(offs), bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length, okG = top.filter(r => r.rate.score >= 55 && r.gate && r.gate.pass).length;
     if (!top.length) { $('#scan-list').innerHTML = scan.running || !closed ? `<p class="loading">${scan.running ? '正在取得行情並評級…' : '沒有可評級的商品'}</p>` : `${offNote ? `<p class="t-off">${offNote}</p>` : ''}<p class="loading">現在沒有可以交易的商品，所以沒有精選名單。</p>`; return; }
-    $('#scan-list').innerHTML = (offNote ? `<p class="t-off">${offNote}</p>` : '') + (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）。` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
-      `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。同一類最多先選 4 個；走勢高度連動、方向相同的商品算同一個賭注，只列分數最高的一檔，所以名單可能不到 10 項。${closed ? `另有 ${closed} 項目前沒有交易（休市或報價延遲），沒有列入，可以到各分類查看。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
+    $('#scan-list').innerHTML = (offNote ? `<p class="t-off">${offNote}</p>` : '') + (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）${okG ? `，其中 <b class="num">${okG}</b> 項通過門檻。` : '，但沒有一項通過門檻：回測裡這種時候的訊號沒有區別力，不做也是選項。'}` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
+      `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。「門檻」只是標示，不影響排名：類別（加密貨幣、外匯不通過）、時段（清晨 05–08 不通過；股票、ETF、指數只在 21–05 通過）、方向順著 4 小時趨勢，三項都符合才算通過。清晨 05–08 與「等突破才進場」的計畫不列可進場。同一類最多先選 4 個；走勢高度連動、方向相同的商品算同一個賭注，只列分數最高的一檔，所以名單可能不到 10 項。${closed ? `另有 ${closed} 項目前沒有交易（休市或報價延遲），沒有列入，可以到各分類查看。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
     return;
   }
   const rows = all.filter(r => S.cls === 'all' || r.inst.cls === S.cls);
@@ -3179,7 +3232,7 @@ async function loadDetail(fresh) {
     const A = E.analyze({ cd: main.cd, tf, cls: inst.cls, dp: inst.dp, mtf, daily: dr.status === 'fulfilled' ? dr.value.cd : null, news: ns.score, newsNote: ns.note, inter: is.score, interNote: is.note, cost: costOf(inst) });
     if (A.error) throw new Error(A.error);
     const cx = ctxOf(inst, main.cd, tf);
-    Object.assign(det, { A, inst, tf, src: main.src, ig: main.ig || null, pt: main.pt || main.ts, cd: main.cd, ns, is, last: Date.now(), cx, rate: E.rate(A, cx) });
+    Object.assign(det, { A, inst, tf, src: main.src, ig: main.ig || null, pt: main.pt || main.ts, cd: main.cd, ns, is, last: Date.now(), cx, rate: E.rate(A, cx) }); det.gate = E.gate(A, det.rate.dir, inst.cls, Date.now());
     if (offline) { offline = false; banner(); }
     renderDetail();
   } catch (e) {
@@ -3198,6 +3251,12 @@ function planCard(p, idx, sel, f) {
     <div class="pstats"><div><b>${isNum(p.pTouch) ? (p.pTouch * 100).toFixed(0) + '%' : '—'}</b><span>到價機率</span></div><div><b>${(p.pWin * 100).toFixed(0)}%</b><span>預估勝率</span></div><div><b>1 : ${p.rr.toFixed(1)}</b><span>風險報酬比</span></div><div><b>${p.ev >= 0 ? '+' : '−'}${Math.abs(p.ev).toFixed(2)}R</b><span>期望值</span></div></div>
     <p class="pnote">${esc(p.note)}。${p.ev > 0 ? '' : '期望值為負，不建議進場。'}${p.against ? '（與目前研判方向相反）' : ''}</p>${sel && p.ev > 0 ? sizeLine(det.inst, p) : ''}
     <div class="t-btns">${sel ? '' : `<button class="btn sm" data-show="${idx}">在圖上顯示</button>`}${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm${sel && p.ev > 0 ? ' primary' : ''}" data-track="${idx}">${p.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div></article>`;
+}
+function gateBox(g, dir) { // 分析頁的門檻檢查表
+  if (!g) return '';
+  return `<div class="v-gate ${g.pass ? 'ok' : 'no'}"><b>${g.pass ? '門檻 ✓ 通過' : '門檻 ✗ 未通過'}</b>　以${dir > 0 ? '做多' : '做空'}來看
+    <ul>${g.checks.map(c => `<li>${c.ok ? '✓' : '✗'} ${esc(c.name)}${c.ok ? '' : '：' + esc(c.why)}</li>`).join('')}</ul>
+    <small>${g.pass ? '回測裡只有三項都符合的時候，看多和看空之後的走勢才有差別。' : '回測裡這種時候看多和看空之後沒有差別，不做也是選項。'}門檻只是標示，不影響評級。</small></div>`;
 }
 function selPlan() { const A = det.A; if (!A || !A.plans.length) return null; return A.plans.find(p => planKey(p) === det.sel) || A.plans.find(p => p.best) || A.plans[0]; }
 function renderDetail() {
@@ -3228,10 +3287,10 @@ function renderDetail() {
   const warns = [...soon.map(e => `<li class="hot">${e.t > Date.now() ? Math.max(1, Math.round((e.t - Date.now()) / 60e3)) + ' 分鐘後' : '剛剛'}公布「${esc(News.evName(e.title))}」（${esc(News.CUR_NAME[e.cur] || e.cur)}，高影響）。數據前後波動劇烈、點差會放大，建議避開。</li>`), ...A.warnings.map(w => `<li>${esc(w)}</li>`)];
   $('#s-verdict').innerHTML = `${off && off.closed ? `<p class="closed-note"><b>沒有交易</b>　${esc(off.why)}${off.re ? '，' + esc(off.re) : ''}。下面的分析用的是休市前${off.by === 'stale' ? '' : '與交易所場外'}的價格，只能當開盤前的參考；這段期間不列入精選，追蹤單也不會判斷停損停利。</p>` : ''}<div class="v-top"><div class="v-label ${dirCls(p.bias)}"><span class="gl">${dirGl(p.bias)}</span>${p.label}</div><div class="v-reg">${esc(A.regime.label)}<br><span class="num">ADX ${A.regime.adx.toFixed(0)}　ATR ${A.atrPct.toFixed(2)}%</span></div></div>
     <div><div class="pbar" role="img" aria-label="上漲機率 ${up}%，下跌機率 ${dn}%"><i class="a" style="width:${up}%"></i><i class="b" style="width:${dn}%"></i></div><div class="pbar-lab"><span>上漲 <b>${up}%</b></span><span><b>${dn}%</b> 下跌</span></div></div>
-    <div class="v-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span>${esc(rt.action)}</span><span class="num t-sc">${rt.score} 分</span></div>
+    <div class="v-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span>${esc(rt.action)}</span><span class="num t-sc">${rt.score} 分</span></div>${gateBox(det.gate, rt.dir)}
     <p class="outlook">${esc(A.outlook)}</p>${warns.length ? `<ul class="warns">${warns.join('')}</ul>` : ''}
     <details data-k="parts" ${op('parts')}><summary>這個機率和評級怎麼算的</summary><table class="parts">${p.parts.map(x => `<tr><td>${esc(x.name)}<small>${esc(x.detail)}</small></td><td class="${dirCls(Math.abs(x.pts) < 0.05 ? 0 : x.pts)}">${x.pts >= 0.05 ? '+' : x.pts <= -0.05 ? '−' : ''}${Math.abs(x.pts).toFixed(1)}</td></tr>`).join('')}</table>
-    <p class="hint">上表是各項對「上漲機率」的加減（百分點，從 50% 起算）。技術指標那一項是拿同一份 K 線回頭驗證過的比例，其餘為經驗權重。<br>評級 ${rt.score} 分＝機率優勢 ${rt.parts.edge.toFixed(0)}／40＋計畫期望值 ${rt.parts.ev.toFixed(0)}／25＋多週期 ${rt.parts.mtf.toFixed(0)}／15＋策略 ${rt.parts.strat.toFixed(0)}／10＋趨勢 ${rt.parts.trend.toFixed(0)}／10${rt.notes.length ? '；' + esc(rt.notes.join('、')) : ''}。這是模型估計，不是保證。</p></details>`;
+    <p class="hint">上表是各項對「上漲機率」的加減（百分點，從 50% 起算）。技術指標那一項是拿同一份 K 線回頭驗證過的比例，其餘為經驗權重；型態在回測裡沒有預測力，只列出、不計入機率。<br>評級 ${rt.score} 分＝機率優勢 ${rt.parts.edge.toFixed(0)}／40＋計畫期望值 ${rt.parts.ev.toFixed(0)}／25＋多週期 ${rt.parts.mtf.toFixed(0)}／15＋策略 ${rt.parts.strat.toFixed(0)}／10＋趨勢 ${rt.parts.trend.toFixed(0)}／10${rt.notes.length ? '；' + esc(rt.notes.join('、')) : ''}。這是模型估計，不是保證。</p></details>`;
   igBox();
   // 圖
   const sp = selPlan();
@@ -3394,6 +3453,8 @@ function renderSettings() {
       <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。IG 另外有獨立報價的「週末」市場，這一頁沒有分析。</li>
       <li>建議數量：到上面的「資金與風險」填帳戶資金。精選卡片會顯示「建議數量」和「打到停損約賠多少」，是從每筆最多賠資金的幾 % 反推的。黃金、白銀、主要加密貨幣、標普 500、恆生、天然氣和外匯（迷你合約）會直接算出 IG 的張數；其他商品只顯示最多賠多少，請在 IG 下單畫面把數量調到停損金額不超過那個數字。</li>
       <li>持有中的提醒：追蹤中的單除了停損停利，還會提醒急轉、獲利回吐、訊號轉向、持有太久、休市前、重大數據前，以及什麼時候該把停損移到進場價。「注意」是先看一下，「建議出場」是該動作了。</li>
+      <li>第七版（2026/11/17）依回測結果改了三件事：K 線與圖形型態不再影響機率（回測裡方向是反的）；「等突破才進場」的計畫不再列為可進場（平均是賠的）；臺北時間清晨 05–08 不列可進場（這個時段的單平均是賠的）。</li>
+      <li>門檻：卡片上的「門檻 ✓ 通過／✗ 未通過」只是標示，不影響評級和排名。三項都符合才算通過：不是加密貨幣或外匯；不在清晨 05–08，而且股票、ETF、指數要在美洲盤（臺北 21–05）；方向順著 4 小時趨勢。回測裡只有通過的判斷，看多和看空之後的走勢才有差別；但通過門檻會不會多賺還沒有證實，所以成績單和回測會把通過與未通過分開統計，累積之後再決定要不要只做通過的。</li>
       <li>成績單：在「追蹤」頁。會算你實際的勝率與平均賺賠、和照原計畫抱到底的差別，以及網頁前三名自己的紙上成績。</li>
       <li>價格多快更新：Binance、Bybit、Hyperliquid 來源的商品由交易所即時推送，大約每秒一次（畫面右上角會出現「即時」）；Kraken、Bitget、OKX 每 5 秒抓一次；Yahoo 轉接的來源慢 10–15 分鐘。連接 IG 的商品每 3 秒讀一次 IG 的實際報價，兩次之間依交易所的即時漲跌推算。評級與支撐阻力每 60 秒重算一次。</li>
       <li>如果你用 IG：在本頁最上面連接 IG 後，現價會改用 IG 的買賣報價，所有價位（支撐、阻力、進場、停損、停利）都會換算成 IG 的價位。做法是把整份 K 線乘上「IG 價 ÷ 來源價」的比例，所以型態和機率不變，只有價位對齊到 IG。個股與 ETF 因為 IG 的 API 不提供報價，維持原來源。</li>
@@ -3436,7 +3497,7 @@ async function runBt() {
     bt.done++;
   }
   if (wl) try { wl.release(); } catch (e) { /* 略過 */ }
-  bt.sum = BT.summarize(bt.rows, { tf, size: bt.size, step, at: Date.now(), secs: Math.round((Date.now() - t0) / 1000), stopped: bt.stop, errs: bt.errs.slice(0, 20), demo: Data.demo, ver: 1 });
+  bt.sum = BT.summarize(bt.rows, { tf, size: bt.size, step, at: Date.now(), secs: Math.round((Date.now() - t0) / 1000), stopped: bt.stop, errs: bt.errs.slice(0, 20), demo: Data.demo, ver: 2 });
   bt.running = false; bt.kept = false; LS.set('cfd.bt', { sum: bt.sum }); btDb.set('last', { at: bt.sum.meta.at, csv: BT.csv(bt.rows) }).then(() => { bt.kept = true; }).catch(() => {}); renderBt(); toast(bt.stop ? '回測已停止，下面是目前跑完的部分。' : `回測完成，共 ${bt.rows.length} 筆判斷。`, 'info');
 }
 const btName = () => `cfd-backtest-${bt.sum.meta.tf}-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -3466,7 +3527,10 @@ function btSummary(s) {
   if (!m.n) return h + '<p class="none">沒有可用的資料。</p>' + errs;
   h += `<h3 class="sb-h">方向準不準</h3><p class="sb-note">網頁判斷偏多或偏空時，12 根 K 線後方向對的比例。50% 等於丟銅板。</p><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${dirRow('全部', s.all)}${CLS.filter(c => s.cls[c]).map(c => dirRow(Data.CLS_NAME[c], s.cls[c])).join('')}${s.dir.long ? dirRow('偏多的判斷', s.dir.long) : ''}${s.dir.short ? dirRow('偏空的判斷', s.dir.short) : ''}</table>
     <h3 class="sb-h">評級準不準</h3><p class="sb-note">「勝率」和「平均」是照卡片的進場、停損、停利走完的結果，已扣點差，以 R 計（1R＝進場到停損的距離）。「6 小時」是最多抱 6 小時就出場的版本。</p>
-    <table class="sb"><tr><th></th><th>筆數</th><th>方向</th><th>勝率</th><th>平均</th><th>6 小時</th></tr>${['A', 'B', 'C', 'D'].filter(g => s.grade[g]).map(g => planRow('評級 ' + g, s.grade[g])).join('')}${s.go && s.go.n ? planRow('現在可進場', s.go) : ''}</table>
+    <table class="sb"><tr><th></th><th>筆數</th><th>方向</th><th>勝率</th><th>平均</th><th>6 小時</th></tr>${['A', 'B', 'C', 'D'].filter(g => s.grade[g]).map(g => planRow('評級 ' + g, s.grade[g])).join('')}${s.go && s.go.n ? planRow('現在可進場', s.go) : ''}${s.goGate && s.goGate.n ? planRow('可進場且通過門檻', s.goGate) : ''}</table>
+    ${s.sep && s.sep.pass ? `<h3 class="sb-h">門檻有沒有用</h3><p class="sb-note">網頁看多之後、看空之後，12 根後實際上漲的比例。兩者相差越多，判斷越有區別力；相差接近 0 就是看多看空沒差別。這個比法不受整段行情偏漲或偏跌影響。</p>
+    <table class="sb"><tr><th></th><th>筆數</th><th>看多後上漲</th><th>看空後上漲</th><th>相差</th></tr>${[['全部', s.sep.all], ['門檻通過', s.sep.pass], ['門檻未通過', s.sep.fail]].map(([nm, z]) => tr(nm, [z.nl + z.ns, pc1(z.upL), pc1(z.upS), z.sep == null ? '—' : (z.sep >= 0 ? '+' : '−') + Math.abs(z.sep * 100).toFixed(1)])).join('')}</table>
+    ${s.gate && (s.gate.pass || s.gate.fail) ? `<table class="sb"><tr><th>照計畫走完</th><th>筆數</th><th>方向</th><th>勝率</th><th>平均</th><th>6 小時</th></tr>${s.gate.pass ? planRow('門檻通過', s.gate.pass) : ''}${s.gate.fail ? planRow('門檻未通過', s.gate.fail) : ''}</table>` : ''}` : ''}
     <h3 class="sb-h">機率可不可信</h3><table class="sb"><tr><th>網頁說的上漲機率</th><th>筆數</th><th>實際上漲</th></tr>${Object.keys(CAL).map(k => tr(CAL[k], [s.cal[k].n, pc1(s.cal[k].up)])).join('')}</table>
     <h3 class="sb-h">各項分析單獨看</h3><p class="sb-note">某一項明確指向一邊時，12 根後有沒有往那邊走。</p><table class="sb"><tr><th></th><th>筆數</th><th>一致</th></tr>${Object.values(s.comp).map(z => tr(esc(z.name), [z.n, pc1(z.agree)])).join('')}</table>
     <h3 class="sb-h">時段（臺北時間）</h3><table class="sb"><tr><th></th><th>筆數</th><th>命中率</th></tr>${['清晨 05–08', '亞洲盤 08–15', '歐洲盤 15–21', '美洲盤 21–05'].filter(k => s.ses[k]).map(k => dirRow(k, s.ses[k])).join('')}</table>
@@ -3634,8 +3698,8 @@ document.addEventListener('click', e => {
     return;
   }
   if (d.cls) { S.cls = d.cls; save(); clsChips(); return renderScan(); }
-  if (d.ttrack) { const r = scan.rows[d.ttrack]; if (r && r.plan) { addTrack(r.inst, r.plan, r.tf, { grade: r.rate.grade, score: r.rate.score, prob: r.rate.dir > 0 ? r.prob.up : r.prob.down, rank: topList().indexOf(r) + 1, from: 'top' }); renderScan(); } return; }
-  if (d.track != null) { const p = det.A && det.A.plans[+d.track]; if (p) { const rt = det.rate, mine = rt && (p.side === 'long') === (rt.dir > 0); addTrack(det.inst, p, det.tf, { grade: mine ? rt.grade : null, score: mine ? rt.score : null, prob: p.side === 'long' ? det.A.prob.up : det.A.prob.down, from: 'detail' }); renderDetail(); } return; }
+  if (d.ttrack) { const r = scan.rows[d.ttrack]; if (r && r.plan) { addTrack(r.inst, r.plan, r.tf, { grade: r.rate.grade, score: r.rate.score, prob: r.rate.dir > 0 ? r.prob.up : r.prob.down, rank: topList().indexOf(r) + 1, from: 'top', gate: r.gate ? r.gate.pass : null }); renderScan(); } return; }
+  if (d.track != null) { const p = det.A && det.A.plans[+d.track]; if (p) { const rt = det.rate, mine = rt && (p.side === 'long') === (rt.dir > 0); addTrack(det.inst, p, det.tf, { grade: mine ? rt.grade : null, score: mine ? rt.score : null, prob: p.side === 'long' ? det.A.prob.up : det.A.prob.down, from: 'detail', gate: mine && det.gate ? det.gate.pass : null }); renderDetail(); } return; }
   if (d.posClose) { const p = TR.list.find(x => x.id === d.posClose); if (p && Track.active(p)) { Track.close(p, isNum(p.price) ? p.price : p.entry, 'manual', Date.now()); saveTR(); badge(); renderTrack(); } return; }
   if (d.posDel) { TR.list = TR.list.filter(x => x.id !== d.posDel); saveTR(); badge(); return renderTrack(); }
   if (d.posBe || d.posTrail) { // 使用者在 IG 把停損移好了：之後照新的停損判斷（影子仍照原計畫）
