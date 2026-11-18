@@ -1672,21 +1672,27 @@ const ADAPT = {
     return d.data.map(bRow).reverse();
   },
   async yahoo(sym, tf, limit, inst, o) {
-    const agg = tf === '4h' ? 4 : 1, iv = { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '60m', '4h': '60m', '1d': '1d' }[tf];
     const p2 = Math.floor(Date.now() / 1000), span = Math.min(limit * E.TF[tf] / 1000 * 1.7 + 3 * 86400, tf === '1m' ? 6 * 86400 : tf === '1d' ? 400 * 86400 : 58 * 86400);
-    const d = await viaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${iv}&period1=${Math.floor(p2 - span)}&period2=${p2}${inst && (inst.cls === 'stock' || inst.cls === 'etf') && tf !== '1d' ? '&includePrePost=true' : ''}`, { timeout: 15000, pri: o && o.pri });
-    const r = d && d.chart && d.chart.result && d.chart.result[0]; if (!r || !r.timestamp) throw new Error('Yahoo：無資料');
-    const q = r.indicators.quote[0]; let out = [];
-    for (let i = 0; i < r.timestamp.length; i++) if (q.close[i] != null && q.open[i] != null) out.push({ t: r.timestamp[i] * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
-    if (agg > 1) {
-      const m = new Map();
-      for (const b of out) { const k = Math.floor(b.t / 14400e3) * 14400e3, g = m.get(k); if (!g) m.set(k, { ...b, t: k }); else { g.h = Math.max(g.h, b.h); g.l = Math.min(g.l, b.l); g.c = b.c; g.v += b.v; } }
-      out = [...m.values()];
-    }
-    out = out.slice(-limit); if (r.meta && r.meta.regularMarketTime) out.pt = r.meta.regularMarketTime * 1000; // 這個來源的報價時間（期貨、指數會延遲 10–15 分鐘）
+    const all = await yChart(sym, tf, Math.floor(p2 - span), p2, inst, o), out = all.slice(-limit);
+    if (all.pt) out.pt = all.pt; // 這個來源的報價時間（期貨、指數會延遲 10–15 分鐘）
     return out;
   },
 };
+/* Yahoo 的 K 線：抓 period1–period2（秒）這一段。平常的行情和回測往回翻頁共用 */
+async function yChart(sym, tf, p1, p2, inst, o) {
+  const agg = tf === '4h' ? 4 : 1, iv = { '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m', '1h': '60m', '4h': '60m', '1d': '1d' }[tf];
+  const d = await viaProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${iv}&period1=${p1}&period2=${p2}${inst && (inst.cls === 'stock' || inst.cls === 'etf') && tf !== '1d' ? '&includePrePost=true' : ''}`, { timeout: 15000, pri: o && o.pri });
+  const r = d && d.chart && d.chart.result && d.chart.result[0]; if (!r || !r.timestamp) throw new Error('Yahoo：無資料');
+  const q = r.indicators.quote[0]; let out = [];
+  for (let i = 0; i < r.timestamp.length; i++) if (q.close[i] != null && q.open[i] != null) out.push({ t: r.timestamp[i] * 1000, o: q.open[i], h: q.high[i], l: q.low[i], c: q.close[i], v: q.volume[i] || 0 });
+  if (agg > 1) {
+    const m = new Map();
+    for (const b of out) { const k = Math.floor(b.t / 14400e3) * 14400e3, g = m.get(k); if (!g) m.set(k, { ...b, t: k }); else { g.h = Math.max(g.h, b.h); g.l = Math.min(g.l, b.l); g.c = b.c; g.v += b.v; } }
+    out = [...m.values()];
+  }
+  if (r.meta && r.meta.regularMarketTime) out.pt = r.meta.regularMarketTime * 1000;
+  return out;
+}
 /* 回測用：再往回抓更早的 K 線（end＝只要這個時間以前的）。只有回測會用到，平常的行情不走這裡 */
 const PAGE = {
   async binance(sym, tf, end) {
@@ -1710,6 +1716,13 @@ const PAGE = {
     const d = await http(`https://api.bitget.com/api/v2/mix/market/candles?symbol=${sym}&productType=USDT-FUTURES&granularity=${TFO[tf].replace('utc', '')}&limit=1000&endTime=${end}`);
     if (d.code !== '00000' || !Array.isArray(d.data)) throw new Error('Bitget：' + (d.msg || '查無資料'));
     return d.data.map(bRow);
+  },
+  /* Yahoo：60 分 K 可以往回約 730 天；30 分以下只給最近 60 天（第一次就抓滿了，不必再翻）；日線約 10 年。一次抓一段，免得轉接服務的回應太大 */
+  async yahoo(sym, tf, end, cat, inst) {
+    const days = tf === '1h' || tf === '4h' ? 729 : tf === '1d' ? 3650 : tf === '1m' ? 6 : 59, floor = Date.now() - days * 86400e3;
+    if (end <= floor + 2 * 86400e3) return [];
+    const p1 = Math.max(floor, end - (tf === '1d' ? 1500 : 150) * 86400e3);
+    return yChart(sym, tf, Math.floor(p1 / 1000), Math.floor(end / 1000), inst);
   },
 };
 function valid(cd) { return Array.isArray(cd) && cd.length >= 30 && cd.every(b => isFinite(b.t) && isFinite(b.o) && isFinite(b.c) && b.h >= b.l); }
@@ -1761,7 +1774,7 @@ const Data = {
   basisOf: null, livePatch: null, onRaw: null, // 由 IG 報價模組掛上：把 K 線換算到 IG 的價位
   all() { return INSTRUMENTS.concat(this.custom); },
   byId(id) { return this.all().find(x => x.id === id); },
-  winners: LS.get('cfd.win3', {}),
+  winners: LS.get('cfd.win3', {}), winAt: LS.get('cfd.winAt', {}), yWait: { t0: 0, used: 0 }, // 上次成功的是清單裡第幾個來源、什麼時候記下的；回測等轉接服務恢復已經等了多久
   clear() { cache.clear(); },
   resetHosts() { for (const k in hostState) delete hostState[k]; },
   status(inst) { for (const tf of ['15m', '1h', '5m', '1m', '30m', '4h', '1d']) { const c = cache.get(inst.id + '|' + tf); if (c) return c.src; } return null; },
@@ -1770,7 +1783,9 @@ const Data = {
   rawLast(id) { return rawLast[id] || null; },
   note(inst, p, t, thin, lag) { if (!(p > 0)) return; rawLast[inst.id] = { p, t, thin: !!thin, lag: lag || 0 }; if (this.onRaw) try { this.onRaw(inst.id); } catch (e) { /* 不影響行情 */ } },
   async fetchFull(inst, tf, limit, o) {
-    const w = this.winners[inst.id], order = inst.src.map((s, i) => i).sort((a, b) => (a === w ? -1 : b === w ? 1 : a - b)), errs = [];
+    // 記住的如果是備援來源（不是清單第一個），每 6 小時從頭再試一次：不然一次連線失敗之後，就會一直停在比較差的備援來源
+    const now = Date.now(), w0 = this.winners[inst.id], w = w0 > 0 && !(now - (this.winAt[inst.id] || 0) < 6 * 3600e3) ? -1 : w0;
+    const order = inst.src.map((s, i) => i).sort((a, b) => (a === w ? -1 : b === w ? 1 : a - b)), errs = [];
     for (const i of order) {
       const [src, sym] = inst.src[i];
       try {
@@ -1779,23 +1794,59 @@ const Data = {
         const lastP = cd[cd.length - 1].c;
         if (inst.ref && (lastP < inst.ref / 6 || lastP > inst.ref * 6)) throw new Error(SRC_NAME[src] + ' ' + sym + '：價位不合理（可能是同代號的其他商品），已略過');
         if (inst.autoDp) { inst.dp0 = autoDp(lastP); this.setDp(inst); }
-        if (this.winners[inst.id] !== i) { this.winners[inst.id] = i; LS.set('cfd.win3', this.winners); }
+        if (w0 !== i || w !== w0) { this.winners[inst.id] = i; this.winAt[inst.id] = now; LS.set('cfd.win3', this.winners); LS.set('cfd.winAt', this.winAt); }
         return { cd, pt: cd.pt || Date.now(), src: { key: src, sym, label: SRC_NAME[src] + ' ' + sym, cap: CAP[src] || 500 } };
       } catch (e) { errs.push(e.message); }
     }
     const er = new Error(errs.join('；') || '沒有可用來源'); er.list = errs; throw er;
   },
-  /* 回測用：抓比平常更長的歷史（往回多抓幾頁）。不進快取，也不經過 IG 換算；抓不到更早的就用手上有的 */
-  async history(inst, tf, bars) {
-    if (this.demo) return { cd: demoSeries(inst, tf, bars), src: { key: 'demo', sym: '', label: '示範資料（非真實行情）' } };
-    const first = await this.fetchFull(inst, tf, bars), pg = PAGE[first.src.key]; let cd = first.cd.slice();
+  /* 回測與匯出用：抓比平常更長的歷史（往回多抓幾頁）。不進快取，也不經過 IG 換算；抓不到更早的就用手上有的。
+     來源不看「上次成功的是哪一個」（那可能只是某次連線失敗後的備援），照清單原本的順序；外匯先用 Yahoo，
+     因為交易所的外匯合約成交太稀疏，很多 K 線完全不會動。某個來源太短（不到要的四分之一）或太冷清（超過 8% 的 K 線高低同價）時，
+     再試下一個，最後用「報價正常、而且最長」的那個 */
+  histOrder(inst) {
+    const ix = inst.src.map((s, i) => i);
+    return inst.cls === 'fx' ? ix.sort((a, b) => (inst.src[b][0] === 'yahoo') - (inst.src[a][0] === 'yahoo') || a - b) : ix;
+  },
+  async histFrom(inst, i, tf, bars) {
+    const [src, sym] = inst.src[i], first = await ADAPT[src](sym, tf, bars, inst);
+    if (!valid(first)) throw new Error(SRC_NAME[src] + '：資料不足');
+    const lastP = first[first.length - 1].c;
+    if (inst.ref && (lastP < inst.ref / 6 || lastP > inst.ref * 6)) throw new Error(SRC_NAME[src] + ' ' + sym + '：價位不合理（可能是同代號的其他商品），已略過');
+    const pg = PAGE[src]; let cd = first.slice();
     for (let k = 0; pg && cd.length < bars && k < 14; k++) {
       if (k >= 2) await new Promise(r => setTimeout(r, 400)); // 要翻很多頁（「加長」範圍）時每頁之間停一下，免得一分鐘內向交易所要太多次
-      let part; try { part = await pg(first.src.sym, tf, cd[0].t - 1); } catch (e) { break; }
+      let part; try { part = await pg(sym, tf, cd[0].t - 1, undefined, inst); } catch (e) { break; }
       part = (part || []).filter(b => b.t < cd[0].t && isFinite(b.o) && isFinite(b.c)).sort((a, b) => a.t - b.t); if (!part.length) break;
       cd = part.concat(cd);
     }
-    return { cd: cd.slice(-bars), src: first.src };
+    cd = cd.slice(-bars);
+    const flat = cd.reduce((a, b) => a + (b.h === b.l ? 1 : 0), 0) / cd.length;
+    return { cd, flat, ok: !(cd.length >= 200 && flat > 0.08), src: { key: src, sym, label: SRC_NAME[src] + ' ' + sym, cap: CAP[src] || 500 } };
+  },
+  async history(inst, tf, bars) {
+    if (this.demo) return { cd: demoSeries(inst, tf, bars), src: { key: 'demo', sym: '', label: '示範資料（非真實行情）' } };
+    const errs = []; let best = null, tried = 0;
+    for (const i of this.histOrder(inst)) {
+      let r = null;
+      for (let a = 0; a < 3 && !r; a++) {
+        try { r = await this.histFrom(inst, i, tf, bars); }
+        catch (e) {
+          // Yahoo 走轉接服務，偶爾會逾時；連續失敗兩次還會被暫停 3 分鐘。這種情況等一下（暫停中就等到恢復）再試，最多再試兩次，不要直接放棄這個商品。
+          // 轉接服務如果整個掛掉，不能每個商品都等：半小時內總共最多等 6 分鐘，用完就照舊直接跳過
+          if (!(inst.src[i][0] === 'yahoo' && a < 2 && /逾時|無法連線|暫停使用|流量已達上限/.test(e.message))) { errs.push(e.message); break; }
+          const st = hostState['r.jina.ai'], now = Date.now(), ms = Math.min(Math.max(st && st.until > now ? st.until - now + 500 : 0, 5000), 190e3), W = this.yWait;
+          if (now - W.t0 > 30 * 60e3) { W.t0 = now; W.used = 0; }
+          if (W.used + ms > 6 * 60e3) { errs.push(e.message); break; }
+          W.used += ms; await new Promise(res => setTimeout(res, ms));
+        }
+      }
+      if (!r) continue;
+      if (!best || (r.ok && !best.ok) || (r.ok === best.ok && r.cd.length > best.cd.length)) best = r;
+      if ((r.ok && r.cd.length >= bars * 0.25) || ++tried >= 4) break;
+    }
+    if (!best) { const er = new Error(errs.join('；') || '沒有可用來源'); er.list = errs; throw er; }
+    return { cd: best.cd, src: best.src, flat: best.flat };
   },
   async getRaw(inst, tf, opt) {
     opt = opt || {}; const limit = opt.limit || 500, key = inst.id + '|' + tf, now = Date.now(); let maxAge = opt.maxAge || 0;
@@ -3456,6 +3507,7 @@ function renderSettings() {
       <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。IG 另外有獨立報價的「週末」市場，這一頁沒有分析。</li>
       <li>建議數量：到上面的「資金與風險」填帳戶資金。精選卡片會顯示「建議數量」和「打到停損約賠多少」，是從每筆最多賠資金的幾 % 反推的。黃金、白銀、主要加密貨幣、標普 500、恆生、天然氣和外匯（迷你合約）會直接算出 IG 的張數；其他商品只顯示最多賠多少，請在 IG 下單畫面把數量調到停損金額不超過那個數字。</li>
       <li>持有中的提醒：追蹤中的單除了停損停利，還會提醒急轉、獲利回吐、訊號轉向、持有太久、休市前、重大數據前，以及什麼時候該把停損移到進場價。「注意」是先看一下，「建議出場」是該動作了。</li>
+      <li>資料來源修正（2026/11/18）：回測與匯出 K 線時，外匯改用 Yahoo 的報價（1 小時 K 最多約兩年），不再用成交稀疏的交易所外匯合約；各商品照清單順序找歷史最長、報價正常的來源，不再沿用某次連線失敗後的備援來源（黃金曾因此只抓到 12 天）。平常看盤時，停在備援來源的商品每 6 小時會從頭再試一次原本的來源。</li>
       <li>第七版（2026/11/17）依回測結果改了三件事：K 線與圖形型態不再影響機率（回測裡方向是反的）；「等突破才進場」的計畫不再列為可進場（平均是賠的）；臺北時間清晨 05–08 不列可進場（這個時段的單平均是賠的）。</li>
       <li>門檻：卡片上的「門檻 ✓ 通過／✗ 未通過」只是標示，不影響評級和排名。三項都符合才算通過：不是加密貨幣或外匯；不在清晨 05–08，而且股票、ETF、指數要在美洲盤（臺北 21–05）；方向順著 4 小時趨勢。回測裡只有通過的判斷，看多和看空之後的走勢才有差別；但通過門檻會不會多賺還沒有證實，所以成績單和回測會把通過與未通過分開統計，累積之後再決定要不要只做通過的。</li>
       <li>成績單：在「追蹤」頁。會算你實際的勝率與平均賺賠、和照原計畫抱到底的差別，以及網頁前三名自己的紙上成績。</li>
@@ -3486,7 +3538,7 @@ async function btRestore() { // 開啟網頁時把上次的完整資料讀回來
    檔案是文字：第一行「#m 」後面接這次匯出的說明（JSON）；每個商品的每個週期先有一行「#i,代號,類別,小數位,來源,週期,根數」，
    之後每根 K 線一行「時間(秒),開,高,低,收,量,主動買進量」。時間和上一根剛好差一根時留空（省大小）；來源沒有主動買進量時最後一欄留空。
    抓的方式和回測完全一樣：掃描週期的歷史，加上 1 小時 K（4 小時與日線由它併出）。 */
-const kl = { running: false, stop: false, done: 0, total: 0, msg: '', parts: [], meta: null, rows: 0, errs: [] };
+const kl = { running: false, stop: false, done: 0, total: 0, msg: '', parts: [], meta: null, rows: 0, errs: [], short: [] };
 const klNum = v => (isNum(v) ? String(v) : ''); // 原樣寫出（不四捨五入），離線重播才會和網頁算的一模一樣
 function klLines(inst, tf, srcKey, cd) {
   const step = E.TF[tf] / 1000, out = [`#i,${inst.id},${inst.cls},${inst.dp0 == null ? inst.dp : inst.dp0},${srcKey},${tf},${cd.length}`]; let pt = null;
@@ -3497,7 +3549,7 @@ const klLive = () => `進度 ${kl.done}／${kl.total}　${kl.msg}　已下載 ${
 function paintKl() { const el = $('#kl-live'); if (el) el.textContent = klLive(); }
 async function runKl() {
   if (kl.running || bt.running) return; const [, bars, step] = BTSZ[bt.size], tf = bt.tf || S.scanTf, list = Data.all().filter(i => S.on[i.cls] !== false);
-  Object.assign(kl, { running: true, stop: false, done: 0, total: list.length, parts: [], errs: [], msg: '', meta: null, rows: 0 }); renderBt();
+  Object.assign(kl, { running: true, stop: false, done: 0, total: list.length, parts: [], errs: [], short: [], msg: '', meta: null, rows: 0 }); renderBt();
   let wl = null; try { wl = await navigator.wakeLock.request('screen'); } catch (e) { /* 不支援就算了 */ }
   let n = 0;
   for (const inst of list) {
@@ -3505,12 +3557,13 @@ async function runKl() {
     try { // 和 runBt 抓的一模一樣
       const base = await Data.history(inst, tf, bars), h1 = E.TF[tf] === 3600e3 ? null : await Data.history(inst, '1h', Math.ceil(base.cd.length * E.TF[tf] / 3600e3) + 1000);
       kl.parts.push(klLines(inst, tf, base.src.key, base.cd) + (h1 ? klLines(inst, '1h', h1.src.key, h1.cd) : '')); kl.rows += base.cd.length + (h1 ? h1.cd.length : 0); n++;
+      if (base.cd.length < bars * 0.25 || base.flat > 0.08) kl.short.push(`${inst.name}（${Data.SRC_NAME[base.src.key] || base.src.key}，${base.cd.length} 根${base.flat > 0.08 ? '，報價冷清' : ''}）`);
     } catch (e) { kl.errs.push(inst.name + '：' + String((e && e.message) || e).slice(0, 90)); }
     kl.done++; await new Promise(r => setTimeout(r, 0));
   }
   if (wl) try { wl.release(); } catch (e) { /* 略過 */ }
   const cost = {}; for (const c of CLS) cost[c] = S.cost[c] != null ? S.cost[c] / 100 : null;
-  const meta = { v: 1, at: Date.now(), tf, size: bt.size, bars, step, cost, inst: n, rows: kl.rows, demo: Data.demo, stopped: kl.stop, errs: kl.errs.slice(0, 20) };
+  const meta = { v: 1, at: Date.now(), tf, size: bt.size, bars, step, cost, inst: n, rows: kl.rows, demo: Data.demo, stopped: kl.stop, errs: kl.errs.slice(0, 20), short: kl.short.slice(0, 30) };
   kl.parts.unshift('#m ' + JSON.stringify(meta) + '\n'); meta.bytes = kl.parts.reduce((a, s) => a + s.length, 0); kl.meta = meta; kl.running = false;
   btDb.set('kl', { meta, parts: kl.parts }).catch(() => {}); renderBt(); toast(kl.stop ? 'K 線下載已停止，下面是目前抓到的部分。' : `K 線下載完成，共 ${kl.rows} 根。`, 'info');
 }
@@ -3533,7 +3586,7 @@ function klBox() {
     <p><button class="btn" id="kl-run">${m ? '重新下載 K 線' : '下載 K 線'}</button></p>`;
   if (m) h += `<p class="sb-note">${m.demo ? '<b>示範資料，不是真實行情。</b>' : ''}${mdhm(m.at)} 下載：${E.TF_NAME[m.tf]}K，${m.inst} 個商品，共 ${m.rows} 根，約 ${(m.bytes / 1048576).toFixed(1)} MB${m.stopped ? '（中途停止）' : ''}。這份檔案會留在這台裝置的瀏覽器裡，下次開啟還能分享。</p>
     <p class="t-btns">${sh ? '<button class="btn primary" id="kl-share">分享或儲存 K 線檔</button><button class="btn" id="kl-save">下載 K 線檔</button>' : '<button class="btn primary" id="kl-save">下載 K 線檔</button>'}</p>
-    ${sh ? '<p class="hint">手機請按「分享或儲存 K 線檔」，在選單裡選 Claude 或「儲存到檔案」。</p>' : ''}${m.errs && m.errs.length ? `<p class="hint">沒抓到的商品：${esc(m.errs.join('；'))}</p>` : ''}`;
+    ${sh ? '<p class="hint">手機請按「分享或儲存 K 線檔」，在選單裡選 Claude 或「儲存到檔案」。</p>' : ''}${m.errs && m.errs.length ? `<p class="hint">沒抓到的商品：${esc(m.errs.join('；'))}</p>` : ''}${m.short && m.short.length ? `<p class="hint">資料特別短或報價冷清的商品：${esc(m.short.join('；'))}</p>` : ''}`;
   return h + '</div>';
 }
 const btLive = () => `進度 ${bt.done}／${bt.total}　${bt.msg}　已記錄 ${bt.rows.length} 筆`;
