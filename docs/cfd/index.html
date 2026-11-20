@@ -166,8 +166,8 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 .diag { font-size: 13px; width: 100%; border-collapse: collapse; } .diag td { padding: 5px 6px 5px 0; border-top: 1px solid var(--line); vertical-align: top; word-break: break-word; }
 .loading { color: var(--muted); padding: 28px 0; text-align: center; }
 
-.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 5; }
-.tabs button { background: none; border: 0; padding: 14px 4px 13px; font-size: 15px; color: var(--muted); border-top: 3px solid transparent; }
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(6, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom, 0px); z-index: 5; }
+.tabs button { background: none; border: 0; padding: 14px 2px 13px; font-size: 14.5px; white-space: nowrap; color: var(--muted); border-top: 3px solid transparent; }
 .tabs button[aria-selected="true"] { color: var(--text); font-weight: 700; border-top-color: var(--text); }
 @media (min-width: 1020px) { .tabs { position: static; max-width: 520px; margin: 0 auto; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; } body { padding-bottom: 24px; } .tabs button { padding: 9px 4px; } }
 @media (prefers-reduced-motion: no-preference) { .row, .chip, .btn { transition: background-color .12s; } }
@@ -175,6 +175,16 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 /* 評級、精選卡片、追蹤與提醒 */
 .tabs .tb { display: inline-block; min-width: 18px; margin-left: 4px; padding: 0 5px; border-radius: 9px; font: 700 12px/18px var(--num); background: var(--surface2); color: var(--text); vertical-align: 1px; }
 .tabs .tb.hot { background: var(--text); color: var(--surface); }
+/* 模擬戰 */
+.sim-eq { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 0 0 10px; } .sim-eq b { font-size: 30px; font-weight: 700; line-height: 1.1; } .sim-eq span { font-size: 15px; font-weight: 600; }
+.sim-spark { display: block; width: 100%; height: 44px; margin: 10px 0 2px; color: var(--text2); }
+.sim-state { margin: 8px 0 0; font-size: 13.5px; color: var(--text2); } #sim-tabs { margin-top: 10px; flex-wrap: wrap; overflow: visible; } #sim-tabs .chip { padding: 6px 10px; }
+.sim-need { margin: 8px 0 0; font-size: 14.5px; } .sim-why { margin: 4px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--text2); }
+.sim-h { border-top: 1px solid var(--line); } .sim-h:first-of-type { border-top: 0; }
+.sim-h > summary { display: flex; align-items: baseline; gap: 6px; padding: 9px 0; font-size: 14px; color: var(--text); list-style: none; } .sim-h > summary::-webkit-details-marker { display: none; }
+.sim-h > summary::before { content: '▸'; color: var(--muted); flex: 0 0 auto; } .sim-h[open] > summary::before { content: '▾'; }
+.sim-h > summary > span:first-of-type { flex: 1 1 auto; min-width: 0; } .sim-h > summary small { color: var(--muted); } .sim-h > summary .dir { white-space: nowrap; }
+.sim-dl { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 4px 10px; margin: 0 0 12px 16px; font-size: 13.5px; } .sim-dl dt { color: var(--muted); } .sim-dl dd { margin: 0; overflow-wrap: anywhere; }
 #toasts { position: fixed; top: 8px; left: 8px; right: 8px; z-index: 20; display: grid; gap: 6px; max-width: 560px; margin: 0 auto; pointer-events: none; }
 .toast { pointer-events: auto; background: var(--text); color: var(--surface); border-radius: 10px; padding: 10px 12px; font-size: 14.5px; display: flex; gap: 10px; align-items: center; justify-content: space-between; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }
 .toast .btn { background: transparent; color: inherit; border-color: currentColor; flex: 0 0 auto; }
@@ -263,6 +273,7 @@ ol.plain { padding-left: 22px; }
     <div id="d-body"></div>
   </section>
   <section id="v-track" hidden></section>
+  <section id="v-sim" hidden></section>
   <section id="v-news" hidden></section>
   <section id="v-settings" hidden></section>
 </main>
@@ -270,6 +281,7 @@ ol.plain { padding-left: 22px; }
   <button role="tab" data-view="scan" aria-selected="true">掃描</button>
   <button role="tab" data-view="detail" aria-selected="false">分析</button>
   <button role="tab" data-view="track" id="tab-track" aria-selected="false">追蹤</button>
+  <button role="tab" data-view="sim" id="tab-sim" aria-selected="false">模擬戰</button>
   <button role="tab" data-view="news" aria-selected="false">新聞</button>
   <button role="tab" data-view="settings" aria-selected="false">設定</button>
 </nav>
@@ -1305,6 +1317,234 @@ T.stats = function (list) {
 };
 if (typeof module !== 'undefined') module.exports = T; else root.Track = T;
 if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Track = T;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+/* ===== 模擬戰：一個假想帳戶，照固定規則把網頁的訊號實際「做」一遍（純函式，方便測試） =====
+   流程：觀察中 → 準備中 → 交易中 → 歷史。停利停損的推進沿用追蹤單（Track）：到停利 1 平一半、停損移到進場價；到停利 2 或回到進場價全部出場。
+   金額一律用「風險金額 × R」計算（R＝損益 ÷ 進場到停損的距離），所以不必處理各商品的計價幣別。
+   成本：來回一趟的點差在進場時就扣；隔夜費以紐約 17:00 為界、每過一晚扣一次（費率是依 IG 公布的算法估的，不是實際帳單）。
+   這裡沒有任何預測能力：它只是把網頁的評級、進場計畫、門檻、行事曆照規則執行，結果好壞就是那套訊號的成績。 */
+(function (root) {
+'use strict';
+const isNum = v => typeof v === 'number' && isFinite(v), TK = () => root.Track, MK = () => root.Mkt;
+const Sim = {};
+/* 規則的數字都在這裡。riskPct：門檻通過時每筆賭資金的幾 %；weakPct：門檻沒通過時（回測裡這種時候沒有優勢，所以只下一半） */
+Sim.DEF = { start: 1000, riskPct: 2, weakPct: 1, maxOpen: 3, maxCls: 2, maxRiskPct: 6, dayStopPct: 5, minScore: 55, watchScore: 45,
+  confirmMs: 60e3, sigMs: 180e3, staleMs: 15 * 60e3, limitBars: 16, coolMs: 2 * 3600e3, cancelCoolMs: 15 * 60e3, holdH: 6, marginOne: 50, marginAll: 90, minRiskPct: 0.25,
+  lagMax: 3, closeGuard: 90 * 60e3, ruin: 100, revP: 0.43, revAfter: 5 * 60e3 };
+/* IG 一般帳戶大約的保證金比例（開一筆部位要押多少） */
+Sim.MARGIN = { fx: 0.0333, metal: 0.05, index: 0.05, cmdty: 0.1, stock: 0.2, etf: 0.2, crypto: 0.5 };
+/* 每晚的隔夜費（占部位金額的比例）：[做多, 做空] */
+Sim.FUND = { crypto: [0.0007, 0], stock: [0.0002, 0.0001], etf: [0.0002, 0.0001], index: [0.0002, 0], metal: [0.00015, 0], fx: [0.00005, 0.00005], cmdty: [0.0001, 0.0001] };
+const dayIdx = t => Math.floor((t + 8 * 3600e3) / 86400e3); // 以臺北時間算一天
+const nyDay = t => Math.floor((t + (MK() ? MK().nyOffset(t) : -300) * 60e3 - 17 * 3600e3) / 86400e3);
+Sim.nights = (a, b) => Math.max(0, nyDay(b) - nyDay(a));
+
+Sim.init = function (cfg, now) {
+  const c = Object.assign({}, Sim.DEF, cfg || {});
+  return { v: 1, cfg: c, created: now, balance: c.start, peak: c.start, maxDd: 0, day: { key: dayIdx(now), startEq: c.start, pnl: 0 }, items: [], watch: [], hist: [], log: [], curve: [[now, c.start]], seq: 0, paused: false };
+};
+const live = st => st.items;
+const dirOf = p => (p.side === 'long' ? 1 : -1);
+const slKind = p => { const lock = dirOf(p) * (p.slNow - p.entry) / p.risk; return lock > 0.02 ? 'trail' : lock > -0.02 ? 'be' : 'sl'; }; // 和 Track 一樣的叫法：停損還在原位＝停損，已移到進場價＝保本
+function finance(p, t) { // 到時間 t 為止累計的隔夜費；到停利 1 之後只剩一半部位
+  if (!p.openedAt) return 0; const r = (Sim.FUND[p.cls] || [0.0002, 0.0001])[p.side === 'long' ? 0 : 1];
+  const t1 = p.tp1At && p.tp1At < t ? p.tp1At : t; return p.notional * r * (Sim.nights(p.openedAt, t1) + 0.5 * Sim.nights(t1, t));
+}
+/* 這筆交易到目前為止的損益（美元，含已落袋的一半、已扣成本與隔夜費） */
+Sim.pnlNow = function (p) {
+  if (p.stage !== 'open') return 0; const px = isNum(p.price) ? p.price : p.entry;
+  return p.riskUsd * TK().rNow(p, px) - p.costUsd - (p.finUsd || 0);
+};
+Sim.equity = st => st.balance + live(st).reduce((s, p) => s + (p.stage === 'open' ? Sim.pnlNow(p) - (p.booked || 0) : 0), 0);
+Sim.margin = st => live(st).reduce((s, p) => s + (p.stage === 'open' && p.tp1At ? 0.5 : 1) * p.margin, 0);
+/* 承擔中的風險：還會賠到原始停損的才算（停損已經移到進場價的不算） */
+Sim.risk = st => live(st).reduce((s, p) => s + (p.stage === 'open' && dirOf(p) * (p.slNow - p.entry) >= -0.02 * p.risk ? 0 : p.riskUsd), 0);
+
+function logEv(st, ev, k, p, x) {
+  const e = Object.assign({ t: x && x.t ? x.t : Date.now(), k, id: p.instId, name: p.name, side: p.side }, x || {});
+  st.log.unshift(e); if (st.log.length > 80) st.log.length = 80; if (ev) ev.push(e);
+  (p.events = p.events || []).push({ t: e.t, k, v: x && x.v, r: x && x.r });
+}
+function mark(st, now, force) { // 記下權益的高點、最大回落與權益曲線
+  const eq = Sim.equity(st); if (eq > st.peak) st.peak = eq; const dd = st.peak > 0 ? (st.peak - eq) / st.peak : 0; if (dd > st.maxDd) st.maxDd = dd;
+  const cv = st.curve, last = cv[cv.length - 1];
+  if (force || !last || now - last[0] >= 15 * 60e3) {
+    cv.push([last ? Math.max(now, last[0]) : now, Math.round(eq * 100) / 100]);
+    if (cv.length > 600) { const keep = cv.slice(-300); st.curve = cv.slice(0, cv.length - 300).filter((_, i) => i % 2 === 0).concat(keep); } // 太長時把比較舊的那一半抽掉一半，形狀還在
+  }
+  return eq;
+}
+/* 今天（臺北時間）的損益；上次掃描如果是昨天以前，今天就是從零開始 */
+Sim.today = (st, now) => (st.day.key === dayIdx(now) ? st.day : { key: dayIdx(now), startEq: Sim.equity(st), pnl: 0 });
+function rollDay(st, now) { const k = dayIdx(now); if (!(st.day.key >= k)) st.day = { key: k, startEq: Sim.equity(st), pnl: 0 }; }
+function toHist(st, p) { // 歷史最多留 300 筆成交的＋60 筆沒成交的（帳戶餘額不受影響）
+  const i = st.items.indexOf(p); if (i >= 0) st.items.splice(i, 1); p.stage = 'hist'; st.hist.unshift(p);
+  const cap = p.cancel ? 60 : 300; let n = 0;
+  for (let j = 0; j < st.hist.length; j++) if (!!st.hist[j].cancel === !!p.cancel && ++n > cap) { st.hist.splice(j, 1); j--; }
+}
+function cancel(st, p, why, t, ev) { // 沒有成交就結束（逾時、訊號消失、價格跑掉…）
+  p.status = 'closed'; p.reason = why; p.closedAt = t; p.r = 0; p.pnl = 0; p.cancel = true; toHist(st, p); logEv(st, ev, 'cancel', p, { t, v: why });
+}
+function settle(st, p, ev) { // Track 已經把這筆結束（p.r、p.exit、p.reason、p.closedAt 都有了）：結算成美元
+  const t = p.closedAt; rollDay(st, t);
+  p.finUsd = finance(p, t); p.pnl = p.riskUsd * p.r - p.costUsd - p.finUsd; p.rNet = p.pnl / p.riskUsd; p.heldMs = t - p.openedAt;
+  st.balance += p.pnl - (p.booked || 0); if (dayIdx(t) === st.day.key) st.day.pnl += p.pnl; p.balAfter = st.balance; p.price = p.exit; toHist(st, p);
+  p.eqAfter = mark(st, t, true); logEv(st, ev, 'close', p, { t, v: p.reason, r: p.pnl });
+}
+function finish(st, p, price, why, t, ev) { TK().close(p, price, why, t); settle(st, p, ev); }
+function onOpen(st, p, t, ctx, ev) { // 成交：準備中 → 交易中
+  const eq = Sim.equity(st); // 這筆還沒算進去的權益
+  p.stage = 'open'; p.openedAt = t; p.costUsd = p.notional * (p.costRate || 0); p.booked = 0; p.finUsd = 0; p.eqAtOpen = eq; p.price = p.entry; p.priceT = t; p.mfe = 0; p.mae = 0;
+  const hold = (ctx && ctx.holdMs) || p.holdMs || st.cfg.holdH * 3600e3, ci = MK() ? MK().closeIn(p.cls, t) : null; p.holdMs = hold;
+  const byHold = t + hold, byClose = isNum(ci) && ci > 0 ? t + ci - 30 * 60e3 : Infinity;
+  if (byClose < byHold) { p.dueAt = byClose; p.dueWhy = 'close_soon'; } else { p.dueAt = byHold; p.dueWhy = 'time'; }
+  logEv(st, ev, 'open', p, { t, v: p.entry });
+}
+function handle(st, p, out, ctx, ev) {
+  for (const e of out) {
+    if (e.kind === 'entry') onOpen(st, p, e.t, ctx, ev);
+    else if (e.kind === 'tp1') { p.booked = 0.5 * p.riskUsd * dirOf(p) * (p.tp1 - p.entry) / p.risk; st.balance += p.booked; logEv(st, ev, 'tp1', p, { t: e.t, r: p.booked }); }
+    else if (e.kind === 'expired') { p.cancel = true; p.pnl = 0; toHist(st, p); logEv(st, ev, 'cancel', p, { t: e.t, v: 'expired' }); }
+    else if (e.kind === 'sl' || e.kind === 'be' || e.kind === 'trail' || e.kind === 'tp2') settle(st, p, ev);
+  }
+}
+function track(p, hi, lo) { // 持有期間最多賺到、最多賠到幾 R
+  const d = dirOf(p), a = d * ((d > 0 ? hi : lo) - p.entry) / p.risk, b = d * ((d > 0 ? lo : hi) - p.entry) / p.risk;
+  if (!(p.mfe >= a)) p.mfe = Math.max(a, p.mfe || 0); if (!(p.mae <= b)) p.mae = Math.min(b, p.mae || 0);
+}
+/* 把一筆單（掛單或持有中）用 K 線一根一根往前推。
+   到了該出場的時間（最長持有、休市前）就用當時的價格出場；開盤就跳過停損的（隔夜、跳空），用那根的開盤價出場，不假裝能照停損價成交。 */
+function advance(st, p, cd, price, now, ctx, ev) {
+  const Tk = TK(), d = dirOf(p); let prev = null;
+  for (const c of cd || []) {
+    if (c.t < p.lastCheck) { prev = c.c; continue; }
+    if (!Tk.active(p)) break;
+    const was = p.stage === 'open';
+    if (was && c.t >= p.dueAt) { finish(st, p, isNum(prev) ? prev : isNum(c.o) ? c.o : c.c, p.dueWhy, p.dueAt, ev); break; }
+    if (was && c.t > p.lastCheck && isNum(c.o) && d * (c.o - p.slNow) < 0) { p.gap = 1; finish(st, p, c.o, slKind(p), c.t, ev); break; }
+    handle(st, p, Tk.step(p, [c], null, c.t), ctx, ev); prev = c.c;
+    if (was && p.stage === 'open' && Tk.active(p)) track(p, c.h, c.l); // 成交的那一根不算（成交前的高低點不是這筆單的）
+  }
+  if (!Tk.active(p)) return;
+  if (p.stage === 'open' && now >= p.dueAt && isNum(price)) return finish(st, p, price, p.dueWhy, Math.min(now, Math.max(p.dueAt, p.lastCheck)), ev);
+  handle(st, p, Tk.step(p, [], price, now), ctx, ev);
+  if (p.stage === 'open' && Tk.active(p) && isNum(price)) { p.price = price; p.priceT = now; track(p, price, price); p.finUsd = finance(p, now); }
+  else if (p.stage === 'ready' && isNum(price)) { p.price = price; p.priceT = now; }
+}
+/* 一個商品的掛單與持有中的單，用新的 K 線與現價推進一次。
+   o = { cd: K 線（由舊到新，已去掉休市時段）, price, now, closed: 現在沒有交易, from: 這份 K 線最早一根的時間, tfMs: K 線週期 }
+   K 線接不上上次檢查的時間（離開太久）：掛單取消，持有中的用現在的價格結算並註明。 */
+Sim.step = function (st, instId, o) {
+  const ev = [], now = o.now, list = live(st).filter(p => p.instId === instId && (p.stage === 'open' || (p.stage === 'ready' && p.type === 'limit')));
+  for (const p of list) {
+    if (o.closed) { // 沒有交易：這段時間的價格不拿來判斷；掛單直接取消
+      if (p.stage === 'ready') cancel(st, p, 'closed', now, ev); else p.lastCheck = Math.max(p.lastCheck, now);
+      continue;
+    }
+    if (isNum(o.from) && o.from > p.lastCheck + (o.tfMs || 60e3)) { if (p.stage === 'ready') cancel(st, p, 'lost', now, ev); else if (isNum(o.price)) finish(st, p, o.price, 'lost', now, ev); continue; }
+    advance(st, p, o.cd, o.price, now, o, ev);
+  }
+  mark(st, now); return ev;
+};
+/* 依風險算部位大小；保證金不夠就縮小，縮到太小就不做 */
+Sim.size = function (st, cls, entry, sl, gate, eq) {
+  const c = st.cfg, dist = Math.abs(entry - sl) / entry; if (!(dist > 0) || !(eq > 0)) return { no: 'margin' };
+  const pct = gate ? c.riskPct : c.weakPct; let riskUsd = eq * pct / 100, scaled = false;
+  const room = eq * c.maxRiskPct / 100 - Sim.risk(st); if (room < eq * c.minRiskPct / 100) return { no: 'risk' };
+  if (riskUsd > room) { riskUsd = room; scaled = true; }
+  const m = Sim.MARGIN[cls] || 0.2, cap = Math.min(eq * c.marginOne / 100, eq * c.marginAll / 100 - Sim.margin(st));
+  let notional = riskUsd / dist;
+  if (notional * m > cap) { if (!(cap > 0)) return { no: 'margin' }; const k = cap / (notional * m); notional *= k; riskUsd *= k; scaled = true; }
+  if (riskUsd < eq * c.minRiskPct / 100) return { no: 'margin' };
+  return { riskUsd, pct: riskUsd / eq * 100, notional, margin: notional * m, scaled };
+};
+function newOrder(st, c, z, now, ctx) {
+  const pl = c.plan, mk = pl.type === 'market', tfMs = c.tfMs || 900e3;
+  return { oid: 's' + (++st.seq) + '-' + now.toString(36), instId: c.id, name: c.name, code: c.code, cls: c.cls, dp: c.dp, tf: c.tf, side: pl.side, type: pl.type, planName: pl.name, stage: 'ready',
+    entry: pl.entry, entry0: pl.entry, sl: pl.sl, slNow: pl.sl, tp1: pl.tp1, tp2: pl.tp2, risk: Math.abs(pl.entry - pl.sl), created: now, lastCheck: now, price: c.price, priceT: now,
+    status: mk ? 'confirm' : 'pending', openedAt: null, confirmAt: mk ? now + st.cfg.confirmMs : null, expires: mk ? null : now + st.cfg.limitBars * tfMs, flags: { nearSl: 1, nearTp1: 1, nearTp2: 1 }, basis: c.basis || 'src',
+    riskUsd: z.riskUsd, riskPct: z.pct, notional: z.notional, margin: z.margin, scaled: !!z.scaled, costRate: c.cost || 0, unit: c.unit || null, holdMs: (ctx && ctx.holdMs) || st.cfg.holdH * 3600e3,
+    score: c.score, grade: c.grade, prob0: c.prob, gate: c.gate == null ? null : c.gate ? 1 : 0, gateWhy: c.gateWhy || null, regime: c.regime || '', label: c.label || '', action: c.action || '', notes: (c.notes || []).slice(0, 6),
+    news: c.news || '', inter: c.inter || '', nextEv: c.nextEv || '', src: c.src || '', eq0: Sim.equity(st), events: [] };
+}
+function resize(st, p, eqNow) { // 市價單成交時，進場價和計畫差一點：風險金額不變，部位金額照新的停損距離重算（保證金不夠就再縮）
+  const dist = p.risk / p.entry, m = Sim.MARGIN[p.cls] || 0.2, cap = Math.min(eqNow * st.cfg.marginOne / 100, eqNow * st.cfg.marginAll / 100 - (Sim.margin(st) - p.margin));
+  let n = p.riskUsd / dist; if (n * m > cap && cap > 0) { const k = cap / (n * m); n *= k; p.riskUsd *= k; p.scaled = true; }
+  p.notional = n; p.margin = n * m; p.riskPct = p.riskUsd / eqNow * 100;
+}
+/* 每次掃描完呼叫一次。ctx = { now, cands: 候選（依分數由高到低）, info: { 商品: { pUp, price, t, off, basis } }, same(a, da, b, db): 是不是同一個賭注, holdMs }
+   候選 c = { id, name, code, cls, dp, tf, tfMs, dir, score, grade, label, action, notes, prob, gate, gateWhy, plan: { type, side, name, entry, sl, tp1, tp2 },
+             price, t, sigOk, sigWait, off, lag, eventSoon, closeIn, cost, regime, src, basis, unit, news, inter, nextEv } */
+Sim.scan = function (st, ctx) {
+  const ev = [], now = ctx.now, c0 = st.cfg, info = ctx.info || {}, by = {}; for (const c of ctx.cands || []) by[c.id] = c;
+  rollDay(st, now);
+  // 1) 準備中的單：訊號還在不在？市價單確認後成交
+  for (const p of live(st).filter(x => x.stage === 'ready')) {
+    const c = by[p.instId], inf = info[p.instId], d = dirOf(p);
+    if (inf && inf.off) { cancel(st, p, 'closed', now, ev); continue; }
+    if (p.type === 'market' && now - p.created > c0.staleMs) { cancel(st, p, 'stale', now, ev); continue; }
+    if (!c) { if (inf && now - inf.t < 180e3) cancel(st, p, 'signal', now, ev); continue; } // 這次掃描有它，但已經不在候選裡
+    if ((p.basis || 'src') !== (c.basis || 'src')) continue; // 價位基準剛換（開或關 IG 報價）：下一輪再看
+    if (c.dir !== d || c.score < c0.watchScore) { cancel(st, p, 'signal', now, ev); continue; }
+    p.scoreNow = c.score; p.gradeNow = c.grade;
+    if (p.type !== 'market' || now < p.confirmAt) continue;
+    if (c.score < c0.minScore || !c.sigOk || c.eventSoon) continue; // 還不夠穩：留在準備中，等下一次掃描（太久會被上面的 stale 取消）
+    const px = c.price, risk0 = Math.abs(p.entry0 - p.sl), risk = d * (px - p.sl), move = d * (px - p.entry0) / risk0;
+    if (!(risk > 0) || move > 0.4 || risk < 0.5 * risk0 || d * (p.tp1 - px) < 0.3 * risk) { cancel(st, p, 'chase', now, ev); continue; }
+    p.entry = px; p.risk = risk; p.status = 'open'; p.lastCheck = now; resize(st, p, Sim.equity(st)); onOpen(st, p, now, ctx, ev);
+  }
+  // 2) 持有中的單：網頁對這個方向的機率掉到 43% 以下（網頁自己會說「建議出場」）就出場
+  for (const p of live(st).filter(x => x.stage === 'open')) {
+    const inf = info[p.instId]; if (!inf || inf.off || !isNum(inf.pUp) || now - inf.t > 180e3) continue;
+    const ps = p.side === 'long' ? inf.pUp : 1 - inf.pUp; p.pNow = ps; p.pNowT = now; p.gradeNow = inf.grade;
+    if (ps > c0.revP || now - p.openedAt < c0.revAfter || !isNum(inf.price) || (p.basis || 'src') !== (inf.basis || 'src')) continue;
+    if (dirOf(p) * (inf.price - p.slNow) <= 0) continue; // 已經碰到停損：交給 K 線那邊照停損結算
+    finish(st, p, inf.price, 'reversal', now, ev);
+  }
+  // 3) 新的候選：夠格就排進準備中，否則留在觀察中並寫明還缺什麼
+  const eq = Sim.equity(st), act = live(st).map(p => ({ id: p.instId, d: dirOf(p), cls: p.cls, name: p.name })), old = {}; for (const w of st.watch) old[w.id + '|' + w.dir] = w;
+  const dayStop = st.day.pnl <= -c0.dayStopPct / 100 * st.day.startEq, watch = [];
+  for (const c of ctx.cands || []) {
+    if (!c.dir || c.off || c.score < c0.watchScore || act.some(a => a.id === c.id)) continue;
+    const why = [], pl = c.plan;
+    if (eq < c0.ruin) why.push({ k: 'ruin' });
+    if (dayStop) why.push({ k: 'daystop' });
+    if (c.score < c0.minScore) why.push({ k: 'score', v: c.score });
+    if (!pl) why.push({ k: 'noplan' }); else if (pl.type !== 'market' && pl.type !== 'limit') why.push({ k: 'breakout' });
+    if (c.score >= c0.minScore && !c.sigOk) why.push({ k: 'fresh', v: c.sigWait || 0 });
+    if (c.eventSoon) why.push({ k: 'event' });
+    if (c.lag >= c0.lagMax) why.push({ k: 'lag', v: c.lag });
+    if (isNum(c.closeIn) && c.closeIn < c0.closeGuard) why.push({ k: 'closing', v: c.closeIn });
+    const lastT = st.hist.find(h => h.instId === c.id && !h.cancel), lastC = st.hist.find(h => h.instId === c.id && h.cancel);
+    if (lastT && now - lastT.closedAt < c0.coolMs) why.push({ k: 'cool', v: lastT.closedAt + c0.coolMs });
+    else if (lastC && now - lastC.closedAt < c0.cancelCoolMs) why.push({ k: 'cool2', v: lastC.closedAt + c0.cancelCoolMs });
+    const dup = act.find(a => ctx.same && ctx.same(c.id, c.dir, a.id, a.d)); if (dup) why.push({ k: 'dup', v: dup.name });
+    if (act.filter(a => a.cls === c.cls).length >= c0.maxCls) why.push({ k: 'cls', v: c0.maxCls });
+    if (act.length >= c0.maxOpen) why.push({ k: 'full', v: c0.maxOpen });
+    let z = null;
+    if (!why.length) { z = Sim.size(st, c.cls, pl.entry, pl.sl, c.gate, eq); if (z.no) why.push({ k: z.no }); }
+    if (!why.length && !st.paused) {
+      const p = newOrder(st, c, z, now, ctx); st.items.push(p); act.push({ id: c.id, d: c.dir, cls: c.cls, name: c.name }); logEv(st, ev, 'ready', p, { t: now, v: p.type }); continue;
+    }
+    if (st.paused) why.unshift({ k: 'paused' });
+    const o = old[c.id + '|' + c.dir];
+    watch.push({ id: c.id, name: c.name, code: c.code, cls: c.cls, dp: c.dp, dir: c.dir, score: c.score, grade: c.grade, prob: c.prob, gate: c.gate, price: c.price, label: c.label, action: c.action, notes: (c.notes || []).slice(0, 4),
+      plan: pl ? { type: pl.type, name: pl.name, entry: pl.entry, sl: pl.sl, tp1: pl.tp1 } : null, why, since: o ? o.since : now, t: now });
+  }
+  st.watch = watch.slice(0, 15); st.scanT = now; mark(st, now); return ev;
+};
+/* 剛打開網頁時：確認中的市價單如果已經放太久（網頁沒開，來不及確認）就取消 */
+Sim.sweep = function (st, now) { const ev = []; for (const p of live(st).filter(x => x.stage === 'ready' && x.type === 'market' && now - x.created > st.cfg.staleMs)) cancel(st, p, 'stale', now, ev); return ev; };
+Sim.stats = function (st) {
+  const tr = st.hist.filter(p => !p.cancel), n = tr.length, sum = (a, f) => a.reduce((s, p) => s + f(p), 0), wins = tr.filter(p => p.pnl > 0).length;
+  const grp = f => { const m = {}; for (const p of tr) { const k = f(p), g = m[k] = m[k] || { n: 0, pnl: 0, r: 0, w: 0 }; g.n++; g.pnl += p.pnl; g.r += p.rNet; if (p.pnl > 0) g.w++; } return m; };
+  return { n, wins, winRate: n ? wins / n : NaN, pnl: sum(tr, p => p.pnl), avgR: n ? sum(tr, p => p.rNet) / n : NaN, cost: sum(tr, p => p.costUsd + (p.finUsd || 0)),
+    best: n ? Math.max(...tr.map(p => p.pnl)) : NaN, worst: n ? Math.min(...tr.map(p => p.pnl)) : NaN, hold: n ? sum(tr, p => p.heldMs) / n : NaN, cancels: st.hist.length - n,
+    byGate: grp(p => (p.gate == null ? 'na' : p.gate ? 'pass' : 'fail')), byCls: grp(p => p.cls), bySide: grp(p => p.side), byReason: grp(p => p.reason) };
+};
+if (typeof module !== 'undefined') module.exports = Sim; else root.Sim = Sim;
+if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Sim = Sim;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
 
 /* ===== 交易時段：哪些商品現在沒有交易（純函式，方便測試） =====
@@ -3115,7 +3355,7 @@ async function runScan() {
   };
   await Promise.all(Array.from({ length: 6 }, worker));
   if (token !== scan.token) { scan.running = false; return runScan(); }
-  scan.running = false; scan.last = Date.now(); clearTimeout(scan.timer); paperLog(); renderScan();
+  scan.running = false; scan.last = Date.now(); clearTimeout(scan.timer); paperLog(); simScan(); renderScan();
   if (!Data.demo && list.length) { const was = offline; offline = fails === list.length; if (was !== offline) banner(); }
   Inter.refresh().catch(() => {}); if (view === 'track') renderTrack();
 }
@@ -3243,6 +3483,7 @@ function liveWant() { // 現在需要即時價的商品：畫面上看得到的�
   if (on && view === 'scan') for (const r of shownRows()) ids.add(r.inst.id);
   if (on && view === 'detail' && det.inst) ids.add(det.inst.id);
   if (!Data.demo) for (const p of TR.list) if (Track.active(p)) ids.add(p.instId);
+  if (!Data.demo && SIM.st) for (const p of SIM.st.items) if (p.stage === 'open' || p.type === 'limit') ids.add(p.instId);
   Data.liveWant([...ids].map(id => Data.byId(id)).filter(i => i && !mktState(i).closed));
   const dot = $('#live-dot'); if (dot) dot.hidden = !Data.liveStat().some(x => x.ok && x.want);
 }
@@ -3507,6 +3748,7 @@ function renderSettings() {
       <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。IG 另外有獨立報價的「週末」市場，這一頁沒有分析。</li>
       <li>建議數量：到上面的「資金與風險」填帳戶資金。精選卡片會顯示「建議數量」和「打到停損約賠多少」，是從每筆最多賠資金的幾 % 反推的。黃金、白銀、主要加密貨幣、標普 500、恆生、天然氣和外匯（迷你合約）會直接算出 IG 的張數；其他商品只顯示最多賠多少，請在 IG 下單畫面把數量調到停損金額不超過那個數字。</li>
       <li>持有中的提醒：追蹤中的單除了停損停利，還會提醒急轉、獲利回吐、訊號轉向、持有太久、休市前、重大數據前，以及什麼時候該把停損移到進場價。「注意」是先看一下，「建議出場」是該動作了。</li>
+      <li>模擬戰（2026/11/20）：下面那一排多了「模擬戰」。它是一個 1,000 美元的假想帳戶，照固定規則把掃描出來的訊號自動做一遍：觀察中 → 準備中 → 交易中 → 模擬交易歷史。不會真的下單；只在這個網頁開著時運作；紀錄存在這台裝置的瀏覽器。完整規則寫在那一頁的最下面。</li>
       <li>資料來源修正（2026/11/18）：回測與匯出 K 線時，外匯改用 Yahoo 的報價（1 小時 K 最多約兩年），不再用成交稀疏的交易所外匯合約；各商品照清單順序找歷史最長、報價正常的來源，不再沿用某次連線失敗後的備援來源（黃金曾因此只抓到 12 天）。平常看盤時，停在備援來源的商品每 6 小時會從頭再試一次原本的來源。</li>
       <li>第七版（2026/11/17）依回測結果改了三件事：K 線與圖形型態不再影響機率（回測裡方向是反的）；「等突破才進場」的計畫不再列為可進場（平均是賠的）；臺北時間清晨 05–08 不列可進場（這個時段的單平均是賠的）。</li>
       <li>門檻：卡片上的「門檻 ✓ 通過／✗ 未通過」只是標示，不影響評級和排名。三項都符合才算通過：不是加密貨幣或外匯；不在清晨 05–08，而且股票、ETF、指數要在美洲盤（臺北 21–05）；方向順著 4 小時趨勢。回測裡只有通過的判斷，看多和看空之後的走勢才有差別；但通過門檻會不會多賺還沒有證實，所以成績單和回測會把通過與未通過分開統計，累積之後再決定要不要只做通過的。</li>
@@ -3729,8 +3971,270 @@ async function runDiag() {
   await Promise.all([w(), w(), w()]); diag.running = false; if (view === 'settings') renderSettings();
 }
 
+/* ---------- 模擬戰 ----------
+   一個 1,000 美元的假想帳戶，照 Sim（上面的純函式）的規則，自動把掃描出來的訊號做一遍：觀察中 → 準備中 → 交易中 → 模擬交易歷史。
+   只在這個網頁開著的時候掃描與下單；關掉期間，已經進場的單會在回來時用 K 線補算停損停利。不會真的下單，紀錄只存在這台裝置的瀏覽器（cfd.sim）。 */
+const SIM = { st: null, tab: '', busy: false, last: 0, saved: 0, resetAt: 0, histAll: false };
+function simLoad() {
+  let s = LS.get('cfd.sim', null);
+  if (!s || s.v !== 1 || !isNum(s.balance) || !Array.isArray(s.items) || !Array.isArray(s.hist) || !Array.isArray(s.curve) || !s.day) s = Sim.init({}, Date.now());
+  else { s.cfg = Object.assign({}, Sim.DEF, { start: s.cfg && s.cfg.start > 0 ? s.cfg.start : Sim.DEF.start }); s.watch = Array.isArray(s.watch) ? s.watch : []; s.log = Array.isArray(s.log) ? s.log : []; } // 規則的數字一律用這一版的
+  SIM.st = s; if (Sim.sweep(s, Date.now()).length) simSave();
+}
+function simSave() { SIM.saved = Date.now(); LS.set('cfd.sim', SIM.st); }
+const usd2 = v => '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const sUsd = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + usd2(v);
+const sgn = v => dirCls(Math.abs(v) < 0.005 ? 0 : v);
+const SIM_REASON = { sl: '停損', be: '保本出場', trail: '鎖利出場', tp2: '停利 2', time: '持有時間到', reversal: '訊號轉向', close_soon: '休市前平倉', lost: '離開太久，以回來時的價格結算',
+  expired: '掛單逾時', signal: '訊號消失或轉向', chase: '價格離計畫太遠，不追', closed: '休市', stale: '等了 15 分鐘都沒能確認（訊號不夠穩，或網頁沒開）' };
+const SIM_UNIT = { crypto: '顆', metal: '盎司', stock: '股', etf: '股' };
+function simUnitMode(inst) { // 部位金額能不能換成數量：只換確定以美元報價的（加密貨幣、金屬、美股與 ETF、含美元的貨幣對）；指數與商品的合約單位各家不同，不猜
+  if (inst.quote || inst.custom) return null;
+  if (inst.cls === 'fx') { const c = (inst.code || '').split('/'); return c[1] === 'USD' ? 'base' : c[0] === 'USD' ? 'usd' : null; }
+  return SIM_UNIT[inst.cls] ? 'base' : null;
+}
+function simQty(p) {
+  if (!p.unit) return ''; let e = p.entry;
+  if (p.basis === 'ig') { const inst = Data.byId(p.instId), b = inst && IG.basis(inst); if (!b || !(b.k > 0)) return ''; e = p.entry / b.k; } // IG 以「點」報價的商品：換回原始價格再算
+  const n = p.unit === 'base' ? p.notional / e : p.notional; if (!isNum(n) || !(n > 0)) return '';
+  const u = p.cls === 'fx' ? (p.code || '').split('/')[0] : SIM_UNIT[p.cls];
+  return '約 ' + (n >= 100 ? Math.round(n).toLocaleString('en-US') : n >= 1 ? n.toFixed(2) : n.toPrecision(3)) + ' ' + u;
+}
+function simSync(p) { // 開或關 IG 報價時，把這筆單的價位換到新的基準
+  const inst = Data.byId(p.instId); if (!inst) return; const was = p.basis || 'src'; syncBasis(p, inst);
+  if ((p.basis || 'src') !== was && p.stage === 'ready') p.entry0 = p.entry;
+}
+function simEvText(e) {
+  const sd = e.side === 'long' ? '做多' : '做空';
+  if (e.k === 'ready') return `${e.name} ${sd}：排進準備中（${e.v === 'market' ? '下次掃描確認後以市價進場' : '掛單等價格回來'}）`;
+  if (e.k === 'open') return `${e.name} ${sd} 進場`;
+  if (e.k === 'tp1') return `${e.name} 到停利 1，先平一半（入帳 ${sUsd(e.r)}），停損移到進場價`;
+  if (e.k === 'close') return `${e.name} ${sd} 出場：${SIM_REASON[e.v] || e.v}，這筆 ${sUsd(e.r)}`;
+  if (e.k === 'cancel') return `${e.name} ${sd} 取消：${SIM_REASON[e.v] || e.v}`;
+  return e.name;
+}
+function simWhy(w, now) { // 觀察中的原因（還缺什麼）
+  const v = w.v;
+  switch (w.k) {
+    case 'paused': return '模擬已暫停，不開新倉';
+    case 'ruin': return '帳戶剩不到 100 美元，已停止開新倉';
+    case 'daystop': return '今天已經賠到停手線，明天再開新倉';
+    case 'score': return `分數 ${v}，要到 55 分才進場`;
+    case 'noplan': return '目前沒有划算的現價或回踩進場點（等突破的計畫不做）';
+    case 'breakout': return '只有「等突破」的計畫（回測是賠的），不做';
+    case 'fresh': return `訊號剛出現，要先穩定 3 分鐘${v > 0 ? '（還要約 ' + Math.max(1, Math.ceil(v / 60e3)) + ' 分鐘）' : ''}`;
+    case 'event': return '一小時內有重大數據公布，等公布後再說';
+    case 'lag': return `這個來源的報價慢約 ${v} 分鐘，模擬成交會不準，不做`;
+    case 'closing': return `距離休市只剩 ${Math.max(1, Math.round(v / 60e3))} 分鐘，不開新倉`;
+    case 'cool': return `這個商品剛結束一筆，${hm(v)} 之後才會再做`;
+    case 'cool2': return `剛取消過一次，${hm(v)} 之後再看`;
+    case 'dup': return `和已經在做的「${v}」走勢連動、方向相同，等於同一個賭注`;
+    case 'cls': return `同一類商品已經有 ${v} 筆`;
+    case 'full': return `部位已滿（最多同時 ${v} 筆）`;
+    case 'margin': return '保證金不夠開這一筆';
+    case 'risk': return '承擔中的風險已經到上限';
+    default: return '';
+  }
+}
+/* 掃描完：把結果整理成候選，交給 Sim.scan 決定觀察、準備或進場 */
+function simScan() {
+  const st = SIM.st; if (!st || Data.demo) return;
+  const now = Date.now(), rows = Object.values(scan.rows).filter(r => !r.err && r.rate), info = {}, cands = [];
+  for (const p of st.items) simSync(p);
+  for (const r of rows) {
+    const i = r.inst, off = !!rowOff(r), d = r.rate.dir;
+    info[i.id] = { pUp: r.prob ? r.prob.up : null, price: r.price, t: r.t, off, grade: r.rate.grade, score: r.rate.score, basis: r.ig ? 'ig' : 'src' };
+    if (S.on[i.cls] === false || !d || now - r.t > 5 * 60e3) continue;
+    const pl = r.plan, g = r.sig, age = g ? now - g.t : 0, ns = News.score(i), is = Inter.score(i), nx = News.events(i, 24).filter(e => e.impact === 'High' && e.t > now)[0];
+    cands.push({ id: i.id, name: i.name, code: i.code, cls: i.cls, dp: i.dp, tf: r.tf, tfMs: E.TF[r.tf], dir: d, score: r.rate.score, grade: r.rate.grade, label: r.rate.label, action: r.rate.action, notes: r.rate.notes || [],
+      prob: d > 0 ? r.prob.up : r.prob.down, gate: r.gate ? !!r.gate.pass : null, gateWhy: r.gate && !r.gate.pass ? r.gate.why : null,
+      plan: pl ? { type: pl.type, side: pl.side, name: pl.name, entry: pl.entry, sl: pl.sl, tp1: pl.tp1, tp2: pl.tp2 } : null, price: r.price, t: r.t,
+      sigOk: !!(g && g.ok && (g.first || age >= st.cfg.sigMs)), sigWait: g && g.ok && !g.first ? Math.max(0, st.cfg.sigMs - age) : 0, off, lag: Math.max(0, lagMin(r)),
+      eventSoon: News.events(i, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3), closeIn: Mkt.closeIn(i.cls, now),
+      cost: costOf(i) || 0, regime: r.regime || '', src: r.src || '', basis: r.ig ? 'ig' : 'src', unit: simUnitMode(i),
+      news: ns && ns.note ? ns.note + (ns.score > 0.15 ? '，偏多' : ns.score < -0.15 ? '，偏空' : '，中性') : '', inter: is && is.note ? is.note : '', nextEv: nx ? `${mdhm(nx.t)} ${News.evName ? News.evName(nx.title) : nx.title}` : '' });
+  }
+  cands.sort((a, b) => b.score - a.score);
+  const same = (a, da, b, db) => { // 同一個賭注：最近 80 根 K 線高度同步而且方向一致（算不出相關時，加密貨幣同方向一律視為同一個賭注）
+    const ra = scan.rows[a], rb = scan.rows[b], c = ra && rb && !ra.err && !rb.err ? corrOf(ra, rb) : null, ia = Data.byId(a), ib = Data.byId(b);
+    return c != null ? c * da * db >= 0.7 : da === db && !!ia && !!ib && ia.cls === ib.cls && ia.cls === 'crypto';
+  };
+  simAfter(Sim.scan(st, { now, cands, info, same, holdMs: (+S.maxHold > 0 ? +S.maxHold : 72) * 3600e3 }));
+}
+/* 掛單與持有中的單：抓 K 線，看有沒有成交、碰到停利停損、或到了該出場的時間（做法和追蹤單的 monitor 一樣） */
+async function simMonitor() {
+  const st = SIM.st; if (!st || SIM.busy || Data.demo) return; SIM.last = Date.now();
+  const sw = Sim.sweep(st, Date.now()); if (sw.length) simAfter(sw); // 確認中的市價單放太久（一直沒有下一次掃描）：取消
+  const act = st.items.filter(p => p.stage === 'open' || (p.stage === 'ready' && p.type === 'limit')); if (!act.length) return;
+  SIM.busy = true; const ev = [];
+  try {
+    const by = {}; for (const p of act) (by[p.instId] = by[p.instId] || []).push(p);
+    await Promise.all(Object.entries(by).map(async ([id, ps]) => {
+      const inst = Data.byId(id); if (!inst) return;
+      const mst = mktState(inst), t0 = Date.now(), due = ps.some(p => p.stage === 'open' && t0 >= p.dueAt);
+      if (mst.closed && !due) { ev.push(...Sim.step(st, id, { closed: true, now: t0 })); return; }
+      const first = Math.min(...ps.map(p => p.lastCheck)), gap = t0 - first, TFS = ['1m', '5m', '15m', '1h'];
+      const row = scan.rows[id], slow = row && !row.err && !DIRECT[row.srcKey];
+      let rec = null, tf = '1m';
+      for (let k = gap <= 12 * 3600e3 ? 0 : gap <= 60 * 3600e3 ? 1 : gap <= 9 * 86400e3 ? 2 : 3; k < TFS.length; k++) { // 有些來源一次給的根數少：接不上上次檢查的時間，就改用大一級的 K 線
+        tf = TFS[k]; try { rec = await Data.get(inst, tf, { limit: Math.min(1000, Math.max(Math.ceil(gap / E.TF[tf]) + 30, 75)), maxAge: slow ? 55e3 : 8e3 }); } catch (e) { return; }
+        if (rec.cd.length && rec.cd[0].t <= first + E.TF[tf]) break;
+      }
+      if (!rec || !rec.cd.length || SIM.st !== st) return; // 等資料的時候帳戶被重設了：這一輪作廢
+      for (const p of ps) simSync(p);
+      if (ps.some(p => (p.basis || 'src') !== (rec.ig ? 'ig' : 'src'))) return; // 價位基準和這份 K 線不一樣（剛開或剛關 IG 報價）：下一輪再判斷
+      const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t)); if (!cd.length) return;
+      const lx = livePrice(inst), now = Date.now(), price = mst.closed ? cd[cd.length - 1].c : lx && lx.ig === !!rec.ig && !lx.ig ? lx.p : rec.cd[rec.cd.length - 1].c;
+      ev.push(...Sim.step(st, id, { cd, price, now, from: rec.cd[0].t, tfMs: E.TF[tf] }));
+    }));
+  } finally { SIM.busy = false; if (SIM.st === st) simAfter(ev); }
+}
+function simAfter(ev) {
+  const st = SIM.st; if (!st) return;
+  if (ev && ev.length) {
+    simSave();
+    for (const e of ev) if (e.k === 'open' || e.k === 'close' || e.k === 'tp1') toast((Date.now() - e.t > 3 * 60e3 ? `（${mdhm(e.t)}）` : '') + '模擬戰：' + simEvText(e), 'info');
+  } else if (Date.now() - SIM.saved > 30e3) simSave();
+  simBadge(); if (view === 'sim') renderSim();
+}
+function simBadge() { const b = $('#tab-sim'); if (!b || !SIM.st) return; const n = SIM.st.items.filter(p => p.stage === 'open').length; b.innerHTML = '模擬戰' + (n ? `<span class="tb">${n}</span>` : ''); }
+function simSpark(st, eq) {
+  const cv = st.curve.concat([[Date.now(), eq]]); if (cv.length < 3) return '';
+  const w = 300, h = 44, ys = cv.map(c => c[1]).concat([st.cfg.start]), lo = Math.min(...ys), hi = Math.max(...ys), sp = hi - lo || 1, t0 = cv[0][0], tt = (cv[cv.length - 1][0] - t0) || 1;
+  const y = v => (h - 3 - (v - lo) / sp * (h - 6)).toFixed(1), pts = cv.map(c => ((c[0] - t0) / tt * w).toFixed(1) + ',' + y(c[1])).join(' ');
+  return `<svg class="sim-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="權益變化：從 ${usd2(cv[0][1])} 到 ${usd2(eq)}"><line x1="0" x2="${w}" y1="${y(st.cfg.start)}" y2="${y(st.cfg.start)}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" opacity=".35" vector-effect="non-scaling-stroke"/><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
+}
+const simSide = p => `<span class="badge ${dirCls(p.side === 'long' ? 1 : -1)}">${dirGl(p.side === 'long' ? 1 : -1)} ${p.side === 'long' ? '做多' : '做空'}</span>`;
+const simGate = g => (g == null ? '' : g ? '　門檻通過' : '　門檻未通過（只下一半）');
+function simWatchCard(w, now) {
+  const f = v => E.fmt(v, w.dp), pl = w.plan, why = w.why.map(x => simWhy(x, now)).filter(Boolean);
+  return `<article class="pos"><header><h3>${esc(w.name)}<span class="badge ${dirCls(w.dir)}">${dirGl(w.dir)} ${w.dir > 0 ? '想做多' : '想做空'}</span></h3><span class="st-chip">${w.grade} 級　${w.score} 分</span></header>
+    <p class="pinfo">現價 <b class="num">${f(w.price)}</b>　${w.dir > 0 ? '上漲' : '下跌'}機率 <span class="num">${(w.prob * 100).toFixed(0)}%</span>${w.label ? '　' + esc(w.label) : ''}</p>
+    <p class="sim-need"><b>還缺什麼：</b>${esc(why[0] || '下一次掃描再確認')}</p>${why.length > 1 ? `<ul class="sim-why">${why.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    <p class="pmeta">${pl ? `打算的做法：${esc(pl.name)}　進場 ${f(pl.entry)}／停損 ${f(pl.sl)}／停利 ${f(pl.tp1)}　` : ''}已觀察 ${durTxt(now - w.since)}${w.gate == null ? '' : w.gate ? '　門檻通過' : '　門檻未通過'}${w.notes && w.notes.length ? '　網頁的提醒：' + esc(w.notes.join('、')) : ''}</p>
+    <div class="t-btns"><span class="t-plan">${w.action ? '網頁的建議：' + esc(w.action) : ''}</span><button class="btn sm" data-id="${esc(w.id)}" data-go="1">看分析</button></div></article>`;
+}
+function simReadyCard(p, now) {
+  const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, r1 = d * (p.tp1 - p.entry) / p.risk, r2 = d * (p.tp2 - p.entry) / p.risk, mk = p.type === 'market', px = p.price;
+  const how = mk ? `下一次掃描確認訊號還在，就以市價進場（預計 <b class="num">${f(p.entry)}</b> 附近）` : `掛單等價格${d > 0 ? '回落' : '反彈'}到 <b class="num">${f(p.entry)}</b>${isNum(px) ? `，現價 <span class="num">${f(px)}</span>（還差 ${pct((p.entry / px - 1) * 100)}）` : ''}，${mdhm(p.expires)} 前有效`;
+  return `<article class="pos"><header><h3>${esc(p.name)}${simSide(p)}</h3><span class="st-chip on">${mk ? '市價，確認中' : '掛單，等到價'}</span></header>
+    <p class="pinfo">${how}</p>
+    <dl class="pgrid c4"><div><dt>${d > 0 ? '買入' : '做空'}金額</dt><dd>${usd(p.notional)}<small>${esc(simQty(p))}</small></dd></div><div><dt>最多賠</dt><dd>${usd(p.riskUsd)}<small>資金的 ${p.riskPct.toFixed(1)}%</small></dd></div>
+      <div><dt>停損</dt><dd>${f(p.sl)}<small>−${usd(p.riskUsd)}</small></dd></div><div><dt>停利 1／2</dt><dd>${f(p.tp1)}<small>${f(p.tp2)}</small></dd></div></dl>
+    <p class="pmeta">兩段停利都到，約賺 ${usd(p.riskUsd * (0.5 * r1 + 0.5 * r2))}（${rTxt(0.5 * r1 + 0.5 * r2)}）；只到停利 1 就回頭，約賺 ${usd(p.riskUsd * 0.5 * r1)}。以上還沒扣點差。</p>
+    <p class="pmeta" style="margin-top:2px">${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${mdhm(p.created)} 排入　押保證金 ${usd(p.margin)}${p.scaled ? '（保證金或風險上限不夠，部位已縮小）' : ''}　當時 ${p.grade} 級 ${p.score} 分、${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%${simGate(p.gate)}</p>
+    <div class="t-btns"><span class="t-plan">${p.action ? '網頁的建議：' + esc(p.action) : ''}</span><button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button></div></article>`;
+}
+function simOpenCard(p, now) {
+  const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, px = isNum(p.price) ? p.price : p.entry, pnl = Sim.pnlNow(p), r = Track.rNow(p, px);
+  const fr = x => clip(d * (x - p.sl) / (d * (p.tp2 - p.sl)), 0, 1) * 100, stp = p.slNow !== p.sl ? '（已移到進場價）' : '', inst = Data.byId(p.instId), off = inst && mktState(inst).closed;
+  const ps = isNum(p.pNow) && now - (p.pNowT || 0) < 10 * 60e3 ? p.pNow : null, holdTxt = ps == null ? '' : ps < 0.5 ? '優勢消失了（掉到 43% 以下就出場）' : isNum(p.prob0) && ps <= p.prob0 - 0.08 ? '優勢在縮小' : '方向仍有利';
+  return `<article class="pos"><header><h3>${esc(p.name)}${simSide(p)}</h3>${off ? '<span class="nt">沒有交易</span>' : ''}<span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${p.status === 'tp1' ? '已到停利 1，剩一半' : '持有中'}</span></header>
+    <p class="pinfo">浮動盈虧 <b class="num ${sgn(pnl)}">${sUsd(pnl)}</b>　<span class="num ${sgn(pnl)}">${rTxt(r)}</span>　現價 <span class="num">${f(px)}</span>（${pct(d * (px / p.entry - 1) * 100)}）</p>
+    <dl class="pgrid c4"><div><dt>進場</dt><dd>${f(p.entry)}<small>${mdhm(p.openedAt)}</small></dd></div><div><dt>${d > 0 ? '買入' : '做空'}金額</dt><dd>${usd(p.notional)}<small>${esc(simQty(p))}</small></dd></div>
+      <div><dt>停損</dt><dd>${f(p.slNow)}<small>${stp || '−' + usd(p.riskUsd)}</small></dd></div><div><dt>停利 1／2</dt><dd>${f(p.tp1)}<small>${f(p.tp2)}</small></dd></div></dl>
+    <div class="gauge" role="img" aria-label="現價在停損與停利之間的位置"><i class="g-fill" style="width:${fr(px)}%"></i><i class="g-tick" style="left:${fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.tp1)}%"></i><i class="g-dot" style="left:${fr(px)}%"></i></div>
+    <div class="g-lab num"><span>停損 ${f(p.slNow)}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
+    <p class="pmeta">已持有 ${durTxt(now - p.openedAt)}　最晚 ${mdhm(p.dueAt)} 出場（${p.dueWhy === 'close_soon' ? '休市前' : '最長持有時間'}）　最多賠 ${usd(p.riskUsd)}　押保證金 ${usd(p.margin * (p.tp1At ? 0.5 : 1))}　已付點差 ${usd(p.costUsd)}${p.finUsd > 0 ? '、隔夜費 ' + usd(p.finUsd) : ''}${p.booked ? '　停利 1 已入帳 ' + sUsd(p.booked) : ''}${isNum(p.mfe) && p.mfe > 0.05 ? '　最多曾賺 ' + rTxt(p.mfe) : ''}</p>
+    <p class="pmeta" style="margin-top:2px">${esc(p.planName)}　進場時 ${p.grade} 級 ${p.score} 分${simGate(p.gate)}${holdTxt ? `　現在：${holdTxt}（${d > 0 ? '上漲' : '下跌'}機率 ${(ps * 100).toFixed(0)}%）` : ''}</p>
+    <div class="t-btns"><span class="t-plan">${off ? '休市中，這段時間不判斷停利停損' : ''}</span><button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button></div></article>`;
+}
+function simHistRow(p) {
+  const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, k = 'simh-' + p.oid, row = (a, b) => `<dt>${a}</dt><dd>${b}</dd>`;
+  const evs = (p.events || []).map(e => `${mdhm(e.t)} ${{ ready: '排入準備中', open: '進場', tp1: '到停利 1，平一半', close: '出場', cancel: '取消' }[e.k] || e.k}`).join('　→　');
+  if (p.cancel) return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}　<small>${mdhm(p.closedAt)}</small></span><span class="dir flat">未成交</span></summary>
+    <dl class="sim-dl">${row('結果', '沒有進場：' + esc(SIM_REASON[p.reason] || p.reason))}${row('原本的計畫', `${esc(p.planName)}（${p.type === 'market' ? '市價' : '掛單'}）　進場 ${f(p.entry0)}／停損 ${f(p.sl)}／停利 ${f(p.tp1)}、${f(p.tp2)}`)}${row('打算的金額', `${usd(p.notional)}，最多賠 ${usd(p.riskUsd)}`)}${row('當時的判斷', `${p.grade} 級 ${p.score} 分　${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%${simGate(p.gate)}`)}${row('經過', esc(evs))}</dl></details>`;
+  return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}　<small>${esc(SIM_REASON[p.reason] || p.reason)}　${mdhm(p.closedAt)}</small></span><span class="dir num ${sgn(p.pnl)}">${sUsd(p.pnl)}　${rTxt(p.rNet)}</span></summary>
+    <dl class="sim-dl">${row('進場', `${mdhm(p.openedAt)}　<span class="num">${f(p.entry)}</span>（${p.type === 'market' ? '市價' : '掛單成交'}）`)}${row('出場', `${mdhm(p.closedAt)}　<span class="num">${f(p.exit)}</span>　${esc(SIM_REASON[p.reason] || p.reason)}${p.gap ? '（開盤就跳過停損價，以開盤價出場）' : ''}　持有 ${durTxt(p.heldMs)}`)}
+      ${row('金額', `${d > 0 ? '買入' : '做空'} ${usd(p.notional)}${simQty(p) ? '（' + esc(simQty(p)) + '）' : ''}　押保證金 ${usd(p.margin)}`)}${row('風險', `最多賠 ${usd(p.riskUsd)}（當時資金的 ${p.riskPct.toFixed(1)}%）`)}
+      ${row('停損／停利', `<span class="num">${f(p.sl)}</span>／<span class="num">${f(p.tp1)}</span>、<span class="num">${f(p.tp2)}</span>${p.tp1At ? '　停利 1 在 ' + mdhm(p.tp1At) + ' 到價' : ''}`)}
+      ${row('損益', `<b class="num ${sgn(p.pnl)}">${sUsd(p.pnl)}</b>（${rTxt(p.rNet)}，占當時資金 ${pct(p.pnl / (p.eqAtOpen || p.eq0) * 100)}）　已扣點差 ${usd(p.costUsd)}${p.finUsd > 0 ? '、隔夜費 ' + usd(p.finUsd) : ''}`)}
+      ${row('過程', `最多曾賺 ${rTxt(p.mfe || 0)}、最多曾賠 ${rTxt(p.mae || 0)}　出場後帳戶餘額 ${usd2(p.balAfter)}`)}
+      ${row('當時的判斷', `${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${p.grade} 級 ${p.score} 分　${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%${simGate(p.gate)}${p.regime ? '　盤勢：' + esc(p.regime) : ''}`)}
+      ${p.action || (p.notes && p.notes.length) ? row('進場理由', esc([p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''))) : ''}${p.gateWhy && p.gateWhy.length ? row('門檻', esc(p.gateWhy.join('；'))) : ''}
+      ${p.news || p.inter || p.nextEv ? row('新聞與數據', esc([p.news && '新聞：' + p.news, p.inter && '相關市場：' + p.inter, p.nextEv && '下一個重大數據：' + p.nextEv].filter(Boolean).join('；'))) : ''}
+      ${row('經過', esc(evs))}${row('報價', esc(p.src || '') + (p.basis === 'ig' ? '（IG 價位）' : ''))}</dl></details>`;
+}
+function simHist(st) {
+  const s = Sim.stats(st), g = s.byGate, line = (name, x) => (x ? `<div><dt>${name}　${x.n} 筆</dt><dd class="${sgn(x.pnl)}">${sUsd(x.pnl)}<small>平均 ${rTxt(x.r / x.n)}</small></dd></div>` : '');
+  const head = s.n ? `<dl class="pgrid"><div><dt>已結束</dt><dd>${s.n} 筆<small>勝率 ${(s.winRate * 100).toFixed(0)}%</small></dd></div><div><dt>總損益</dt><dd class="${sgn(s.pnl)}">${sUsd(s.pnl)}<small>平均 ${rTxt(s.avgR)}</small></dd></div>
+      <div><dt>最好／最差</dt><dd>${sUsd(s.best)}<small>${sUsd(s.worst)}</small></dd></div><div><dt>平均持有</dt><dd>${durTxt(s.hold)}<small>成本共 ${usd(s.cost)}</small></dd></div></dl>
+      ${g.pass || g.fail ? `<dl class="pgrid" style="margin-top:6px">${line('門檻通過', g.pass)}${line('門檻未通過', g.fail)}${line('做多', s.bySide.long)}${line('做空', s.bySide.short)}</dl>` : ''}
+      <p class="hint">不到 30 筆以前，這些數字只能參考：幾筆的輸贏主要是運氣。${s.cancels ? `另外有 ${s.cancels} 筆排進準備中但沒有成交。` : ''}</p>` : '';
+  const list = st.hist.filter(p => SIM.histAll || !p.cancel);
+  return `<section class="card"><h2>模擬交易歷史 <small>${s.n ? `${s.n} 筆交易` : ''}${s.cancels ? `${s.n ? '、' : ''}${s.cancels} 筆未成交` : ''}</small></h2>${head}
+    ${list.length ? list.slice(0, 150).map(simHistRow).join('') : `<p class="none">${st.hist.length ? '還沒有成交過的模擬交易。' : '還沒有任何一筆結束的模擬交易。交易結束（停利、停損、時間到…）之後，每一筆的完整紀錄會留在這裡。'}</p>`}
+    ${st.hist.length ? `<p class="t-btns"><span class="t-plan">點一筆可以展開全部細節。</span><span>${s.cancels ? `<button class="btn sm" id="sim-hall">${SIM.histAll ? '只看有成交的' : `也顯示未成交的 ${s.cancels} 筆`}</button> ` : ''}<button class="btn sm" id="sim-csv">匯出成檔案</button></span></p>` : ''}</section>`;
+}
+function renderSim() {
+  const el = $('#v-sim'), st = SIM.st; if (!el || !st) return;
+  if (Data.demo) { el.innerHTML = '<section class="card"><h2>模擬戰</h2><p class="none">現在是示範資料（不是真實行情），模擬戰不運作。回到真實行情後會繼續。</p></section>'; return; }
+  const now = Date.now(), c = st.cfg, eq = Sim.equity(st), ch = eq - c.start, real = st.balance - c.start, fl = eq - st.balance, mg = Sim.margin(st), rk = Sim.risk(st), s = Sim.stats(st);
+  const ready = st.items.filter(p => p.stage === 'ready'), open = st.items.filter(p => p.stage === 'open');
+  if (!SIM.tab) SIM.tab = open.length ? 'open' : ready.length ? 'ready' : 'watch';
+  const day = Sim.today(st, now), dayStop = day.pnl <= -c.dayStopPct / 100 * day.startEq, auto = S.auto !== false;
+  const state = st.paused ? '<b>已暫停</b>：不開新倉；已經進場的單照常管理到出場。' : eq < c.ruin ? '<b>已停止</b>：帳戶剩不到 100 美元。要重來請重設帳戶。'
+    : dayStop ? `<b>今天停手</b>：今天已經賠 ${usd(-day.pnl)}（超過資金的 ${c.dayStopPct}%），明天再開新倉。` : !auto ? '<b>沒有在掃描</b>：「自動更新」關著。到設定打開，模擬才會持續找機會。'
+    : `<b>運作中</b>：這個網頁開著時才會動作（在這一頁或掃描頁每分鐘掃描一次，其他頁每 3 分鐘）${st.scanT ? '。上次掃描 ' + hms(st.scanT) : ''}。`;
+  const tabs = [['watch', '觀察中', st.watch.length], ['ready', '準備中', ready.length], ['open', '交易中', open.length], ['hist', '模擬交易歷史', s.n]];
+  let body = '';
+  if (SIM.tab === 'watch') body = `<section class="card"><h2>觀察中 <small>有方向、但還不到可以下單</small></h2>${st.watch.length ? st.watch.map(w => simWatchCard(w, now)).join('') : `<p class="none">${st.scanT ? '目前沒有值得觀察的項目（沒有 45 分以上、有明確方向的商品）。' : '等第一次掃描完成…'}</p>`}
+      <p class="hint">每次掃描完，45 分以上、有方向的商品會排在這裡，並寫明還缺什麼條件。條件齊了就移到「準備中」。</p></section>`;
+  else if (SIM.tab === 'ready') body = `<section class="card"><h2>準備中 <small>條件齊了，已經算好金額與停利停損</small></h2>${ready.length ? ready.map(p => simReadyCard(p, now)).join('') : '<p class="none">目前沒有準備要進場的單。</p>'}
+      <p class="hint">市價單要等下一次掃描（至少 1 分鐘後）確認訊號還在才進場，價格跑太遠就取消；掛單等價格回到進場價，${c.limitBars} 根 K 線內沒到就取消。訊號消失或轉向也會取消。</p></section>`;
+  else if (SIM.tab === 'open') body = `<section class="card"><h2>交易中 <small>${open.length ? `${open.length} 筆　${hms(SIM.last || now)} 檢查` : ''}</small></h2>${open.length ? open.map(p => simOpenCard(p, now)).join('') : '<p class="none">目前沒有持有中的模擬部位。</p>'}
+      <p class="hint">到停利 1 先平一半、停損移到進場價；到停利 2、碰到停損、持有超過最長時間、休市前 30 分鐘，或網頁對這個方向的機率掉到 43% 以下，就全部出場。</p></section>`;
+  else body = simHist(st);
+  const logs = st.log.slice(0, 12).map(e => `<li><span>${esc(simEvText(e))}</span><div class="meta"><span>${mdhm(e.t)}</span></div></li>`).join('');
+  const rst = now - SIM.resetAt < 6e3;
+  el.innerHTML = `<section class="card"><h2>模擬帳戶 <small>起始 ${usd2(c.start)}　${mdhm(st.created)} 開始</small></h2>
+      <div class="sim-eq"><b class="num">${usd2(eq)}</b><span class="num ${sgn(ch)}">${sUsd(ch)}（${pct(ch / c.start * 100)}）</span></div>
+      <dl class="pgrid"><div><dt>已實現</dt><dd class="${sgn(real)}">${sUsd(real)}<small>帳戶餘額 ${usd2(st.balance)}</small></dd></div><div><dt>浮動盈虧</dt><dd class="${sgn(fl)}">${sUsd(fl)}<small>${open.length} 筆持有中</small></dd></div>
+        <div><dt>保證金</dt><dd>${usd(mg)}<small>資金的 ${(mg / Math.max(eq, 1) * 100).toFixed(0)}%</small></dd></div><div><dt>最多再賠</dt><dd>${usd(rk)}<small>資金的 ${(rk / Math.max(eq, 1) * 100).toFixed(1)}%</small></dd></div></dl>
+      ${simSpark(st, eq)}
+      <p class="pmeta">今天 ${sUsd(day.pnl)}${s.n ? `　已結束 ${s.n} 筆　勝率 ${(s.winRate * 100).toFixed(0)}%　平均 ${rTxt(s.avgR)}` : ''}${st.maxDd > 0.0005 ? `　最大回落 −${(st.maxDd * 100).toFixed(1)}%` : ''}</p>
+      <p class="sim-state">${state}</p></section>
+    <div class="chips" id="sim-tabs" role="tablist" aria-label="模擬戰的分頁">${tabs.map(t => `<button class="chip" role="tab" data-simtab="${t[0]}" aria-pressed="${SIM.tab === t[0]}">${t[1]}${t[2] ? ' ' + t[2] : ''}</button>`).join('')}</div>
+    ${body}
+    <section class="card"><h2>最近動態</h2>${logs ? `<ul class="nlist">${logs}</ul>` : '<p class="none">還沒有任何動作。</p>'}</section>
+    <section class="card"><h2>這個模擬怎麼運作</h2>
+      <p class="pnote" style="margin-top:0"><b>這不是真的下單，也不是人在操作</b>：是一套寫死的規則，照網頁的掃描結果自動執行。回測還沒有證明這些訊號有優勢，模擬戰的用途就是拿之後的真實行情來驗：賺賠都是這套訊號自己的成績。</p>
+      <details data-k="sim-rules" ${op('sim-rules')}><summary>完整規則</summary><ul class="plain">
+        <li>資金：${usd2(c.start)} 起。每筆最多賠當時資金的 ${c.riskPct}%；門檻未通過的只下 ${c.weakPct}%（回測裡那種時候看多看空沒有差別）。部位金額＝最多賠的錢 ÷ 停損距離。</li>
+        <li>同時最多 ${c.maxOpen} 筆（含準備中），同一類最多 ${c.maxCls} 筆，承擔中的風險合計不超過 ${c.maxRiskPct}%；走勢連動、方向相同的只做一檔。</li>
+        <li>保證金：外匯 3.33%、金屬與指數 5%、商品 10%、股票與 ETF 20%、加密貨幣 50%。單筆不押超過資金的 ${c.marginOne}%，合計不超過 ${c.marginAll}%；不夠就縮小部位，縮到太小就不做。</li>
+        <li>進場條件：評分 ${c.minScore} 分以上、訊號已經穩定 3 分鐘、有現價或回踩的進場計畫（等突破的不做）、一小時內沒有重大數據、報價沒有延遲、距離休市 90 分鐘以上、同商品上一筆結束滿 2 小時（取消的滿 15 分鐘）。</li>
+        <li>出場：停利 1 平一半並把停損移到進場價；停利 2、停損、最長持有時間（設定頁的「最長持有時間」，目前 ${+S.maxHold > 0 ? S.maxHold + ' 小時' : '不限，這裡以 72 小時計'}）、休市前 30 分鐘、方向機率掉到 43% 以下。</li>
+        <li>一天賠超過資金的 ${c.dayStopPct}% 就停手到隔天（臺北時間）。帳戶低於 100 美元就停止。</li>
+        <li>成本：來回一趟的點差在進場時就扣（用設定頁各類別的交易成本，有接 IG 時用 IG 當下的點差）；每過紐約 17:00 一次扣一晚隔夜費（估計值）。停損照停損價成交；開盤就跳過停損價的（跳空、隔夜）以那根 K 線的開盤價成交。平常的滑價沒有算，所以實際會比這裡差一點。</li>
+        <li>只在這個網頁開著（而且「自動更新」開著）的時候掃描與下單。關掉期間不會開新倉；已經進場的單，回來時用 K 線補算。</li>
+      </ul></details>
+      <p class="t-btns"><span class="t-plan">紀錄只存在這台裝置的瀏覽器。</span><span><button class="btn sm" id="sim-pause">${st.paused ? '繼續模擬' : '暫停開新倉'}</button> <button class="btn sm" id="sim-reset">${rst ? '再按一次：清空並重新開始' : '重設帳戶'}</button></span></p></section>`;
+}
+function simCsv() {
+  const st = SIM.st, q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', iso = t => (t ? new Date(t).toISOString() : ''), n = (v, d) => (isNum(v) ? v.toFixed(d == null ? 2 : d) : '');
+  const head = ['編號', '商品', '代號', '類別', '方向', '計畫', '進場方式', '結果', '排入時間', '進場時間', '出場時間', '進場價', '出場價', '停損', '停利1', '停利2', '買賣金額(USD)', '最多賠(USD)', '風險%', '保證金(USD)', '損益(USD)', '損益(R)', '點差成本(USD)', '隔夜費(USD)', '持有分鐘', '最多曾賺(R)', '最多曾賠(R)', '評級', '分數', '方向機率', '門檻', '盤勢', '出場後餘額(USD)', '報價來源', '進場理由', '新聞', '相關市場', '下一個重大數據'];
+  const rows = st.hist.map(p => [p.oid, p.name, p.code, Data.CLS_NAME[p.cls] || p.cls, p.side === 'long' ? '做多' : '做空', p.planName, p.type === 'market' ? '市價' : '掛單', p.cancel ? '未成交：' + (SIM_REASON[p.reason] || p.reason) : SIM_REASON[p.reason] || p.reason,
+    iso(p.created), iso(p.openedAt), iso(p.closedAt), p.cancel ? p.entry0 : p.entry, p.cancel ? '' : p.exit, p.sl, p.tp1, p.tp2, n(p.notional), n(p.riskUsd), n(p.riskPct), n(p.margin), p.cancel ? '' : n(p.pnl), p.cancel ? '' : n(p.rNet, 3), p.cancel ? '' : n(p.costUsd), p.cancel ? '' : n(p.finUsd || 0),
+    p.cancel ? '' : Math.round(p.heldMs / 60e3), p.cancel ? '' : n(p.mfe || 0), p.cancel ? '' : n(p.mae || 0), p.grade, p.score, n(p.prob0, 3), p.gate == null ? '' : p.gate ? '通過' : '未通過', p.regime, p.cancel ? '' : n(p.balAfter), p.src, [p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''), p.news, p.inter, p.nextEv].map(q).join(','));
+  const url = URL.createObjectURL(new Blob(['﻿' + head.map(q).join(',') + '\n' + rows.join('\n') + '\n'], { type: 'application/octet-stream' }));
+  const a = document.createElement('a'); a.href = url; a.download = `cfd-sim-${new Date().toISOString().slice(0, 10)}.csv`; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
+}
+function simClick(t, d) { // 模擬戰頁面上的按鈕；有處理就回傳 true
+  if (d.simtab) { SIM.tab = d.simtab; renderSim(); return true; }
+  if (t.id === 'sim-pause') { SIM.st.paused = !SIM.st.paused; simSave(); renderSim(); return true; }
+  if (t.id === 'sim-csv') { simCsv(); return true; }
+  if (t.id === 'sim-hall') { SIM.histAll = !SIM.histAll; renderSim(); return true; }
+  if (t.id === 'sim-reset') {
+    if (Date.now() - SIM.resetAt < 6e3) { SIM.st = Sim.init({}, Date.now()); SIM.resetAt = 0; SIM.tab = ''; simSave(); simBadge(); toast('模擬帳戶已重設，從 1,000 美元重新開始。', 'info'); }
+    else { SIM.resetAt = Date.now(); setTimeout(() => { if (view === 'sim') renderSim(); }, 6100); }
+    renderSim(); return true;
+  }
+  return false;
+}
+
 /* ---------- 切換與事件 ---------- */
-const VIEWS = ['scan', 'detail', 'track', 'news', 'settings'];
+const VIEWS = ['scan', 'detail', 'track', 'sim', 'news', 'settings'];
 function show(v) {
   view = v; for (const k of VIEWS) $('#v-' + k).hidden = k !== v;
   $$('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.view === v));
@@ -3738,6 +4242,7 @@ function show(v) {
   if (v === 'scan') { clsChips(); renderScan(); if (!scan.running && (Date.now() - scan.last > 30e3 || scan.tf !== S.scanTf)) runScan(); }
   if (v === 'detail') { $('#d-inst').value = S.inst; tfChips('#d-tf', S.tf); const k = S.inst + '|' + S.tf; if (det.key !== k) loadDetail(true); else loadDetail(false); }
   if (v === 'track') { renderTrack(); monitor(); }
+  if (v === 'sim') { renderSim(); SIM.last = 0; simMonitor(); if (!Data.demo && !scan.running && !bt.running && !kl.running && Date.now() - scan.last > 30e3) runScan(); }
   if (v === 'news') { renderNews(); refreshNews(false); Inter.refresh().then(() => view === 'news' && renderNews()).catch(() => {}); }
   if (v === 'settings') renderSettings();
   window.scrollTo(0, 0);
@@ -3750,7 +4255,8 @@ function fillSelect() {
 document.addEventListener('click', e => {
   const t = e.target.closest('button, [data-view]'); if (!t) return; const d = t.dataset;
   if (d.view) return show(d.view);
-  if (t.id === 'btn-refresh') { if (view === 'scan') { scan.last = 0; Data.resetHosts(); Data.clear(); runScan(); } else if (view === 'detail') loadDetail(false); else if (view === 'news') { refreshNews(true); Inter.updated = 0; renderNews(); } else if (view === 'track') { TR.last = 0; monitor(); } return; }
+  if (simClick(t, d)) return;
+  if (t.id === 'btn-refresh') { if (view === 'scan') { scan.last = 0; Data.resetHosts(); Data.clear(); runScan(); } else if (view === 'detail') loadDetail(false); else if (view === 'news') { refreshNews(true); Inter.updated = 0; renderNews(); } else if (view === 'track') { TR.last = 0; monitor(); } else if (view === 'sim') { SIM.last = 0; simMonitor(); if (!scan.running) { scan.last = 0; runScan(); } } return; }
   if (t.id === 'demo-on' || t.id === 'demo-on2') return setDemo(true);
   if (t.id === 'demo-off') return setDemo(false);
   if (t.id === 'demo-toggle') return setDemo(!Data.demo);
@@ -3841,7 +4347,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'igs-term') { const b = document.querySelector('[data-igs="go"]'); if (b) b.click(); } });
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.k; if (k) openSt[k] = e.target.open; }, true);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { TR.last = 0; monitor(); quick.last = 0; liveWant(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { TR.last = 0; monitor(); SIM.last = 0; simMonitor(); quick.last = 0; liveWant(); } else if (SIM.st) simSave(); });
 window.addEventListener('resize', () => { if (det.chart && view === 'detail') det.chart.draw(); });
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => det.chart && det.chart.draw());
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => det.chart && det.chart.draw());
@@ -3849,6 +4355,7 @@ if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => det.
 function tick() {
   $('#clock').textContent = hms(Date.now()); const now = Date.now();
   if (now - TR.last > 5e3) monitor(); // 追蹤單不受「自動更新」與背景影響
+  if (now - SIM.last > (view === 'sim' ? 5e3 : 15e3)) simMonitor(); // 模擬戰：掛單與持有中的單一樣要盯著
   liveWant();
   IG.bg = TR.list.some(Track.active); IG.prio = [S.inst, ...TR.list.filter(Track.active).map(p => p.instId), ...(S.cls === 'top' ? topList().map(r => r.inst.id) : [])]; IG.tick();
   if (document.hidden || !S.auto || Data.demo) return;
@@ -3856,16 +4363,17 @@ function tick() {
   if (view === 'scan' && !scan.running && scan.last && (now - scan.last > 60e3 || (scan.dirty && now - scan.last > 20e3))) runScan();
   if (view === 'scan' && scan.last && now - quick.last > 5e3) quickPrices();
   if (view === 'track' && !scan.running && now - scan.last > 5 * 60e3 && TR.list.some(Track.active)) runScan(); // 讓追蹤單的評級保持更新
+  if (view !== 'scan' && !scan.running && !bt.running && !kl.running && SIM.st && !SIM.st.paused && now - scan.last > (view === 'sim' ? 60e3 : 180e3)) runScan(); // 模擬戰要靠掃描找機會：在它那一頁每分鐘一次，其他頁每 3 分鐘一次；回測或下載 K 線時不跟它們搶連線
   if (!News.loading && now - News.updated > 12 * 60e3) refreshNews(false);
 }
 function boot() {
   const h = (location.hash || '').replace('#', '');
   if (h === 'demo') Data.demo = true;
-  IG.init(); btRestore(); klRestore(); applyTheme(); fillSelect(); tfChips('#scan-tf', S.scanTf); tfChips('#d-tf', S.tf); clsChips(); badge();
+  IG.init(); btRestore(); klRestore(); applyTheme(); fillSelect(); tfChips('#scan-tf', S.scanTf); tfChips('#d-tf', S.tf); clsChips(); badge(); simLoad(); simBadge();
   banner(); show(VIEWS.includes(h) ? h : 'scan');
   refreshNews(true); setInterval(tick, 1000); tick();
 }
-window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard, bt, runBt, btUrl: () => btUrl };
+window.__app = { S, det, scan, show, setDemo, TR, PP, addTrack, monitor, mktState, topList, livePrice, sizeOf, corrOf, sameBet, runScan, renderScan, renderTrack, paperLog, scoreboard, bt, runBt, btUrl: () => btUrl, SIM, simScan, simMonitor, renderSim };
 boot();
 })();
 
