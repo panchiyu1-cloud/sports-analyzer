@@ -33,7 +33,7 @@ HANDOVER = (8, 18)        # 清晨就啟動的那一輪在這個時間交棒（�
 MAX_MINUTES = 352         # GitHub 一個工作最多 6 小時（stock.yml 設 358 分鐘）：08:18 啟動可以一路跑到 14:10，留幾分鐘存快取
 ONCE_MINUTES = 55         # 非盤中：最多等這麼久讓一輪完整掃描跑完
 # 小而重要、不能重算的資料：除了 Actions 快取，另外在 stock-data 分支存一份，快取被清掉也不會遺失
-STATE_DIRS = ("close_lists", "daytrade", "review", "preopen")
+STATE_DIRS = ("close_lists", "daytrade", "review", "preopen", "sim")
 BRANCH = "stock-data"
 # 推送頻率（秒）
 EVERY = {"live": 60, "market": 180, "key_stocks": 300, "tf": 600, "slow": 900, "all_stocks": 3600}
@@ -160,6 +160,11 @@ class Publisher:
                     self.write("top.json", eng.api_top())
                     self.write("daytrade.json", eng.daytrade.api())
                     self.write("quotes.json", self.quotes())
+                    try:   # 模擬戰（當沖）：帳戶、觀察中、準備中、交易中；歷史沒有新交易時內容不變，不會多傳
+                        self.write("sim.json", eng.sim.api())
+                        self.write("sim_hist.json", eng.sim.hist_api())
+                    except Exception as e:      # 模擬戰出錯不能擋住其他資料的輸出
+                        log(f"[雲端] 模擬戰輸出失敗：{type(e).__name__}")
                     pre = eng.api_preopen()      # 開盤前試撮（08:30 起）；開盤後留到 09:40 對照實際開盤價
                     if pre.get("phase") != "none" or self._read("preopen.json") is None:
                         self.write("preopen.json", pre)
@@ -325,12 +330,30 @@ class Relay(threading.Thread):
                     log(f"[轉播] 送出失敗（{type(e).__name__}），連續 {self.fails} 次")
 
 
+def _rev(path):
+    """模擬戰存檔的版本號（每存一次加一）；讀不到就是 -1。"""
+    try:
+        with open(path, encoding="utf-8") as f:
+            return int((json.load(f) or {}).get("rev") or 0)
+    except (OSError, ValueError, TypeError, AttributeError):
+        return -1
+
+
 def restore_state(eng, out):
     """Actions 快取不見時（例如連續放假超過 7 天），從 stock-data 分支把小檔案拿回來。"""
     n = 0
     for sub in STATE_DIRS:
         src_dir = os.path.join(out, "state", sub)
         if not os.path.isdir(src_dir):
+            continue
+        if sub == "sim" and _rev(os.path.join(src_dir, "state.json")) > _rev(eng._p("sim", "state.json")):
+            # 模擬戰的帳戶：分支上那一份比快取新（上一輪被中途取消，快取沒存到）就整份換掉，
+            # 否則已經發生的交易會不見、餘額倒退
+            for f in ("state.json", "hist.json"):
+                if os.path.exists(os.path.join(src_dir, f)):
+                    os.makedirs(eng._p("sim"), exist_ok=True)
+                    shutil.copy2(os.path.join(src_dir, f), eng._p("sim", f))
+                    n += 1
             continue
         for root, _dirs, files in os.walk(src_dir):
             rel = os.path.relpath(root, src_dir)

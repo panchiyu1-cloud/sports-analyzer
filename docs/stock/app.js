@@ -170,6 +170,7 @@ function route() {
   window.scrollTo(0, 0);
   if (h.startsWith('stock-')) { setTab(''); showStock(h.slice(6).toUpperCase()); }
   else if (h === 'market') { setTab('market'); showMarket(); }
+  else if (h === 'sim') { setTab('sim'); showSim(); }
   else if (h === 'review') { setTab('review'); showReview(); }
   else if (h === 'about') { setTab('about'); showAbout(); }
   else { setTab('top'); showTop(); }

@@ -79,6 +79,10 @@ def make_handler(engine):
                     self._json(engine.daytrade.api())
                 elif u.path == "/api/daytrade/review":
                     self._json(engine.daytrade.review())
+                elif u.path == "/api/sim":
+                    self._json(engine.sim.api())
+                elif u.path == "/api/sim/hist":
+                    self._json(engine.sim.hist_api())
                 elif u.path == "/api/diag":
                     self._json(engine.api_diag())
                 else:
@@ -110,6 +114,8 @@ def make_handler(engine):
                     self._json(engine.api_settings(self._body()))
                 elif path == "/api/daytrade":
                     self._json(engine.daytrade.action(self._body()))
+                elif path == "/api/sim":
+                    self._json(engine.sim.action(self._body()))
                 else:
                     self._json({"error": "not found"}, 404)
             except (BrokenPipeError, ConnectionResetError):

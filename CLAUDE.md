@@ -656,6 +656,22 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   56% within 0.5%. The thresholds are still unvalidated design values: the daily file keeps
   `rows` (per stock: previous close, last trial, lots, 5-day average lots, real open) to tune
   them once a few weeks have accumulated.
+- 模擬戰 (owner, 2026-11-21: 「在台灣股市的這一個網頁裡面也新增一個模擬戰的系統，專門是在模擬當沖…放台幣350,000…我想
+  看績效如何」; modelled on docs/cfd/'s 模擬戰): `stock/twscan/sim.py`, a paper account that follows the 當沖模式
+  "可進場" advice (`DayTrade.advise`: its entry / stop / target) by itself during the session, on the runner (the page
+  only displays; nothing is ever ordered). Stages 觀察中 -> 準備中 (60 s, then confirmed again) -> 交易中 -> 歷史.
+  Rules are the constants in `sim.DEF`: NT$350,000 (`sim_start` in stock/config.json, used when an account is
+  created), cash only (bought amounts <= balance), one position <= 50% of the balance (the owner's own habit),
+  loss at the stop incl. costs <= 1% of the balance, at most 3 positions, a stock once a day, no new entry after
+  -3% on the day, everything sold at 13:15. Fills are deliberately conservative (buy at the ask; a stop found
+  already broken sells at the bid; a target fills at the target; both touched between two reads = the stop).
+  State: stock/data/live/sim/state.json + hist.json, in `STATE_DIRS`; `cloud.restore_state` takes the branch copy
+  when its `rev` is higher than the cache's (a cancelled run does not save its cache: without this the account
+  would lose trades). Published as sim.json / sim_hist.json; page docs/stock/sim.js (#sim). A new account: change
+  `sim_reset` in stock/config.json (the old files are kept as old-*.json). The rules are a first version, nothing
+  about them is validated; do not tune them to make the record look better - change them only when the owner asks,
+  and say in the page's rules what changed and when. `Engine._sim_tick`, `load_cache` and the publisher wrap every
+  sim call: a sim error must never stop quotes, the scan or the other files.
 - `Engine.recent_trading_dates` takes the union of the TAIEX history, the daily bars of a few
   stocks that trade every day (`BELLWETHER`) and the newest quote date. Yahoo's ^TWII series
   lacked 2026-11-16 during the 11-17 session: with the index alone, "the last finished day"

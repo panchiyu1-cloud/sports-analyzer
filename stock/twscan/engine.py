@@ -13,6 +13,7 @@ from . import sources as src
 from . import quotes
 from .daytrade import DayTrade
 from .preopen import PreOpen
+from .sim import Sim
 from .net import Http
 from .review import Review
 from .util import (DATA_DIR, TW, clamp, log, market_phase, now_tw, r2, read_json,
@@ -39,6 +40,8 @@ DEFAULT_CONFIG = {
     "chase_gap_pct": 3.0,                 # 昨日名單開盤跳空超過幾 % 視為不宜追價
     "fee_discount": 0.28,                 # 券商電子下單手續費折扣（0.28＝2.8 折）
     "review_days": 105,                   # 復盤回補的交易日數（約 5 個月）
+    "sim_start": 350000,                  # 模擬戰（當沖）的起始資金；只在建立帳戶時生效
+    "sim_reset": "",                      # 改成任何新的字（例如日期）＝模擬戰帳戶重新開始，舊紀錄另存
 }
 
 CONFIG_PATH = os.path.join(os.path.dirname(DATA_DIR), "config.json")
@@ -107,6 +110,7 @@ class Engine:
         self.live_cands = []          # 盤中即時名單的完整排序（當沖模式用）
         self.daytrade = DayTrade(self)
         self.preopen = PreOpen(self)   # 開盤前（08:30–09:00）的試撮價量
+        self.sim = Sim(self)           # 模擬戰：假想帳戶照當沖模式的建議自動買賣
 
     # ================================================================== 基本
     def _p(self, *parts):
@@ -174,6 +178,10 @@ class Engine:
         self.quality["repair"] = {"total": rep.get("total") or 0, "left": len(self.repair_pending), "done": rep.get("done")}
         self.review.load()
         self.daytrade.load()
+        try:
+            self.sim.load()
+        except Exception:      # 模擬戰的存檔壞了也不能讓掃描程式起不來（那樣模擬戰會停用，其餘照常）
+            traceback.print_exc()
         self._update_regime()
         if self.universe:
             log(f"載入快取：{len(self.universe)} 檔股票、{len(self.hist)} 檔歷史 K 線")
@@ -183,6 +191,7 @@ class Engine:
             from .demo import populate, populate_daytrade
             populate(self)
             self._demo_dt = populate_daytrade
+            self.sim.load()
         else:
             self.load_cache()
         if self.hist and self.universe:
@@ -191,6 +200,8 @@ class Engine:
                 self.rank()
                 if self.demo:
                     self._demo_dt(self)
+                    from .demo import populate_sim
+                    populate_sim(self)
             except Exception:
                 traceback.print_exc()
         threading.Thread(target=self._scan_loop, name="scan", daemon=True).start()
@@ -834,6 +845,7 @@ class Engine:
                         from .demo import tick
                         tick(self)
                         self.daytrade.tick()
+                        self._sim_tick()
                     time.sleep(3)
                     continue
                 ph = market_phase()
@@ -851,6 +863,7 @@ class Engine:
                         time.sleep(120)
                         continue
                     self.daytrade.tick()   # 當沖模式：記錄分鐘價、檢查提醒
+                    self._sim_tick()       # 模擬戰：照當沖模式的建議模擬買賣
                     for _ in range(2):
                         self.poll_mis(self._next_chunk())
                     time.sleep(1)
@@ -879,6 +892,12 @@ class Engine:
             except Exception:
                 traceback.print_exc()
                 time.sleep(10)
+
+    def _sim_tick(self):
+        try:
+            self.sim.tick()
+        except Exception:      # 模擬戰出錯不能拖累即時報價
+            traceback.print_exc()
 
     def is_holiday(self):
         """平日但休市（國定假日、颱風假）：開盤 5 分鐘後指數日期仍不是今天。"""
@@ -1210,12 +1229,13 @@ class Engine:
             self.review.on_close_list(payload)
             try:
                 self.daytrade.on_close()
+                self.sim.on_close()
             except Exception:
                 traceback.print_exc()
         with self.lock:
             pri, seen = [], set()
             keep = [c["code"] for c in (self.close_payload or {}).get("top", [])]
-            for c in list(self.extra_watch) + self.daytrade.watch_codes() + keep + cands:   # 當沖候選與持倉優先，報價才會幾秒更新一次
+            for c in list(self.extra_watch) + self.sim.watch_codes() + self.daytrade.watch_codes() + keep + cands:   # 當沖候選與持倉優先，報價才會幾秒更新一次
                 if c not in seen:
                     seen.add(c)
                     pri.append(c)
@@ -1300,6 +1320,9 @@ class Engine:
 
     def api_preopen(self):
         return self.preopen.board()
+
+    def api_sim(self):
+        return self.sim.api()
 
     def top_payload_list(self):
         out = list((self.close_payload or {}).get("top", []))

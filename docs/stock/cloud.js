@@ -392,6 +392,8 @@ window.TWSCAN_CLOUD = (() => {
         d.settings = Object.assign({ min_fee: MIN_FEE }, d.settings || {});
         return d;
       }
+      case '/api/sim': return (await file('sim.json')) || { on: false };          // 模擬戰（當沖）：帳戶在雲端，這裡只讀
+      case '/api/sim/hist': return (await file('sim_hist.json')) || { n: 0, trades: [] };
       case '/api/diag': return (await file('diag.json')) || { sources: {} };
       case '/api/stock': {
         const m = await getMeta();

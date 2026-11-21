@@ -340,3 +340,59 @@ def intraday(eng, code, size):
             out.append([f"{d} {m // 60:02d}:{m % 60:02d}", round(seg[0], 2), round(max(seg), 2), round(min(seg), 2),
                         round(seg[-1], 2), int(v * ws[i] / sum(w))])
     return out
+
+
+def populate_sim(eng):
+    """示範用的模擬戰紀錄：過去十幾天的模擬當沖（數字都是虛構的）。"""
+    from .daytrade import floor_tick
+    sim = eng.sim
+    if sim.st is None or sim.hist:
+        return
+    rnd = random.Random(11)
+    st = sim.st
+    codes = [c for c, u in eng.universe.items() if u["type"] == "stock"]
+    days = [b[0] for b in eng.index_hist["TAIEX"]][-14:-1]
+    st["created"] = f"{days[0]} 08:20"
+    seq = 0
+    for d in days:
+        st["day"] = {"date": d, "start": st["balance"], "pnl": 0, "n": 0, "win": 0, "codes": [], "stopped": False,
+                     "ran": True, "signals": 0, "cancels": 0}
+        t = 9 * 60 + 12
+        for _ in range(rnd.choice([0, 1, 2, 2, 3, 3, 4])):
+            code = rnd.choice(codes)
+            entry = _tk(rnd.uniform(22, 150))
+            stop = floor_tick(entry * (1 - rnd.uniform(0.008, 0.02)))
+            target = floor_tick(entry + 2 * (entry - stop))
+            lots, _risk, _one = sim.size(entry, stop, False, st["balance"])
+            if lots < 1 or st["day"]["stopped"]:
+                continue
+            t += rnd.randint(4, 45)
+            hold = rnd.randint(6, 150)
+            u = rnd.random()
+            if u < 0.40:
+                reason, px = "stop", stop
+            elif u < 0.68:
+                reason, px = "target", target
+            else:
+                reason, px, hold = "time", _tk(min(target, max(stop, entry * (1 + rnd.gauss(0.003, 0.006))))), 13 * 60 + 15 - t
+            tin, tout = f"{t // 60:02d}:{t % 60:02d}:20", f"{(t + hold) // 60:02d}:{(t + hold) % 60:02d}:05"
+            seq += 1
+            it = {"id": f"demo-{seq}", "code": code, "name": eng.universe[code]["name"], "etf": False, "stage": "open", "date": d,
+                  "sig_time": tin, "sig_price": entry, "rank": rnd.randint(1, 8), "score": rnd.randint(48, 76), "time": tin,
+                  "entry": entry, "stop": stop, "target": target, "lots": lots, "amount": round(entry * 1000 * lots),
+                  "stop_pct": round((stop / entry - 1) * 100, 2), "target_pct": round((target / entry - 1) * 100, 2),
+                  "bal_before": round(st["balance"]), "hi": max(entry, px), "lo": min(entry, px), "last": px,
+                  "path": [[tin[:5], entry], [tout[:5], px]], "checks": ["站上開盤價與當日均價", "預估量是均量的 1.6 倍"],
+                  "ctx": {"rank": 3, "score": 58, "taiex": 0.4, "tpex": 0.6, "market": "大盤沒有拖累，可以做"},
+                  "events": [[tin, "出現「可進場」，進入準備中"], [tin, f"以賣一價 {entry} 買進 {lots} 張"]]}
+            from .daytrade import trade_pnl
+            disc = eng.cfg.get("fee_discount", 0.28)
+            it["risk"] = round(-trade_pnl(entry, stop, lots, disc))
+            it["gain"] = round(trade_pnl(entry, target, lots, disc))
+            st["items"].append(it)
+            st["day"]["codes"].append(code)
+            st["day"]["signals"] += 1
+            sim._close(it, px, reason, when=(d, tout))
+        sim._upsert_day()
+    st["day"] = None
+    st["log"] = []
