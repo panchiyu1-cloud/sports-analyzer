@@ -185,6 +185,15 @@ details > summary { cursor: pointer; font-size: 14px; color: var(--text2); paddi
 .sim-h > summary::before { content: '▸'; color: var(--muted); flex: 0 0 auto; } .sim-h[open] > summary::before { content: '▾'; }
 .sim-h > summary > span:first-of-type { flex: 1 1 auto; min-width: 0; } .sim-h > summary small { color: var(--muted); } .sim-h > summary .dir { white-space: nowrap; }
 .sim-dl { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: 4px 10px; margin: 0 0 12px 16px; font-size: 13.5px; } .sim-dl dt { color: var(--muted); } .sim-dl dd { margin: 0; overflow-wrap: anywhere; }
+.sim-del { margin: 0 0 12px 16px; } .sim-save { margin-top: 6px; } .sim-save.bad { margin: 8px 0 0; padding: 8px 10px; border: 1.5px solid currentColor; border-radius: 8px; font-size: 14px; color: var(--text); }
+.sim-io { border-top: 1px solid var(--line); } .sim-io > summary { padding: 10px 0; font-size: 14.5px; font-weight: 600; color: var(--text); } .sim-io[open] { padding-bottom: 6px; }
+.sim-io textarea { display: block; width: 100%; box-sizing: border-box; border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 6px; padding: 7px 8px; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; }
+.sim-form input[type="datetime-local"] { border: 1px solid var(--line); background: var(--surface); color: var(--text); border-radius: 6px; padding: 7px 8px; font-size: 16px; min-width: 0; max-width: 100%; box-sizing: border-box; } .sim-form .f > span small { font-weight: 400; }
+.sim-io-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 10px 0; } .sim-io-btns label.btn { cursor: pointer; }
+.sim-file { position: relative; overflow: hidden; } .sim-file input { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; }
+.sim-msg { margin: 8px 0 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--surface2); } .sim-msg.bad { border: 1.5px solid currentColor; font-weight: 600; }
+.sim-tbl { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 8px; } .sim-tbl th, .sim-tbl td { padding: 4px 6px; text-align: right; border-top: 1px solid var(--line); } .sim-tbl th { color: var(--muted); font-weight: 400; border-top: 0; }
+.sim-tbl td:first-child, .sim-tbl th:first-child { text-align: left; } .sim-tbl tr.sub td { color: var(--muted); font-size: 12.5px; padding-top: 8px; }
 #toasts { position: fixed; top: 8px; left: 8px; right: 8px; z-index: 20; display: grid; gap: 6px; max-width: 560px; margin: 0 auto; pointer-events: none; }
 .toast { pointer-events: auto; background: var(--text); color: var(--surface); border-radius: 10px; padding: 10px 12px; font-size: 14.5px; display: flex; gap: 10px; align-items: center; justify-content: space-between; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); }
 .toast .btn { background: transparent; color: inherit; border-color: currentColor; flex: 0 0 auto; }
@@ -1335,7 +1344,7 @@ const Sim = {};
 /* 規則的數字都在這裡。riskPct：門檻通過時每筆賭資金的幾 %；weakPct：門檻沒通過時（回測裡這種時候沒有優勢，所以只下一半） */
 Sim.DEF = { start: 1000, riskPct: 2, weakPct: 1, maxOpen: 3, maxCls: 2, maxRiskPct: 6, dayStopPct: 5, minScore: 55, watchScore: 45,
   confirmMs: 60e3, sigMs: 180e3, staleMs: 15 * 60e3, limitBars: 16, coolMs: 2 * 3600e3, cancelCoolMs: 15 * 60e3, holdH: 6, marginOne: 50, marginAll: 90, minRiskPct: 0.25,
-  lagMax: 3, closeGuard: 90 * 60e3, ruin: 100, revP: 0.43, revAfter: 5 * 60e3 };
+  lagMax: 3, closeGuard: 90 * 60e3, ruin: 100, revP: 0.43, revAfter: 5 * 60e3, histFull: 200, histMax: 1000 };
 /* IG 一般帳戶大約的保證金比例（開一筆部位要押多少） */
 Sim.MARGIN = { fx: 0.0333, metal: 0.05, index: 0.05, cmdty: 0.1, stock: 0.2, etf: 0.2, crypto: 0.5 };
 /* 每晚的隔夜費（占部位金額的比例）：[做多, 做空] */
@@ -1344,9 +1353,10 @@ const dayIdx = t => Math.floor((t + 8 * 3600e3) / 86400e3); // 以臺北時間�
 const nyDay = t => Math.floor((t + (MK() ? MK().nyOffset(t) : -300) * 60e3 - 17 * 3600e3) / 86400e3);
 Sim.nights = (a, b) => Math.max(0, nyDay(b) - nyDay(a));
 
+Sim.code = () => (Math.random().toString(36).slice(2, 6).toUpperCase() + 'XXXX').slice(0, 4); // 帳戶代號：分辨「這個瀏覽器的帳戶」和別的瀏覽器的
 Sim.init = function (cfg, now) {
   const c = Object.assign({}, Sim.DEF, cfg || {});
-  return { v: 1, cfg: c, created: now, balance: c.start, peak: c.start, maxDd: 0, day: { key: dayIdx(now), startEq: c.start, pnl: 0 }, items: [], watch: [], hist: [], log: [], curve: [[now, c.start]], seq: 0, paused: false };
+  return { v: 1, acct: Sim.code(), cfg: c, created: now, balance: c.start, peak: c.start, maxDd: 0, day: { key: dayIdx(now), startEq: c.start, pnl: 0 }, items: [], watch: [], hist: [], log: [], curve: [[now, c.start]], seq: 0, paused: false };
 };
 const live = st => st.items;
 const dirOf = p => (p.side === 'long' ? 1 : -1);
@@ -1382,11 +1392,24 @@ function mark(st, now, force) { // 記下權益的高點、最大回落與權益
 /* 今天（臺北時間）的損益；上次掃描如果是昨天以前，今天就是從零開始 */
 Sim.today = (st, now) => (st.day.key === dayIdx(now) ? st.day : { key: dayIdx(now), startEq: Sim.equity(st), pnl: 0 });
 function rollDay(st, now) { const k = dayIdx(now); if (!(st.day.key >= k)) st.day = { key: k, startEq: Sim.equity(st), pnl: 0 }; }
-function toHist(st, p) { // 歷史最多留 300 筆成交的＋60 筆沒成交的（帳戶餘額不受影響）
-  const i = st.items.indexOf(p); if (i >= 0) st.items.splice(i, 1); p.stage = 'hist'; st.hist.unshift(p);
-  const cap = p.cancel ? 60 : 300; let n = 0;
-  for (let j = 0; j < st.hist.length; j++) if (!!st.hist[j].cancel === !!p.cancel && ++n > cap) { st.hist.splice(j, 1); j--; }
+/* 歷史要一直累積（算勝率要用）：成交過的交易最近 histFull 筆留完整細節，更早的只留主要欄位（省空間），
+   超過 histMax 筆才把最舊的併進 st.old（只剩筆數、勝場、損益的合計，統計照樣算得到）。沒成交就取消的單只留最近 60 筆。 */
+const HEAVY = ['notes', 'action', 'label', 'gateWhy', 'news', 'inter', 'nextEv', 'events', 'flags', 'lastCheck', 'price', 'priceT', 'pNow', 'pNowT', 'scoreNow', 'gradeNow', 'confirmAt', 'expires', 'holdMs', 'eq0', 'eqAfter', 'costRate', 'booked', 'dueAt', 'dueWhy', 'entry0', 'slNow', 'risk', 'scaled'];
+const CENTS = ['riskUsd', 'notional', 'margin', 'costUsd', 'finUsd', 'eqAtOpen', 'balAfter'];
+const gKey = { gate: p => (p.gate == null ? 'na' : p.gate ? 'pass' : 'fail'), cls: p => p.cls || 'na', side: p => p.side, reason: p => p.reason || 'na' };
+function gAdd(m, k, p) { const g = m[k] = m[k] || { n: 0, pnl: 0, r: 0, rn: 0, w: 0 }; g.n++; g.pnl += p.pnl; if (isNum(p.rNet)) { g.r += p.rNet; g.rn++; } if (p.pnl > 0) g.w++; }
+function fold(st, h) { const o = st.old = st.old || { n: 0, wins: 0, pnl: 0, r: 0, rn: 0, cost: 0, hold: 0, hn: 0 }; o.n++; if (h.pnl > 0) o.wins++; o.pnl += h.pnl; if (isNum(h.rNet)) { o.r += h.rNet; o.rn++; } o.cost += (h.costUsd || 0) + (h.finUsd || 0); if (isNum(h.heldMs)) { o.hold += h.heldMs; o.hn++; }
+  o.g = o.g || {}; for (const k in gKey) gAdd(o.g[k] = o.g[k] || {}, gKey[k](h), h); if (!(o.first <= h.closedAt)) o.first = h.closedAt; } // 分組的合計也留著：門檻、類別、方向、出場原因的統計不會因為併掉而少算
+function trim(st) {
+  const full = st.cfg.histFull || 200, max = st.cfg.histMax || 1000; let nT = 0, nC = 0;
+  for (let j = 0; j < st.hist.length; j++) {
+    const h = st.hist[j];
+    if (h.cancel) { if (++nC > 60) { st.hist.splice(j, 1); j--; } continue; }
+    nT++; if (nT > full && !h.slim) { for (const k of HEAVY) delete h[k]; for (const k of CENTS) if (isNum(h[k])) h[k] = Math.round(h[k] * 100) / 100; h.slim = 1; }
+    if (nT > max) { fold(st, h); st.hist.splice(j, 1); j--; }
+  }
 }
+function toHist(st, p) { const i = st.items.indexOf(p); if (i >= 0) st.items.splice(i, 1); p.stage = 'hist'; st.hist.unshift(p); trim(st); }
 function cancel(st, p, why, t, ev) { // 沒有成交就結束（逾時、訊號消失、價格跑掉…）
   p.status = 'closed'; p.reason = why; p.closedAt = t; p.r = 0; p.pnl = 0; p.cancel = true; toHist(st, p); logEv(st, ev, 'cancel', p, { t, v: why });
 }
@@ -1521,7 +1544,7 @@ Sim.scan = function (st, ctx) {
     if (c.eventSoon) why.push({ k: 'event' });
     if (c.lag >= c0.lagMax) why.push({ k: 'lag', v: c.lag });
     if (isNum(c.closeIn) && c.closeIn < c0.closeGuard) why.push({ k: 'closing', v: c.closeIn });
-    const lastT = st.hist.find(h => h.instId === c.id && !h.cancel), lastC = st.hist.find(h => h.instId === c.id && h.cancel);
+    const lastT = st.hist.find(h => h.instId === c.id && !h.cancel && !h.manual), lastC = st.hist.find(h => h.instId === c.id && h.cancel);
     if (lastT && now - lastT.closedAt < c0.coolMs) why.push({ k: 'cool', v: lastT.closedAt + c0.coolMs });
     else if (lastC && now - lastC.closedAt < c0.cancelCoolMs) why.push({ k: 'cool2', v: lastC.closedAt + c0.cancelCoolMs });
     const dup = act.find(a => ctx.same && ctx.same(c.id, c.dir, a.id, a.d)); if (dup) why.push({ k: 'dup', v: dup.name });
@@ -1541,12 +1564,75 @@ Sim.scan = function (st, ctx) {
 };
 /* 剛打開網頁時：確認中的市價單如果已經放太久（網頁沒開，來不及確認）就取消 */
 Sim.sweep = function (st, now) { const ev = []; for (const p of live(st).filter(x => x.stage === 'ready' && x.type === 'market' && now - x.created > st.cfg.staleMs)) cancel(st, p, 'stale', now, ev); return ev; };
+/* 全部成交過的交易的統計（含已經併進 st.old 的最舊紀錄）。手動補登的只有損益：算進筆數、勝率、總損益，不算進 R 與持有時間的平均 */
 Sim.stats = function (st) {
-  const tr = st.hist.filter(p => !p.cancel), n = tr.length, sum = (a, f) => a.reduce((s, p) => s + f(p), 0), wins = tr.filter(p => p.pnl > 0).length;
-  const grp = f => { const m = {}; for (const p of tr) { const k = f(p), g = m[k] = m[k] || { n: 0, pnl: 0, r: 0, w: 0 }; g.n++; g.pnl += p.pnl; g.r += p.rNet; if (p.pnl > 0) g.w++; } return m; };
-  return { n, wins, winRate: n ? wins / n : NaN, pnl: sum(tr, p => p.pnl), avgR: n ? sum(tr, p => p.rNet) / n : NaN, cost: sum(tr, p => p.costUsd + (p.finUsd || 0)),
-    best: n ? Math.max(...tr.map(p => p.pnl)) : NaN, worst: n ? Math.min(...tr.map(p => p.pnl)) : NaN, hold: n ? sum(tr, p => p.heldMs) / n : NaN, cancels: st.hist.length - n,
-    byGate: grp(p => (p.gate == null ? 'na' : p.gate ? 'pass' : 'fail')), byCls: grp(p => p.cls), bySide: grp(p => p.side), byReason: grp(p => p.reason) };
+  const tr = st.hist.filter(p => !p.cancel), o = st.old || { n: 0, wins: 0, pnl: 0, r: 0, rn: 0, cost: 0, hold: 0, hn: 0 }, sum = (a, f) => a.reduce((s, p) => s + f(p), 0);
+  const n = tr.length + o.n, wins = tr.filter(p => p.pnl > 0).length + o.wins, rs = tr.filter(p => isNum(p.rNet)), hs = tr.filter(p => isNum(p.heldMs));
+  const grp = k => { const m = {}, og = (o.g && o.g[k]) || {}; for (const x in og) m[x] = Object.assign({}, og[x]); for (const p of tr) gAdd(m, gKey[k](p), p); return m; };
+  return { n, wins, winRate: n ? wins / n : NaN, pnl: sum(tr, p => p.pnl) + o.pnl, avgR: rs.length + o.rn ? (sum(rs, p => p.rNet) + o.r) / (rs.length + o.rn) : NaN, cost: sum(tr, p => (p.costUsd || 0) + (p.finUsd || 0)) + o.cost,
+    best: tr.length ? Math.max(...tr.map(p => p.pnl)) : NaN, worst: tr.length ? Math.min(...tr.map(p => p.pnl)) : NaN, hold: hs.length + o.hn ? (sum(hs, p => p.heldMs) + o.hold) / (hs.length + o.hn) : NaN,
+    cancels: st.hist.length - tr.length, listed: tr.length, folded: o.n, manual: tr.filter(p => p.manual).length, first: tr.length || o.first ? Math.min(...tr.map(p => p.closedAt).concat(o.first ? [o.first] : [])) : null,
+    byGate: grp('gate'), byCls: grp('cls'), bySide: grp('side'), byReason: grp('reason') };
+};
+/* ---- 備份、合併、補登：讓紀錄可以離開這個瀏覽器，也可以從別的瀏覽器搬進來 ---- */
+const F_STR = ['instId', 'name', 'code', 'cls', 'tf', 'type', 'planName', 'reason', 'unit', 'regime', 'label', 'action', 'news', 'inter', 'nextEv', 'src', 'basis', 'note'];
+const F_NUM = ['entry', 'entry0', 'exit', 'sl', 'slNow', 'tp1', 'tp2', 'risk', 'created', 'openedAt', 'closedAt', 'tp1At', 'r', 'rNet', 'pnl', 'riskUsd', 'riskPct', 'notional', 'margin', 'costRate', 'costUsd', 'finUsd', 'booked', 'heldMs', 'mfe', 'mae', 'score', 'prob0', 'eqAtOpen', 'balAfter'];
+const F_FLAG = ['scaled', 'wk', 'gap', 'manual', 'slim'];
+const NEED = ['entry', 'exit', 'sl', 'tp1', 'tp2', 'riskUsd', 'riskPct', 'notional', 'margin', 'openedAt'], NEED_C = ['sl', 'tp1', 'tp2', 'riskUsd', 'notional']; // 一般交易／未成交的單一定要有的數字（畫面要用）
+const strs = (v, n) => (Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, n).map(x => x.slice(0, 200)) : undefined);
+function clean(x) { // 外面來的資料（備份檔、貼上的文字）：只收認得的欄位，而且型別要對；缺主要數字的整筆不要
+  if (!x || typeof x !== 'object' || typeof x.oid !== 'string' || !/^[\w-]{1,60}$/.test(x.oid) || !isNum(x.closedAt) || typeof x.name !== 'string' || !x.name) return null;
+  if ((x.side !== 'long' && x.side !== 'short') || (!x.cancel && !isNum(x.pnl))) return null;
+  const p = { oid: x.oid, side: x.side };
+  for (const k of F_STR) if (typeof x[k] === 'string' && x[k].length <= 400) p[k] = x[k];
+  for (const k of F_NUM) if (isNum(x[k]) && Math.abs(x[k]) < 1e15) p[k] = x[k];
+  for (const k of F_FLAG) if (x[k]) p[k] = 1;
+  if (typeof x.gate === 'boolean' || x.gate === 1 || x.gate === 0) p.gate = x.gate ? 1 : 0;
+  p.dp = isNum(x.dp) ? Math.min(8, Math.max(0, Math.round(x.dp))) : 2;
+  if (typeof x.grade === 'string' && /^[A-D]$/.test(x.grade)) p.grade = x.grade; if (typeof x.from === 'string' && /^[\w-]{1,12}$/.test(x.from)) p.from = x.from;
+  if (!p.manual && (x.cancel ? NEED_C : NEED).some(k => !isNum(p[k]))) return null;
+  if (x.cancel && !isNum(p.entry0)) { if (!isNum(p.entry)) return null; p.entry0 = p.entry; }
+  const a = strs(x.notes, 8), b = strs(x.gateWhy, 8); if (a) p.notes = a; if (b) p.gateWhy = b;
+  if (Array.isArray(x.events)) p.events = x.events.filter(e => e && isNum(e.t) && typeof e.k === 'string').slice(0, 12).map(e => ({ t: e.t, k: e.k.slice(0, 12) }));
+  p.stage = 'hist'; p.status = 'closed'; if (x.cancel) { p.cancel = true; p.pnl = 0; p.r = 0; }
+  return p;
+}
+/* 備份：逐筆保留的紀錄全部，加上已經併成合計的最舊那一段 */
+Sim.pack = st => ({ app: 'cfd-sim', v: 1, t: Date.now(), acct: st.acct || '', start: st.cfg.start, created: st.created, balance: st.balance, trades: st.hist, old: st.old || null });
+/* 把一份備份（或一串交易）併進這個帳戶：已經有的（編號相同）略過；新加進來的交易，損益也加進帳戶餘額。
+   所以「餘額＝起始金額＋所有交易的損益」永遠成立，從別的瀏覽器搬來的、補登的都算在同一個帳戶裡。
+   備份裡「已經併成合計」的那一段沒有逐筆編號、沒辦法比對重複：只有這個帳戶自己還沒有這種合計時才收（回傳 oldN 筆）。 */
+Sim.merge = function (st, data, now, from) {
+  const list = Array.isArray(data) ? data : data && data.app === 'cfd-sim' && Array.isArray(data.trades) ? data.trades : null; if (!list) return { err: 'format' };
+  const have = new Set(st.hist.map(p => p.oid).concat(st.items.map(p => p.oid))), add = [], tag = from && from !== st.acct && /^[\w-]{1,12}$/.test(from) ? from : ''; let bad = 0, dup = 0, oldN = 0, oldPnl = 0;
+  for (const x of list) { const p = clean(x); if (!p) { bad++; continue; } if (have.has(p.oid)) { dup++; continue; } have.add(p.oid); if (tag && !p.from) p.from = tag; add.push(p); }
+  const tr = add.filter(p => !p.cancel), pnl = tr.reduce((s, p) => s + p.pnl, 0), o = !Array.isArray(data) && data.old;
+  if (o && !st.old && isNum(o.n) && o.n > 0 && o.n < 1e7 && isNum(o.wins) && o.wins >= 0 && o.wins <= o.n && isNum(o.pnl) && Math.abs(o.pnl) < 1e12) {
+    const num = v => (isNum(v) ? v : 0), g = {};
+    for (const k in gKey) { const m = o.g && o.g[k]; if (!m || typeof m !== 'object') continue; g[k] = {}; for (const x of Object.keys(m).slice(0, 40)) { const v = m[x]; if (/^[\w-]{1,20}$/.test(x) && v && isNum(v.n)) g[k][x] = { n: v.n, pnl: num(v.pnl), r: num(v.r), rn: num(v.rn), w: num(v.w) }; } }
+    st.old = { n: Math.round(o.n), wins: Math.round(o.wins), pnl: o.pnl, r: num(o.r), rn: num(o.rn), cost: num(o.cost), hold: num(o.hold), hn: num(o.hn), g, first: isNum(o.first) ? o.first : undefined, from: tag || undefined };
+    oldN = st.old.n; oldPnl = o.pnl; if (isNum(o.first) && o.first < st.created) st.created = o.first;
+  }
+  if (add.length || oldN) {
+    st.hist = st.hist.concat(add).sort((a, b) => b.closedAt - a.closedAt); trim(st);
+    st.balance += pnl + oldPnl; if (add.length) { const first = Math.min(...add.map(p => p.openedAt || p.closedAt)); if (first < st.created) st.created = first; }
+    mark(st, now, true); st.log.unshift({ t: now, k: 'merge', n: tr.length + oldN, r: pnl + oldPnl, name: '' }); if (st.log.length > 80) st.log.length = 80;
+  }
+  return { added: tr.length, cancels: add.length - tr.length, dup, bad, pnl: pnl + oldPnl, oldN };
+};
+/* 手動補登一筆（紀錄不見、只記得結果時用）：只有商品、方向、損益、時間與備註，會標成「補登」 */
+Sim.manual = function (st, o, now) {
+  if (!o || !isNum(o.pnl) || Math.abs(o.pnl) > 1e5 || (o.side !== 'long' && o.side !== 'short') || typeof o.name !== 'string' || !o.name.trim()) return { err: 'bad' };
+  const p = { oid: 'm' + (++st.seq) + '-' + now.toString(36), manual: 1, instId: typeof o.instId === 'string' ? o.instId : '', name: o.name.trim().slice(0, 60), code: typeof o.code === 'string' ? o.code : '', cls: typeof o.cls === 'string' ? o.cls : '', dp: isNum(o.dp) ? o.dp : 2,
+    side: o.side, type: 'manual', planName: '手動補登', closedAt: isNum(o.t) && o.t <= now ? o.t : now, reason: 'manual', pnl: Math.round(o.pnl * 100) / 100, note: typeof o.note === 'string' ? o.note.slice(0, 200) : '', created: now };
+  const m = Sim.merge(st, [p], now); if (m.added) { st.log[0].k = 'manual'; st.log[0].name = p.name; }
+  return Object.assign(m, { oid: p.oid });
+};
+/* 刪掉一筆補登的（打錯的時候）：只有補登的可以刪，網頁自己記下來的交易不能刪。損益從餘額扣回去 */
+Sim.unmanual = function (st, oid, now) {
+  const i = st.hist.findIndex(p => p.oid === oid && p.manual); if (i < 0) return { err: 'none' };
+  const p = st.hist.splice(i, 1)[0]; st.balance -= p.pnl; mark(st, now, true); st.log.unshift({ t: now, k: 'unmanual', r: p.pnl, name: p.name }); if (st.log.length > 80) st.log.length = 80;
+  return { pnl: p.pnl, name: p.name };
 };
 if (typeof module !== 'undefined') module.exports = Sim; else root.Sim = Sim;
 if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalThis.Sim = Sim;
@@ -3793,6 +3879,7 @@ function renderSettings() {
       <li>「週末盤」（2026/11/21）：IG 有週末市場、而且週末拿得到報價的商品（歐元／美元、英鎊／美元、美元／日圓、黃金、WTI 原油、那斯達克 100、特斯拉、SpaceX），在 IG 的週末盤期間會照常分析、列入精選，名稱旁標「週末盤」。價格取自交易所的 24 小時合約，不是 IG 的週末報價，所以價位會有落差；成本用平日的倍數估。週末盤和平日是兩個市場：平日建立的追蹤單週末不會動，週末盤建立的追蹤單收盤後接著用平日的價格判斷。開盤時間與成本倍數在設定 →「IG 週末盤」。</li>
       <li>建議數量：到上面的「資金與風險」填帳戶資金。精選卡片會顯示「建議數量」和「打到停損約賠多少」，是從每筆最多賠資金的幾 % 反推的。黃金、白銀、主要加密貨幣、標普 500、恆生、天然氣和外匯（迷你合約）會直接算出 IG 的張數；其他商品只顯示最多賠多少，請在 IG 下單畫面把數量調到停損金額不超過那個數字。</li>
       <li>持有中的提醒：追蹤中的單除了停損停利，還會提醒急轉、獲利回吐、訊號轉向、持有太久、休市前、重大數據前，以及什麼時候該把停損移到進場價。「注意」是先看一下，「建議出場」是該動作了。</li>
+      <li>模擬戰的紀錄（2026/11/21）：每一筆結束的模擬交易都會留著，勝率用全部成交過的交易算（以前只留最近 300 筆；現在逐筆留最近 1,000 筆，更早的併成合計，照樣算在勝率裡）。「模擬交易歷史」多了「保存與補登」：可以把紀錄複製或下載成備份、把另一個瀏覽器的紀錄合併進來、補登一筆只記得結果的交易。重設帳戶前會留一份，可以換回來；紀錄存不進瀏覽器時會明白警告。</li>
       <li>模擬戰（2026/11/20）：下面那一排多了「模擬戰」。它是一個 1,000 美元的假想帳戶，照固定規則把掃描出來的訊號自動做一遍：觀察中 → 準備中 → 交易中 → 模擬交易歷史。不會真的下單；只在這個網頁開著時運作；紀錄存在這台裝置的瀏覽器。完整規則寫在那一頁的最下面。</li>
       <li>資料來源修正（2026/11/18）：回測與匯出 K 線時，外匯改用 Yahoo 的報價（1 小時 K 最多約兩年），不再用成交稀疏的交易所外匯合約；各商品照清單順序找歷史最長、報價正常的來源，不再沿用某次連線失敗後的備援來源（黃金曾因此只抓到 12 天）。平常看盤時，停在備援來源的商品每 6 小時會從頭再試一次原本的來源。</li>
       <li>第七版（2026/11/17）依回測結果改了三件事：K 線與圖形型態不再影響機率（回測裡方向是反的）；「等突破才進場」的計畫不再列為可進場（平均是賠的）；臺北時間清晨 05–08 不列可進場（這個時段的單平均是賠的）。</li>
@@ -4018,19 +4105,45 @@ async function runDiag() {
 
 /* ---------- 模擬戰 ----------
    一個 1,000 美元的假想帳戶，照 Sim（上面的純函式）的規則，自動把掃描出來的訊號做一遍：觀察中 → 準備中 → 交易中 → 模擬交易歷史。
-   只在這個網頁開著的時候掃描與下單；關掉期間，已經進場的單會在回來時用 K 線補算停損停利。不會真的下單，紀錄只存在這台裝置的瀏覽器（cfd.sim）。 */
-const SIM = { st: null, tab: '', busy: false, last: 0, saved: 0, resetAt: 0, histAll: false };
-function simLoad() {
-  let s = LS.get('cfd.sim', null);
-  if (!s || s.v !== 1 || !isNum(s.balance) || !Array.isArray(s.items) || !Array.isArray(s.hist) || !Array.isArray(s.curve) || !s.day) s = Sim.init({}, Date.now());
-  else { s.cfg = Object.assign({}, Sim.DEF, { start: s.cfg && s.cfg.start > 0 ? s.cfg.start : Sim.DEF.start }); s.watch = Array.isArray(s.watch) ? s.watch : []; s.log = Array.isArray(s.log) ? s.log : []; } // 規則的數字一律用這一版的
-  SIM.st = s; if (Sim.sweep(s, Date.now()).length) simSave();
+   只在這個網頁開著的時候掃描與下單；關掉期間，已經進場的單會在回來時用 K 線補算停損停利。不會真的下單。
+   紀錄只存在這台裝置的這個瀏覽器（cfd.sim）：每一筆結束的交易都留著（算勝率要用），可以備份成文字或檔案、合併別的瀏覽器的紀錄、補登；
+   重設前的帳戶留一份在 cfd.sim.bak，讀不懂的舊紀錄留在 cfd.sim.bad，都不直接丟掉。 */
+const SIM = { st: null, tab: '', busy: false, last: 0, saved: 0, savedOk: 0, saveErr: '', resetAt: 0, noBak: false, histAll: false, histN: 150, bak: null, hasBad: false, ioKey: null, ioRev: 0, ioMsg: null, delId: '', delAt: 0 };
+const simValid = s => !!s && s.v === 1 && isNum(s.balance) && Array.isArray(s.items) && Array.isArray(s.hist) && Array.isArray(s.curve) && !!s.day;
+function simFix(s) { // 存著的帳戶拿出來用之前：規則的數字一律用這一版的；舊版沒有帳戶代號的補一個
+  s.cfg = Object.assign({}, Sim.DEF, { start: s.cfg && s.cfg.start > 0 ? s.cfg.start : Sim.DEF.start }); s.watch = Array.isArray(s.watch) ? s.watch : []; s.log = Array.isArray(s.log) ? s.log : [];
+  if (typeof s.acct !== 'string' || !/^[A-Z0-9]{4}$/.test(s.acct)) s.acct = Sim.code(); return s;
 }
-function simSave() { SIM.saved = Date.now(); LS.set('cfd.sim', SIM.st); }
+function simBakInfo() { // 重設前留下的那一份帳戶：只記筆數與餘額，給「換回」的按鈕用
+  const b = LS.get('cfd.sim.bak', null);
+  SIM.bak = simValid(b) ? { n: b.hist.filter(p => !p.cancel).length + ((b.old && b.old.n) || 0), bal: b.balance, t: b.bakT || 0 } : null;
+  try { SIM.hasBad = !!localStorage.getItem('cfd.sim.bad'); } catch (e) { SIM.hasBad = false; }
+}
+function simLoad() {
+  let raw = null; try { raw = localStorage.getItem('cfd.sim'); } catch (e) { /* 讀不到就當沒有 */ }
+  let s = LS.get('cfd.sim', null), fresh = false;
+  if (!simValid(s)) {
+    if (raw && raw.length > 20) { try { localStorage.setItem('cfd.sim.bad', raw); } catch (e) { /* 存不下就算了 */ } } // 有東西但讀不懂（存到一半、被改壞）：原樣另外留一份，不直接蓋掉
+    s = Sim.init({}, Date.now()); fresh = true;
+  } else { fresh = typeof s.acct !== 'string'; simFix(s); }
+  SIM.st = s; simBakInfo(); if (Sim.sweep(s, Date.now()).length || fresh) simSave();
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* 舊瀏覽器沒有這個功能 */ } // 請瀏覽器不要自動清掉這個網站存的資料（准不准由瀏覽器決定）
+}
+/* 存檔：寫完再讀回來確認。存不進去（空間不夠、無痕模式）要讓人知道，不能靜靜地失敗：那樣關掉網頁紀錄就不見了 */
+function simSave() {
+  SIM.saved = Date.now(); let err = '';
+  const put = () => { const txt = JSON.stringify(SIM.st); localStorage.setItem('cfd.sim', txt); const back = localStorage.getItem('cfd.sim'); if (!back || back.length !== txt.length) throw new Error('readback'); };
+  try { put(); } catch (e) {
+    err = (e && e.name) || 'Error';
+    try { localStorage.removeItem('cfd.sim.bad'); put(); err = ''; SIM.hasBad = false; } catch (e2) { /* 還是存不下 */ } // 先放掉「讀不懂的舊紀錄」那一份再試一次；重設前的帳戶不動
+  }
+  const was = SIM.saveErr; SIM.saveErr = err; if (!err) SIM.savedOk = SIM.saved;
+  if (err && !was) toast('模擬戰的紀錄存不進這個瀏覽器（空間不夠，或是無痕模式）。請到「模擬交易歷史」下載備份。', 'warn');
+}
 const usd2 = v => '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const sUsd = v => (v > 0.004 ? '+' : v < -0.004 ? '−' : '') + usd2(v);
 const sgn = v => dirCls(Math.abs(v) < 0.005 ? 0 : v);
-const SIM_REASON = { sl: '停損', be: '保本出場', trail: '鎖利出場', tp2: '停利 2', time: '持有時間到', reversal: '訊號轉向', close_soon: '休市前平倉', lost: '離開太久，以回來時的價格結算',
+const SIM_REASON = { manual: '手動補登', sl: '停損', be: '保本出場', trail: '鎖利出場', tp2: '停利 2', time: '持有時間到', reversal: '訊號轉向', close_soon: '休市前平倉', lost: '離開太久，以回來時的價格結算',
   expired: '掛單逾時', signal: '訊號消失或轉向', chase: '價格離計畫太遠，不追', closed: '休市', stale: '等了 15 分鐘都沒能確認（訊號不夠穩，或網頁沒開）' };
 const SIM_UNIT = { crypto: '顆', metal: '盎司', stock: '股', etf: '股' };
 function simUnitMode(inst) { // 部位金額能不能換成數量：只換確定以美元報價的（加密貨幣、金屬、美股與 ETF、含美元的貨幣對）；指數與商品的合約單位各家不同，不猜
@@ -4056,6 +4169,9 @@ function simEvText(e) {
   if (e.k === 'tp1') return `${e.name} 到停利 1，先平一半（入帳 ${sUsd(e.r)}），停損移到進場價`;
   if (e.k === 'close') return `${e.name} ${sd} 出場：${SIM_REASON[e.v] || e.v}，這筆 ${sUsd(e.r)}`;
   if (e.k === 'cancel') return `${e.name} ${sd} 取消：${SIM_REASON[e.v] || e.v}`;
+  if (e.k === 'merge') return `從備份合併進 ${e.n} 筆交易，損益合計 ${sUsd(e.r)}`;
+  if (e.k === 'manual') return `補登一筆：${e.name}，${sUsd(e.r)}`;
+  if (e.k === 'unmanual') return `刪掉一筆補登：${e.name}，${sUsd(e.r)}`;
   return e.name;
 }
 function simWhy(w, now) { // 觀察中的原因（還缺什麼）
@@ -4184,36 +4300,129 @@ function simOpenCard(p, now) {
     <p class="pmeta" style="margin-top:2px">${esc(p.planName)}　進場時 ${p.grade} 級 ${p.score} 分${simGate(p.gate)}${holdTxt ? `　現在：${holdTxt}（${d > 0 ? '上漲' : '下跌'}機率 ${(ps * 100).toFixed(0)}%）` : ''}</p>
     <div class="t-btns"><span class="t-plan">${off ? (p.wk ? '週末盤已收，等平日開盤' : '休市中，這段時間不判斷停利停損' + (wkNow(inst) ? '（平日開的單不看週末盤的價格）' : '')) : ''}</span><button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button></div></article>`;
 }
+const simJudge = (p, d) => [p.grade && isNum(p.score) ? `${p.grade} 級 ${p.score} 分` : '', isNum(p.prob0) ? `${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%` : ''].filter(Boolean).join('　') + simGate(p.gate);
 function simHistRow(p) {
-  const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, k = 'simh-' + p.oid, row = (a, b) => `<dt>${a}</dt><dd>${b}</dd>`;
+  const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, k = 'simh-' + p.oid, row = (a, b) => `<dt>${a}</dt><dd>${b}</dd>`, sd = d > 0 ? '做多' : '做空';
   const evs = (p.events || []).map(e => `${mdhm(e.t)} ${{ ready: '排入準備中', open: '進場', tp1: '到停利 1，平一半', close: '出場', cancel: '取消' }[e.k] || e.k}`).join('　→　');
-  if (p.cancel) return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}　<small>${mdhm(p.closedAt)}</small></span><span class="dir flat">未成交</span></summary>
-    <dl class="sim-dl">${row('結果', '沒有進場：' + esc(SIM_REASON[p.reason] || p.reason))}${row('原本的計畫', `${esc(p.planName)}（${p.type === 'market' ? '市價' : '掛單'}）　進場 ${f(p.entry0)}／停損 ${f(p.sl)}／停利 ${f(p.tp1)}、${f(p.tp2)}`)}${row('打算的金額', `${usd(p.notional)}，最多賠 ${usd(p.riskUsd)}`)}${row('當時的判斷', `${p.grade} 級 ${p.score} 分　${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%${simGate(p.gate)}`)}${row('經過', esc(evs))}</dl></details>`;
-  return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}${p.wk ? '　週末盤' : ''}　<small>${esc(SIM_REASON[p.reason] || p.reason)}　${mdhm(p.closedAt)}</small></span><span class="dir num ${sgn(p.pnl)}">${sUsd(p.pnl)}　${rTxt(p.rNet)}</span></summary>
-    <dl class="sim-dl">${row('進場', `${mdhm(p.openedAt)}　<span class="num">${f(p.entry)}</span>（${p.type === 'market' ? '市價' : '掛單成交'}${p.wk ? '，IG 週末盤' : ''}）`)}${row('出場', `${mdhm(p.closedAt)}　<span class="num">${f(p.exit)}</span>　${esc(SIM_REASON[p.reason] || p.reason)}${p.gap ? '（開盤就跳過停損價，以開盤價出場）' : ''}　持有 ${durTxt(p.heldMs)}`)}
+  const from = p.from ? row('來源', `從帳戶 ${esc(p.from)} 的備份合併進來`) : '';
+  if (p.manual) { // 補登的：只有結果
+    const ask = SIM.delId === p.oid && Date.now() - SIM.delAt < 6e3;
+    return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${sd}　<small>補登　${mdhm(p.closedAt)}</small></span><span class="dir num ${sgn(p.pnl)}">${sUsd(p.pnl)}</span></summary>
+    <dl class="sim-dl">${row('結果', `<b class="num ${sgn(p.pnl)}">${sUsd(p.pnl)}</b>　出場時間 ${mdhm(p.closedAt)}`)}${row('說明', '手動補登的交易：不是網頁當時記下來的，只有結果，沒有進出場價與停損停利。算進筆數、勝率與總損益，不算進平均 R 與持有時間。')}${p.note ? row('備註', esc(p.note)) : ''}${isNum(p.created) ? row('補登於', mdhm(p.created)) : ''}${from}</dl>
+    <p class="sim-del"><button class="btn sm" data-simdel="${esc(p.oid)}">${ask ? '再按一次：刪掉這筆補登' : '刪掉這筆補登'}</button></p></details>`;
+  }
+  if (p.cancel) return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${sd}　<small>${mdhm(p.closedAt)}</small></span><span class="dir flat">未成交</span></summary>
+    <dl class="sim-dl">${row('結果', '沒有進場：' + esc(SIM_REASON[p.reason] || p.reason))}${row('原本的計畫', `${esc(p.planName)}（${p.type === 'market' ? '市價' : '掛單'}）　進場 ${f(p.entry0)}／停損 ${f(p.sl)}／停利 ${f(p.tp1)}、${f(p.tp2)}`)}${row('打算的金額', `${usd(p.notional)}，最多賠 ${usd(p.riskUsd)}`)}${row('當時的判斷', simJudge(p, d))}${evs ? row('經過', esc(evs)) : ''}${from}</dl></details>`;
+  const eq0 = p.eqAtOpen || p.eq0;
+  return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${sd}${p.wk ? '　週末盤' : ''}　<small>${esc(SIM_REASON[p.reason] || p.reason)}　${mdhm(p.closedAt)}</small></span><span class="dir num ${sgn(p.pnl)}">${sUsd(p.pnl)}${isNum(p.rNet) ? '　' + rTxt(p.rNet) : ''}</span></summary>
+    <dl class="sim-dl">${row('進場', `${mdhm(p.openedAt)}　<span class="num">${f(p.entry)}</span>（${p.type === 'market' ? '市價' : '掛單成交'}${p.wk ? '，IG 週末盤' : ''}）`)}${row('出場', `${mdhm(p.closedAt)}　<span class="num">${f(p.exit)}</span>　${esc(SIM_REASON[p.reason] || p.reason)}${p.gap ? '（開盤就跳過停損價，以開盤價出場）' : ''}${isNum(p.heldMs) ? '　持有 ' + durTxt(p.heldMs) : ''}`)}
       ${row('金額', `${d > 0 ? '買入' : '做空'} ${usd(p.notional)}${simQty(p) ? '（' + esc(simQty(p)) + '）' : ''}　押保證金 ${usd(p.margin)}`)}${row('風險', `最多賠 ${usd(p.riskUsd)}（當時資金的 ${p.riskPct.toFixed(1)}%）`)}
       ${row('停損／停利', `<span class="num">${f(p.sl)}</span>／<span class="num">${f(p.tp1)}</span>、<span class="num">${f(p.tp2)}</span>${p.tp1At ? '　停利 1 在 ' + mdhm(p.tp1At) + ' 到價' : ''}`)}
-      ${row('損益', `<b class="num ${sgn(p.pnl)}">${sUsd(p.pnl)}</b>（${rTxt(p.rNet)}，占當時資金 ${pct(p.pnl / (p.eqAtOpen || p.eq0) * 100)}）　已扣點差 ${usd(p.costUsd)}${p.finUsd > 0 ? '、隔夜費 ' + usd(p.finUsd) : ''}`)}
-      ${row('過程', `最多曾賺 ${rTxt(p.mfe || 0)}、最多曾賠 ${rTxt(p.mae || 0)}　出場後帳戶餘額 ${usd2(p.balAfter)}`)}
-      ${row('當時的判斷', `${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${p.grade} 級 ${p.score} 分　${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%${simGate(p.gate)}${p.regime ? '　盤勢：' + esc(p.regime) : ''}`)}
+      ${row('損益', `<b class="num ${sgn(p.pnl)}">${sUsd(p.pnl)}</b>${isNum(p.rNet) ? `（${rTxt(p.rNet)}${eq0 > 0 ? '，占當時資金 ' + pct(p.pnl / eq0 * 100) : ''}）` : ''}　已扣點差 ${usd(p.costUsd || 0)}${p.finUsd > 0 ? '、隔夜費 ' + usd(p.finUsd) : ''}`)}
+      ${row('過程', `最多曾賺 ${rTxt(p.mfe || 0)}、最多曾賠 ${rTxt(p.mae || 0)}${isNum(p.balAfter) ? '　出場後帳戶餘額 ' + usd2(p.balAfter) : ''}`)}
+      ${row('當時的判斷', `${esc(p.planName)}　${E.TF_NAME[p.tf] || ''}K　${simJudge(p, d)}${p.regime ? '　盤勢：' + esc(p.regime) : ''}`)}
       ${p.action || (p.notes && p.notes.length) ? row('進場理由', esc([p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''))) : ''}${p.gateWhy && p.gateWhy.length ? row('門檻', esc(p.gateWhy.join('；'))) : ''}
       ${p.news || p.inter || p.nextEv ? row('新聞與數據', esc([p.news && '新聞：' + p.news, p.inter && '相關市場：' + p.inter, p.nextEv && '下一個重大數據：' + p.nextEv].filter(Boolean).join('；'))) : ''}
-      ${row('經過', esc(evs))}${row('報價', esc(p.src || '') + (p.basis === 'ig' ? '（IG 價位）' : ''))}</dl></details>`;
+      ${evs ? row('經過', esc(evs)) : ''}${row('報價', esc(p.src || '') + (p.basis === 'ig' ? '（IG 價位）' : ''))}${from}${p.slim ? row('備註', '比較舊的紀錄：為了省空間，只留主要的數字。') : ''}</dl></details>`;
+}
+function simHistSafe(p) { // 一筆紀錄有問題（例如別處匯入、欄位不齊）不能讓整頁壞掉
+  try { return simHistRow(p); } catch (e) { return `<details class="sim-h"><summary><span><b>${esc(p && p.name)}</b>　<small>這筆紀錄的細節顯示不出來</small></span><span class="dir num">${p && isNum(p.pnl) ? sUsd(p.pnl) : ''}</span></summary></details>`; }
 }
 function simHist(st) {
-  const s = Sim.stats(st), g = s.byGate, line = (name, x) => (x ? `<div><dt>${name}　${x.n} 筆</dt><dd class="${sgn(x.pnl)}">${sUsd(x.pnl)}<small>平均 ${rTxt(x.r / x.n)}</small></dd></div>` : '');
-  const head = s.n ? `<dl class="pgrid"><div><dt>已結束</dt><dd>${s.n} 筆<small>勝率 ${(s.winRate * 100).toFixed(0)}%</small></dd></div><div><dt>總損益</dt><dd class="${sgn(s.pnl)}">${sUsd(s.pnl)}<small>平均 ${rTxt(s.avgR)}</small></dd></div>
-      <div><dt>最好／最差</dt><dd>${sUsd(s.best)}<small>${sUsd(s.worst)}</small></dd></div><div><dt>平均持有</dt><dd>${durTxt(s.hold)}<small>成本共 ${usd(s.cost)}</small></dd></div></dl>
+  const s = Sim.stats(st), g = s.byGate, c = st.cfg, wr = x => (x.w / x.n * 100).toFixed(0) + '%';
+  const line = (name, x) => (x ? `<div><dt>${name}　${x.n} 筆</dt><dd class="${sgn(x.pnl)}">${sUsd(x.pnl)}<small>勝率 ${wr(x)}${x.rn ? '　平均 ' + rTxt(x.r / x.rn) : ''}</small></dd></div>` : '');
+  const tbl = (m, nameOf) => Object.keys(m).sort((a, b) => m[b].n - m[a].n).map(k => `<tr><td>${esc(nameOf(k))}</td><td class="num">${m[k].n}</td><td class="num">${wr(m[k])}</td><td class="num ${sgn(m[k].pnl)}">${sUsd(m[k].pnl)}</td></tr>`).join('');
+  const head = s.n ? `<dl class="pgrid"><div><dt>勝率</dt><dd>${(s.winRate * 100).toFixed(0)}%<small>${s.wins} 筆賺、${s.n - s.wins} 筆沒賺，共 ${s.n} 筆</small></dd></div><div><dt>總損益</dt><dd class="${sgn(s.pnl)}">${sUsd(s.pnl)}<small>${isNum(s.avgR) ? '平均 ' + rTxt(s.avgR) : ''}</small></dd></div>
+      <div><dt>最好／最差</dt><dd>${isNum(s.best) ? sUsd(s.best) : '—'}<small>${isNum(s.worst) ? sUsd(s.worst) : ''}</small></dd></div><div><dt>平均持有</dt><dd>${isNum(s.hold) ? durTxt(s.hold) : '—'}<small>成本共 ${usd(s.cost)}</small></dd></div></dl>
       ${g.pass || g.fail ? `<dl class="pgrid" style="margin-top:6px">${line('門檻通過', g.pass)}${line('門檻未通過', g.fail)}${line('做多', s.bySide.long)}${line('做空', s.bySide.short)}</dl>` : ''}
-      <p class="hint">不到 30 筆以前，這些數字只能參考：幾筆的輸贏主要是運氣。${s.cancels ? `另外有 ${s.cancels} 筆排進準備中但沒有成交。` : ''}</p>` : '';
-  const list = st.hist.filter(p => SIM.histAll || !p.cancel);
+      <details data-k="sim-grp" ${op('sim-grp')}><summary>依類別、出場原因分開看</summary><table class="sim-tbl"><thead><tr><th></th><th>筆數</th><th>勝率</th><th>損益</th></tr></thead>
+        <tbody><tr class="sub"><td colspan="4">類別</td></tr>${tbl(s.byCls, k => Data.CLS_NAME[k] || (k === 'na' ? '其他' : k))}<tr class="sub"><td colspan="4">出場原因</td></tr>${tbl(s.byReason, k => SIM_REASON[k] || k)}</tbody></table></details>
+      <p class="hint">${s.first ? `從 ${mdhm(s.first)} 起，每一筆成交過的交易都算在裡面` : ''}${s.manual ? `（含補登 ${s.manual} 筆）` : ''}。不到 30 筆以前，這些數字只能參考：幾筆的輸贏主要是運氣。${s.cancels ? `另外有 ${s.cancels} 筆排進準備中但沒有成交，不算在勝率裡。` : ''}${s.folded ? `最舊的 ${s.folded} 筆只留合計，下面不逐筆列出。` : ''}</p>` : '';
+  const list = st.hist.filter(p => SIM.histAll || !p.cancel), more = list.length - SIM.histN;
   return `<section class="card"><h2>模擬交易歷史 <small>${s.n ? `${s.n} 筆交易` : ''}${s.cancels ? `${s.n ? '、' : ''}${s.cancels} 筆未成交` : ''}</small></h2>${head}
-    ${list.length ? list.slice(0, 150).map(simHistRow).join('') : `<p class="none">${st.hist.length ? '還沒有成交過的模擬交易。' : '還沒有任何一筆結束的模擬交易。交易結束（停利、停損、時間到…）之後，每一筆的完整紀錄會留在這裡。'}</p>`}
-    ${st.hist.length ? `<p class="t-btns"><span class="t-plan">點一筆可以展開全部細節。</span><span>${s.cancels ? `<button class="btn sm" id="sim-hall">${SIM.histAll ? '只看有成交的' : `也顯示未成交的 ${s.cancels} 筆`}</button> ` : ''}<button class="btn sm" id="sim-csv">匯出成檔案</button></span></p>` : ''}</section>`;
+    ${list.length ? list.slice(0, SIM.histN).map(simHistSafe).join('') : `<p class="none">${st.hist.length ? '還沒有成交過的模擬交易。' : '還沒有任何一筆結束的模擬交易。交易結束（停利、停損、時間到…）之後，每一筆的完整紀錄會留在這裡。'}</p>`}
+    ${st.hist.length ? `<p class="t-btns"><span class="t-plan">點一筆可以展開全部細節。</span><span>${more > 0 ? `<button class="btn sm" id="sim-more">再顯示 ${Math.min(more, 300)} 筆</button> ` : ''}${s.cancels ? `<button class="btn sm" id="sim-hall">${SIM.histAll ? '只看有成交的' : `也顯示未成交的 ${s.cancels} 筆`}</button> ` : ''}<button class="btn sm" id="sim-csv">匯出成檔案</button></span></p>` : ''}
+    <p class="hint">交易紀錄會一直累積，不會因為筆數多而刪掉：最近 ${c.histFull} 筆留完整細節，更早的只留主要數字；超過 ${c.histMax.toLocaleString('en-US')} 筆時，最舊的併進合計（勝率與損益照樣算得到）。</p></section>`;
+}
+/* 「保存與補登」：備份、合併別的瀏覽器的紀錄、補登。這一塊有輸入框，不能跟著每 5 秒的重畫一起換掉，所以自己一個容器（#sim-io） */
+function simIo(st) {
+  const m = SIM.ioMsg, opts = Data.all().map(i => `<option value="${esc(i.id)}">${esc(i.name)}</option>`).join('');
+  const now = new Date(Date.now() - new Date().getTimezoneOffset() * 60e3).toISOString().slice(0, 16), since = st.bkT ? st.hist.filter(p => !p.cancel && p.closedAt > st.bkT).length : 0;
+  const n = st.hist.filter(p => !p.cancel).length;
+  return `<section class="card"><h2>保存與補登 <small>帳戶 ${esc(st.acct)}</small></h2>
+    <p class="hint" style="margin-top:0">紀錄只存在<b>這台裝置的這個瀏覽器</b>。換手機、換瀏覽器，或從別的 App 裡點開這個網址，看到的是另一個帳戶（帳戶代號會不一樣）。清除瀏覽器資料，或太久沒打開這個網頁（有些瀏覽器會自動清），紀錄也會不見。要留底、或把兩邊合在一起，用備份。</p>
+    <p class="sim-io-btns"><button class="btn sm" id="sim-bk-copy">複製備份</button><button class="btn sm" id="sim-bk-dl">下載備份檔</button>${simCanShare() ? '<button class="btn sm" id="sim-bk-share">分享備份檔</button>' : ''}</p>
+    <p class="pmeta">${st.bkT ? `上次備份 ${mdhm(st.bkT)}${since ? `，之後又多了 ${since} 筆交易` : ''}。` : n ? `還沒有備份過（現在有 ${n} 筆交易）。` : '還沒有交易可以備份。'}</p>
+    <p class="sim-msg${m && m.bad ? ' bad' : ''}" id="sim-io-msg" role="status"${m ? '' : ' hidden'}>${m ? m.html : ''}</p>
+    <details class="sim-io" data-k="sim-in" ${op('sim-in')}><summary>把另一個瀏覽器的紀錄合併進來</summary>
+      <p class="hint">在有紀錄的那個瀏覽器按「複製備份」，回到這裡貼上、按「合併進來」。編號相同的交易不會重複算；新加進來的交易，損益會加進這個帳戶的餘額。</p>
+      <textarea id="sim-in-txt" rows="4" placeholder="把備份的文字貼在這裡" aria-label="備份的文字" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
+      <p class="sim-io-btns"><button class="btn sm primary" id="sim-in-go">合併進來</button><label class="btn sm sim-file">選備份檔<input type="file" id="sim-in-file" accept=".json,.txt,application/json,text/plain"></label></p></details>
+    <details class="sim-io" data-k="sim-man" ${op('sim-man')}><summary>補登一筆（紀錄不見了，只記得結果）</summary>
+      <p class="hint">補登的交易會標「補登」，算進筆數、勝率與總損益，也加進帳戶餘額。因為沒有進出場價，不算進平均 R 與持有時間。打錯可以在那一筆裡刪掉。</p>
+      <div class="form sim-form"><label class="f"><span>商品</span><select id="sim-m-inst"><option value="?">請選擇</option>${opts}<option value="">其他（自己填名稱）</option></select></label>
+        <label class="f" id="sim-m-namebox" hidden><span>名稱</span><input type="text" id="sim-m-name" maxlength="40"></label>
+        <label class="f"><span>方向</span><select id="sim-m-side"><option value="long">做多（買進）</option><option value="short">做空（賣出）</option></select></label>
+        <label class="f"><span>結果</span><select id="sim-m-win"><option value="1">賺</option><option value="-1">賠</option></select></label>
+        <label class="f"><span>金額（美元）</span><input type="number" id="sim-m-pnl" min="0" step="0.01" inputmode="decimal" placeholder="例如 13"></label>
+        <label class="f"><span>出場時間 <small>大約就好</small></span><input type="datetime-local" id="sim-m-t" value="${now}" max="${now}"></label>
+        <label class="f"><span>備註 <small>可不填</small></span><input type="text" id="sim-m-note" maxlength="100" placeholder="例如：到停利 1 後保本出場"></label></div>
+      <p class="sim-io-btns"><button class="btn sm primary" id="sim-m-go">補登這一筆</button></p></details>
+    ${SIM.hasBad ? '<p class="pmeta">之前有一份這個網頁讀不懂的模擬戰紀錄，原樣留著沒有刪。<button class="btn sm" id="sim-bad-copy">複製那份原始資料</button>（可以貼給 Claude 看能不能救回來）</p>' : ''}</section>`;
+}
+function simSay(html, bad, keep) { // 「保存與補登」的結果訊息。keep：只換訊息那一行，不重畫整塊（輸入到一半的內容要留著）
+  SIM.ioMsg = { html, bad: !!bad };
+  if (keep) { const el = $('#sim-io-msg'); if (el) { el.innerHTML = html; el.hidden = false; el.className = 'sim-msg' + (bad ? ' bad' : ''); return; } }
+  SIM.ioRev++; if (view === 'sim') renderSim();
+}
+const simBkText = () => JSON.stringify(Sim.pack(SIM.st));
+const simBkName = ext => `cfd-sim-backup-${SIM.st.acct}-${new Date().toISOString().slice(0, 10)}.${ext}`;
+const simCanShare = () => { try { return !!(navigator.canShare && navigator.canShare({ files: [new File(['a'], 'a.txt', { type: 'text/plain' })] })); } catch (e) { return false; } };
+function simBkDone(text) { SIM.st.bkT = Date.now(); simSave(); simSay(text); }
+let simBkUrl = null;
+async function simCopy(txt) { try { await navigator.clipboard.writeText(txt); } catch (e) { const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); } }
+async function simBkCopy() { const n = SIM.st.hist.filter(p => !p.cancel).length; await simCopy(simBkText()); simBkDone(`備份已複製（${n} 筆交易）。到另一個瀏覽器的「把另一個瀏覽器的紀錄合併進來」貼上；或貼到備忘錄留底。`); }
+function simBkSave() { // 做法和回測的下載一樣：網址留著不收回，iPhone 的 Safari 才讀得到
+  if (simBkUrl) URL.revokeObjectURL(simBkUrl); simBkUrl = URL.createObjectURL(new Blob([simBkText()], { type: 'application/octet-stream' }));
+  const a = document.createElement('a'); a.href = simBkUrl; a.download = simBkName('json'); a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
+  simBkDone('備份檔已經交給瀏覽器下載（' + esc(simBkName('json')) + '）。要放回來時，用「選備份檔」。');
+}
+async function simBkShare() {
+  try { await navigator.share({ files: [new File([simBkText()], simBkName('txt'), { type: 'text/plain' })], title: '差價交易模擬戰備份' }); simBkDone('備份檔已經交給分享選單。'); }
+  catch (e) { if (e.name !== 'AbortError') toast('分享沒有成功，請改按「下載備份檔」或「複製備份」。', 'warn'); }
+}
+function simImport(text) {
+  const st = SIM.st, s = String(text || '').trim(); if (!s) return simSay('還沒有貼上備份的文字。', true, true);
+  const i = s.indexOf('{'), j = s.lastIndexOf('}'); let data = null; // 前後多貼了別的字也沒關係
+  try { data = JSON.parse(i >= 0 && j > i ? s.slice(i, j + 1) : s); } catch (e) { data = null; }
+  const r = data ? Sim.merge(st, data, Date.now(), typeof data.acct === 'string' ? data.acct : '') : { err: 'format' };
+  if (r.err) return simSay('這不是模擬戰的備份，或是內容不完整（要用「複製備份」或「下載備份檔」得到的內容；「匯出成檔案」的表格不行）。沒有任何變動。', true, true);
+  const got = r.added + r.oldN, tail = (r.dup ? `有 ${r.dup} 筆這裡已經有了，沒有重複算。` : '') + (r.bad ? `有 ${r.bad} 筆內容不完整，沒有收。` : '');
+  if (!got && !r.cancels) return simSay('沒有新的紀錄可以加進來。' + tail, !r.dup, true);
+  simSave(); simBadge(); simSay(`合併完成：加進 ${got} 筆交易${r.cancels ? `、${r.cancels} 筆未成交的` : ''}，損益合計 <b class="num">${sUsd(r.pnl)}</b>，帳戶餘額現在 <b class="num">${usd2(st.balance)}</b>。` + tail);
+}
+function simManual() {
+  const v = id => { const e = $('#' + id); return e ? e.value : ''; }, pick = v('sim-m-inst'), inst = Data.byId(pick), name = inst ? inst.name : pick === '' ? v('sim-m-name').trim() : '';
+  const amt = parseFloat(v('sim-m-pnl')), side = v('sim-m-side') === 'short' ? 'short' : 'long', t = Date.parse(v('sim-m-t')), now = Date.now();
+  if (!name) return simSay(pick === '' ? '請填上商品的名稱。' : '請先選商品。', true, true);
+  if (!isNum(amt) || amt < 0 || amt > 1e5) return simSay('請填金額（美元，填正數；賺或賠在「結果」選）。', true, true);
+  if (isNum(t) && t > now + 60e3) return simSay('出場時間不能是未來。', true, true);
+  const r = Sim.manual(SIM.st, { instId: inst ? inst.id : '', name, code: inst ? inst.code : '', cls: inst ? inst.cls : '', dp: inst ? inst.dp : 2, side, pnl: (v('sim-m-win') === '-1' ? -1 : 1) * amt, t: isNum(t) ? Math.min(t, now) : now, note: v('sim-m-note').trim() }, now);
+  if (r.err || !r.added) return simSay('沒有補登成功，請檢查填的內容。', true, true);
+  simSave(); const p = SIM.st.hist.find(x => x.oid === r.oid);
+  simSay(`已補登：${esc(name)} ${side === 'long' ? '做多' : '做空'} <b class="num">${sUsd(p ? p.pnl : 0)}</b>。帳戶餘額現在 <b class="num">${usd2(SIM.st.balance)}</b>。這一筆在下面的清單裡標「補登」。`);
+}
+function simChange(t) { // 「保存與補登」裡的選單與選檔
+  if (t.id === 'sim-m-inst') { const b = $('#sim-m-namebox'); if (b) b.hidden = t.value !== ''; return; }
+  if (t.id !== 'sim-in-file' || !t.files || !t.files[0]) return;
+  const f = t.files[0]; t.value = '';
+  if (f.size > 8e6) return simSay('這個檔案太大，不像是模擬戰的備份。沒有任何變動。', true, true);
+  const rd = new FileReader(); rd.onload = () => simImport(String(rd.result || '')); rd.onerror = () => simSay('讀不到這個檔案。', true, true); rd.readAsText(f);
 }
 function renderSim() {
   const el = $('#v-sim'), st = SIM.st; if (!el || !st) return;
-  if (Data.demo) { el.innerHTML = '<section class="card"><h2>模擬戰</h2><p class="none">現在是示範資料（不是真實行情），模擬戰不運作。回到真實行情後會繼續。</p></section>'; return; }
+  if (Data.demo) { el.innerHTML = '<section class="card"><h2>模擬戰</h2><p class="none">現在是示範資料（不是真實行情），模擬戰不運作。回到真實行情後會繼續。</p></section>'; SIM.ioKey = null; return; }
+  if (!$('#sim-a')) { el.innerHTML = '<div id="sim-a"></div><div id="sim-io"></div><div id="sim-b"></div>'; SIM.ioKey = null; } // 三塊分開畫：中間那塊有輸入框，只在需要時才換
   const now = Date.now(), c = st.cfg, eq = Sim.equity(st), ch = eq - c.start, real = st.balance - c.start, fl = eq - st.balance, mg = Sim.margin(st), rk = Sim.risk(st), s = Sim.stats(st);
   const ready = st.items.filter(p => p.stage === 'ready'), open = st.items.filter(p => p.stage === 'open');
   if (!SIM.tab) SIM.tab = open.length ? 'open' : ready.length ? 'ready' : 'watch';
@@ -4231,17 +4440,21 @@ function renderSim() {
       <p class="hint">到停利 1 先平一半、停損移到進場價；到停利 2、碰到停損、持有超過最長時間、休市前 30 分鐘，或網頁對這個方向的機率掉到 43% 以下，就全部出場。</p></section>`;
   else body = simHist(st);
   const logs = st.log.slice(0, 12).map(e => `<li><span>${esc(simEvText(e))}</span><div class="meta"><span>${mdhm(e.t)}</span></div></li>`).join('');
-  const rst = now - SIM.resetAt < 6e3;
-  el.innerHTML = `<section class="card"><h2>模擬帳戶 <small>起始 ${usd2(c.start)}　${mdhm(st.created)} 開始</small></h2>
+  const rst = now - SIM.resetAt < 6e3, bk = SIM.bak;
+  const saveLine = SIM.saveErr ? '<p class="sim-save bad" role="alert"><b>紀錄存不進這個瀏覽器</b>（空間不夠，或是無痕模式）：關掉網頁之後，這段時間的交易會不見。請到「模擬交易歷史」→「保存與補登」下載備份。</p>'
+    : `<p class="pmeta sim-save">帳戶 <b class="num">${esc(st.acct)}</b>　紀錄存在這台裝置的這個瀏覽器${SIM.savedOk ? '（' + hms(SIM.savedOk) + ' 已存檔）' : ''}</p>`;
+  $('#sim-a').innerHTML = `<section class="card"><h2>模擬帳戶 <small>起始 ${usd2(c.start)}　${mdhm(st.created)} 開始</small></h2>
       <div class="sim-eq"><b class="num">${usd2(eq)}</b><span class="num ${sgn(ch)}">${sUsd(ch)}（${pct(ch / c.start * 100)}）</span></div>
       <dl class="pgrid"><div><dt>已實現</dt><dd class="${sgn(real)}">${sUsd(real)}<small>帳戶餘額 ${usd2(st.balance)}</small></dd></div><div><dt>浮動盈虧</dt><dd class="${sgn(fl)}">${sUsd(fl)}<small>${open.length} 筆持有中</small></dd></div>
         <div><dt>保證金</dt><dd>${usd(mg)}<small>資金的 ${(mg / Math.max(eq, 1) * 100).toFixed(0)}%</small></dd></div><div><dt>最多再賠</dt><dd>${usd(rk)}<small>資金的 ${(rk / Math.max(eq, 1) * 100).toFixed(1)}%</small></dd></div></dl>
       ${simSpark(st, eq)}
       <p class="pmeta">今天 ${sUsd(day.pnl)}${s.n ? `　已結束 ${s.n} 筆　勝率 ${(s.winRate * 100).toFixed(0)}%　平均 ${rTxt(s.avgR)}` : ''}${st.maxDd > 0.0005 ? `　最大回落 −${(st.maxDd * 100).toFixed(1)}%` : ''}</p>
-      <p class="sim-state">${state}</p></section>
+      <p class="sim-state">${state}</p>${saveLine}</section>
     <div class="chips" id="sim-tabs" role="tablist" aria-label="模擬戰的分頁">${tabs.map(t => `<button class="chip" role="tab" data-simtab="${t[0]}" aria-pressed="${SIM.tab === t[0]}">${t[1]}${t[2] ? ' ' + t[2] : ''}</button>`).join('')}</div>
-    ${body}
-    <section class="card"><h2>最近動態</h2>${logs ? `<ul class="nlist">${logs}</ul>` : '<p class="none">還沒有任何動作。</p>'}</section>
+    ${body}`;
+  const key = SIM.tab === 'hist' ? 'h' + SIM.ioRev : '';
+  if (key !== SIM.ioKey) { $('#sim-io').innerHTML = key ? simIo(st) : ''; SIM.ioKey = key; }
+  $('#sim-b').innerHTML = `<section class="card"><h2>最近動態</h2>${logs ? `<ul class="nlist">${logs}</ul>` : '<p class="none">還沒有任何動作。</p>'}</section>
     <section class="card"><h2>這個模擬怎麼運作</h2>
       <p class="pnote" style="margin-top:0"><b>這不是真的下單，也不是人在操作</b>：是一套寫死的規則，照網頁的掃描結果自動執行。回測還沒有證明這些訊號有優勢，模擬戰的用途就是拿之後的真實行情來驗：賺賠都是這套訊號自己的成績。</p>
       <details data-k="sim-rules" ${op('sim-rules')}><summary>完整規則</summary><ul class="plain">
@@ -4254,27 +4467,55 @@ function renderSim() {
         <li>成本：來回一趟的點差在進場時就扣（用設定頁各類別的交易成本，有接 IG 時用 IG 當下的點差）；每過紐約 17:00 一次扣一晚隔夜費（估計值）。停損照停損價成交；開盤就跳過停損價的（跳空、隔夜）以那根 K 線的開盤價成交。平常的滑價沒有算，所以實際會比這裡差一點。</li>
         <li>週末盤：IG 有週末盤的商品（名稱旁標「週末盤」）在週末照樣模擬，成本用平日的 ${Math.max(1, +S.wkCost || 5)} 倍估（設定頁可改）；週末盤收盤前 30 分鐘出場。週末盤和平日是兩個市場：平日開的單週末不動，也不會被週末的價格打到停損。</li>
         <li>只在這個網頁開著（而且「自動更新」開著）的時候掃描與下單。關掉期間不會開新倉；已經進場的單，回來時用 K 線補算。</li>
+        <li>紀錄：每一筆結束的交易都留著，勝率用全部成交過的交易算。紀錄只存在這台裝置的這個瀏覽器，沒有上傳到任何地方；備份、合併別的瀏覽器的紀錄、補登，都在「模擬交易歷史」的「保存與補登」。</li>
       </ul></details>
-      <p class="t-btns"><span class="t-plan">紀錄只存在這台裝置的瀏覽器。</span><span><button class="btn sm" id="sim-pause">${st.paused ? '繼續模擬' : '暫停開新倉'}</button> <button class="btn sm" id="sim-reset">${rst ? '再按一次：清空並重新開始' : '重設帳戶'}</button></span></p></section>`;
+      <p class="t-btns"><span class="t-plan">${rst ? '重設會從 ' + usd2(Sim.DEF.start) + ' 重新開始。現在的帳戶會留一份，可以換回來' + (bk ? '；上次重設留的那一份會被換掉' : '') + '。' : '重設＝開一個新帳戶，勝率重新算。'}</span><span><button class="btn sm" id="sim-pause">${st.paused ? '繼續模擬' : '暫停開新倉'}</button> <button class="btn sm" id="sim-reset">${rst ? '再按一次：清空並重新開始' : '重設帳戶'}</button></span></p>
+      ${bk ? `<p class="t-btns"><span class="t-plan">重設前的帳戶還留著：${bk.n} 筆交易，餘額 ${usd2(bk.bal)}${bk.t ? '（' + mdhm(bk.t) + ' 重設）' : ''}。</span><span><button class="btn sm" id="sim-undo">換回那個帳戶</button></span></p>` : ''}</section>`;
 }
-function simCsv() {
-  const st = SIM.st, q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', iso = t => (t ? new Date(t).toISOString() : ''), n = (v, d) => (isNum(v) ? v.toFixed(d == null ? 2 : d) : '');
-  const head = ['編號', '商品', '代號', '類別', '方向', '計畫', '進場方式', '結果', '排入時間', '進場時間', '出場時間', '進場價', '出場價', '停損', '停利1', '停利2', '買賣金額(USD)', '最多賠(USD)', '風險%', '保證金(USD)', '損益(USD)', '損益(R)', '點差成本(USD)', '隔夜費(USD)', '持有分鐘', '最多曾賺(R)', '最多曾賠(R)', '評級', '分數', '方向機率', '門檻', '盤勢', '出場後餘額(USD)', '報價來源', '進場理由', '新聞', '相關市場', '下一個重大數據', '週末盤'];
-  const rows = st.hist.map(p => [p.oid, p.name, p.code, Data.CLS_NAME[p.cls] || p.cls, p.side === 'long' ? '做多' : '做空', p.planName, p.type === 'market' ? '市價' : '掛單', p.cancel ? '未成交：' + (SIM_REASON[p.reason] || p.reason) : SIM_REASON[p.reason] || p.reason,
-    iso(p.created), iso(p.openedAt), iso(p.closedAt), p.cancel ? p.entry0 : p.entry, p.cancel ? '' : p.exit, p.sl, p.tp1, p.tp2, n(p.notional), n(p.riskUsd), n(p.riskPct), n(p.margin), p.cancel ? '' : n(p.pnl), p.cancel ? '' : n(p.rNet, 3), p.cancel ? '' : n(p.costUsd), p.cancel ? '' : n(p.finUsd || 0),
-    p.cancel ? '' : Math.round(p.heldMs / 60e3), p.cancel ? '' : n(p.mfe || 0), p.cancel ? '' : n(p.mae || 0), p.grade, p.score, n(p.prob0, 3), p.gate == null ? '' : p.gate ? '通過' : '未通過', p.regime, p.cancel ? '' : n(p.balAfter), p.src, [p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''), p.news, p.inter, p.nextEv, p.wk ? '是' : ''].map(q).join(','));
+function simCsv() { // 文字欄位開頭是 = + @ 的，前面加一撇：試算表才不會把它當成公式
+  const st = SIM.st, q = v => { const x = String(v == null ? '' : v); return '"' + (typeof v === 'string' && /^[=+@]/.test(x) ? "'" + x : x).replace(/"/g, '""') + '"'; }, iso = t => (t ? new Date(t).toISOString() : ''), n = (v, d) => (isNum(v) ? v.toFixed(d == null ? 2 : d) : '');
+  const head = ['編號', '商品', '代號', '類別', '方向', '計畫', '進場方式', '結果', '排入時間', '進場時間', '出場時間', '進場價', '出場價', '停損', '停利1', '停利2', '買賣金額(USD)', '最多賠(USD)', '風險%', '保證金(USD)', '損益(USD)', '損益(R)', '點差成本(USD)', '隔夜費(USD)', '持有分鐘', '最多曾賺(R)', '最多曾賠(R)', '評級', '分數', '方向機率', '門檻', '盤勢', '出場後餘額(USD)', '報價來源', '進場理由', '新聞', '相關市場', '下一個重大數據', '週末盤', '補登', '來源帳戶', '備註'];
+  const rows = st.hist.map(p => [p.oid, p.name, p.code, Data.CLS_NAME[p.cls] || p.cls, p.side === 'long' ? '做多' : '做空', p.planName, p.manual ? '' : p.type === 'market' ? '市價' : '掛單', p.cancel ? '未成交：' + (SIM_REASON[p.reason] || p.reason) : SIM_REASON[p.reason] || p.reason,
+    iso(p.created), iso(p.openedAt), iso(p.closedAt), p.cancel ? p.entry0 : p.entry, p.cancel ? '' : p.exit, p.sl, p.tp1, p.tp2, n(p.notional), n(p.riskUsd), n(p.riskPct), n(p.margin), p.cancel ? '' : n(p.pnl), p.cancel ? '' : n(p.rNet, 3), p.cancel || p.manual ? '' : n(p.costUsd || 0), p.cancel || p.manual ? '' : n(p.finUsd || 0),
+    p.cancel || !isNum(p.heldMs) ? '' : Math.round(p.heldMs / 60e3), p.cancel || p.manual ? '' : n(p.mfe || 0), p.cancel || p.manual ? '' : n(p.mae || 0), p.grade, p.score, n(p.prob0, 3), p.gate == null ? '' : p.gate ? '通過' : '未通過', p.regime, p.cancel ? '' : n(p.balAfter), p.src, [p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''), p.news, p.inter, p.nextEv, p.wk ? '是' : '', p.manual ? '是' : '', p.from, p.note].map(q).join(','));
   const url = URL.createObjectURL(new Blob(['﻿' + head.map(q).join(',') + '\n' + rows.join('\n') + '\n'], { type: 'application/octet-stream' }));
   const a = document.createElement('a'); a.href = url; a.download = `cfd-sim-${new Date().toISOString().slice(0, 10)}.csv`; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
 }
 function simClick(t, d) { // 模擬戰頁面上的按鈕；有處理就回傳 true
-  if (d.simtab) { SIM.tab = d.simtab; renderSim(); return true; }
+  if (d.simtab) { SIM.tab = d.simtab; SIM.histN = 150; renderSim(); return true; }
   if (t.id === 'sim-pause') { SIM.st.paused = !SIM.st.paused; simSave(); renderSim(); return true; }
   if (t.id === 'sim-csv') { simCsv(); return true; }
   if (t.id === 'sim-hall') { SIM.histAll = !SIM.histAll; renderSim(); return true; }
-  if (t.id === 'sim-reset') {
-    if (Date.now() - SIM.resetAt < 6e3) { SIM.st = Sim.init({}, Date.now()); SIM.resetAt = 0; SIM.tab = ''; simSave(); simBadge(); toast('模擬帳戶已重設，從 1,000 美元重新開始。', 'info'); }
-    else { SIM.resetAt = Date.now(); setTimeout(() => { if (view === 'sim') renderSim(); }, 6100); }
+  if (t.id === 'sim-more') { SIM.histN += 300; renderSim(); return true; }
+  if (t.id === 'sim-bk-copy') { simBkCopy(); return true; }
+  if (t.id === 'sim-bk-dl') { simBkSave(); return true; }
+  if (t.id === 'sim-bk-share') { simBkShare(); return true; }
+  if (t.id === 'sim-in-go') { const ta = $('#sim-in-txt'); simImport(ta ? ta.value : ''); return true; }
+  if (t.id === 'sim-m-go') { simManual(); return true; }
+  if (t.id === 'sim-bad-copy') { let raw = ''; try { raw = localStorage.getItem('cfd.sim.bad') || ''; } catch (e) { /* 讀不到 */ } simCopy(raw).then(() => toast('已複製那份原始資料。', 'info')); return true; }
+  if (d.simdel) { // 刪掉一筆補登：按兩次
+    if (SIM.delId === d.simdel && Date.now() - SIM.delAt < 6e3) {
+      const r = Sim.unmanual(SIM.st, d.simdel, Date.now()); SIM.delId = '';
+      if (!r.err) { simSave(); simSay(`已刪掉補登的那一筆（${esc(r.name)} <span class="num">${sUsd(r.pnl)}</span>），帳戶餘額現在 <b class="num">${usd2(SIM.st.balance)}</b>。`); return true; }
+    } else { SIM.delId = d.simdel; SIM.delAt = Date.now(); setTimeout(() => { if (view === 'sim') renderSim(); }, 6100); }
     renderSim(); return true;
+  }
+  if (t.id === 'sim-reset') {
+    if (Date.now() - SIM.resetAt < 6e3) {
+      const old = SIM.st, has = old.hist.length > 0 || old.items.length > 0 || !!old.old; let kept = false;
+      if (has) { try { old.bakT = Date.now(); localStorage.setItem('cfd.sim.bak', JSON.stringify(old)); kept = true; } catch (e) { kept = false; } } // 重設前的帳戶留一份，按錯可以換回來
+      if (has && !kept && !SIM.noBak) { SIM.noBak = true; SIM.resetAt = 0; toast('空間不夠，留不下重設前的帳戶，所以先不重設。請先到「模擬交易歷史」下載備份；之後再按重設就會直接清空。', 'warn'); renderSim(); return true; }
+      SIM.st = Sim.init({}, Date.now()); SIM.resetAt = 0; SIM.noBak = false; SIM.tab = ''; SIM.ioMsg = null; SIM.ioRev++; simSave(); simBakInfo(); simBadge();
+      toast('模擬帳戶已重設，從 1,000 美元重新開始。' + (kept ? '重設前的帳戶留著一份，可以在這一頁最下面換回來。' : ''), 'info');
+    } else { SIM.resetAt = Date.now(); setTimeout(() => { if (view === 'sim') renderSim(); }, 6100); }
+    renderSim(); return true;
+  }
+  if (t.id === 'sim-undo') { // 和重設前的帳戶對調：現在這個改成留著的那一份，所以按錯還可以再換回來
+    const b = LS.get('cfd.sim.bak', null), cur = SIM.st;
+    if (!simValid(b)) { simBakInfo(); toast('找不到重設前的帳戶。', 'warn'); renderSim(); return true; }
+    try { cur.bakT = Date.now(); localStorage.setItem('cfd.sim.bak', JSON.stringify(cur)); } catch (e) { delete cur.bakT; toast('空間不夠，沒辦法對調兩個帳戶。請先下載備份。', 'warn'); return true; }
+    delete b.bakT; b.watch = []; SIM.st = simFix(b); Sim.sweep(b, Date.now()); SIM.tab = ''; SIM.ioMsg = null; SIM.ioRev++; SIM.last = 0; simSave(); simBakInfo(); simBadge();
+    toast('已換回重設前的帳戶；剛才那個帳戶改成留著的那一份，可以再換回來。', 'info'); renderSim(); simMonitor(); return true;
   }
   return false;
 }
@@ -4381,7 +4622,7 @@ document.addEventListener('click', e => {
   if (d.feed) { newsFeed = d.feed; return renderNews(); }
 });
 document.addEventListener('change', e => {
-  const t = e.target;
+  const t = e.target; simChange(t);
   if (t.id === 'd-inst') { S.inst = t.value; save(); loadDetail(true); }
   if (t.id === 'ig-rem') igDraft.remember = t.checked;
   if (t.dataset && t.dataset.cost) { const v = parseFloat(t.value); if (v >= 0) { S.cost[t.dataset.cost] = v; save(); } }
