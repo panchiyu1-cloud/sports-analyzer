@@ -244,6 +244,10 @@ ol.plain { padding-left: 22px; }
 .row.off .r-spark, .row.off .r-price, .row.off .r-sig { opacity: .5; }
 .t-off, .closed-note { margin: 2px 0 6px; font-size: 14px; border: 1px solid var(--line); border-left: 4px solid var(--muted); background: var(--surface); border-radius: 6px; padding: 8px 10px; color: var(--text2); }
 .closed-note { margin: 0; } .t-off b, .closed-note b { color: var(--text); }
+/* 週末盤 */
+.wkc { display: inline-flex; align-items: center; font-size: 12px; font-weight: 700; color: var(--text); border: 1.5px dashed var(--text); border-radius: 5px; padding: 0 5px; margin-left: 6px; white-space: nowrap; line-height: 1.5; vertical-align: middle; }
+small .wkc { margin-left: 0; font-size: 11.5px; } .wk-note, .wk-off { display: block; } .wk-off { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line); }
+.t-wk { margin: 6px 0 0; font-size: 13px; color: var(--text2); border-left: 3px dashed var(--muted); padding-left: 8px; } .closed-note + .closed-note { margin-top: 6px; }
 .d-price .nt { font-family: var(--sans); font-size: 12.5px; line-height: 1.5; margin-top: 4px; }
 .live-dot { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text2); white-space: nowrap; }
 .live-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--blue); }
@@ -1396,8 +1400,8 @@ function finish(st, p, price, why, t, ev) { TK().close(p, price, why, t); settle
 function onOpen(st, p, t, ctx, ev) { // 成交：準備中 → 交易中
   const eq = Sim.equity(st); // 這筆還沒算進去的權益
   p.stage = 'open'; p.openedAt = t; p.costUsd = p.notional * (p.costRate || 0); p.booked = 0; p.finUsd = 0; p.eqAtOpen = eq; p.price = p.entry; p.priceT = t; p.mfe = 0; p.mae = 0;
-  const hold = (ctx && ctx.holdMs) || p.holdMs || st.cfg.holdH * 3600e3, ci = MK() ? MK().closeIn(p.cls, t) : null; p.holdMs = hold;
-  const byHold = t + hold, byClose = isNum(ci) && ci > 0 ? t + ci - 30 * 60e3 : Infinity;
+  const hold = (ctx && ctx.holdMs) || p.holdMs || st.cfg.holdH * 3600e3, ci = MK() ? MK().closeIn(p.cls, t, !!p.wk) : null; p.holdMs = hold; // 週末盤開的單：收盤指的是週末盤收盤
+  const byHold = t + hold, byClose = isNum(ci) && ci > 0 ? Math.floor(t / 60e3) * 60e3 + ci - 30 * 60e3 : Infinity; // closeIn 以整分鐘計
   if (byClose < byHold) { p.dueAt = byClose; p.dueWhy = 'close_soon'; } else { p.dueAt = byHold; p.dueWhy = 'time'; }
   logEv(st, ev, 'open', p, { t, v: p.entry });
 }
@@ -1433,10 +1437,10 @@ function advance(st, p, cd, price, now, ctx, ev) {
   else if (p.stage === 'ready' && isNum(price)) { p.price = price; p.priceT = now; }
 }
 /* 一個商品的掛單與持有中的單，用新的 K 線與現價推進一次。
-   o = { cd: K 線（由舊到新，已去掉休市時段）, price, now, closed: 現在沒有交易, from: 這份 K 線最早一根的時間, tfMs: K 線週期 }
+   o = { cd: K 線（由舊到新，已去掉休市時段）, price, now, closed: 現在沒有交易, from: 這份 K 線最早一根的時間, tfMs: K 線週期, wk: 只推進週末盤（true）或平日（false）開的單 }
    K 線接不上上次檢查的時間（離開太久）：掛單取消，持有中的用現在的價格結算並註明。 */
 Sim.step = function (st, instId, o) {
-  const ev = [], now = o.now, list = live(st).filter(p => p.instId === instId && (p.stage === 'open' || (p.stage === 'ready' && p.type === 'limit')));
+  const ev = [], now = o.now, list = live(st).filter(p => p.instId === instId && (o.wk == null || !!p.wk === !!o.wk) && (p.stage === 'open' || (p.stage === 'ready' && p.type === 'limit')));
   for (const p of list) {
     if (o.closed) { // 沒有交易：這段時間的價格不拿來判斷；掛單直接取消
       if (p.stage === 'ready') cancel(st, p, 'closed', now, ev); else p.lastCheck = Math.max(p.lastCheck, now);
@@ -1463,7 +1467,7 @@ function newOrder(st, c, z, now, ctx) {
   const pl = c.plan, mk = pl.type === 'market', tfMs = c.tfMs || 900e3;
   return { oid: 's' + (++st.seq) + '-' + now.toString(36), instId: c.id, name: c.name, code: c.code, cls: c.cls, dp: c.dp, tf: c.tf, side: pl.side, type: pl.type, planName: pl.name, stage: 'ready',
     entry: pl.entry, entry0: pl.entry, sl: pl.sl, slNow: pl.sl, tp1: pl.tp1, tp2: pl.tp2, risk: Math.abs(pl.entry - pl.sl), created: now, lastCheck: now, price: c.price, priceT: now,
-    status: mk ? 'confirm' : 'pending', openedAt: null, confirmAt: mk ? now + st.cfg.confirmMs : null, expires: mk ? null : now + st.cfg.limitBars * tfMs, flags: { nearSl: 1, nearTp1: 1, nearTp2: 1 }, basis: c.basis || 'src',
+    status: mk ? 'confirm' : 'pending', openedAt: null, confirmAt: mk ? now + st.cfg.confirmMs : null, expires: mk ? null : now + st.cfg.limitBars * tfMs, flags: { nearSl: 1, nearTp1: 1, nearTp2: 1 }, basis: c.basis || 'src', wk: c.wk ? 1 : 0,
     riskUsd: z.riskUsd, riskPct: z.pct, notional: z.notional, margin: z.margin, scaled: !!z.scaled, costRate: c.cost || 0, unit: c.unit || null, holdMs: (ctx && ctx.holdMs) || st.cfg.holdH * 3600e3,
     score: c.score, grade: c.grade, prob0: c.prob, gate: c.gate == null ? null : c.gate ? 1 : 0, gateWhy: c.gateWhy || null, regime: c.regime || '', label: c.label || '', action: c.action || '', notes: (c.notes || []).slice(0, 6),
     news: c.news || '', inter: c.inter || '', nextEv: c.nextEv || '', src: c.src || '', eq0: Sim.equity(st), events: [] };
@@ -1473,16 +1477,17 @@ function resize(st, p, eqNow) { // 市價單成交時，進場價和計畫差一
   let n = p.riskUsd / dist; if (n * m > cap && cap > 0) { const k = cap / (n * m); n *= k; p.riskUsd *= k; p.scaled = true; }
   p.notional = n; p.margin = n * m; p.riskPct = p.riskUsd / eqNow * 100;
 }
-/* 每次掃描完呼叫一次。ctx = { now, cands: 候選（依分數由高到低）, info: { 商品: { pUp, price, t, off, basis } }, same(a, da, b, db): 是不是同一個賭注, holdMs }
+/* 每次掃描完呼叫一次。ctx = { now, cands: 候選（依分數由高到低）, info: { 商品: { pUp, price, t, off, basis, wk } }, same(a, da, b, db): 是不是同一個賭注, holdMs }
+   wk：現在是 IG 的週末盤。週末盤和平日是兩個市場，所以平日開的單在週末盤期間一律當作休市（反過來也是）。
    候選 c = { id, name, code, cls, dp, tf, tfMs, dir, score, grade, label, action, notes, prob, gate, gateWhy, plan: { type, side, name, entry, sl, tp1, tp2 },
-             price, t, sigOk, sigWait, off, lag, eventSoon, closeIn, cost, regime, src, basis, unit, news, inter, nextEv } */
+             price, t, sigOk, sigWait, off, lag, eventSoon, closeIn, cost, regime, src, basis, unit, news, inter, nextEv, wk } */
 Sim.scan = function (st, ctx) {
   const ev = [], now = ctx.now, c0 = st.cfg, info = ctx.info || {}, by = {}; for (const c of ctx.cands || []) by[c.id] = c;
   rollDay(st, now);
   // 1) 準備中的單：訊號還在不在？市價單確認後成交
   for (const p of live(st).filter(x => x.stage === 'ready')) {
     const c = by[p.instId], inf = info[p.instId], d = dirOf(p);
-    if (inf && inf.off) { cancel(st, p, 'closed', now, ev); continue; }
+    if (inf && (inf.off || !!inf.wk !== !!p.wk)) { cancel(st, p, 'closed', now, ev); continue; }
     if (p.type === 'market' && now - p.created > c0.staleMs) { cancel(st, p, 'stale', now, ev); continue; }
     if (!c) { if (inf && now - inf.t < 180e3) cancel(st, p, 'signal', now, ev); continue; } // 這次掃描有它，但已經不在候選裡
     if ((p.basis || 'src') !== (c.basis || 'src')) continue; // 價位基準剛換（開或關 IG 報價）：下一輪再看
@@ -1496,7 +1501,7 @@ Sim.scan = function (st, ctx) {
   }
   // 2) 持有中的單：網頁對這個方向的機率掉到 43% 以下（網頁自己會說「建議出場」）就出場
   for (const p of live(st).filter(x => x.stage === 'open')) {
-    const inf = info[p.instId]; if (!inf || inf.off || !isNum(inf.pUp) || now - inf.t > 180e3) continue;
+    const inf = info[p.instId]; if (!inf || inf.off || !!inf.wk !== !!p.wk || !isNum(inf.pUp) || now - inf.t > 180e3) continue;
     const ps = p.side === 'long' ? inf.pUp : 1 - inf.pUp; p.pNow = ps; p.pNowT = now; p.gradeNow = inf.grade;
     if (ps > c0.revP || now - p.openedAt < c0.revAfter || !isNum(inf.price) || (p.basis || 'src') !== (inf.basis || 'src')) continue;
     if (dirOf(p) * (inf.price - p.slNow) <= 0) continue; // 已經碰到停損：交給 K 線那邊照停損結算
@@ -1529,7 +1534,7 @@ Sim.scan = function (st, ctx) {
     }
     if (st.paused) why.unshift({ k: 'paused' });
     const o = old[c.id + '|' + c.dir];
-    watch.push({ id: c.id, name: c.name, code: c.code, cls: c.cls, dp: c.dp, dir: c.dir, score: c.score, grade: c.grade, prob: c.prob, gate: c.gate, price: c.price, label: c.label, action: c.action, notes: (c.notes || []).slice(0, 4),
+    watch.push({ id: c.id, name: c.name, code: c.code, cls: c.cls, dp: c.dp, dir: c.dir, score: c.score, grade: c.grade, prob: c.prob, gate: c.gate, price: c.price, label: c.label, action: c.action, notes: (c.notes || []).slice(0, 4), wk: c.wk ? 1 : 0,
       plan: pl ? { type: pl.type, name: pl.name, entry: pl.entry, sl: pl.sl, tp1: pl.tp1 } : null, why, since: o ? o.since : now, t: now });
   }
   st.watch = watch.slice(0, 15); st.scanT = now; mark(st, now); return ev;
@@ -1550,7 +1555,12 @@ if (typeof module !== 'undefined' && typeof globalThis !== 'undefined') globalTh
 /* ===== 交易時段：哪些商品現在沒有交易（純函式，方便測試） =====
    交易所的 24 小時合約在週末照樣有價格，但 IG 的平日市場不能下單，所以要另外判斷。依 IG 公布的時段（以紐約時間計，夏令時間自動跟著走）：
    外匯：週五 17:00 收、週日 16:00 開；金屬、商品、指數：週五 17:00 收、週日 18:00 開（臺北時間約週六 06:00～週一 07:00，外匯 05:00）。
-   加密貨幣：只在週五 17:00～週六 03:00 暫停。個股與 ETF：只判斷週末（週五 20:00～週日 20:00），平日的盤前盤後不判斷。 */
+   加密貨幣：只在週五 17:00～週六 03:00 暫停。個股與 ETF：只判斷週末（週五 20:00～週日 20:00），平日的盤前盤後不判斷。
+   週末盤：IG 另外有獨立報價的週末市場（Weekend Gold、Weekend US Tech 100…），只有部分商品有（商品清單裡有 wk 的那些）。
+   外匯到週日 15:40、其餘到週日 17:40 收（臺北冬令週一 04:40／06:40），平日市場 20 分鐘後接著開。
+   幾點開，IG 各地網站寫法不一：多數寫週六 03:00（倫敦 08:00、臺北冬令 16:00），IG 國際站的表格寫平日收盤後接著開。
+   預設用前者（比較保守），cfg.wkEarly = true 改成後者。週末盤和平日是兩個市場：平日開的單週末不動，週末開的單收盤後轉成平日的單。
+   所以每個函式多一個參數 wk：要不要把週末盤算進去（看商品現在能不能交易＝商品有沒有週末盤；看一筆單＝它是不是在週末盤開的）。 */
 (function (root) {
 'use strict';
 const D = 1440, W = 7 * D, at = (d, h) => d * D + h * 60;
@@ -1559,6 +1569,7 @@ const RULES = {
   stock: [at(5, 20), at(0, 20)], etf: [at(5, 20), at(0, 20)], crypto: [at(5, 17), at(6, 3)],
 };
 const ROLL = { fx: 1, metal: 1, cmdty: 1, index: 1 };
+const WKEND = { fx: at(0, 15) + 40, metal: at(0, 17) + 40, cmdty: at(0, 17) + 40, index: at(0, 17) + 40, stock: at(0, 17) + 40, etf: at(0, 17) + 40 }; // 週末盤收盤（紐約週日）
 let fmt = null; const offCache = new Map();
 function nyOffset(t) { // 紐約時間比 UTC 慢幾分鐘（-300 或 -240）。每 6 小時查一次就夠：夏令時間只在週日凌晨切換，那時所有商品都休市
   const k = Math.floor(t / 21600e3); let v = offCache.get(k); if (v != null) return v;
@@ -1576,19 +1587,27 @@ function nyOffset(t) { // 紐約時間比 UTC 慢幾分鐘（-300 或 -240）。
 /* 紐約時間的「一週第幾分鐘」（週日 00:00 = 0） */
 function mow(t) { const d = new Date(t + nyOffset(t) * 60e3); return d.getUTCDay() * D + d.getUTCHours() * 60 + d.getUTCMinutes(); }
 const M = {
-  RULES, mow, nyOffset,
-  /* 這一類商品在時間 t 有沒有交易；沒有的話，reopen 是預計恢復的時間 */
-  sched(cls, t) {
+  RULES, WKEND, mow, nyOffset, cfg: { wkEarly: false },
+  wkOpen(cls) { const r = RULES[cls]; return M.cfg.wkEarly ? r[0] : Math.max(r[0], at(6, 3)); }, // 週末盤幾點開（一週的第幾分鐘）
+  /* 這一類商品在時間 t 有沒有交易；沒有的話，reopen 是預計恢復的時間。wk：把 IG 的週末盤算進去（weekend＝現在是週末盤，until＝週末盤收盤時間） */
+  sched(cls, t, wk) {
     const r = RULES[cls]; if (!r) return { open: true };
     const m = mow(t), a = r[0], b = r[1], closed = a <= b ? (m >= a && m < b) : (m >= a || m < b);
     if (!closed) return { open: true };
-    let re = (Math.floor(t / 60e3) + ((b - m + W) % W)) * 60e3;
-    const m2 = mow(re); if (m2 !== b) re += (((b - m2 + W + 720) % W) - 720) * 60e3; // 中間剛好跨過夏令時間切換：修正那一小時
-    return { open: false, reopen: re, why: cls === 'crypto' ? '每週固定暫停' : '週末休市' };
+    const when = x => { let re = (Math.floor(t / 60e3) + ((x - m + W) % W)) * 60e3; const m2 = mow(re); if (m2 !== x) re += (((x - m2 + W + 720) % W) - 720) * 60e3; return re; }; // 中間剛好跨過夏令時間切換：修正那一小時
+    const e = wk && a > b ? WKEND[cls] : null;
+    if (e != null) {
+      const o = M.wkOpen(cls);
+      if (m >= o || m < e) return { open: true, weekend: true, until: when(e) };
+      if (m >= a) return { open: false, reopen: when(o), why: '週末盤還沒開' };
+      return { open: false, reopen: when(b), why: '週末盤已收，等平日開盤' };
+    }
+    return { open: false, reopen: when(b), why: cls === 'crypto' ? '每週固定暫停' : '週末休市' };
   },
-  closedAt(cls, t) { return !M.sched(cls, t).open; },
-  /* 距離下一次每週休市還有幾毫秒（現在就休市＝0；這一類沒有規則＝null） */
-  closeIn(cls, t) { const r = RULES[cls]; if (!r) return null; if (!M.sched(cls, t).open) return 0; return ((r[0] - mow(t) + W) % W) * 60e3; },
+  closedAt(cls, t, wk) { return !M.sched(cls, t, wk).open; },
+  weekend(cls, t, wk) { return !!M.sched(cls, t, wk).weekend; },
+  /* 距離下一次收盤還有幾毫秒（現在就休市＝0；這一類沒有規則＝null）。週末盤期間＝距離週末盤收盤 */
+  closeIn(cls, t, wk) { const r = RULES[cls]; if (!r) return null; const sc = M.sched(cls, t, wk); if (!sc.open) return 0; return (((sc.weekend ? WKEND[cls] : r[0]) - mow(t) + W) % W) * 60e3; },
   /* 每日換日時段（紐約 16:45–18:15，臺北冬令 05:45–07:15）：外匯點差放大，IG 的金屬、商品、指數暫停約一小時 */
   thin(cls, t) { if (!ROLL[cls]) return false; const m = mow(t), day = Math.floor(m / D), mm = m % D; return day >= 1 && day <= 5 && mm >= 1005 && mm < 1095; },
   /* 距離今天的換日（紐約 17:00）還有幾毫秒；週一到週四才有（週五是每週休市），已經過了＝null */
@@ -1760,14 +1779,16 @@ const fxSrc = (p, extra) => [['bybit', p + 'USDT'], ...(HLFX[p] ? [['hl', HLFX[p
 const cSrc = b => [['binance', b + 'USDT'], ['bybits', b + 'USDT'], ['okx', b + '-USDT'], ['kraken', (b === 'BTC' ? 'XBT' : b) + 'USD']];
 /* 股票與 ETF：先試交易所的 24 小時股票合約，再退到 Yahoo。ref 是大概的價位，用來擋掉「同代號的加密貨幣」 */
 const perp = (t, extra) => [['binancef', t + 'USDT'], ['bybit', t + 'USDT'], ...(extra || []), ['yahoo', t]];
+/* wk：這個商品在 IG 有週末盤，值是 IG 上的名稱。只標「週末真的拿得到報價」的（交易所的 24 小時合約）：
+   IG 還有週末的華爾街、德國 40、英國 100、香港 HS50、澳洲 200、法國 40，但找不到週末有在動的公開報價，所以沒有標 */
 const stk = (t, name, ref) => ({ id: t, name, code: t, cls: 'stock', dp: 2, ref, src: perp(t), expo: { RISK: 1 }, demo: [ref, 0.0007] });
 const etf = (t, name, ref, expo) => ({ id: t, name, code: t, cls: 'etf', dp: 2, ref, src: perp(t), expo: expo || { RISK: 1 }, demo: [ref, 0.0004] });
 const idx = (id, name, y, ref, dp, o) => Object.assign({ id, name, code: id, cls: 'index', dp, ref, src: [['yahoo', y]], expo: { RISK: 1 }, demo: [ref, 0.0003] }, o || {});
 const cmd = (id, name, code, y, ref, dp, o) => Object.assign({ id, name, code, cls: 'cmdty', dp, src: [['yahoo', y]], expo: {}, demo: [ref, 0.0006] }, o || {});
 const INSTRUMENTS = [
-  { id: 'EURUSD', name: '歐元／美元', code: 'EUR/USD', cls: 'fx', dp: 5, src: fxSrc('EURUSD', [['kraken', 'EURUSD'], ['krakenf', 'PF_EURUSD'], ['binance', 'EURUSDT']]), expo: { EUR: 1, USD: -1, RISK: 0.2 }, demo: [1.162, 0.00011] },
-  { id: 'GBPUSD', name: '英鎊／美元', code: 'GBP/USD', cls: 'fx', dp: 5, src: fxSrc('GBPUSD', [['kraken', 'GBPUSD'], ['krakenf', 'PF_GBPUSD']]), expo: { GBP: 1, USD: -1, RISK: 0.2 }, demo: [1.318, 0.00012] },
-  { id: 'USDJPY', name: '美元／日圓', code: 'USD/JPY', cls: 'fx', dp: 3, src: fxSrc('USDJPY', [['kraken', 'USDJPY'], ['krakenf', 'PF_USDJPY']]), expo: { USD: 1, JPY: -1, RISK: 0.3 }, demo: [153.8, 0.00012] },
+  { id: 'EURUSD', name: '歐元／美元', code: 'EUR/USD', cls: 'fx', dp: 5, src: fxSrc('EURUSD', [['kraken', 'EURUSD'], ['krakenf', 'PF_EURUSD'], ['binance', 'EURUSDT']]), expo: { EUR: 1, USD: -1, RISK: 0.2 }, demo: [1.162, 0.00011], ref: 1.16, wk: 'Weekend EUR/USD' },
+  { id: 'GBPUSD', name: '英鎊／美元', code: 'GBP/USD', cls: 'fx', dp: 5, src: fxSrc('GBPUSD', [['kraken', 'GBPUSD'], ['krakenf', 'PF_GBPUSD']]), expo: { GBP: 1, USD: -1, RISK: 0.2 }, demo: [1.318, 0.00012], ref: 1.32, wk: 'Weekend GBP/USD' },
+  { id: 'USDJPY', name: '美元／日圓', code: 'USD/JPY', cls: 'fx', dp: 3, src: fxSrc('USDJPY', [['kraken', 'USDJPY'], ['krakenf', 'PF_USDJPY']]), expo: { USD: 1, JPY: -1, RISK: 0.3 }, demo: [153.8, 0.00012], ref: 154, wk: 'Weekend USD/JPY' },
   { id: 'AUDUSD', name: '澳幣／美元', code: 'AUD/USD', cls: 'fx', dp: 5, src: fxSrc('AUDUSD', [['kraken', 'AUDUSD'], ['krakenf', 'PF_AUDUSD']]), expo: { AUD: 1, USD: -1, RISK: 0.5 }, demo: [0.655, 0.00014] },
   { id: 'USDCAD', name: '美元／加幣', code: 'USD/CAD', cls: 'fx', dp: 5, src: fxSrc('USDCAD', [['kraken', 'USDCAD']]), expo: { USD: 1, OIL: -0.4, RISK: -0.2 }, demo: [1.401, 0.00009] },
   { id: 'USDCHF', name: '美元／瑞郎', code: 'USD/CHF', cls: 'fx', dp: 5, src: fxSrc('USDCHF', [['kraken', 'USDCHF'], ['krakenf', 'PF_USDCHF']]), expo: { USD: 1, RISK: 0.3 }, demo: [0.802, 0.0001] },
@@ -1775,7 +1796,7 @@ const INSTRUMENTS = [
   { id: 'EURJPY', name: '歐元／日圓', code: 'EUR/JPY', cls: 'fx', dp: 3, src: fxSrc('EURJPY', [['kraken', 'EURJPY']]), expo: { EUR: 1, JPY: -1, RISK: 0.4 }, demo: [178.7, 0.00012] },
   { id: 'GBPJPY', name: '英鎊／日圓', code: 'GBP/JPY', cls: 'fx', dp: 3, src: fxSrc('GBPJPY'), expo: { GBP: 1, JPY: -1, RISK: 0.4 }, demo: [202.7, 0.00014] },
   { id: 'EURGBP', name: '歐元／英鎊', code: 'EUR/GBP', cls: 'fx', dp: 5, src: fxSrc('EURGBP', [['kraken', 'EURGBP']]), expo: { EUR: 1, GBP: -1 }, demo: [0.8815, 0.00007] },
-  { id: 'XAUUSD', name: '黃金', code: 'XAU/USD', cls: 'metal', dp: 2, src: [['binancef', 'XAUUSDT'], ['bybit', 'XAUUSDT'], ['hl', 'xyz:GOLD'], ['yahoo', 'XAUUSD=X'], ['okx', 'XAUT-USDT'], ['binance', 'PAXGUSDT'], ['yahoo', 'GC=F']], expo: { GOLD: 1, USD: -0.6, RISK: -0.3 }, demo: [4120, 0.00022] },
+  { id: 'XAUUSD', name: '黃金', code: 'XAU/USD', cls: 'metal', dp: 2, src: [['binancef', 'XAUUSDT'], ['bybit', 'XAUUSDT'], ['hl', 'xyz:GOLD'], ['yahoo', 'XAUUSD=X'], ['okx', 'XAUT-USDT'], ['binance', 'PAXGUSDT'], ['yahoo', 'GC=F']], expo: { GOLD: 1, USD: -0.6, RISK: -0.3 }, demo: [4120, 0.00022], wk: 'Weekend Gold' },
   { id: 'XAGUSD', name: '白銀', code: 'XAG/USD', cls: 'metal', dp: 3, src: [['binancef', 'XAGUSDT'], ['bybit', 'XAGUSDT'], ['yahoo', 'XAGUSD=X'], ['yahoo', 'SI=F']], expo: { GOLD: 0.8, USD: -0.5, RISK: 0.1 }, demo: [51.2, 0.0004] },
   { id: 'XPTUSD', name: '鉑金', code: 'XPT/USD', cls: 'metal', dp: 2, src: [['binancef', 'XPTUSDT'], ['bybit', 'XPTUSDT'], ['yahoo', 'XPTUSD=X'], ['yahoo', 'PL=F']], expo: { GOLD: 0.4, USD: -0.4, RISK: 0.3 }, demo: [1540, 0.00035] },
   { id: 'XPDUSD', name: '鈀金', code: 'XPD/USD', cls: 'metal', dp: 2, src: [['binancef', 'XPDUSDT'], ['bybit', 'XPDUSDT'], ['yahoo', 'XPDUSD=X'], ['yahoo', 'PA=F']], expo: { GOLD: 0.3, USD: -0.4, RISK: 0.3 }, demo: [1030, 0.0004] },
@@ -1788,20 +1809,20 @@ const INSTRUMENTS = [
   { id: 'ADAUSD', name: '艾達幣', code: 'ADA/USD', cls: 'crypto', dp: 4, src: cSrc('ADA'), expo: { CRYPTO: 1, USD: -0.2, RISK: 0.6 }, demo: [0.56, 0.0011] },
   { id: 'LINKUSD', name: 'Chainlink', code: 'LINK/USD', cls: 'crypto', dp: 3, src: cSrc('LINK'), expo: { CRYPTO: 1, USD: -0.2, RISK: 0.6 }, demo: [15.4, 0.0011] },
   // 大宗商品
-  cmd('WTI', 'WTI 原油', 'WTI/USD', 'CL=F', 60, 2, { src: [['binancef', 'CLUSDT'], ['bybit', 'CLUSDT'], ['yahoo', 'CL=F']], ref: 60, expo: { OIL: 1, RISK: 0.3, USD: -0.2 } }),
+  cmd('WTI', 'WTI 原油', 'WTI/USD', 'CL=F', 60, 2, { src: [['binancef', 'CLUSDT'], ['bybit', 'CLUSDT'], ['hl', 'xyz:CL'], ['yahoo', 'CL=F']], ref: 60, expo: { OIL: 1, RISK: 0.3, USD: -0.2 }, wk: 'Weekend Oil - US Crude' }),
   cmd('BRENT', '布蘭特原油', 'BRENT/USD', 'BZ=F', 64, 2, { src: [['binancef', 'BZUSDT'], ['bybit', 'BZUSDT'], ['yahoo', 'BZ=F']], ref: 64, expo: { OIL: 1, RISK: 0.3, USD: -0.2 } }),
   cmd('NATGAS', '天然氣', 'NG/USD', 'NG=F', 4, 3, { src: [['binancef', 'NATGASUSDT'], ['bybit', 'NATGASUSDT'], ['yahoo', 'NG=F']], ref: 4 }),
   cmd('COPPER', '銅', 'XCU/USD', 'HG=F', 5.6, 4, { src: [['binancef', 'COPPERUSDT'], ['bybit', 'COPPERUSDT'], ['yahoo', 'HG=F']], autoDp: true, expo: { USD: -0.4, RISK: 0.6 } }),
   cmd('CORN', '玉米', 'CORN', 'ZC=F', 430, 2), cmd('WHEAT', '小麥', 'WHEAT', 'ZW=F', 540, 2), cmd('SOYBEAN', '黃豆', 'SOYBEAN', 'ZS=F', 1050, 2),
   cmd('COFFEE', '咖啡', 'COFFEE', 'KC=F', 380, 2), cmd('SUGAR', '糖', 'SUGAR', 'SB=F', 16, 2), cmd('COCOA', '可可', 'COCOA', 'CC=F', 6000, 0),
   // 美股
-  stk('AAPL', '蘋果', 270), stk('MSFT', '微軟', 500), stk('NVDA', '輝達', 190), stk('AMZN', '亞馬遜', 240), stk('GOOGL', 'Alphabet（Google）', 300), stk('META', 'Meta', 700), stk('TSLA', '特斯拉', 400),
-  stk('TSM', '台積電 ADR', 300), stk('AVGO', '博通', 380), stk('AMD', '超微', 250), stk('MU', '美光', 220), stk('INTC', '英特爾', 40), stk('PLTR', 'Palantir', 180), stk('BABA', '阿里巴巴 ADR', 160),
+  stk('AAPL', '蘋果', 270), stk('MSFT', '微軟', 500), stk('NVDA', '輝達', 190), stk('AMZN', '亞馬遜', 240), stk('GOOGL', 'Alphabet（Google）', 300), stk('META', 'Meta', 700), Object.assign(stk('TSLA', '特斯拉', 400), { src: perp('TSLA', [['hl', 'xyz:TSLA']]), wk: 'Tesla（All Sessions）' }),
+  stk('TSM', '台積電 ADR', 300), stk('AVGO', '博通', 380), stk('AMD', '超微', 250), stk('MU', '美光', 220), stk('INTC', '英特爾', 40), stk('PLTR', 'Palantir', 180), stk('BABA', '阿里巴巴 ADR', 160), Object.assign(stk('SPCX', 'SpaceX', 160), { src: [['hl', 'xyz:SPCX'], ['binancef', 'SPCXUSDT'], ['bybit', 'SPCXUSDT']], wk: 'Weekend SpaceX' }),
   // ETF
   etf('SPY', '標普 500 ETF', 680), etf('QQQ', '那斯達克 100 ETF', 620), etf('IWM', '羅素 2000 ETF', 250), Object.assign(etf('DIA', '道瓊 ETF', 480), { src: perp('DIA', [['bitget', 'DIASTOCKUSDT']]) }), etf('SMH', '半導體 ETF', 380),
   etf('SOXL', '半導體 3 倍做多 ETF', 50), etf('TLT', '美國 20 年期公債 ETF', 90, { USD: -0.6, RISK: -0.3 }), etf('GLD', '黃金 ETF', 380, { GOLD: 1, USD: -0.6, RISK: -0.3 }), etf('EWT', '臺灣 ETF（MSCI）', 65), etf('FXI', '中國大型股 ETF', 40),
   // 指數（以期貨或現貨指數為準）
-  idx('US500', '標普 500 指數', 'ES=F', 6800, 2, { src: [['hl', 'xyz:SP500'], ['okxs', 'US500-USDT-SWAP'], ['bitget', 'SP500USDT'], ['yahoo', 'ES=F']] }), idx('NAS100', '那斯達克 100 指數', 'NQ=F', 25500, 2, { src: [['hl', 'xyz:XYZ100'], ['okxs', 'US100-USDT-SWAP'], ['bitget', 'NDX100USDT'], ['yahoo', 'NQ=F']] }), idx('US30', '道瓊指數（期貨）', 'YM=F', 48000, 0), idx('US2000', '羅素 2000 指數（期貨）', 'RTY=F', 2500, 1),
+  idx('US500', '標普 500 指數', 'ES=F', 6800, 2, { src: [['hl', 'xyz:SP500'], ['okxs', 'US500-USDT-SWAP'], ['bitget', 'SP500USDT'], ['yahoo', 'ES=F']] }), idx('NAS100', '那斯達克 100 指數', 'NQ=F', 25500, 2, { src: [['hl', 'xyz:XYZ100'], ['okxs', 'US100-USDT-SWAP'], ['bitget', 'NDX100USDT'], ['yahoo', 'NQ=F']], wk: 'Weekend US Tech 100' }), idx('US30', '道瓊指數（期貨）', 'YM=F', 48000, 0), idx('US2000', '羅素 2000 指數（期貨）', 'RTY=F', 2500, 1),
   idx('JP225', '日經 225 指數', 'NIY=F', 51000, 0, { quote: 'JPY', cur: 'JPY', src: [['hl', 'xyz:JP225'], ['okxs', 'JP225-USDT-SWAP'], ['bitget', 'JP225USDT'], ['yahoo', 'NIY=F']] }), idx('GER40', '德國 DAX 指數', '^GDAXI', 24000, 1, { quote: 'EUR', cur: 'EUR' }), idx('HK50', '香港恆生指數', '^HSI', 26000, 0, { quote: 'HKD', cur: 'CNY', src: [['bitget', 'HSIUSDT'], ['yahoo', '^HSI']] }), idx('TWSE', '臺灣加權指數', '^TWII', 28000, 0, { quote: 'TWD' }),
 ];
 const CLS_NAME = { fx: '外匯', metal: '金屬', cmdty: '商品', stock: '股票', etf: 'ETF', index: '指數', crypto: '加密貨幣' };
@@ -2007,10 +2028,13 @@ function demoSeries(inst, tf, limit) {
 }
 
 /* ---------- 快取與取得 ---------- */
-const cache = new Map(), inflight = new Map(), rawLast = {};
+const cache = new Map(), inflight = new Map(), rawLast = {}, wkTry = {};
+/* 這份 K 線是不是「沒有在動」：最後一根太舊，或最近 8 根有 6 根以上高低同價（有些交易所的合約週末照樣出 K 線，但價格不動） */
+function dead(cd, tf, now) { const n = cd.length, ms = E.TF[tf]; if (!n || now - cd[n - 1].t > ms + Math.max(ms * 0.5, 20 * 60e3)) return true; return cd.slice(-8).filter(b => b.h === b.l).length >= 6; }
+const wkLive = (inst, tf, now) => !!inst.wk && E.TF[tf] >= 900e3 && !!root.Mkt && root.Mkt.weekend(inst.cls, now, true); // 現在是這個商品的週末盤（只在 15 分以上的週期檢查，短週期本來就常常不動）
 for (const i of INSTRUMENTS) i.dp0 = i.dp;
 const Data = {
-  INSTRUMENTS, CLS_NAME, CLS_ORDER, SRC_NAME, http, viaProxy, demo: false, custom: LS.get('cfd.custom', []),
+  INSTRUMENTS, CLS_NAME, CLS_ORDER, SRC_NAME, http, viaProxy, dead, demo: false, custom: LS.get('cfd.custom', []),
   basisOf: null, livePatch: null, onRaw: null, // 由 IG 報價模組掛上：把 K 線換算到 IG 的價位
   all() { return INSTRUMENTS.concat(this.custom); },
   byId(id) { return this.all().find(x => x.id === id); },
@@ -2025,7 +2049,7 @@ const Data = {
   async fetchFull(inst, tf, limit, o) {
     // 記住的如果是備援來源（不是清單第一個），每 6 小時從頭再試一次：不然一次連線失敗之後，就會一直停在比較差的備援來源
     const now = Date.now(), w0 = this.winners[inst.id], w = w0 > 0 && !(now - (this.winAt[inst.id] || 0) < 6 * 3600e3) ? -1 : w0;
-    const order = inst.src.map((s, i) => i).sort((a, b) => (a === w ? -1 : b === w ? 1 : a - b)), errs = [];
+    const order = inst.src.map((s, i) => i).sort((a, b) => (a === w ? -1 : b === w ? 1 : a - b)), errs = [], wk = wkLive(inst, tf, now); let spare = null;
     for (const i of order) {
       const [src, sym] = inst.src[i];
       try {
@@ -2033,11 +2057,13 @@ const Data = {
         if (!valid(cd)) throw new Error(SRC_NAME[src] + '：資料不足');
         const lastP = cd[cd.length - 1].c;
         if (inst.ref && (lastP < inst.ref / 6 || lastP > inst.ref * 6)) throw new Error(SRC_NAME[src] + ' ' + sym + '：價位不合理（可能是同代號的其他商品），已略過');
+        if (wk && dead(cd, tf, Date.now())) { if (!spare) spare = { cd, src, sym }; throw new Error(SRC_NAME[src] + ' ' + sym + '：週末沒有在報價'); } // 週末盤期間：換下一個來源試
         if (inst.autoDp) { inst.dp0 = autoDp(lastP); this.setDp(inst); }
         if (w0 !== i || w !== w0) { this.winners[inst.id] = i; this.winAt[inst.id] = now; LS.set('cfd.win3', this.winners); LS.set('cfd.winAt', this.winAt); }
         return { cd, pt: cd.pt || Date.now(), src: { key: src, sym, label: SRC_NAME[src] + ' ' + sym, cap: CAP[src] || 500 } };
       } catch (e) { errs.push(e.message); }
     }
+    if (spare) return { cd: spare.cd, pt: spare.cd.pt || Date.now(), src: { key: spare.src, sym: spare.sym, label: SRC_NAME[spare.src] + ' ' + spare.sym, cap: CAP[spare.src] || 500 } }; // 沒有一個來源週末有報價：照舊回傳，畫面會標成沒有交易
     const er = new Error(errs.join('；') || '沒有可用來源'); er.list = errs; throw er;
   },
   /* 回測與匯出用：抓比平常更長的歷史（往回多抓幾頁）。不進快取，也不經過 IG 換算；抓不到更早的就用手上有的。
@@ -2097,7 +2123,8 @@ const Data = {
     const done = rec => { const b = rec.cd[rec.cd.length - 1]; this.note(inst, b.c, rec.pt || rec.ts, rec.src.key === 'kraken', rec.ts - (rec.pt || rec.ts)); return rec; };
     const job = (async () => {
       try {
-        if (c && c.cd.length >= Math.min(limit, c.src.cap) * 0.9 && c.src.key !== 'yahoo' && c.src.key !== 'kraken') {
+        const redo = !!c && wkLive(inst, tf, now) && dead(c.cd, tf, now) && !(now - (wkTry[key] || 0) < 10 * 60e3); if (redo) wkTry[key] = now; // 週末盤開了，手上這個來源卻不動：每 10 分鐘從頭找一次有在報價的來源
+        if (c && !redo && c.cd.length >= Math.min(limit, c.src.cap) * 0.9 && c.src.key !== 'yahoo' && c.src.key !== 'kraken') {
           try { // 只補最新幾根
             const lastT = c.cd[c.cd.length - 1].t, need = Math.ceil((now - lastT) / E.TF[tf]) + 3;
             if (need > 200) throw new Error('缺口太大，改完整重抓');
@@ -3002,12 +3029,15 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const CLS = ['fx', 'metal', 'cmdty', 'stock', 'etf', 'index', 'crypto'];
 const DEF = { inst: 'XAUUSD', tf: '15m', scanTf: '15m', cls: 'top', swap: false, theme: 'auto', auto: true, sound: true, equity: 0, riskPct: 10, lev: 100, maxHold: 6,
-  cost: { fx: 0.006, metal: 0.012, cmdty: 0.05, stock: 0.04, etf: 0.03, index: 0.012, crypto: 0.05 }, on: { fx: true, metal: true, cmdty: true, stock: true, etf: true, index: true, crypto: true } };
+  wkEarly: false, wkCost: 5, cost: { fx: 0.006, metal: 0.012, cmdty: 0.05, stock: 0.04, etf: 0.03, index: 0.012, crypto: 0.05 }, on: { fx: true, metal: true, cmdty: true, stock: true, etf: true, index: true, crypto: true } };
 const S = Object.assign({}, DEF, LS.get('cfd.set', {})); S.cost = Object.assign({}, DEF.cost, S.cost || {}); S.on = Object.assign({}, DEF.on, S.on || {});
 if (!(S.v >= 2)) S.cls = 'top';
 if (!(S.v >= 3)) { S.equity = 0; S.riskPct = 10; S.maxHold = 6; } // 第五版：資金要自己填（不再預設一萬），每筆最多賠資金的 10%、最長持有 6 小時（使用者 2026/11/15 指定）
 S.v = 3;
 const save = () => LS.set('cfd.set', S);
+const applyWk = () => { Mkt.cfg.wkEarly = S.wkEarly === true; }; applyWk(); // IG 週末盤幾點開（設定頁可改）
+const wkNow = inst => !!inst && !!inst.wk && !Data.demo && Mkt.weekend(inst.cls, Date.now(), true); // 這個商品現在是不是 IG 的週末盤
+const wkMul = () => Math.max(1, +S.wkCost || 5);
 const pct = (v, d) => (isNum(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(d == null ? 2 : d) + '%' : '—');
 const hm = t => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
 const hms = t => hm(t) + ':' + String(new Date(t).getSeconds()).padStart(2, '0');
@@ -3015,6 +3045,7 @@ const mdhm = t => { const d = new Date(t); return (d.getMonth() + 1) + '/' + d.g
 const ago = t => { const m = Math.max(0, Math.round((Date.now() - t) / 60e3)); return m < 60 ? m + ' 分鐘前' : m < 1440 ? Math.round(m / 60) + ' 小時前' : Math.round(m / 1440) + ' 天前'; };
 const rTxt = r => (r >= 0 ? '+' : '−') + Math.abs(r).toFixed(2) + 'R';
 const costOf = inst => { // 來回一趟的成本（占價格的比例）。有 IG 報價時直接用 IG 當下的點差
+  if (wkNow(inst)) return S.cost[inst.cls] != null ? S.cost[inst.cls] / 100 * wkMul() : undefined; // 週末盤：IG 沒有公布點差，先用平日成本乘上倍數估（設定頁可改）
   const q = IG.basis(inst) && IG.quote(inst.id); if (q && q.ok && q.spread > 0 && Date.now() - q.t < 120e3) return clip(q.spread / q.mid, 0, 0.02);
   return S.cost[inst.cls] != null ? S.cost[inst.cls] / 100 : undefined;
 };
@@ -3026,17 +3057,25 @@ let view = 'scan', offline = false;
 
 /* ---------- 有沒有交易 ----------
    交易所的 24 小時合約週末照樣有價格，但在 IG 不能下單。判斷順序：IG 自己回報的狀態（含假日）→ 固定時段（週末）→ 來源本身停了。
-   沒有交易的商品：標「沒有交易」、不列入精選 10、不推送即時價、追蹤單不判斷停損停利。 */
+   沒有交易的商品：標「沒有交易」、不列入精選 10、不推送即時價、追蹤單不判斷停損停利。
+   IG 有週末盤的商品（inst.wk）在週末盤期間算「有交易」（回傳 weekend: true），前提是報價來源週末真的有在動。
+   pos：看的是一筆單（追蹤單、紙上單、模擬單）而不是商品本身。平日開的單在週末盤期間一樣是沒有交易（兩個市場各算各的）。 */
 const reTxt = t => { const d = new Date(t); return (d.toDateString() === new Date().toDateString() ? '今天' : '週' + '日一二三四五六'[d.getDay()]) + ' ' + hm(t); };
-function mktState(inst, stale) {
+function mktState(inst, stale, pos) {
   if (Data.demo) return { closed: false };
-  const now = Date.now(), sc = Mkt.sched(inst.cls, now), m = IG.ready() ? IG.map[inst.id] : null, q = m && m.epic ? IG.quote(inst.id) : null;
-  const re = sc.open ? '' : inst.cls === 'stock' || inst.cls === 'etf' ? '週一恢復' : reTxt(sc.reopen) + ' 恢復';
+  const now = Date.now(), wk = pos ? !!pos.wk : !!inst.wk, sc = Mkt.sched(inst.cls, now, wk), m = IG.ready() ? IG.map[inst.id] : null, q = m && m.epic ? IG.quote(inst.id) : null;
+  if (sc.weekend) return stale ? { closed: true, by: 'stale', why: '週末盤的報價來源沒有在動', re: '', reopen: 0 } : { closed: false, weekend: true, until: sc.until }; // 平日那個 IG 商品這時候是關的，不看它
+  const re = sc.open ? '' : (inst.cls === 'stock' || inst.cls === 'etf') && !wk ? '週一恢復' : reTxt(sc.reopen) + ' 恢復';
   if (q && now - q.t < 120e3) return q.ok ? { closed: false, by: 'ig' } : { closed: true, by: 'ig', why: sc.open ? 'IG 目前沒有開放交易' : sc.why, re, reopen: sc.reopen || 0 };
   if (!sc.open) return { closed: true, by: 'sched', why: sc.why, re, reopen: sc.reopen };
   return stale ? { closed: true, by: 'stale', why: '休市或報價延遲', re: '', reopen: 0 } : { closed: false };
 }
 const rowOff = r => { if (!r || r.err) return null; const st = mktState(r.inst, r.stale); return st.closed ? st : null; };
+function wkLine(all) { // 掃描頁最上面：現在是 IG 的週末盤時，說明哪些可以做、要注意什麼
+  const on = all.filter(r => !r.err && wkNow(r.inst) && !rowOff(r)); if (!on.length) return '';
+  const until = Math.min(...on.map(r => Mkt.sched(r.inst.cls, Date.now(), true).until || Infinity));
+  return `<span class="wk-note">現在是 IG 的<b>週末盤</b>${isFinite(until) ? `（最早 ${reTxt(until)} 收）` : ''}：加密貨幣以外，有 <b class="num">${on.length}</b> 項可以交易，名稱旁標「週末盤」。IG 的週末盤是另外報價的市場，這裡的價格取自交易所的 24 小時合約，<b>和 IG 的價位會有落差，點差也比平日大很多</b>（這裡先用平日的 ${wkMul()} 倍估）。下單前請看 IG 的報價，進場、停損、停利用百分比距離對照。</span>`;
+}
 function offLine(offs) { // 掃描頁最上面那一行：有幾項沒有交易、什麼時候恢復
   const wk = offs.filter(x => x.by !== 'stale'); if (!wk.length) return '';
   const re = Math.min(...wk.map(x => x.reopen || Infinity)), why = [...new Set(wk.map(x => x.why))];
@@ -3158,7 +3197,7 @@ function newPos(inst, plan, tf, meta) { // meta：建立當下的評級、分數
   const now = Date.now(), mk = plan.type === 'market', z = sizeOf(inst, plan), m = meta || {};
   const p = { id: 'p' + now.toString(36) + Math.random().toString(36).slice(2, 6), instId: inst.id, name: inst.name, dp: inst.dp, cls: inst.cls, side: plan.side, type: plan.type, planName: plan.name, tf,
     entry: plan.entry, sl: plan.sl, slNow: plan.sl, tp1: plan.tp1, tp2: plan.tp2, risk: Math.abs(plan.entry - plan.sl), created: now, lastCheck: now, price: null,
-    status: mk ? 'open' : 'pending', openedAt: mk ? now : null, expires: mk ? null : now + 48 * E.TF[tf], flags: {}, basis: IG.basis(inst) ? 'ig' : 'src',
+    status: mk ? 'open' : 'pending', openedAt: mk ? now : null, expires: mk ? null : now + 48 * E.TF[tf], flags: {}, basis: IG.basis(inst) ? 'ig' : 'src', wk: wkNow(inst) ? 1 : 0, // wk：在 IG 的週末盤建立的
     grade: m.grade || null, score: isNum(m.score) ? m.score : null, prob0: isNum(m.prob) ? m.prob : null, rank: m.rank || 0, from: m.from || 'detail', gate: m.gate == null ? null : m.gate ? 1 : 0 }; // gate：建立當下有沒有通過門檻（第七版起；舊的紀錄沒有）
   if (z && z.money) { p.budget = z.money; if (z.n >= 0.01) p.qty = z.n; }
   return p;
@@ -3182,12 +3221,12 @@ const shadowAt = {};
 async function monitor() {
   const act = TR.list.filter(p => Track.active(p) || shLive(p)); if (TR.busy || !act.length) return; TR.busy = true; TR.last = Date.now(); let changed = false;
   try {
-    const by = {}; for (const p of act) (by[p.instId] = by[p.instId] || []).push(p);
-    await Promise.all(Object.entries(by).map(async ([id, ps]) => {
-      const inst = Data.byId(id); if (!inst) return;
+    const by = {}; for (const p of act) { const k = p.instId + (p.wk ? '|w' : ''); (by[k] = by[k] || []).push(p); } // 週末盤的單和平日的單分開看
+    await Promise.all(Object.entries(by).map(async ([key, ps]) => {
+      const id = ps[0].instId, wk = !!ps[0].wk, inst = Data.byId(id); if (!inst) return;
       const real = ps.some(Track.active);
-      if (!real) { if (Date.now() - (shadowAt[id] || 0) < 30e3) return; shadowAt[id] = Date.now(); } // 只剩影子要看：30 秒一次就夠
-      const st = mktState(inst), chk = p => (Track.active(p) ? p.lastCheck : p.sh.lastCheck);
+      if (!real) { if (Date.now() - (shadowAt[key] || 0) < 30e3) return; shadowAt[key] = Date.now(); } // 只剩影子要看：30 秒一次就夠
+      const st = mktState(inst, false, ps[0]), chk = p => (Track.active(p) ? p.lastCheck : p.sh.lastCheck);
       if (st.closed) { // 沒有交易：不拿場外的價格判斷停損停利，這段時間的 K 線之後也不回頭看
         const t0 = Date.now(), txt = st.why + (st.re ? '，' + st.re : '');
         for (const p of ps) { p.lastCheck = Math.max(p.lastCheck, t0); if (p.sh) p.sh.lastCheck = Math.max(p.sh.lastCheck, t0); if (Track.active(p) && p.off !== txt) { p.off = txt; changed = true; } }
@@ -3196,9 +3235,9 @@ async function monitor() {
       const gap = Date.now() - Math.min(...ps.map(chk)), tf = gap <= 12 * 3600e3 ? '1m' : gap <= 60 * 3600e3 ? '5m' : gap <= 9 * 86400e3 ? '15m' : '1h';
       let rec; try { rec = await Data.get(inst, tf, { limit: Math.min(1000, Math.max(Math.ceil(gap / E.TF[tf]) + 30, real && tf === '1m' ? 75 : 0)), maxAge: 4e3 }); } catch (e) { return; }
       const lx = livePrice(inst), price = lx && lx.ig === !!rec.ig && !lx.ig ? lx.p : rec.cd[rec.cd.length - 1].c, now = Date.now();
-      const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t)); // 週末的場外 K 線不算
+      const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t, wk)); // 休市時的場外 K 線不算（平日開的單：整個週末都不算）
       const pu = liveProb(id), nev = News.events(inst, 1).filter(e => e.impact === 'High' && e.t > now)[0];
-      const wo = { now, cd: tf === '1m' ? cd : null, maxHold: (+S.maxHold || 0) * 3600e3, closeIn: Mkt.closeIn(inst.cls, now), rollIn: Mkt.rollIn(inst.cls, now), ev: nev ? { t: nev.t, title: News.evName ? News.evName(nev.title) : nev.title } : null };
+      const wo = { now, cd: tf === '1m' ? cd : null, maxHold: (+S.maxHold || 0) * 3600e3, closeIn: Mkt.closeIn(inst.cls, now, wk), rollIn: Mkt.rollIn(inst.cls, now), ev: nev ? { t: nev.t, title: News.evName ? News.evName(nev.title) : nev.title } : null };
       for (const p of ps) {
         syncBasis(p, inst);
         if (p.sh && Track.active(p.sh) && !Data.demo) { // 影子照原計畫走，不發提醒；自己出場後最多再看 48 根，還沒結果就用當時的價格結算
@@ -3233,7 +3272,7 @@ function posCard(p) {
   const ps = row && row.prob && !row.err && Date.now() - row.t < 10 * 60e3 ? (d > 0 ? row.prob.up : row.prob.down) : null, mx = +S.maxHold || 0;
   const holdTxt = ps == null ? '' : ps <= 0.43 ? '方向已經轉向，建議出場' : ps < 0.5 ? '優勢消失了，可以出場' : isNum(p.prob0) && ps <= p.prob0 - 0.08 ? '優勢在縮小，留意' : '方向仍有利，可以續抱';
   const hold = on && !p.off ? `<p class="pmeta" style="margin-top:0">${holdTxt ? `續抱判斷：<b>${holdTxt}</b>（${d > 0 ? '上漲' : '下跌'}機率 ${(ps * 100).toFixed(0)}%）　` : ''}已持有 ${durTxt(Date.now() - p.openedAt)}${mx ? '／最長 ' + mx + ' 小時' : ''}${p.mfe > 0.05 ? '　最多曾賺 ' + rTxt(p.mfe) : ''}</p>` : '';
-  return `<article class="pos"><header><h3>${esc(p.name)}<span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span></h3>${p.off ? '<span class="nt">沒有交易</span>' : ''}<span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${ST_NAME[p.status]}</span></header>
+  return `<article class="pos"><header><h3>${esc(p.name)}<span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span>${p.wk ? '<span class="wkc">週末盤</span>' : ''}</h3>${p.off ? '<span class="nt">沒有交易</span>' : ''}<span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${ST_NAME[p.status]}</span></header>
     <p class="pinfo">${info}</p>${p.off ? `<p class="pmeta" style="margin-top:0">${esc(p.off)}。這段期間不檢查停損停利，恢復交易後繼續。</p>` : ''}${hold}${sug}
     <div class="gauge" role="img" aria-label="現價在停損與停利之間的位置"><i class="g-fill" style="width:${has ? fr(px) : fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.entry)}%"></i><i class="g-tick" style="left:${fr(p.tp1)}%"></i>${has ? `<i class="g-dot" style="left:${fr(px)}%"></i>` : ''}</div>
     <div class="g-lab num"><span>停損 ${f(p.slNow)}${p.slNow !== p.sl ? (d * (p.slNow - p.entry) > 0.02 * p.risk ? '（已移到停利 1）' : '（已移到進場價）') : ''}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
@@ -3248,9 +3287,9 @@ const savePP = () => { PP.dirty = false; LS.set('cfd.paper', PP.list.slice(0, 40
 function paperStep(inst, cd, price, isIg) { // 每次掃描順便推進紙上單（用掃描抓到的 K 線，不另外抓資料）
   const act = PP.list.filter(p => p.instId === inst.id && Track.active(p)); if (!act.length || Data.demo) return;
   const now = Date.now(); PP.dirty = true;
-  if (mktState(inst).closed) { for (const p of act) p.lastCheck = Math.max(p.lastCheck, now); return; }
-  const use = cd.filter(b => !Mkt.closedAt(inst.cls, b.t));
+  const shut = [0, 1].map(w => mktState(inst, false, { wk: w }).closed), bars = [0, 1].map(w => cd.filter(b => !Mkt.closedAt(inst.cls, b.t, !!w))); // [平日開的單, 週末盤開的單]
   for (const p of act) {
+    const w = p.wk ? 1 : 0, use = bars[w]; if (shut[w]) { p.lastCheck = Math.max(p.lastCheck, now); continue; }
     syncBasis(p, inst); if ((p.basis || 'src') !== (isIg ? 'ig' : 'src')) continue;
     if (cd.length && cd[0].t > p.lastCheck) { p.status = 'closed'; p.reason = 'lost'; p.closedAt = now; p.r = 0; continue; } // 離開太久，中間的 K 線已經看不到了：不列入統計
     Track.step(p, use, price, now);
@@ -3313,8 +3352,8 @@ function renderTrack() {
 const scan = { tf: null, rows: {}, running: false, last: 0, token: 0, timer: 0, done: 0, total: 0, dirty: false, ver: 0 };
 const slim = p => p && ({ side: p.side, type: p.type, name: p.name, entry: p.entry, sl: p.sl, tp1: p.tp1, tp2: p.tp2, rr: p.rr, ev: p.ev, pWin: p.pWin, pTouch: p.pTouch, slPct: p.slPct, tpPct: p.tpPct });
 function ctxOf(inst, cd, tf) {
-  const now = Date.now(), lastT = cd[cd.length - 1].t, stale = !Data.demo && now - lastT > E.TF[tf] + Math.max(E.TF[tf] * 0.5, 20 * 60e3), st = mktState(inst, stale);
-  return { dp: inst.dp, stale, closed: st.closed, thin: !st.closed && !Data.demo && Mkt.thin(inst.cls, now), dawn: !st.closed && !Data.demo && E.isDawn(now), why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
+  const now = Date.now(), lastT = cd[cd.length - 1].t, stale = !Data.demo && (now - lastT > E.TF[tf] + Math.max(E.TF[tf] * 0.5, 20 * 60e3) || (wkNow(inst) && E.TF[tf] >= 900e3 && Data.dead(cd, tf, now))), st = mktState(inst, stale); // 週末盤：K 線還在出但價格不動，也算沒有報價
+  return { dp: inst.dp, stale, closed: st.closed, weekend: !!st.weekend, thin: !st.closed && !st.weekend && !Data.demo && Mkt.thin(inst.cls, now), dawn: !st.closed && !Data.demo && E.isDawn(now), why: st.why, act: st.closed ? `沒有交易，${st.re ? st.re + '後' : '開盤後'}再評估` : '', eventSoon: News.events(inst, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3) };
 }
 async function analyzeScan(inst, tf) {
   const main = await Data.get(inst, tf, { limit: 300, maxAge: 25e3 });
@@ -3396,11 +3435,11 @@ function gateLine(g) { // 門檻（見 E.gate）：只標示，不影響排名�
 }
 function topCard(r, k) {
   const i = r.inst, f = v => E.fmt(v, i.dp), p = r.prob, rt = r.rate, pl = r.plan, d = rt.dir, tracked = pl && TR.list.some(x => Track.active(x) && x.instId === i.id && x.planName === pl.name);
-  return `<article class="tcard"><button class="t-open" data-id="${esc(i.id)}"><span class="t-rank num">${k + 1}</span><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}　${Data.CLS_NAME[i.cls] || ''}</small></span><span class="r-spark">${r.spark}</span>
+  return `<article class="tcard"><button class="t-open" data-id="${esc(i.id)}"><span class="t-rank num">${k + 1}</span><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}　${Data.CLS_NAME[i.cls] || ''}${wkNow(i) ? '　<span class="wkc">週末盤</span>' : ''}</small></span><span class="r-spark">${r.spark}</span>
       <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span></button>
     <div class="t-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span class="badge ${dirCls(d)}">${dirGl(d)} ${d > 0 ? '做多' : '做空'}</span><span class="num">${d > 0 ? '上漲' : '下跌'} ${((d > 0 ? p.up : p.down) * 100).toFixed(0)}%</span><span class="num t-sc">${rt.score} 分</span>${sigChip(r)}</div>
     <p class="t-act"><b>${esc(rt.action)}</b>${rt.notes.length ? `<small>${esc(rt.notes.join('、'))}</small>` : ''}${r.sig && r.sig.ok && !r.sig.first && Date.now() - r.sig.t < 3 * 60e3 ? '<small>這個訊號剛出現，等它維持 3 分鐘以上再進場比較穩。</small>' : ''}</p>
-    ${gateLine(r.gate)}
+    ${wkNow(i) ? `<p class="t-wk">IG 上要下的是「${esc(i.wk)}」。它是 IG 另外報價的週末市場，價位會和這裡不一樣、點差也大：請用下面的百分比距離去對 IG 的價格。</p>` : ''}${gateLine(r.gate)}
     ${r.also && r.also.length ? `<p class="t-also">同一個賭注（走勢連動、方向相同，只列這一檔）：${esc(r.also.slice(0, 5).map(x => x.inst.name).join('、'))}${r.also.length > 5 ? ' 等 ' + r.also.length + ' 項' : ''}</p>` : ''}
     ${pl ? `<dl class="pgrid c4"><div><dt>進場</dt><dd>${f(pl.entry)}</dd></div><div><dt>停損</dt><dd>${f(pl.sl)}<small>−${pl.slPct.toFixed(2)}%</small></dd></div><div><dt>停利</dt><dd>${f(pl.tp1)}<small>+${pl.tpPct.toFixed(2)}%</small></dd></div><div><dt>勝率／期望</dt><dd>${(pl.pWin * 100).toFixed(0)}%<small>${rTxt(pl.ev)}</small></dd></div></dl>${rt.score >= 55 ? sizeLine(i, pl) : ''}
     <div class="t-btns"><span class="t-plan">${esc(pl.name)}</span>${tracked ? '<span class="st-chip on">追蹤中</span>' : `<button class="btn sm primary" data-ttrack="${esc(i.id)}">${pl.type === 'market' ? '追蹤，停利停損提醒我' : '追蹤，到價提醒我'}</button>`}</div>` : ''}
@@ -3409,6 +3448,7 @@ function topCard(r, k) {
 const lagMin = r => Math.round((r.t - r.pt) / 60e3);
 function srcLine(r) { // 卡片最下面那行：價格是哪裡來的、什麼時候的
   const id = esc(r.inst.id), q = r.ig ? IG.quote(r.inst.id) : null, f = v => E.fmt(v, r.inst.dp);
+  if (wkNow(r.inst)) return `報價來源 ${esc(r.src)}　<span data-pt="${id}">${hms(r.pt)}</span>　不是 IG 週末盤的報價${r.ig ? '（照週五的比例換算成 IG 價位）' : ''}`; // IG 平日那個商品這時候是關的，不顯示它凍結的報價
   if (q && isNum(q.bid)) return `IG 報價　賣 <span class="num" data-bid="${id}">${f(q.bid)}</span>／買 <span class="num" data-ask="${id}">${f(q.offer)}</span>　<span data-pt="${id}">${hms(q.t)}</span>${q.ok ? '' : '　IG 休市中'}<br>K 線取自 ${esc(r.src)}，已換算成 IG 價位`;
   return `報價來源 ${esc(r.src)}　<span data-pt="${id}">${hms(r.pt)}</span>${lagMin(r) >= 3 ? `　這個來源慢約 ${lagMin(r)} 分鐘` : ''}${r.ig ? '　已換算成 IG 價位' : ''}`;
 }
@@ -3416,9 +3456,9 @@ function renderScan() {
   const all = Object.values(scan.rows), st = $('#scan-status'); pxIdx = null;
   st.textContent = scan.running ? `掃描中 ${scan.done}／${scan.total}…` : scan.last ? `${E.TF_NAME[S.scanTf]}K　${S.cls === 'top' ? '依評分排序' : '依評級排序'}　${hms(scan.last)} 更新${IG.cfg.on && !Data.demo ? `　價位基準：IG（${all.filter(r => r.ig).length} 項已換算）` : ''}` : '';
   if (S.cls === 'top') {
-    const top = topList(), offs = all.map(rowOff).filter(Boolean), closed = offs.length, offNote = offLine(offs), bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length, okG = top.filter(r => r.rate.score >= 55 && r.gate && r.gate.pass).length;
-    if (!top.length) { $('#scan-list').innerHTML = scan.running || !closed ? `<p class="loading">${scan.running ? '正在取得行情並評級…' : '沒有可評級的商品'}</p>` : `${offNote ? `<p class="t-off">${offNote}</p>` : ''}<p class="loading">現在沒有可以交易的商品，所以沒有精選名單。</p>`; return; }
-    $('#scan-list').innerHTML = (offNote ? `<p class="t-off">${offNote}</p>` : '') + (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）${okG ? `，其中 <b class="num">${okG}</b> 項通過門檻。` : '，但沒有一項通過門檻：回測裡這種時候的訊號沒有區別力，不做也是選項。'}` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
+    const top = topList(), offs = all.map(rowOff).filter(Boolean), closed = offs.length, wl = wkLine(all), ol = offLine(offs), offNote = wl && ol ? wl + '<span class="wk-off">' + ol + '</span>' : wl || ol, bad = all.filter(r => r.err).length, ok = top.filter(r => r.rate.score >= 55).length, okG = top.filter(r => r.rate.score >= 55 && r.gate && r.gate.pass).length;
+    if (!top.length) { $('#scan-list').innerHTML = scan.running || !closed ? `<p class="loading">${scan.running ? '正在取得行情並評級…' : '沒有可評級的商品'}</p>` : `${offNote ? `<div class="t-off">${offNote}</div>` : ''}<p class="loading">現在沒有可以交易的商品，所以沒有精選名單。</p>`; return; }
+    $('#scan-list').innerHTML = (offNote ? `<div class="t-off">${offNote}</div>` : '') + (scan.running ? '' : `<p class="t-sum">${ok ? `目前有 <b class="num">${ok}</b> 項達到「可進場」（A 或 B）${okG ? `，其中 <b class="num">${okG}</b> 項通過門檻。` : '，但沒有一項通過門檻：回測裡這種時候的訊號沒有區別力，不做也是選項。'}` : '目前沒有任何一項達到「可進場」，建議先觀望。'}${ok < top.length ? '排在後面的是分數相對高、但還不到進場標準的。' : ''}</p>`) + top.map(topCard).join('') +
       `<p class="hint">評分（0–100）＝方向機率優勢 40＋進場計畫期望值 25＋多週期共振 15＋策略訊號 10＋趨勢強度 10。A 是 72 分以上且機率優勢至少 8 個百分點；B 55 分以上；C 38 分以上；其餘為 D。「門檻」只是標示，不影響排名：類別（加密貨幣、外匯不通過）、時段（清晨 05–08 不通過；股票、ETF、指數只在 21–05 通過）、方向順著 4 小時趨勢，三項都符合才算通過。清晨 05–08 與「等突破才進場」的計畫不列可進場。同一類最多先選 4 個；走勢高度連動、方向相同的商品算同一個賭注，只列分數最高的一檔，所以名單可能不到 10 項。${closed ? `另有 ${closed} 項目前沒有交易（休市或報價延遲），沒有列入，可以到各分類查看。` : ''}${bad ? `${bad} 項取不到資料。` : ''}</p>`;
     return;
   }
@@ -3433,7 +3473,7 @@ function renderScan() {
     return `<button class="row${off ? ' off' : ''}" data-id="${esc(i.id)}"><span class="r-name"><b>${esc(i.name)}</b><small>${esc(i.code)}</small></span><span class="r-spark">${r.spark}</span>
       <span class="r-price"><b data-px="${esc(i.id)}">${f(r.price)}</b><small data-ch="${esc(i.id)}" class="${dirCls(r.chg)}">${isNum(r.chg) ? dirGl(r.chg) + ' ' + pct(r.chg) : ''}</small></span>
       <span class="r-sig">${badge2(p)}<small>${side}</small></span>
-      <span class="r-lv">${off ? `<span class="nt">沒有交易</span><span>${esc(off.why)}${off.re ? '・' + esc(off.re) : ''}</span>` : `${gradeChip(r.rate.grade)}<span>${esc(r.rate.label)}</span>`}<span>撐 <span class="num">${f(r.s1.p)}</span></span><span>阻 <span class="num">${f(r.r1.p)}</span></span><span>${esc(r.regime)}</span><span class="src">${r.ig ? 'IG 價位' : esc(r.src.split(' ')[0]) + (lagMin(r) >= 3 ? ' 延遲' : '')}</span></span></button>`;
+      <span class="r-lv">${off ? `<span class="nt">沒有交易</span><span>${esc(off.why)}${off.re ? '・' + esc(off.re) : ''}</span>` : `${gradeChip(r.rate.grade)}<span>${esc(r.rate.label)}</span>${wkNow(i) ? '<span class="wkc">週末盤</span>' : ''}`}<span>撐 <span class="num">${f(r.s1.p)}</span></span><span>阻 <span class="num">${f(r.r1.p)}</span></span><span>${esc(r.regime)}</span><span class="src">${r.ig ? 'IG 價位' : esc(r.src.split(' ')[0]) + (lagMin(r) >= 3 ? ' 延遲' : '')}</span></span></button>`;
   }).join('');
 }
 /* 價格更新：Binance、Bybit、Hyperliquid 的商品由交易所即時推送（見「即時報價」）；
@@ -3580,7 +3620,7 @@ function renderDetail() {
   // 研判與評級
   const p = A.prob, up = (p.up * 100).toFixed(0), dn = 100 - up, ev = News.events(inst, 6), soon = ev.filter(e => e.impact === 'High' && e.t - Date.now() < 90 * 60e3), rt = det.rate;
   const warns = [...soon.map(e => `<li class="hot">${e.t > Date.now() ? Math.max(1, Math.round((e.t - Date.now()) / 60e3)) + ' 分鐘後' : '剛剛'}公布「${esc(News.evName(e.title))}」（${esc(News.CUR_NAME[e.cur] || e.cur)}，高影響）。數據前後波動劇烈、點差會放大，建議避開。</li>`), ...A.warnings.map(w => `<li>${esc(w)}</li>`)];
-  $('#s-verdict').innerHTML = `${off && off.closed ? `<p class="closed-note"><b>沒有交易</b>　${esc(off.why)}${off.re ? '，' + esc(off.re) : ''}。下面的分析用的是休市前${off.by === 'stale' ? '' : '與交易所場外'}的價格，只能當開盤前的參考；這段期間不列入精選，追蹤單也不會判斷停損停利。</p>` : ''}<div class="v-top"><div class="v-label ${dirCls(p.bias)}"><span class="gl">${dirGl(p.bias)}</span>${p.label}</div><div class="v-reg">${esc(A.regime.label)}<br><span class="num">ADX ${A.regime.adx.toFixed(0)}　ATR ${A.atrPct.toFixed(2)}%</span></div></div>
+  $('#s-verdict').innerHTML = `${!(off && off.closed) && wkNow(inst) ? `<p class="closed-note"><b>週末盤</b>　現在能下單的是 IG 的「${esc(inst.wk)}」，它是另外報價的市場：這裡的價格取自交易所的 24 小時合約，和 IG 的價位會有落差，點差也比平日大很多（期望值先用平日成本的 ${wkMul()} 倍算）。進場、停損、停利請用百分比距離去對 IG 的價格。週末成交少，訊號比平日更不可靠。</p>` : ''}${off && off.closed ? `<p class="closed-note"><b>沒有交易</b>　${esc(off.why)}${off.re ? '，' + esc(off.re) : ''}。下面的分析用的是休市前${off.by === 'stale' ? '' : '與交易所場外'}的價格，只能當開盤前的參考；這段期間不列入精選，追蹤單也不會判斷停損停利。</p>` : ''}<div class="v-top"><div class="v-label ${dirCls(p.bias)}"><span class="gl">${dirGl(p.bias)}</span>${p.label}</div><div class="v-reg">${esc(A.regime.label)}<br><span class="num">ADX ${A.regime.adx.toFixed(0)}　ATR ${A.atrPct.toFixed(2)}%</span></div></div>
     <div><div class="pbar" role="img" aria-label="上漲機率 ${up}%，下跌機率 ${dn}%"><i class="a" style="width:${up}%"></i><i class="b" style="width:${dn}%"></i></div><div class="pbar-lab"><span>上漲 <b>${up}%</b></span><span><b>${dn}%</b> 下跌</span></div></div>
     <div class="v-rate">${gradeChip(rt.grade)}<b>${rt.label}</b><span>${esc(rt.action)}</span><span class="num t-sc">${rt.score} 分</span></div>${gateBox(det.gate, rt.dir)}
     <p class="outlook">${esc(A.outlook)}</p>${warns.length ? `<ul class="warns">${warns.join('')}</ul>` : ''}
@@ -3729,6 +3769,10 @@ function renderSettings() {
       <div class="f"><span>自動更新</span>${seg('auto', S.auto, [[true, '開'], [false, '關']])}<small>價格由交易所即時推送（沒有推送的來源每 5 秒抓一次）；分析頁每 8–15 秒重新分析、掃描頁每 60 秒重新評級；切到背景時暫停。追蹤中的單子價格一到就提醒，不受這個開關影響。</small></div></div></section>
     <section class="card"><h2>點差成本 <small>占價格的百分比，來回一趟</small></h2><div class="three">${CLS.map(c => `<label>${Data.CLS_NAME[c]}<input type="number" step="0.001" min="0" data-cost="${c}" value="${S.cost[c]}"></label>`).join('')}</div>
       <p class="hint">回測與期望值都會扣掉這個成本。例：歐元／美元 0.006% 約等於 0.7 點。請依你券商的實際點差調整——週期越短，點差吃掉的比例越高。</p></section>
+    <section class="card"><h2>IG 週末盤 <small>週末也能下單的商品</small></h2><div class="form">
+      <div class="f"><span>週末盤幾點開</span>${seg('wkEarly', S.wkEarly === true, [[false, '週六下午（倫敦早上 8 點）'], [true, '平日收盤後接著開']])}<small>IG 各地網站的寫法不一樣。請在週六白天看一下 IG：如果下午 4 點以前（夏令 3 點）就能下「Weekend」開頭的商品，選右邊。收盤固定是週一清晨（外匯 04:40、其他 06:40；夏令各早一小時）。</small></div>
+      <div class="f"><span>週末盤的點差是平日的幾倍</span><input type="number" id="s-wkcost" inputmode="decimal" min="1" max="50" step="0.5" value="${wkMul()}"><small>IG 沒有公布週末盤的點差，要看下單畫面。用「買價 − 賣價」除以價格算出百分比，再除以上面那一類的平日成本，就是倍數。</small></div>
+      <p class="hint">週末盤是 IG 自己報價的另一個市場（例如 Weekend Gold），沒有公開的行情可以抓。這一頁用交易所的 24 小時合約當代替，方向與波動可以參考，<b>價位不會和 IG 一樣</b>。目前納入：${Data.all().filter(i => i.wk).map(i => esc(i.name)).join('、')}，再加上本來就全年無休的加密貨幣。IG 另外還有週末的華爾街、德國 40、英國 100、香港 HS50、澳洲 200、法國 40，但找不到週末有在動的公開報價，所以沒有納入。</p></div></section>
     <section class="card"><h2>自訂商品</h2><div class="form"><div class="three"><label>名稱<input type="text" id="cu-name" placeholder="例：台積電"></label><label>來源<select id="cu-src">${Object.entries(Data.SRC_NAME).filter(([k]) => k !== 'demo').map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</select></label><label>代號<input type="text" id="cu-sym" placeholder="例：2330.TW"></label></div>
       <div class="three"><label>類別<select id="cu-cls">${CLS.map(c => `<option value="${c}"${c === 'stock' ? ' selected' : ''}>${Data.CLS_NAME[c]}</option>`).join('')}</select></label><label>小數位<input type="number" id="cu-dp" min="0" max="8" value="2"></label><label>&nbsp;<button class="btn primary" id="cu-add">加入</button></label></div>
       ${Data.custom.length ? `<table class="diag">${Data.custom.map(c => `<tr><td>${esc(c.name)}</td><td>${esc(Data.SRC_NAME[c.src[0][0]])} ${esc(c.src[0][1])}</td><td style="text-align:right"><button class="btn sm" data-del="${esc(c.id)}">移除</button></td></tr>`).join('')}</table>` : ''}
@@ -3745,7 +3789,8 @@ function renderSettings() {
       <li>支撐、阻力來自：前高前低、較大週期的轉折、昨日高低收、樞紐點、費波那契、均線、布林、VWAP、一目均衡表、整數關卡、成交密集區與趨勢線，價位接近的會合併成一個區間。</li>
       <li>進場計畫的勝率與期望值已扣點差。1 分、5 分 K 的雜訊最多、點差占比最高；想提高勝率，先看 1 小時與 4 小時的方向，再用小週期找進場點。</li>
       <li>價格和你的券商不會完全一樣，每張卡片下方都寫了報價來源與時間。股票、原油、黃金、指數多半來自交易所的 24 小時合約，會和券商的報價差一點，美股休市時差距較大；標示「延遲」的來源慢 10–15 分鐘。「今日」漲跌是從臺北時間 08:00（國際換日）起算，和券商的算法可能不同。</li>
-      <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。IG 另外有獨立報價的「週末」市場，這一頁沒有分析。</li>
+      <li>「沒有交易」：IG 的平日市場在臺北時間週六 06:00 收盤、週一 07:00 開盤（外匯 05:00；美國夏令時間各早一小時），加密貨幣只在週六 06:00–16:00 暫停。這段期間交易所的 24 小時合約還是有價格，但在 IG 不能下單，所以這些商品會標「沒有交易」、不列入精選 10，追蹤單也不會判斷停損停利。連接 IG 後，會直接用 IG 回報的狀態（含假日）。個股與 ETF 目前只判斷週末，平日盤前盤後不判斷。</li>
+      <li>「週末盤」（2026/11/21）：IG 有週末市場、而且週末拿得到報價的商品（歐元／美元、英鎊／美元、美元／日圓、黃金、WTI 原油、那斯達克 100、特斯拉、SpaceX），在 IG 的週末盤期間會照常分析、列入精選，名稱旁標「週末盤」。價格取自交易所的 24 小時合約，不是 IG 的週末報價，所以價位會有落差；成本用平日的倍數估。週末盤和平日是兩個市場：平日建立的追蹤單週末不會動，週末盤建立的追蹤單收盤後接著用平日的價格判斷。開盤時間與成本倍數在設定 →「IG 週末盤」。</li>
       <li>建議數量：到上面的「資金與風險」填帳戶資金。精選卡片會顯示「建議數量」和「打到停損約賠多少」，是從每筆最多賠資金的幾 % 反推的。黃金、白銀、主要加密貨幣、標普 500、恆生、天然氣和外匯（迷你合約）會直接算出 IG 的張數；其他商品只顯示最多賠多少，請在 IG 下單畫面把數量調到停損金額不超過那個數字。</li>
       <li>持有中的提醒：追蹤中的單除了停損停利，還會提醒急轉、獲利回吐、訊號轉向、持有太久、休市前、重大數據前，以及什麼時候該把停損移到進場價。「注意」是先看一下，「建議出場」是該動作了。</li>
       <li>模擬戰（2026/11/20）：下面那一排多了「模擬戰」。它是一個 1,000 美元的假想帳戶，照固定規則把掃描出來的訊號自動做一遍：觀察中 → 準備中 → 交易中 → 模擬交易歷史。不會真的下單；只在這個網頁開著時運作；紀錄存在這台裝置的瀏覽器。完整規則寫在那一頁的最下面。</li>
@@ -4042,15 +4087,15 @@ function simScan() {
   const now = Date.now(), rows = Object.values(scan.rows).filter(r => !r.err && r.rate), info = {}, cands = [];
   for (const p of st.items) simSync(p);
   for (const r of rows) {
-    const i = r.inst, off = !!rowOff(r), d = r.rate.dir;
-    info[i.id] = { pUp: r.prob ? r.prob.up : null, price: r.price, t: r.t, off, grade: r.rate.grade, score: r.rate.score, basis: r.ig ? 'ig' : 'src' };
+    const i = r.inst, ms = mktState(i, r.stale), off = !!ms.closed, wk = !!ms.weekend, d = r.rate.dir;
+    info[i.id] = { pUp: r.prob ? r.prob.up : null, price: r.price, t: r.t, off, wk, grade: r.rate.grade, score: r.rate.score, basis: r.ig ? 'ig' : 'src' };
     if (S.on[i.cls] === false || !d || now - r.t > 5 * 60e3) continue;
     const pl = r.plan, g = r.sig, age = g ? now - g.t : 0, ns = News.score(i), is = Inter.score(i), nx = News.events(i, 24).filter(e => e.impact === 'High' && e.t > now)[0];
     cands.push({ id: i.id, name: i.name, code: i.code, cls: i.cls, dp: i.dp, tf: r.tf, tfMs: E.TF[r.tf], dir: d, score: r.rate.score, grade: r.rate.grade, label: r.rate.label, action: r.rate.action, notes: r.rate.notes || [],
       prob: d > 0 ? r.prob.up : r.prob.down, gate: r.gate ? !!r.gate.pass : null, gateWhy: r.gate && !r.gate.pass ? r.gate.why : null,
       plan: pl ? { type: pl.type, side: pl.side, name: pl.name, entry: pl.entry, sl: pl.sl, tp1: pl.tp1, tp2: pl.tp2 } : null, price: r.price, t: r.t,
       sigOk: !!(g && g.ok && (g.first || age >= st.cfg.sigMs)), sigWait: g && g.ok && !g.first ? Math.max(0, st.cfg.sigMs - age) : 0, off, lag: Math.max(0, lagMin(r)),
-      eventSoon: News.events(i, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3), closeIn: Mkt.closeIn(i.cls, now),
+      eventSoon: News.events(i, 1.5).some(e => e.impact === 'High' && e.t - now < 60 * 60e3 && e.t > now - 15 * 60e3), closeIn: Mkt.closeIn(i.cls, now, wk), wk,
       cost: costOf(i) || 0, regime: r.regime || '', src: r.src || '', basis: r.ig ? 'ig' : 'src', unit: simUnitMode(i),
       news: ns && ns.note ? ns.note + (ns.score > 0.15 ? '，偏多' : ns.score < -0.15 ? '，偏空' : '，中性') : '', inter: is && is.note ? is.note : '', nextEv: nx ? `${mdhm(nx.t)} ${News.evName ? News.evName(nx.title) : nx.title}` : '' });
   }
@@ -4068,11 +4113,11 @@ async function simMonitor() {
   const act = st.items.filter(p => p.stage === 'open' || (p.stage === 'ready' && p.type === 'limit')); if (!act.length) return;
   SIM.busy = true; const ev = [];
   try {
-    const by = {}; for (const p of act) (by[p.instId] = by[p.instId] || []).push(p);
-    await Promise.all(Object.entries(by).map(async ([id, ps]) => {
-      const inst = Data.byId(id); if (!inst) return;
-      const mst = mktState(inst), t0 = Date.now(), due = ps.some(p => p.stage === 'open' && t0 >= p.dueAt);
-      if (mst.closed && !due) { ev.push(...Sim.step(st, id, { closed: true, now: t0 })); return; }
+    const by = {}; for (const p of act) { const k = p.instId + (p.wk ? '|w' : ''); (by[k] = by[k] || []).push(p); } // 週末盤的單和平日的單分開看：兩個市場的開收盤不一樣
+    await Promise.all(Object.values(by).map(async ps => {
+      const id = ps[0].instId, wk = !!ps[0].wk, inst = Data.byId(id); if (!inst) return;
+      const mst = mktState(inst, false, ps[0]), t0 = Date.now(), due = ps.some(p => p.stage === 'open' && t0 >= p.dueAt);
+      if (mst.closed && !due) { ev.push(...Sim.step(st, id, { closed: true, now: t0, wk })); return; }
       const first = Math.min(...ps.map(p => p.lastCheck)), gap = t0 - first, TFS = ['1m', '5m', '15m', '1h'];
       const row = scan.rows[id], slow = row && !row.err && !DIRECT[row.srcKey];
       let rec = null, tf = '1m';
@@ -4083,9 +4128,9 @@ async function simMonitor() {
       if (!rec || !rec.cd.length || SIM.st !== st) return; // 等資料的時候帳戶被重設了：這一輪作廢
       for (const p of ps) simSync(p);
       if (ps.some(p => (p.basis || 'src') !== (rec.ig ? 'ig' : 'src'))) return; // 價位基準和這份 K 線不一樣（剛開或剛關 IG 報價）：下一輪再判斷
-      const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t)); if (!cd.length) return;
+      const cd = rec.cd.filter(b => !Mkt.closedAt(inst.cls, b.t, wk)); if (!cd.length) return;
       const lx = livePrice(inst), now = Date.now(), price = mst.closed ? cd[cd.length - 1].c : lx && lx.ig === !!rec.ig && !lx.ig ? lx.p : rec.cd[rec.cd.length - 1].c;
-      ev.push(...Sim.step(st, id, { cd, price, now, from: rec.cd[0].t, tfMs: E.TF[tf] }));
+      ev.push(...Sim.step(st, id, { cd, price, now, from: rec.cd[0].t, tfMs: E.TF[tf], wk }));
     }));
   } finally { SIM.busy = false; if (SIM.st === st) simAfter(ev); }
 }
@@ -4104,11 +4149,11 @@ function simSpark(st, eq) {
   const y = v => (h - 3 - (v - lo) / sp * (h - 6)).toFixed(1), pts = cv.map(c => ((c[0] - t0) / tt * w).toFixed(1) + ',' + y(c[1])).join(' ');
   return `<svg class="sim-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="權益變化：從 ${usd2(cv[0][1])} 到 ${usd2(eq)}"><line x1="0" x2="${w}" y1="${y(st.cfg.start)}" y2="${y(st.cfg.start)}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 4" opacity=".35" vector-effect="non-scaling-stroke"/><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
 }
-const simSide = p => `<span class="badge ${dirCls(p.side === 'long' ? 1 : -1)}">${dirGl(p.side === 'long' ? 1 : -1)} ${p.side === 'long' ? '做多' : '做空'}</span>`;
+const simSide = p => `<span class="badge ${dirCls(p.side === 'long' ? 1 : -1)}">${dirGl(p.side === 'long' ? 1 : -1)} ${p.side === 'long' ? '做多' : '做空'}</span>${p.wk ? '<span class="wkc">週末盤</span>' : ''}`;
 const simGate = g => (g == null ? '' : g ? '　門檻通過' : '　門檻未通過（只下一半）');
 function simWatchCard(w, now) {
   const f = v => E.fmt(v, w.dp), pl = w.plan, why = w.why.map(x => simWhy(x, now)).filter(Boolean);
-  return `<article class="pos"><header><h3>${esc(w.name)}<span class="badge ${dirCls(w.dir)}">${dirGl(w.dir)} ${w.dir > 0 ? '想做多' : '想做空'}</span></h3><span class="st-chip">${w.grade} 級　${w.score} 分</span></header>
+  return `<article class="pos"><header><h3>${esc(w.name)}<span class="badge ${dirCls(w.dir)}">${dirGl(w.dir)} ${w.dir > 0 ? '想做多' : '想做空'}</span>${w.wk ? '<span class="wkc">週末盤</span>' : ''}</h3><span class="st-chip">${w.grade} 級　${w.score} 分</span></header>
     <p class="pinfo">現價 <b class="num">${f(w.price)}</b>　${w.dir > 0 ? '上漲' : '下跌'}機率 <span class="num">${(w.prob * 100).toFixed(0)}%</span>${w.label ? '　' + esc(w.label) : ''}</p>
     <p class="sim-need"><b>還缺什麼：</b>${esc(why[0] || '下一次掃描再確認')}</p>${why.length > 1 ? `<ul class="sim-why">${why.slice(1).map(x => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
     <p class="pmeta">${pl ? `打算的做法：${esc(pl.name)}　進場 ${f(pl.entry)}／停損 ${f(pl.sl)}／停利 ${f(pl.tp1)}　` : ''}已觀察 ${durTxt(now - w.since)}${w.gate == null ? '' : w.gate ? '　門檻通過' : '　門檻未通過'}${w.notes && w.notes.length ? '　網頁的提醒：' + esc(w.notes.join('、')) : ''}</p>
@@ -4127,7 +4172,7 @@ function simReadyCard(p, now) {
 }
 function simOpenCard(p, now) {
   const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, px = isNum(p.price) ? p.price : p.entry, pnl = Sim.pnlNow(p), r = Track.rNow(p, px);
-  const fr = x => clip(d * (x - p.sl) / (d * (p.tp2 - p.sl)), 0, 1) * 100, stp = p.slNow !== p.sl ? '（已移到進場價）' : '', inst = Data.byId(p.instId), off = inst && mktState(inst).closed;
+  const fr = x => clip(d * (x - p.sl) / (d * (p.tp2 - p.sl)), 0, 1) * 100, stp = p.slNow !== p.sl ? '（已移到進場價）' : '', inst = Data.byId(p.instId), off = inst && mktState(inst, false, p).closed;
   const ps = isNum(p.pNow) && now - (p.pNowT || 0) < 10 * 60e3 ? p.pNow : null, holdTxt = ps == null ? '' : ps < 0.5 ? '優勢消失了（掉到 43% 以下就出場）' : isNum(p.prob0) && ps <= p.prob0 - 0.08 ? '優勢在縮小' : '方向仍有利';
   return `<article class="pos"><header><h3>${esc(p.name)}${simSide(p)}</h3>${off ? '<span class="nt">沒有交易</span>' : ''}<span class="st-chip${p.status === 'tp1' ? ' on' : ''}">${p.status === 'tp1' ? '已到停利 1，剩一半' : '持有中'}</span></header>
     <p class="pinfo">浮動盈虧 <b class="num ${sgn(pnl)}">${sUsd(pnl)}</b>　<span class="num ${sgn(pnl)}">${rTxt(r)}</span>　現價 <span class="num">${f(px)}</span>（${pct(d * (px / p.entry - 1) * 100)}）</p>
@@ -4137,15 +4182,15 @@ function simOpenCard(p, now) {
     <div class="g-lab num"><span>停損 ${f(p.slNow)}</span><span>進場 ${f(p.entry)}</span><span>停利 ${f(p.tp1)}／${f(p.tp2)}</span></div>
     <p class="pmeta">已持有 ${durTxt(now - p.openedAt)}　最晚 ${mdhm(p.dueAt)} 出場（${p.dueWhy === 'close_soon' ? '休市前' : '最長持有時間'}）　最多賠 ${usd(p.riskUsd)}　押保證金 ${usd(p.margin * (p.tp1At ? 0.5 : 1))}　已付點差 ${usd(p.costUsd)}${p.finUsd > 0 ? '、隔夜費 ' + usd(p.finUsd) : ''}${p.booked ? '　停利 1 已入帳 ' + sUsd(p.booked) : ''}${isNum(p.mfe) && p.mfe > 0.05 ? '　最多曾賺 ' + rTxt(p.mfe) : ''}</p>
     <p class="pmeta" style="margin-top:2px">${esc(p.planName)}　進場時 ${p.grade} 級 ${p.score} 分${simGate(p.gate)}${holdTxt ? `　現在：${holdTxt}（${d > 0 ? '上漲' : '下跌'}機率 ${(ps * 100).toFixed(0)}%）` : ''}</p>
-    <div class="t-btns"><span class="t-plan">${off ? '休市中，這段時間不判斷停利停損' : ''}</span><button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button></div></article>`;
+    <div class="t-btns"><span class="t-plan">${off ? (p.wk ? '週末盤已收，等平日開盤' : '休市中，這段時間不判斷停利停損' + (wkNow(inst) ? '（平日開的單不看週末盤的價格）' : '')) : ''}</span><button class="btn sm" data-id="${esc(p.instId)}" data-go="1">看分析</button></div></article>`;
 }
 function simHistRow(p) {
   const f = v => E.fmt(v, p.dp), d = p.side === 'long' ? 1 : -1, k = 'simh-' + p.oid, row = (a, b) => `<dt>${a}</dt><dd>${b}</dd>`;
   const evs = (p.events || []).map(e => `${mdhm(e.t)} ${{ ready: '排入準備中', open: '進場', tp1: '到停利 1，平一半', close: '出場', cancel: '取消' }[e.k] || e.k}`).join('　→　');
   if (p.cancel) return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}　<small>${mdhm(p.closedAt)}</small></span><span class="dir flat">未成交</span></summary>
     <dl class="sim-dl">${row('結果', '沒有進場：' + esc(SIM_REASON[p.reason] || p.reason))}${row('原本的計畫', `${esc(p.planName)}（${p.type === 'market' ? '市價' : '掛單'}）　進場 ${f(p.entry0)}／停損 ${f(p.sl)}／停利 ${f(p.tp1)}、${f(p.tp2)}`)}${row('打算的金額', `${usd(p.notional)}，最多賠 ${usd(p.riskUsd)}`)}${row('當時的判斷', `${p.grade} 級 ${p.score} 分　${d > 0 ? '上漲' : '下跌'}機率 ${(p.prob0 * 100).toFixed(0)}%${simGate(p.gate)}`)}${row('經過', esc(evs))}</dl></details>`;
-  return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}　<small>${esc(SIM_REASON[p.reason] || p.reason)}　${mdhm(p.closedAt)}</small></span><span class="dir num ${sgn(p.pnl)}">${sUsd(p.pnl)}　${rTxt(p.rNet)}</span></summary>
-    <dl class="sim-dl">${row('進場', `${mdhm(p.openedAt)}　<span class="num">${f(p.entry)}</span>（${p.type === 'market' ? '市價' : '掛單成交'}）`)}${row('出場', `${mdhm(p.closedAt)}　<span class="num">${f(p.exit)}</span>　${esc(SIM_REASON[p.reason] || p.reason)}${p.gap ? '（開盤就跳過停損價，以開盤價出場）' : ''}　持有 ${durTxt(p.heldMs)}`)}
+  return `<details class="sim-h" data-k="${k}" ${op(k)}><summary><span><b>${esc(p.name)}</b>　${d > 0 ? '做多' : '做空'}${p.wk ? '　週末盤' : ''}　<small>${esc(SIM_REASON[p.reason] || p.reason)}　${mdhm(p.closedAt)}</small></span><span class="dir num ${sgn(p.pnl)}">${sUsd(p.pnl)}　${rTxt(p.rNet)}</span></summary>
+    <dl class="sim-dl">${row('進場', `${mdhm(p.openedAt)}　<span class="num">${f(p.entry)}</span>（${p.type === 'market' ? '市價' : '掛單成交'}${p.wk ? '，IG 週末盤' : ''}）`)}${row('出場', `${mdhm(p.closedAt)}　<span class="num">${f(p.exit)}</span>　${esc(SIM_REASON[p.reason] || p.reason)}${p.gap ? '（開盤就跳過停損價，以開盤價出場）' : ''}　持有 ${durTxt(p.heldMs)}`)}
       ${row('金額', `${d > 0 ? '買入' : '做空'} ${usd(p.notional)}${simQty(p) ? '（' + esc(simQty(p)) + '）' : ''}　押保證金 ${usd(p.margin)}`)}${row('風險', `最多賠 ${usd(p.riskUsd)}（當時資金的 ${p.riskPct.toFixed(1)}%）`)}
       ${row('停損／停利', `<span class="num">${f(p.sl)}</span>／<span class="num">${f(p.tp1)}</span>、<span class="num">${f(p.tp2)}</span>${p.tp1At ? '　停利 1 在 ' + mdhm(p.tp1At) + ' 到價' : ''}`)}
       ${row('損益', `<b class="num ${sgn(p.pnl)}">${sUsd(p.pnl)}</b>（${rTxt(p.rNet)}，占當時資金 ${pct(p.pnl / (p.eqAtOpen || p.eq0) * 100)}）　已扣點差 ${usd(p.costUsd)}${p.finUsd > 0 ? '、隔夜費 ' + usd(p.finUsd) : ''}`)}
@@ -4207,16 +4252,17 @@ function renderSim() {
         <li>出場：停利 1 平一半並把停損移到進場價；停利 2、停損、最長持有時間（設定頁的「最長持有時間」，目前 ${+S.maxHold > 0 ? S.maxHold + ' 小時' : '不限，這裡以 72 小時計'}）、休市前 30 分鐘、方向機率掉到 43% 以下。</li>
         <li>一天賠超過資金的 ${c.dayStopPct}% 就停手到隔天（臺北時間）。帳戶低於 100 美元就停止。</li>
         <li>成本：來回一趟的點差在進場時就扣（用設定頁各類別的交易成本，有接 IG 時用 IG 當下的點差）；每過紐約 17:00 一次扣一晚隔夜費（估計值）。停損照停損價成交；開盤就跳過停損價的（跳空、隔夜）以那根 K 線的開盤價成交。平常的滑價沒有算，所以實際會比這裡差一點。</li>
+        <li>週末盤：IG 有週末盤的商品（名稱旁標「週末盤」）在週末照樣模擬，成本用平日的 ${Math.max(1, +S.wkCost || 5)} 倍估（設定頁可改）；週末盤收盤前 30 分鐘出場。週末盤和平日是兩個市場：平日開的單週末不動，也不會被週末的價格打到停損。</li>
         <li>只在這個網頁開著（而且「自動更新」開著）的時候掃描與下單。關掉期間不會開新倉；已經進場的單，回來時用 K 線補算。</li>
       </ul></details>
       <p class="t-btns"><span class="t-plan">紀錄只存在這台裝置的瀏覽器。</span><span><button class="btn sm" id="sim-pause">${st.paused ? '繼續模擬' : '暫停開新倉'}</button> <button class="btn sm" id="sim-reset">${rst ? '再按一次：清空並重新開始' : '重設帳戶'}</button></span></p></section>`;
 }
 function simCsv() {
   const st = SIM.st, q = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"', iso = t => (t ? new Date(t).toISOString() : ''), n = (v, d) => (isNum(v) ? v.toFixed(d == null ? 2 : d) : '');
-  const head = ['編號', '商品', '代號', '類別', '方向', '計畫', '進場方式', '結果', '排入時間', '進場時間', '出場時間', '進場價', '出場價', '停損', '停利1', '停利2', '買賣金額(USD)', '最多賠(USD)', '風險%', '保證金(USD)', '損益(USD)', '損益(R)', '點差成本(USD)', '隔夜費(USD)', '持有分鐘', '最多曾賺(R)', '最多曾賠(R)', '評級', '分數', '方向機率', '門檻', '盤勢', '出場後餘額(USD)', '報價來源', '進場理由', '新聞', '相關市場', '下一個重大數據'];
+  const head = ['編號', '商品', '代號', '類別', '方向', '計畫', '進場方式', '結果', '排入時間', '進場時間', '出場時間', '進場價', '出場價', '停損', '停利1', '停利2', '買賣金額(USD)', '最多賠(USD)', '風險%', '保證金(USD)', '損益(USD)', '損益(R)', '點差成本(USD)', '隔夜費(USD)', '持有分鐘', '最多曾賺(R)', '最多曾賠(R)', '評級', '分數', '方向機率', '門檻', '盤勢', '出場後餘額(USD)', '報價來源', '進場理由', '新聞', '相關市場', '下一個重大數據', '週末盤'];
   const rows = st.hist.map(p => [p.oid, p.name, p.code, Data.CLS_NAME[p.cls] || p.cls, p.side === 'long' ? '做多' : '做空', p.planName, p.type === 'market' ? '市價' : '掛單', p.cancel ? '未成交：' + (SIM_REASON[p.reason] || p.reason) : SIM_REASON[p.reason] || p.reason,
     iso(p.created), iso(p.openedAt), iso(p.closedAt), p.cancel ? p.entry0 : p.entry, p.cancel ? '' : p.exit, p.sl, p.tp1, p.tp2, n(p.notional), n(p.riskUsd), n(p.riskPct), n(p.margin), p.cancel ? '' : n(p.pnl), p.cancel ? '' : n(p.rNet, 3), p.cancel ? '' : n(p.costUsd), p.cancel ? '' : n(p.finUsd || 0),
-    p.cancel ? '' : Math.round(p.heldMs / 60e3), p.cancel ? '' : n(p.mfe || 0), p.cancel ? '' : n(p.mae || 0), p.grade, p.score, n(p.prob0, 3), p.gate == null ? '' : p.gate ? '通過' : '未通過', p.regime, p.cancel ? '' : n(p.balAfter), p.src, [p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''), p.news, p.inter, p.nextEv].map(q).join(','));
+    p.cancel ? '' : Math.round(p.heldMs / 60e3), p.cancel ? '' : n(p.mfe || 0), p.cancel ? '' : n(p.mae || 0), p.grade, p.score, n(p.prob0, 3), p.gate == null ? '' : p.gate ? '通過' : '未通過', p.regime, p.cancel ? '' : n(p.balAfter), p.src, [p.label, p.action].filter(Boolean).join('：') + (p.notes && p.notes.length ? '（' + p.notes.join('、') + '）' : ''), p.news, p.inter, p.nextEv, p.wk ? '是' : ''].map(q).join(','));
   const url = URL.createObjectURL(new Blob(['﻿' + head.map(q).join(',') + '\n' + rows.join('\n') + '\n'], { type: 'application/octet-stream' }));
   const a = document.createElement('a'); a.href = url; a.download = `cfd-sim-${new Date().toISOString().slice(0, 10)}.csv`; a.style.display = 'none'; document.body.appendChild(a); a.click(); setTimeout(() => a.remove(), 1000);
 }
@@ -4313,7 +4359,7 @@ document.addEventListener('click', e => {
   }
   if (d.del) { Data.custom = Data.custom.filter(c => c.id !== d.del); LS.set('cfd.custom', Data.custom); delete scan.rows[d.del]; if (S.inst === d.del) { S.inst = DEF.inst; save(); } fillSelect(); return renderSettings(); }
   if (d.on) { S.on[d.on] = S.on[d.on] === false; if (!CLS.some(c => S.on[c] !== false)) S.on[d.on] = true; save(); for (const k in scan.rows) if (S.on[scan.rows[k].inst.cls] === false) delete scan.rows[k]; scan.last = 0; return renderSettings(); }
-  if (d.set) { const v = d.v === 'true' ? true : d.v === 'false' ? false : d.v; S[d.set] = v; save(); applyTheme(); return view === 'track' ? renderTrack() : renderSettings(); }
+  if (d.set) { const v = d.v === 'true' ? true : d.v === 'false' ? false : d.v; S[d.set] = v; save(); applyTheme(); applyWk(); return view === 'track' ? renderTrack() : renderSettings(); }
   if (d.tf) {
     if (t.parentElement.id === 'scan-tf') { S.scanTf = d.tf; save(); tfChips('#scan-tf', S.scanTf); scan.token++; scan.rows = {}; scan.tf = d.tf; if (!scan.running) runScan(); else renderScan(); }
     else { S.tf = d.tf; save(); tfChips('#d-tf', S.tf); loadDetail(true); }
@@ -4339,6 +4385,7 @@ document.addEventListener('change', e => {
   if (t.id === 'd-inst') { S.inst = t.value; save(); loadDetail(true); }
   if (t.id === 'ig-rem') igDraft.remember = t.checked;
   if (t.dataset && t.dataset.cost) { const v = parseFloat(t.value); if (v >= 0) { S.cost[t.dataset.cost] = v; save(); } }
+  if (t.id === 's-wkcost') { const v = parseFloat(t.value); if (v >= 1 && v <= 50) { S.wkCost = v; save(); } }
 });
 document.addEventListener('input', e => {
   const t = e.target, m = { 'c-eq': 'equity', 'c-risk': 'riskPct', 'c-lev': 'lev', 's-eq': 'equity', 's-risk': 'riskPct' }[t.id];
