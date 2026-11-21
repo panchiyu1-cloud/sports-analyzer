@@ -75,4 +75,11 @@ python stock/cloud.py --demo-live --minutes 2 --publish-dir /tmp/pub --no-push
 
 這會用模擬資料寫出 JSON。網頁加上 `?data=` 參數，就可以讀本機的資料夾。
 
+模擬戰的測試（不連網路）：
+
+```bash
+python3 stock/tests/test_sim.py       # 核心規則：部位大小、成交、出場、停手、存檔還原、40 天隨機對帳
+python3 stock/tests/shots_sim.py      # 手機版面（需要 Playwright；準備方式寫在檔案開頭）
+```
+
 本工具僅供研究參考，不構成投資建議。
