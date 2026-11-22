@@ -1,0 +1,95 @@
+# 差價交易模擬戰回測 (cfd/bt_*.js) - manual, or a change of cfd/bt_request.json on the branch
+# claude/cfd-backtest (so the replay can run from that branch without anything on main).
+#
+# Replays the last N weekdays through the page's own code (docs/cfd/index.html: the analysis
+# engine -> the 模擬戰 paper account), one step per 5-minute bar. The sandbox the code is
+# written in cannot reach the price sources, so the download and the replay run here.
+# Nothing here touches the page or the owner's real paper account (that one lives in his
+# browser). Bars and per-step analyses stay in this workflow's own cache; only the result
+# (sim_backtest.json: statistics and trades, fetch_report.json: which source gave what) goes
+# to the orphan branch cfd-backtest.
+name: 差價交易模擬戰回測 (cfd backtest)
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "回測幾個交易日（週一到週五；Yahoo 的 5 分 K 最多約 60 個交易日）"
+        default: "60"
+      stage:
+        description: "all＝抓資料後重播；fetch＝只抓資料，看每個商品抓到多長"
+        type: choice
+        options: [all, fetch]
+        default: all
+  push:
+    branches: [claude/cfd-backtest]
+    paths: ["cfd/bt_request.json"]
+
+permissions:
+  contents: write   # push the cfd-backtest branch
+
+concurrency:
+  group: cfd-backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 170
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: What to run
+        env:
+          IN_DAYS: ${{ inputs.days }}
+          IN_STAGE: ${{ inputs.stage }}
+        run: |
+          # a manual run takes its inputs; a push takes them from cfd/bt_request.json
+          if [ "${{ github.event_name }}" = "push" ]; then
+            IN_DAYS=$(node -e "console.log(require('./cfd/bt_request.json').days)")
+            IN_STAGE=$(node -e "console.log(require('./cfd/bt_request.json').stage)")
+          fi
+          case "$IN_DAYS" in ''|*[!0-9]*) IN_DAYS=60 ;; esac
+          if [ "$IN_STAGE" != "fetch" ]; then IN_STAGE=all; fi
+          echo "BT_DAYS=$IN_DAYS" >> "$GITHUB_ENV"
+          echo "BT_STAGE=$IN_STAGE" >> "$GITHUB_ENV"
+          echo "days=$IN_DAYS stage=$IN_STAGE"
+      - name: Self-test (synthetic prices, no network)
+        if: env.BT_STAGE != 'fetch'
+        run: node cfd/bt_selftest.js
+      - name: Restore what was fetched and analysed earlier today
+        uses: actions/cache/restore@v4
+        with:
+          path: cfd-bt-cache
+          key: cfd-bt-${{ github.run_id }}
+          restore-keys: cfd-bt-
+      - name: Fetch the bars
+        run: |
+          dir="cfd-bt-cache/$(date -u +%F)-$BT_DAYS"
+          # bars fetched on another day (or for another window) are stale
+          find cfd-bt-cache -mindepth 1 -maxdepth 1 ! -name "$(basename "$dir")" -exec rm -rf {} + 2>/dev/null || true
+          if [ -f "$dir/fetch_report.json" ] && [ "$BT_STAGE" != "fetch" ]; then echo "bars: reused from an earlier run today"; else node cfd/bt_fetch.js --cache "$dir" --days "$BT_DAYS"; fi
+          echo "BT_DIR=$dir" >> "$GITHUB_ENV"
+      - name: Replay
+        if: env.BT_STAGE != 'fetch'
+        run: node cfd/bt_replay.js --cache "$BT_DIR" --out "$RUNNER_TEMP/bt-out" --days "$BT_DAYS"
+      - name: Save the cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: cfd-bt-cache
+          key: cfd-bt-${{ github.run_id }}
+      - name: Publish the result (branch cfd-backtest)
+        run: |
+          git config --global user.name "sports-analyzer bot"
+          git config --global user.email "actions@users.noreply.github.com"
+          PUB="$RUNNER_TEMP/bt-pub"
+          git worktree add --orphan -b cfd-backtest "$PUB"
+          cp "$BT_DIR/fetch_report.json" "$PUB/"
+          if [ -f "$RUNNER_TEMP/bt-out/sim_backtest.json" ]; then cp "$RUNNER_TEMP/bt-out/sim_backtest.json" "$PUB/"; fi
+          cd "$PUB"
+          git add -A
+          git commit -q -m "cfd backtest: $(TZ=Asia/Taipei date '+%F %H:%M')"
+          git push -f origin cfd-backtest
