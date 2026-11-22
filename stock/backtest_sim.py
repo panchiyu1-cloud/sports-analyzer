@@ -41,8 +41,9 @@ from twscan import analysis as an  # noqa: E402
 from twscan import sim as SM  # noqa: E402
 from twscan import util  # noqa: E402
 import twscan.engine as E  # noqa: E402
-from twscan.daytrade import ceil_tick, floor_tick, tick_size  # noqa: E402
-from twscan.util import log  # noqa: E402
+import twscan.daytrade as DT  # noqa: E402
+from twscan.daytrade import ceil_tick, floor_tick, fmt_price, hm, tick_size  # noqa: E402
+from twscan.util import log, r2  # noqa: E402
 
 # ---------------------------------------------------------------- 假時鐘
 CLOCK = [datetime(2026, 1, 5, 8, 0, tzinfo=util.TW)]
@@ -349,25 +350,111 @@ def analyze_day(day):
         return day, {}, {"error": True}
 
 
+# ---------------------------------------------------------------- 改法研究用：不追價，掛限價單等拉回
+PULLBACK_VALID_MIN = 30
+
+
+class PullbackSim(SM.Sim):
+    """只給回測用。出現「可進場」時不買在賣一價，改掛限價單在當日均價（往上取到檔位），
+    30 分鐘內價格拉回、而且「穿過」限價才算成交（剛好碰到不算）；沒等到就取消。
+    成交後的停損、目標價照當沖模式原本的算法（用成交價重算），出場規則不變。"""
+
+    def _order(self, a, lots, now):
+        super()._order(a, lots, now)
+        it = self.st["items"][-1]
+        it["limit"] = min(a["entry"], ceil_tick(a.get("vwap") or a["entry"], a["etf"]))
+        it["events"][-1][1] += f"；掛限價 {fmt_price(it['limit'])}（當日均價）等拉回"
+
+    def _cancel(self, it, why, now):
+        self.st["items"].remove(it)
+        self.st["day"]["cancels"] = self.st["day"].get("cancels", 0) + 1
+        self._log("cancel", f"取消 {it['name']} {it['code']}：{why}", it["code"], now)
+
+    def _confirm(self, it, now):
+        # 這裡只處理逾時與帳戶條件；成交由重播程式拿 K 棒判斷（fill_limit）
+        waited = self._ts(now) - it["sig_ts"]
+        if waited >= PULLBACK_VALID_MIN * 60:
+            self._cancel(it, f"{PULLBACK_VALID_MIN} 分鐘內沒有拉回到限價 {fmt_price(it['limit'])}", now)
+        elif now.hour * 60 + now.minute > hm(self.eng.daytrade.settings["entry_to"]):
+            self._cancel(it, "過了進場時間", now)
+        elif self.st["day"]["stopped"] or self.st["paused"]:
+            self._cancel(it, "今天已停手", now)
+
+    def fill_limit(self, it, price, now):
+        dt = self.eng.daytrade
+        a = dt.advise(it["code"], rank=it.get("rank"), now=now)
+        if a.get("status") == "nodata":
+            return False
+        s = self.eng.snap[it["code"]]
+        stop, target = dt.levels(price, a.get("open"), a.get("vwap"), s.get("low"), a["etf"], s.get("limit_up"))
+        cash = self.st["balance"] - (self._used() - it["amount"])
+        lots, _risk, _one = self.size(price, stop, a["etf"], cash)
+        if lots < 1:
+            self._cancel(it, "成交時現金或每筆風險上限已經不夠買一張", now)
+            return False
+        a2 = dict(a, entry=price, stop=stop, target=target, stop_pct=r2((stop / price - 1) * 100, 2), target_pct=r2((target / price - 1) * 100, 2))
+        self._fill(it, a2, lots, now)
+        it["events"][-1][1] = f"價格拉回穿過限價，以 {fmt_price(price)} 買進 {lots} 張"
+        return True
+
+
+def above_ma20(day):
+    """前一個交易日收盤時，加權指數是不是在月線（20 日均線）之上。"""
+    cl = [b[4] for b in INDEX_HIST["TAIEX"] if b[0] < day]
+    return len(cl) >= 20 and cl[-1] > sum(cl[-20:]) / 20
+
+
 # ---------------------------------------------------------------- 第二段：照時間順序重播，讓模擬戰自己買賣
-def replay(days, steps_by_day, spread=1, overrides=None):
+def replay(days, steps_by_day, spread=1, overrides=None, spec=None):
+    """spec（改法研究用）：regime＝大盤走空不做多；pullback＝等拉回再買；tick_max＝一檔跳動占股價的上限。"""
+    spec = spec or {}
     patch_clock()
-    old = dict(SM.DEF)
+    old, old_weak = dict(SM.DEF), DT.MARKET_WEAK
     SM.DEF.update(overrides or {})
+    if spec.get("regime"):
+        DT.MARKET_WEAK = 0.0          # 進場當時指數不是上漲（≤ 0%）就不進場
     try:
         eng = make_engine()
+        if spec.get("pullback"):
+            eng.sim = PullbackSim(eng)
         sim = eng.sim
         set_clock(days[0], 8 * 60 + 30)
         sim.load()
         for day in days:
             d = Day(eng, day, spread)
             steps = steps_by_day.get(day) or {}
+            trade_ok = not spec.get("regime") or above_ma20(day)     # 月線之下的日子整天不進場
             anchor = next((c for c in ("2330", "2317", "0050") if c in d.prev), d.codes[0] if d.codes else None)
             for t in range(T_FIRST, T_END + 1, STEP):
+                just = set()
+                # 0) 掛著的限價單：這一根 K 棒有沒有拉回穿過限價
+                for it in (list(sim._ready()) if spec.get("pullback") else []):
+                    code, b = it["code"], d.bar(it["code"], t - STEP)
+                    if not b or code not in d.cum or "limit" not in it:
+                        continue
+                    _m, o, h, lo, _c, _v = b
+                    st, lim = d.cum[code], it["limit"]
+                    px = o if o <= lim else lim if lo < lim else None
+                    if px is None:
+                        continue
+                    # 成交當下：這一根的最高價先算進「已經出現過的高點」，同一根裡不承認到目標價（不知道先後）
+                    set_clock(day, t - STEP, 60)
+                    d.put(code, t - STEP, price=px, low=min(st[2], o, px), high=max(st[1], h), sec=60)
+                    with eng.lock:
+                        ok = sim.fill_limit(it, px, CLOCK[0])
+                    if not ok:
+                        continue
+                    just.add(it["id"])
+                    if lo <= it["stop"]:              # 成交後同一根又跌到停損：算停損
+                        px2 = max(lo, round(it["stop"] - tick_size(it["stop"]) * spread, 2))
+                        set_clock(day, t - STEP, 200)
+                        d.put(code, t - STEP, price=px2, low=min(st[2], o, px2), high=max(st[1], h), sec=200)
+                        with eng.lock:
+                            sim._manage(it, CLOCK[0])
                 # 1) 手上的部位：先走完 t-5 ～ t 這一根 K 棒（開盤價 → 碰到停損或目標 → 收盤價）
                 for it in list(sim._open()):
                     code, b = it["code"], d.bar(it["code"], t - STEP)
-                    if not b or code not in d.cum:
+                    if not b or code not in d.cum or it["id"] in just:
                         continue
                     _m, o, h, lo, _c, _v = b
                     st = d.cum[code]
@@ -398,7 +485,10 @@ def replay(days, steps_by_day, spread=1, overrides=None):
                 if step:
                     eng.analysis = step["an"]
                     eng.daytrade.on_live_rank(step["cands"])
-                    eng.live_cands = step["cands"]
+                    cands = step["cands"] if trade_ok else []
+                    if spec.get("tick_max"):          # 一檔跳動占股價太大的不做（買賣價差的成本太重）
+                        cands = [c for c in cands if c in eng.snap and tick_size(eng.snap[c]["price"]) / eng.snap[c]["price"] <= spec["tick_max"]]
+                    eng.live_cands = cands
                 else:
                     eng.live_cands = []
                 sim._last = 0
@@ -415,6 +505,7 @@ def replay(days, steps_by_day, spread=1, overrides=None):
     finally:
         SM.DEF.clear()
         SM.DEF.update(old)
+        DT.MARKET_WEAK = old_weak
 
 
 def quality(days):
@@ -480,6 +571,62 @@ VARIANTS = [
 ]
 
 
+STUDY = [
+    {"key": "base", "label": "現在的規則"},
+    {"key": "regime", "label": "大盤走空不做多（加權在月線之下、或進場當時不是上漲就不進場）", "regime": True},
+    {"key": "pullback", "label": "不追強，掛限價單在當日均價等拉回（30 分鐘有效）", "pullback": True},
+    {"key": "tick", "label": "避開一檔跳動超過股價 0.25% 的價位（10–20 元、100–200 元）", "tick_max": 0.0025},
+    {"key": "all", "label": "三項一起", "regime": True, "pullback": True, "tick_max": 0.0025},
+]
+MIN_HALF_TRADES = 10       # 一半裡不到這麼多筆：不足以判斷
+
+
+def half_stats(trades, days, start):
+    ds = set(days)
+    ts = [t for t in trades if t["date"] in ds]
+    s = SM.stats(ts)
+    return {"days": len(days), "from": days[0], "to": days[-1], "n": s.get("n", 0), "win": s.get("win", 0), "win_rate": s.get("win_rate"),
+            "pnl": s.get("pnl", 0), "avg_r": s.get("avg_r"), "pf": s.get("pf"), "by": {k: [v["n"], v["pnl"]] for k, v in (s.get("by") or {}).items()},
+            "traded_days": len({t["date"] for t in ts})}
+
+
+def run_study(days, steps_by_day, out):
+    mid = len(days) // 2
+    h1, h2 = days[:mid], days[mid:]
+    th = INDEX_HIST["TAIEX"]
+    by = {b[0]: i for i, b in enumerate(th)}
+
+    def mkt(ds):
+        if ds[0] in by and ds[-1] in by and by[ds[0]] > 0:
+            return round((th[by[ds[-1]]][4] / th[by[ds[0]] - 1][4] - 1) * 100, 2)
+        return None
+    out.update(kind="sim_study", split={"first": [h1[0], h1[-1]], "second": [h2[0], h2[-1]]},
+               bench_halves=[mkt(h1), mkt(h2)], above_ma20=[d for d in days if above_ma20(d)],
+               rule=f"前後兩半的總損益（已扣成本）都是正的、而且每一半至少 {MIN_HALF_TRADES} 筆，才算過關", variants=[])
+    log(f"[研究] 前半 {h1[0]}～{h1[-1]}（{len(h1)} 天，加權 {mkt(h1)}%）｜後半 {h2[0]}～{h2[-1]}（{len(h2)} 天，加權 {mkt(h2)}%）"
+        f"｜月線之上 {len(out['above_ma20'])} 天｜過關條件：{out['rule']}")
+    for spec in STUDY:
+        api, _hist, trades, _lg = replay(days, steps_by_day, 1, None, spec)
+        a, b = half_stats(trades, h1, api["start"]), half_stats(trades, h2, api["start"])
+        enough = a["n"] >= MIN_HALF_TRADES and b["n"] >= MIN_HALF_TRADES
+        verdict = "pass" if enough and a["pnl"] > 0 and b["pnl"] > 0 else "fail" if enough or (a["n"] >= MIN_HALF_TRADES and a["pnl"] <= 0) or (b["n"] >= MIN_HALF_TRADES and b["pnl"] <= 0) else "thin"
+        s = api["stats"]
+        log(f"[研究] {spec['label']}：全期 {s.get('n', 0)} 筆、勝率 {s.get('win_rate', '—')}%、{s.get('pnl', 0):+,}｜前半 {a['n']} 筆 {a['pnl']:+,}｜後半 {b['n']} 筆 {b['pnl']:+,}"
+            f"｜最大回落 {api['account']['max_dd']:,} → {verdict}")
+        sig = sum(d.get("signals", 0) for d in api["days"])
+        out["variants"].append({
+            "key": spec["key"], "label": spec["label"], "verdict": verdict, "h1": a, "h2": b, "signals": sig,
+            "all": {"n": s.get("n", 0), "win": s.get("win", 0), "win_rate": s.get("win_rate"), "pnl": s.get("pnl", 0), "avg_r": s.get("avg_r"),
+                    "pf": s.get("pf"), "avg_win": s.get("avg_win"), "avg_loss": s.get("avg_loss"), "cost": s.get("cost"), "avg_hold": s.get("avg_hold"),
+                    "by": {k: [v["n"], v["pnl"]] for k, v in (s.get("by") or {}).items()},
+                    "ret_pct": api["account"]["ret_pct"], "max_dd": api["account"]["max_dd"], "max_dd_pct": api["account"]["max_dd_pct"],
+                    "balance": api["account"]["balance"], "days_traded": api["days_traded"], "days_up": api["days_up"], "days_down": api["days_down"]},
+            "extra": breakdown(trades),
+            "days": [[d["date"], d["n"], d["win"], d["pnl"], d["end"]] for d in reversed(api["days"])],   # api 只帶最近 60 天，這裡夠用
+            "trades": [{k: t.get(k) for k in ("date", "code", "name", "sig_time", "time", "entry", "stop", "target", "lots", "exit_time", "exit", "reason", "pnl", "r", "mfe_r", "mae_r", "limit")} for t in trades],
+        })
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=30)
@@ -490,6 +637,7 @@ def main():
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--no-fetch", action="store_true")
     ap.add_argument("--reanalyze", action="store_true", help="不要用先前存下的排名，重算第一段")
+    ap.add_argument("--study", action="store_true", help="跑事先講定的幾種改法（前後兩半驗證），寫 sim_study.json")
     a = ap.parse_args()
     CFG.update(E.load_config() if not a.demo else dict(E.DEFAULT_CONFIG))
     t0 = time.time()
@@ -551,6 +699,12 @@ def main():
            "from": days[0], "to": days[-1], "n_days": len(days), "step_min": STEP, "fetch": fetch, "diag": diag,
            "quality": quality(days), "tpex_proxy": not any(IDX5["TPEX"].get(d) for d in days),
            "bench": bench, "variants": []}
+    if a.study:
+        run_study(days, steps_by_day, out)
+        os.makedirs(a.out, exist_ok=True)
+        util.write_json(os.path.join(a.out, "sim_study.json"), out)
+        log(f"[研究] 完成，共 {time.time() - t0:.0f} 秒 → {os.path.join(a.out, 'sim_study.json')}")
+        return 0
     for key, label, spread, ov in VARIANTS:
         t1 = time.time()
         api, hist, trades, _lg = replay(days, steps_by_day, spread, ov)

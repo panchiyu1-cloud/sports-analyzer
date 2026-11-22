@@ -12,8 +12,13 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "回測幾個交易日（Yahoo 的 5 分 K 最多約 40 個交易日）"
+        description: "回測幾個交易日（Yahoo 的 5 分 K 最多約 59 個交易日）"
         default: "30"
+      mode:
+        description: "backtest＝照現在的規則重播；study＝事先講定的幾種改法，前後兩半驗證"
+        type: choice
+        options: [backtest, study]
+        default: backtest
 
 permissions:
   contents: write   # push the stock-backtest branch
@@ -46,13 +51,16 @@ jobs:
       - name: Run the backtest
         env:
           DAYS: ${{ inputs.days }}
+          MODE: ${{ inputs.mode }}
           PYTHONUNBUFFERED: "1"
         run: |
           today=$(TZ=Asia/Taipei date +%F)
           # bars fetched on another day are stale (the newest days would be missing)
           find stock-bt-cache -mindepth 1 -maxdepth 1 ! -name "$today" -exec rm -rf {} + 2>/dev/null || true
           case "$DAYS" in ''|*[!0-9]*) DAYS=30 ;; esac
-          python stock/backtest_sim.py --days "$DAYS" --out "$RUNNER_TEMP/bt-out" --cache-dir "stock-bt-cache/$today"
+          extra=""
+          if [ "$MODE" = "study" ]; then extra="--study"; fi
+          python stock/backtest_sim.py --days "$DAYS" --out "$RUNNER_TEMP/bt-out" --cache-dir "stock-bt-cache/$today" $extra
       - name: Save the 5-minute bars
         if: always()
         uses: actions/cache/save@v4
@@ -65,8 +73,8 @@ jobs:
           git config --global user.email "actions@users.noreply.github.com"
           PUB="$RUNNER_TEMP/bt-pub"
           git worktree add --orphan -b stock-backtest "$PUB"
-          cp "$RUNNER_TEMP/bt-out/sim_backtest.json" "$PUB/"
+          cp "$RUNNER_TEMP"/bt-out/*.json "$PUB/"
           cd "$PUB"
-          git add sim_backtest.json
+          git add -A
           git commit -q -m "backtest: $(TZ=Asia/Taipei date '+%F %H:%M')"
           git push -f origin stock-backtest
