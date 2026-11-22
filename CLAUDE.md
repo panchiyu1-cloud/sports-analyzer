@@ -731,3 +731,34 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   `eng.extra_watch` / `rt_priority` (MIS every few seconds). No relay: everything stays per
   minute. MIS refuses r.jina.ai and sends no CORS, and TWSE's realtime data is not to be
   re-broadcast publicly, so no public relay (ntfy / public MQTT) is used.
+
+## 差價交易分析網頁 (docs/cfd/) — the owner's CFD page, a separate project
+- `docs/cfd/index.html` is one hand-written file (analysis engine, Track, the 模擬戰 paper account `Sim`,
+  trading hours `Mkt`, the page's own backtest `BT`, data sources, IG module, UI); it runs only in the owner's
+  browser, nothing is uploaded. It is not part of the sports pipeline and CI never touches it. Its notes and
+  tests are in the owner's claude.ai Project (經濟分析), not in this repository.
+- 模擬戰的回測 (owner, 2026-11-22: 「用我的模擬戰的模式回測60個交易天」; branch `claude/cfd-backtest`, not on
+  main): `cfd/bt_replay.js` loads the page's own modules from the HTML (no second copy of any rule) and replays
+  them, one step per 5-minute bar: the bars as they stood (the last 15m / 1h / 4h / daily bars still forming)
+  -> `Engine.analyze` / `rate` / `gate` -> `Sim.scan` / `Sim.step`. `cfd/bt_fetch.js` downloads 5-minute and
+  1-hour bars in the page's source order from what a runner can reach: Binance spot (API), Binance futures (the
+  API answers 451 from GitHub: the public files on data.binance.vision), Yahoo through `cfd/bt_yahoo.py`
+  (Node's fetch got 429 on every Yahoo request; Python's urllib with the stock scanner's headers is answered).
+  `cfd/bt_selftest.js` (synthetic prices): the bars handed to the engine equal `BT.views`, removing later data
+  changes nothing earlier, fills happen at prices that existed, the books add up. Workflow
+  `.github/workflows/cfd-backtest.yml`: a change of `cfd/bt_request.json` on that branch (or manual once on
+  main); about 75 minutes (940,000 analyses on 4 cores); result on the orphan branch `cfd-backtest`.
+- Not reproducible, say so with every number: the real account trades only while the page is open (the replay
+  assumes always); 5-minute steps (the page scans each minute and watches positions every few seconds); no
+  news, related-market or calendar history (technical analysis only, no "data release soon" guard); default
+  spreads per class (no IG prices); FX, index futures and four ETFs from Yahoo (the page in Taiwan uses Bybit /
+  Hyperliquid first), so no weekend session for them; ten instruments with delayed quotes only are left out
+  (the real account refuses them too); FX starts 09-04, index futures 09-17 (Yahoo's 60 days, 300 bars to warm up).
+- First result (2026-08-31..11-20, 60 weekdays, 55 instruments). By the rules: 816 trades, 37.1% winners,
+  -0.072R a trade (se 0.054), US$1,000 -> 723 (-27.7%), lowest 461, drawdown 55.7%, spread paid 313. Entries one
+  step later: 723 trades, -0.042R, yet +19.1% (one day made +248). No spread: 833 trades, +0.009R, +20.1%.
+  So: before costs the signal is at zero, the spread (about 0.08R a trade) makes it negative, and the dollar
+  result swings from -28% to +19% on a five-minute detail, with a 44-56% drawdown in every run. Do not present
+  the 模擬戰 or the page's "可進場" as profitable, and do not quote the +19% without the rest. Subgroups (shorts
+  better than longs, 15:00-24:00 Taipei better than 00:00-15:00, metals better than stocks, the second half
+  better than the first) come from one window and many comparisons: hypotheses for data not yet seen, not rules.
