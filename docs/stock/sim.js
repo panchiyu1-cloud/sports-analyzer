@@ -1,7 +1,7 @@
 'use strict';
 /* 模擬戰（當沖）：假想帳戶照「當沖模式」的建議自動買賣，看績效。
    規則與成交都在掃描程式那一邊算（twscan/sim.py）；這裡只負責顯示。共用的小工具（$、api、esc、pct…）定義在 app.js。 */
-const SIM = { data: null, hist: null, tab: null, open: {}, loaded: 0, histN: -1, msg: '', sure: 0 };
+const SIM = { data: null, hist: null, tab: null, open: {}, loaded: 0, histN: -1, msg: '', sure: 0, mode: 'live', bt: null, btVar: 'main', btTried: false };
 try { SIM.tab = localStorage.getItem('twscan.simTab'); } catch (e) { /* 無痕模式 */ }
 
 const simMoney = (n) => (n == null ? '—' : fmtInt(n) + ' 元');
@@ -31,9 +31,10 @@ async function simHistLoad() {
 function showSim() {
   S.view = 'sim';
   $('#view').innerHTML = `<section class="section"><div class="section-head"><h2>當沖模擬戰</h2><span class="sub">假想的帳戶，照「當沖模式」的建議自動買賣；不會真的下單</span></div>
-    <div id="simRoot"><div class="panel empty">載入中…</div></div></section>`;
+    <div id="simMode"></div><div id="simRoot"><div class="panel empty">載入中…</div></div></section>`;
   if (SIM.data) simRender();
   simLoad();
+  simBtLoad();
   S.timers.push(setInterval(() => { if (fastMode() || Date.now() - SIM.loaded > 120000) simLoad(); }, 20000));
 }
 
@@ -54,21 +55,27 @@ function simCurve(d) {
     <div class="sim-curve-ax"><span>${md(pts[0][0])} 起始 ${fmtInt(d.start)}</span><span>虛線＝起始資金</span><span>${md(pts[pts.length - 1][0])} <b class="num ${cl}">${fmtInt(last)}</b></span></div></div>`;
 }
 
-function simAccount(d) {
+function simAccount(d, bt) {
   const a = d.account, t = d.today, st = d.stats || { n: 0 };
   const upd = d.now ? d.now.slice(5, 16).replace('-', '/') : '';
   const total = a.equity - d.start;
+  const top = bt ? `<span class="st info">回測結果</span><span class="muted">${md(bt.from)}–${md(bt.to)}・${bt.n_days} 個交易日${bt.demo ? '・示範資料' : ''}</span>`
+    : `<span class="st ${SIM_ST[a.state] || 'info'}">${a.state === 'run' ? '● ' : ''}${esc(a.state_text)}</span>
+      <span class="muted">${esc(upd)} 更新${d.demo ? '・示範資料' : ''}</span>`;
+  const third = bt ? `<div class="rv-m"><div class="l">最大回落</div><div class="v num">${fmtInt(a.max_dd)}</div><div class="s">${a.max_dd ? '從高點最多少掉 ' + a.max_dd_pct + '%' : '—'}</div></div>`
+    : `<div class="rv-m"><div class="l">今天</div><div class="v num ${clsOf(t.pnl)}">${t.ran || t.n ? signed(t.pnl) : '—'}</div><div class="s">${t.n ? `已結束 ${t.n} 筆・賺 ${t.win} 筆` : t.ran ? '還沒有結束的交易' : '今天還沒開始'}</div></div>`;
+  const sub = bt ? `<b class="num">${d.days_run}</b> 個交易日裡 <b class="num">${d.days_traded}</b> 天有進場（賺 ${d.days_up} 天、賠 ${d.days_down} 天）`
+    : `可用現金 <b class="num">${fmtInt(a.avail)}</b>・已投入 <b class="num">${fmtInt(a.used)}</b>${a.float ? `・浮動損益 <b class="num ${clsOf(a.float)}">${signed(a.float)}</b>` : ''}
+      ・最大回落 <b class="num">${fmtInt(a.max_dd)}</b>${a.max_dd ? `（${a.max_dd_pct}%）` : ''}・執行 <b class="num">${d.days_run}</b> 天${d.days_traded ? `（賺 ${d.days_up} 天、賠 ${d.days_down} 天）` : ''}`;
   return `<div class="panel sim-acct">
-    <div class="sim-top"><span class="st ${SIM_ST[a.state] || 'info'}">${a.state === 'run' ? '● ' : ''}${esc(a.state_text)}</span>
-      <span class="muted">${esc(upd)} 更新${d.demo ? '・示範資料' : ''}</span></div>
+    <div class="sim-top">${top}</div>
     <div class="rv-metrics sim-metrics">
       <div class="rv-m"><div class="l">帳戶權益</div><div class="v num">${fmtInt(a.equity)}</div><div class="s">起始 ${fmtInt(d.start)} 元</div></div>
       <div class="rv-m"><div class="l">總損益</div><div class="v num ${clsOf(total)}">${signed(total)}</div><div class="s num ${clsOf(a.ret_pct)}">${pct(a.ret_pct)}</div></div>
-      <div class="rv-m"><div class="l">今天</div><div class="v num ${clsOf(t.pnl)}">${t.ran || t.n ? signed(t.pnl) : '—'}</div><div class="s">${t.n ? `已結束 ${t.n} 筆・賺 ${t.win} 筆` : t.ran ? '還沒有結束的交易' : '今天還沒開始'}</div></div>
+      ${third}
       <div class="rv-m"><div class="l">勝率</div><div class="v num">${st.n ? st.win_rate + '%' : '—'}</div><div class="s">${st.n ? `${st.n} 筆裡賺 ${st.win} 筆` : '還沒有交易'}</div></div>
     </div>
-    <div class="sim-sub t2">可用現金 <b class="num">${fmtInt(a.avail)}</b>・已投入 <b class="num">${fmtInt(a.used)}</b>${a.float ? `・浮動損益 <b class="num ${clsOf(a.float)}">${signed(a.float)}</b>` : ''}
-      ・最大回落 <b class="num">${fmtInt(a.max_dd)}</b>${a.max_dd ? `（${a.max_dd_pct}%）` : ''}・執行 <b class="num">${d.days_run}</b> 天${d.days_traded ? `（賺 ${d.days_up} 天、賠 ${d.days_down} 天）` : ''}</div>
+    <div class="sim-sub t2">${sub}</div>
     ${simCurve(d)}</div>`;
 }
 
@@ -93,8 +100,8 @@ function simStats(d) {
     <table class="tbl sim-by"><tbody>${reason}</tbody></table></div>`;
 }
 
-function simDays(d) {
-  const rows = (d.days || []).slice(0, 20);
+function simDays(d, n) {
+  const rows = (d.days || []).slice(0, n || 20);
   if (!rows.length) return `<div class="panel"><h3>每天的結果</h3><div class="muted" style="font-size:13.5px">程式在交易時間執行過的日子會列在這裡（沒有進場的日子也算一天）。</div></div>`;
   return `<div class="panel"><h3>每天的結果</h3><div class="table-scroll"><table class="tbl rv-tbl"><thead><tr><th>日期</th><th class="n">筆數</th><th class="n">當天損益</th><th class="n">收盤後餘額</th></tr></thead><tbody>
     ${rows.map((r) => `<tr style="cursor:default"><td>${md(r.date)}（${wd(r.date)}）</td><td class="n num">${r.n ? `${r.n}<span class="muted"> 賺${r.win}</span>` : '<span class="muted">沒進場</span>'}</td>
@@ -222,8 +229,8 @@ function simOpen(d) {
     ${done.length ? `<div class="panel" style="margin-top:14px"><h3>今天已經結束的交易</h3>${done.map((t) => simTradeRow(t, false)).join('')}</div>` : ''}`;
 }
 
-function simHist(d) {
-  const h = SIM.hist;
+function simHist(d, hh) {
+  const h = hh || SIM.hist;
   if (!h) { simHistLoad(); return '<div class="panel empty">載入交易紀錄…</div>'; }
   if (!h.trades.length) return `<div class="panel empty"><div class="big">還沒有交易紀錄</div>每一筆結束的模擬交易都會記在這裡：進出場的時間與價格、張數與金額、停損停利、出場原因、損益與成本、途中最多賺賠多少、當時的排名與大盤。點一筆可以展開。</div>`;
   let last = null;
@@ -266,8 +273,65 @@ function simControls(d) {
     <button class="btn ghost" data-sim-act="reset">${SIM.sure && Date.now() - SIM.sure < 6000 ? '確定重設？再按一次' : '重設帳戶'}</button><span class="muted small-inline">${esc(SIM.msg)}</span></div>`;
 }
 
+// ---------------------------------------------------------------- 回測（stock/backtest_sim.py 的結果，一個固定的檔案）
+async function simBtLoad() {
+  if (SIM.bt || SIM.btTried) return;
+  SIM.btTried = true;
+  try {
+    const r = await fetch((CLOUD ? '' : '/static/') + 'sim_backtest.json?d=' + new Date().toISOString().slice(0, 10), { cache: 'no-cache' });
+    if (!r.ok) return;
+    const j = await r.json();
+    if (j && j.v === 1 && Array.isArray(j.variants) && j.variants.length) SIM.bt = j;
+  } catch (e) { return; }
+  if (S.view === 'sim') simRender();
+}
+
+function simBtBreak(x) {
+  if (!x || !x.n) return '';
+  const tbl = (title, rows) => `<h4 class="sim-h4">${title}</h4><table class="tbl rv-tbl"><tbody>${rows.map((r) => `<tr style="cursor:default"><td>${esc(r.k.replace(/^\d /, ''))}</td>
+    <td class="n num">${r.n} 筆<span class="muted"> 賺${r.win}</span></td><td class="n num ${clsOf(r.pnl)}">${signed(r.pnl)}</td><td class="n num ${clsOf(r.avg_r)}">${simR(r.avg_r)}</td></tr>`).join('')}</tbody></table>`;
+  return `<div class="panel"><h3>拆開來看 <span class="muted" style="font-weight:400;font-size:12.5px">筆數・損益・平均 R</span></h3>
+    ${tbl('進場時間', x.hour)}${tbl('股價', x.price)}${tbl('進場時在即時名單的排名', x.rank)}${tbl('進場時的大盤', x.market)}
+    <div class="muted small">${x.n} 筆裡有 ${x.reached_1r} 筆途中曾經賺到 1R 以上（1R＝原本最多賠的金額）；平均最多曾賺 ${simR(x.avg_mfe)}、最多曾賠 ${simR(x.avg_mae)}。分得越細每一格的筆數越少，只能當線索。</div></div>`;
+}
+
+const SIM_VAR = { main: ['照模擬戰的規則', '買進算賣一價（成交價往上一檔）'], opt: ['樂觀的算法', '買在成交價、停損剛好成交'], nocap: ['單筆上限放寬', '一筆可以用到全部資金'] };
+
+function simBtView() {
+  const b = SIM.bt;
+  const v = b.variants.find((x) => x.key === SIM.btVar) || b.variants[0];
+  const d = v.api;
+  const rows = b.variants.map((x) => {
+    const s = x.api.stats || { n: 0 }, a = x.api.account;
+    const nm = SIM_VAR[x.key] || [x.label, ''];
+    return `<tr data-sim-var="${esc(x.key)}" class="${x.key === v.key ? 'on' : ''}"><td>${x.key === v.key ? '● ' : ''}${esc(nm[0])}<small>${esc(nm[1])}</small></td><td class="n num">${s.n || 0}</td><td class="n num">${s.n ? Math.round(s.win_rate) + '%' : '—'}</td>
+      <td class="n num ${clsOf(s.pnl)}">${s.n ? signed(s.pnl) : '—'}</td><td class="n num">${fmtInt(a.max_dd)}</td></tr>`;
+  }).join('');
+  const bench = b.bench ? `同一段時間加權指數 <b class="num ${clsOf(b.bench.pct)}">${pct(b.bench.pct)}</b>。` : '';
+  return `<div class="panel sim-bt-intro"><h3>回測：把過去 ${b.n_days} 個交易日重播一遍</h3>
+      <div class="t2" style="font-size:13.5px;line-height:1.75">${md(b.from)}–${md(b.to)}。用和模擬戰同一套程式（即時排名 → 當沖模式的「可進場」→ 模擬戰的買賣規則），餵它當時的 5 分 K。${bench}</div>
+      <details class="sim-more" style="margin-top:8px"><summary>和實際執行不一樣的地方</summary>
+        <ul class="sim-ul"><li>實際每幾秒看一次報價；回測每 ${b.step_min} 分鐘一次，「等 60 秒再確認」變成等下一根 5 分 K。</li>
+        <li>沒有過去的內外盤資料：「外盤比 ≥ 50%」這個條件沒有檢查，所以回測的進場次數會比實際多一些。</li>
+        <li>沒有當時的新聞與三大法人資料：排名只用技術面。${b.tpex_proxy ? '櫃買指數沒有 5 分鐘資料，上櫃股票的「大盤偏弱」改看加權指數。' : ''}</li>
+        <li>買進算「最後成交價往上一檔」，停損算「停損價往下一檔」（跳空跌破用開盤價），同一根 K 棒同時碰到停損與目標算停損。</li>
+        <li>處置股、不能現股當沖的股票分不出來；${b.n_days} 天只是一小段行情，不代表以後。</li>
+        ${b.quality && b.quality.stock_days ? `<li>資料核對：5 分 K 合起來的每日最高、最低價，${(100 - b.quality.hilo_off_pct).toFixed(1)}% 和日 K 一致（${fmtInt(b.quality.stock_days)} 筆）。Yahoo 的 5 分 K 多半沒有 13:30 最後一盤，但模擬戰 13:15 就出場，不受影響。</li>` : ''}</ul></details>
+      <div class="table-scroll" style="margin-top:10px"><table class="tbl rv-tbl sim-var"><thead><tr><th>三種算法（點一列看）</th><th class="n">筆數</th><th class="n">勝率</th><th class="n">總損益</th><th class="n">回落</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <div class="muted small">回落＝帳戶從最高點最多少掉多少元。出現「可進場」${v.signals} 次，其中 ${v.cancels} 次等到下一根 K 棒條件已經不在，沒有買。回測時間 ${esc(b.generated)}。</div></div>
+    ${simAccount(d, b)}
+    <div class="grid2" style="margin-top:14px">${simStats(d)}${simDays(d, 60)}</div>
+    ${simBtBreak(v.extra)}
+    <div style="margin-top:14px">${v.hist ? simHist(d, v.hist) : '<div class="panel empty">交易明細只列在第一種算法；其他兩種只比較總結果。</div>'}</div>`;
+}
+
 function simRender() {
   const root = $('#simRoot'), d = SIM.data;
+  const modeBox = $('#simMode');
+  if (modeBox) {
+    modeBox.innerHTML = SIM.bt ? `<div class="seg sim-mode"><button data-sim-mode="live" class="${SIM.mode === 'live' ? 'on' : ''}">實際紀錄</button><button data-sim-mode="bt" class="${SIM.mode === 'bt' ? 'on' : ''}">回測 ${SIM.bt.n_days} 天</button></div>` : '';
+  }
+  if (root && SIM.mode === 'bt' && SIM.bt) { root.innerHTML = simBtView(); return; }
   if (!root || !d) return;
   if (!d.on) {
     root.innerHTML = `<div class="panel empty"><div class="big">模擬戰的資料還沒有產生</div>${CLOUD ? '雲端主機下一次執行（交易日早上，或傍晚的掃描）之後就會出現。' : '請稍候，程式啟動後就會出現。'}</div>`;
@@ -294,7 +358,7 @@ function simRender() {
 
 // ---------------------------------------------------------------- 匯出
 function simCsv() {
-  const h = SIM.hist;
+  const h = SIM.mode === 'bt' && SIM.bt ? (SIM.bt.variants.find((x) => x.hist) || {}).hist : SIM.hist;
   if (!h || !h.trades.length) return;
   const cols = [['日期', 'date'], ['代號', 'code'], ['名稱', 'name'], ['訊號時間', 'sig_time'], ['買進時間', 'time'], ['買進價', 'entry'], ['張數', 'lots'], ['買進金額', 'amount'],
     ['停損價', 'stop'], ['目標價', 'target'], ['賣出時間', 'exit_time'], ['賣出價', 'exit'], ['出場原因', 'reason_text'], ['損益', 'pnl'], ['報酬率%', 'ret'], ['占帳戶%', 'eq_pct'], ['R', 'r'],
@@ -305,7 +369,7 @@ function simCsv() {
   const lines = [cols.map((c) => c[0]).join(',')].concat(h.trades.slice().reverse().map((t) => cols.map((c) => cell(typeof c[1] === 'function' ? c[1](t) : t[c[1]])).join(',')));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' }));
-  a.download = `當沖模擬戰-${(SIM.data && SIM.data.date) || ''}.csv`;
+  a.download = SIM.mode === 'bt' ? `當沖模擬戰-回測-${SIM.bt.from}_${SIM.bt.to}.csv` : `當沖模擬戰-${(SIM.data && SIM.data.date) || ''}.csv`;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
@@ -314,6 +378,10 @@ function simCsv() {
 // ---------------------------------------------------------------- 操作
 document.addEventListener('click', async (e) => {
   if (S.view !== 'sim') return;
+  const mode = e.target.closest('[data-sim-mode]');
+  if (mode) { SIM.mode = mode.dataset.simMode; simRender(); window.scrollTo(0, 0); return; }
+  const vr = e.target.closest('[data-sim-var]');
+  if (vr) { SIM.btVar = vr.dataset.simVar; simRender(); return; }
   const tab = e.target.closest('[data-sim-tab]');
   if (tab) {
     SIM.tab = tab.dataset.simTab;

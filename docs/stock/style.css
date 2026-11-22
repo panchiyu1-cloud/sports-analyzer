@@ -512,6 +512,16 @@ h3 .mbadge { vertical-align: 2px; margin-left: 6px; }
 .sim-rules ul { margin: 10px 0 0; padding-left: 18px; font-size: 13.5px; color: var(--text-2); line-height: 1.75; }
 .sim-rules li b { color: var(--text); }
 .sim-log ul { margin-top: 8px; }
+.sim-mode { display: flex; width: 100%; margin: 0 0 14px; }
+.sim-mode button { flex: 1; padding: 8px 4px; font-size: 14px; font-weight: 600; }
+.sim-var tbody tr { cursor: pointer; }
+.sim-var tbody tr.on td { background: var(--surface-2); font-weight: 600; }
+.sim-var { font-size: 13px; }
+.sim-var td:first-child { white-space: normal; min-width: 92px; }
+.sim-var td small { display: block; color: var(--muted); font-weight: 400; font-size: 11.5px; line-height: 1.35; }
+.sim-var th, .sim-var td { padding-left: 5px; padding-right: 5px; }
+.sim-h4 { margin: 14px 0 4px; font-size: 13px; color: var(--text-2); font-weight: 600; }
+.sim-ul { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--text-2); line-height: 1.7; }
 @media (max-width: 640px) {
   .sim-kv { grid-template-columns: minmax(0, 1fr); }
   .sim-tabs button { font-size: 13.5px; }

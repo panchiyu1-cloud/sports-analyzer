@@ -672,6 +672,20 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   about them is validated; do not tune them to make the record look better - change them only when the owner asks,
   and say in the page's rules what changed and when. `Engine._sim_tick`, `load_cache` and the publisher wrap every
   sim call: a sim error must never stop quotes, the scan or the other files.
+- 模擬戰的回測 (owner, 2026-11-22: 「運用這一套模擬戰的系統幫我去回測過去30個交易日」): `stock/backtest_sim.py`
+  replays past days through the session's own code (`Engine._analyze` with the volume estimate -> `DayTrade.advise`
+  -> `Sim`) under a fake clock, one step per Yahoo 5-minute bar; `.github/workflows/stock-backtest.yml` (manual;
+  the sandbox cannot reach Yahoo) reads the scanner's cache without saving it, keeps bars and rankings in its own
+  cache and pushes only sim_backtest.json to the orphan branch `stock-backtest`; the page shows the copy committed
+  as docs/stock/sim_backtest.json (實際紀錄 / 回測 switch in sim.js). Not reproducible, and said so on the page: no
+  order-flow history (the 外盤比 check is skipped), no news or institutional data of the time (technical ranking
+  only), 5-minute steps, no TPEx index bars (the TAIEX move stands in for the weak-market check). Fills: buy at
+  the last price + 1 tick, a stop 1 tick below the stop (the open when gapped), stop first when a bar touches both.
+  Check of fidelity: on 11-13 / 11-17 / 11-18 the replay bought mostly the stocks of the real entry alerts at
+  about the same prices. First result (10-07..11-20, 30 days, TAIEX -27.7%): 79 trades, 26.6% winners, -52,598
+  (-15.0%); stops 45, targets 14; -10.6% with no spread at all; -15.9% with the 50% cap lifted; negative before
+  costs too. The signal showed no edge in this window: do not present 當沖模式 or the 模擬戰 as profitable, and
+  do not pick a rule variant because it looks better on these 30 days (one falling month, 79 trades).
 - `Engine.recent_trading_dates` takes the union of the TAIEX history, the daily bars of a few
   stocks that trade every day (`BELLWETHER`) and the newest quote date. Yahoo's ^TWII series
   lacked 2026-11-16 during the 11-17 session: with the index alone, "the last finished day"
