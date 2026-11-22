@@ -295,10 +295,10 @@ class Day:
             rows = [r for r in (IDX5[key].get(self.day) or []) if r[0] < t]
             self.eng.index[key] = {"date": self.day, "price": rows[-1][4] if rows else None, "prev": prev}
         tx, ox = self.eng.index["TAIEX"], self.eng.index["TPEX"]
-        if ox["price"] is None and ox["prev"] and tx["price"] and tx["prev"]:
-            # Yahoo 沒有櫃買指數的 5 分 K：用加權指數當時的漲跌幅代替（盤中兩者方向幾乎一致），
-            # 否則上櫃股票在大盤重挫的日子也會被放行，和實際執行不一樣
-            ox["price"] = ox["prev"] * tx["price"] / tx["prev"]
+        if ox["price"] is None and tx["price"] and tx["prev"]:
+            # Yahoo 沒有櫃買指數的 5 分 K（快取裡也不一定有它的日 K）：用加權指數當時的漲跌幅代替
+            # （盤中兩者方向幾乎一致），否則上櫃股票在大盤重挫的日子也會被放行，和實際執行不一樣
+            ox["price"], ox["prev"] = tx["price"], tx["prev"]
 
     def bar(self, code, start):
         for r in M5.get(code, {}).get(self.day, []):
