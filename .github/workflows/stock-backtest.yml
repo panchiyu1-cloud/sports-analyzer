@@ -1,0 +1,72 @@
+# 臺股模擬戰回測 (stock/backtest_sim.py) - manual only.
+#
+# Replays the last N trading days through the same code the session runs (live ranking ->
+# day-trade advice -> the 模擬戰 paper account), on Yahoo 5-minute bars. The sandbox the code
+# is written in cannot reach Yahoo, so the replay runs here. It only reads the scanner's
+# state (stock/data, Actions cache) and never saves it back: the real paper account is not
+# touched. The 5-minute bars stay in this workflow's own cache (not published); only the
+# result (sim_backtest.json: trades and statistics) goes to the orphan branch stock-backtest.
+name: 臺股模擬戰回測 (stock backtest)
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "回測幾個交易日（Yahoo 的 5 分 K 最多約 40 個交易日）"
+        default: "30"
+
+permissions:
+  contents: write   # push the stock-backtest branch
+
+concurrency:
+  group: stock-backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore the scanner's state (read only)
+        uses: actions/cache/restore@v4
+        with:
+          path: stock/data
+          key: stock-state-${{ github.run_id }}
+          restore-keys: stock-state-
+      - name: Restore the 5-minute bars fetched earlier today
+        uses: actions/cache/restore@v4
+        with:
+          path: stock-bt-cache
+          key: stock-bt5m-${{ github.run_id }}
+          restore-keys: stock-bt5m-
+      - name: Run the backtest
+        env:
+          DAYS: ${{ inputs.days }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          today=$(TZ=Asia/Taipei date +%F)
+          # bars fetched on another day are stale (the newest days would be missing)
+          find stock-bt-cache -mindepth 1 -maxdepth 1 ! -name "$today" -exec rm -rf {} + 2>/dev/null || true
+          case "$DAYS" in ''|*[!0-9]*) DAYS=30 ;; esac
+          python stock/backtest_sim.py --days "$DAYS" --out "$RUNNER_TEMP/bt-out" --cache-dir "stock-bt-cache/$today"
+      - name: Save the 5-minute bars
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: stock-bt-cache
+          key: stock-bt5m-${{ github.run_id }}
+      - name: Publish the result (branch stock-backtest)
+        run: |
+          git config --global user.name "sports-analyzer bot"
+          git config --global user.email "actions@users.noreply.github.com"
+          PUB="$RUNNER_TEMP/bt-pub"
+          git worktree add --orphan -b stock-backtest "$PUB"
+          cp "$RUNNER_TEMP/bt-out/sim_backtest.json" "$PUB/"
+          cd "$PUB"
+          git add sim_backtest.json
+          git commit -q -m "backtest: $(TZ=Asia/Taipei date '+%F %H:%M')"
+          git push -f origin stock-backtest
