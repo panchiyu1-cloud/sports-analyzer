@@ -10,6 +10,7 @@
   1. 盤中每幾秒看一次報價、每分鐘重新排名；這裡每 5 分鐘一次。「等 60 秒再確認」變成等下一根 5 分 K。
   2. 沒有歷史的內外盤資料：「外盤比 ≥ 50%」這個條件不檢查（和盤中資料還在累積時一樣，當作沒有意見）。
   3. 沒有當時的新聞與三大法人資料：排名只用技術面（盤中另外有新聞 ±8 分、法人幾分）。
+     Yahoo 沒有櫃買指數的 5 分 K：上櫃股票的「大盤偏弱」條件改看加權指數當時的漲跌。
   4. 買進價用「最後成交價往上一檔」（當作賣一價），市價賣出用最後成交價；停損在 5 分 K 內被碰到時，
      以停損價往下一檔成交（開盤就跳空跌破的用開盤價）；同一根 K 棒同時碰到停損與目標，算停損。
   5. 處置股、注意股、當天不能現股當沖的股票，程式分不出來。
@@ -293,6 +294,11 @@ class Day:
             prev = hist[-1][4] if hist else None
             rows = [r for r in (IDX5[key].get(self.day) or []) if r[0] < t]
             self.eng.index[key] = {"date": self.day, "price": rows[-1][4] if rows else None, "prev": prev}
+        tx, ox = self.eng.index["TAIEX"], self.eng.index["TPEX"]
+        if ox["price"] is None and ox["prev"] and tx["price"] and tx["prev"]:
+            # Yahoo 沒有櫃買指數的 5 分 K：用加權指數當時的漲跌幅代替（盤中兩者方向幾乎一致），
+            # 否則上櫃股票在大盤重挫的日子也會被放行，和實際執行不一樣
+            ox["price"] = ox["prev"] * tx["price"] / tx["prev"]
 
     def bar(self, code, start):
         for r in M5.get(code, {}).get(self.day, []):
@@ -411,6 +417,27 @@ def replay(days, steps_by_day, spread=1, overrides=None):
         SM.DEF.update(old)
 
 
+def quality(days):
+    """5 分 K 合成的日線和掃描程式的日 K 比對：收盤差超過 0.5%、最高最低差超過 1%、成交量差超過兩成各有多少。"""
+    n = bad_c = bad_hl = bad_v = 0
+    for code, by in M5.items():
+        idx = {d: i for i, d in enumerate(HDATES.get(code, []))}
+        for d in days:
+            rows, i = by.get(d), idx.get(d)
+            if not rows or i is None:
+                continue
+            b = HIST[code][i]
+            hi, lo, c, v = max(r[2] for r in rows), min(r[3] for r in rows), rows[-1][4], sum(r[5] for r in rows)
+            if not b[4] or not b[2] or not b[3]:
+                continue
+            n += 1
+            bad_c += abs(c / b[4] - 1) > 0.005
+            bad_hl += abs(hi / b[2] - 1) > 0.01 or abs(lo / b[3] - 1) > 0.01
+            bad_v += bool(b[5]) and not (0.8 <= v / b[5] <= 1.2)
+    pc = lambda x: round(x / n * 100, 2) if n else None  # noqa: E731
+    return {"stock_days": n, "close_off_pct": pc(bad_c), "hilo_off_pct": pc(bad_hl), "vol_off_pct": pc(bad_v)}
+
+
 def breakdown(trades):
     """交易分組統計：進場時段、股價、排名、當時大盤、出場原因以外的幾個角度。"""
     def grp(key):
@@ -462,6 +489,7 @@ def main():
     ap.add_argument("--workers", type=int, default=os.cpu_count() or 2)
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--no-fetch", action="store_true")
+    ap.add_argument("--reanalyze", action="store_true", help="不要用先前存下的排名，重算第一段")
     a = ap.parse_args()
     CFG.update(E.load_config() if not a.demo else dict(E.DEFAULT_CONFIG))
     t0 = time.time()
@@ -488,11 +516,26 @@ def main():
         return 1
     log(f"[回測] {len(days)} 個交易日：{days[0]} ～ {days[-1]}｜第一段：每 5 分鐘的即時排名（{a.workers} 個行程）")
     patch_clock()
-    if a.workers > 1:
-        with Pool(a.workers) as pool:
-            parts = pool.map(analyze_day, days, chunksize=1)
-    else:
-        parts = [analyze_day(d) for d in days]
+    spath = os.path.join(a.cache_dir, f"steps-{days[0]}-{days[-1]}-{len(days)}.json.gz")
+    parts = None
+    if not a.demo and not a.reanalyze and os.path.exists(spath):
+        try:
+            with gzip.open(spath, "rt", encoding="utf-8") as f:
+                saved = json.load(f)
+            parts = [(d, {int(t): v for t, v in s.items()}, g) for d, s, g in saved]
+            log(f"[回測] 第一段：讀回先前算好的排名（{spath}）")
+        except (OSError, ValueError):
+            parts = None
+    if parts is None:
+        if a.workers > 1:
+            with Pool(a.workers) as pool:
+                parts = pool.map(analyze_day, days, chunksize=1)
+        else:
+            parts = [analyze_day(d) for d in days]
+        if not a.demo and not any(g.get("error") for _, _, g in parts):
+            os.makedirs(a.cache_dir, exist_ok=True)
+            with gzip.open(spath, "wt", encoding="utf-8") as f:
+                json.dump(parts, f, separators=(",", ":"))
     steps_by_day = {d: s for d, s, _ in parts}
     diag = {d: g for d, _, g in parts}
     log(f"[回測] 第一段完成（{time.time() - t0:.0f} 秒）｜每天平均 {round(sum(g.get('stocks', 0) for g in diag.values()) / len(diag))} 檔有 5 分 K、"
@@ -506,6 +549,7 @@ def main():
                  "days": [[d, round((th[by[d]][4] / th[by[d] - 1][4] - 1) * 100, 2)] for d in days if d in by and by[d] > 0]}
     out = {"v": 1, "kind": "sim_backtest", "generated": real_now.strftime("%Y-%m-%d %H:%M"), "demo": a.demo,
            "from": days[0], "to": days[-1], "n_days": len(days), "step_min": STEP, "fetch": fetch, "diag": diag,
+           "quality": quality(days), "tpex_proxy": not any(IDX5["TPEX"].get(d) for d in days),
            "bench": bench, "variants": []}
     for key, label, spread, ov in VARIANTS:
         t1 = time.time()
