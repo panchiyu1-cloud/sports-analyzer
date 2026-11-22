@@ -1,7 +1,7 @@
 'use strict';
 /* 模擬戰（當沖）：假想帳戶照「當沖模式」的建議自動買賣，看績效。
    規則與成交都在掃描程式那一邊算（twscan/sim.py）；這裡只負責顯示。共用的小工具（$、api、esc、pct…）定義在 app.js。 */
-const SIM = { data: null, hist: null, tab: null, open: {}, loaded: 0, histN: -1, msg: '', sure: 0, mode: 'live', bt: null, btVar: 'main', btTried: false };
+const SIM = { data: null, hist: null, tab: null, open: {}, loaded: 0, histN: -1, msg: '', sure: 0, mode: 'live', bt: null, btVar: 'main', btTried: false, study: null };
 try { SIM.tab = localStorage.getItem('twscan.simTab'); } catch (e) { /* 無痕模式 */ }
 
 const simMoney = (n) => (n == null ? '—' : fmtInt(n) + ' 元');
@@ -282,7 +282,9 @@ async function simBtLoad() {
     if (!r.ok) return;
     const j = await r.json();
     if (j && j.v === 1 && Array.isArray(j.variants) && j.variants.length) SIM.bt = j;
-  } catch (e) { return; }
+    const r2 = await fetch((CLOUD ? '' : '/static/') + 'sim_study.json?d=' + new Date().toISOString().slice(0, 10), { cache: 'no-cache' });
+    if (r2.ok) { const k = await r2.json(); if (k && k.v === 1 && Array.isArray(k.variants)) SIM.study = k; }
+  } catch (e) { if (!SIM.bt) return; }
   if (S.view === 'sim') simRender();
 }
 
@@ -296,6 +298,24 @@ function simBtBreak(x) {
 }
 
 const SIM_VAR = { main: ['照模擬戰的規則', '買進算賣一價（成交價往上一檔）'], opt: ['樂觀的算法', '買在成交價、停損剛好成交'], nocap: ['單筆上限放寬', '一筆可以用到全部資金'] };
+
+const SIM_STUDY = { base: '現在的規則', regime: '大盤走空不做多', pullback: '不追強，等拉回再買', tick: '避開價差大的價位', all: '三項一起' };
+
+function simStudy() {
+  const k = SIM.study;
+  if (!k) return '';
+  const pass = k.variants.filter((v) => v.verdict === 'pass').length;
+  const half = (h) => `<td class="n num ${clsOf(h.pnl)}">${signed(h.pnl)}<small>${h.n} 筆</small></td>`;
+  const rows = k.variants.map((v) => `<tr style="cursor:default"><td>${esc(SIM_STUDY[v.key] || v.label)}<small>${v.verdict === 'pass' ? '過關' : v.verdict === 'thin' ? '筆數太少' : '沒過關'}</small></td>
+    ${half(v.h1)}${half(v.h2)}<td class="n num ${clsOf(v.all.pnl)}">${signed(v.all.pnl)}<small>${v.all.n} 筆・勝率 ${Math.round(v.all.win_rate || 0)}%</small></td></tr>`).join('');
+  const base = k.variants.find((v) => v.key === 'base');
+  return `<div class="panel" style="margin-top:14px"><h3>改法研究：${pass ? `有 ${pass} 種過關` : '幾種改法都沒有過關'}</h3>
+    <div class="t2" style="font-size:13.5px;line-height:1.75">把回測拉長到 ${k.n_days} 個交易日（${md(k.from)}–${md(k.to)}），分成前後兩半：前半加權指數 <b class="num ${clsOf(k.bench_halves[0])}">${pct(k.bench_halves[0])}</b>，後半 <b class="num ${clsOf(k.bench_halves[1])}">${pct(k.bench_halves[1])}</b>。
+      事先講定只測這幾種，而且${esc(k.rule)}。</div>
+    <div class="table-scroll" style="margin-top:8px"><table class="tbl rv-tbl sim-var sim-study"><thead><tr><th>改法</th><th class="n">前半</th><th class="n">後半</th><th class="n">全期</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="muted small">${base ? `現在的規則在大盤上漲的前半段也賠（${base.h1.n} 筆，${signed(base.h1.pnl)} 元），所以問題不只是後半段的大跌。` : ''}改法主要是讓進場次數變少、賠得少一點；沒有一種把訊號變成賺錢的。
+      做法：大盤走空＝加權在月線之下、或進場當時不是上漲；等拉回＝限價單掛在當日均價、30 分鐘有效、價格穿過才算成交；價差大＝一檔跳動超過股價的 0.25%。</div></div>`;
+}
 
 function simBtView() {
   const b = SIM.bt;
@@ -319,7 +339,8 @@ function simBtView() {
         ${b.quality && b.quality.stock_days ? `<li>資料核對：5 分 K 合起來的每日最高、最低價，${(100 - b.quality.hilo_off_pct).toFixed(1)}% 和日 K 一致（${fmtInt(b.quality.stock_days)} 筆）。Yahoo 的 5 分 K 多半沒有 13:30 最後一盤，但模擬戰 13:15 就出場，不受影響。</li>` : ''}</ul></details>
       <div class="table-scroll" style="margin-top:10px"><table class="tbl rv-tbl sim-var"><thead><tr><th>三種算法（點一列看）</th><th class="n">筆數</th><th class="n">勝率</th><th class="n">總損益</th><th class="n">回落</th></tr></thead><tbody>${rows}</tbody></table></div>
       <div class="muted small">回落＝帳戶從最高點最多少掉多少元。出現「可進場」${v.signals} 次，其中 ${v.cancels} 次等到下一根 K 棒條件已經不在，沒有買。回測時間 ${esc(b.generated)}。</div></div>
-    ${simAccount(d, b)}
+    ${simStudy()}
+    <div style="margin-top:14px">${simAccount(d, b)}</div>
     <div class="grid2" style="margin-top:14px">${simStats(d)}${simDays(d, 60)}</div>
     ${simBtBreak(v.extra)}
     <div style="margin-top:14px">${v.hist ? simHist(d, v.hist) : '<div class="panel empty">交易明細只列在第一種算法；其他兩種只比較總結果。</div>'}</div>`;

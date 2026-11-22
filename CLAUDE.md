@@ -686,6 +686,18 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   (-15.0%); stops 45, targets 14; -10.6% with no spread at all; -15.9% with the 50% cap lifted; negative before
   costs too. The signal showed no edge in this window: do not present 當沖模式 or the 模擬戰 as profitable, and
   do not pick a rule variant because it looks better on these 30 days (one falling month, 79 trades).
+- 改法研究 (owner, 2026-11-22, agreed beforehand: four changes only, 55 days in two halves, a change passes only
+  with profit after costs in both halves and >= 10 trades in each; `backtest_sim.py --study`, `STUDY`,
+  `PullbackSim`, workflow mode `study`). Window 08-31..11-20: first half TAIEX +6.4%, second -26.9%. Nothing
+  passed. Current rules 162 trades, 28% winners, -88,999, and -47,342 on 95 trades in the RISING half: the
+  crash is not the explanation. No long entries in a weak market (TAIEX below its 20-day average, or not up at
+  entry): 64 trades -41,751 (first half -42,884). Limit order at the day's average price instead of chasing:
+  121 trades -69,841. Skipping prices where a tick is > 0.25%: 153 trades -68,840. All three: 39 trades -24,658.
+  Winners stay at 27-32% where the 2:1 target needs about 40%; only a third of trades ever reach +1R; negative
+  before costs as well. The changes only trade less. So: the 可進場 signal has no day-trading edge that this
+  data can show; exits, filters and entry price were tried. Do not re-test these or neighbours of them on the
+  same 55 days and call it new evidence; a new idea needs its own pre-declared rule and data it has not seen
+  (the paper account's record from 2026-11-23 on). The page shows the summary (docs/stock/sim_study.json).
 - `Engine.recent_trading_dates` takes the union of the TAIEX history, the daily bars of a few
   stocks that trade every day (`BELLWETHER`) and the newest quote date. Yahoo's ^TWII series
   lacked 2026-11-16 during the 11-17 session: with the index alone, "the last finished day"
