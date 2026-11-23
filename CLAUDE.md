@@ -762,3 +762,15 @@ scripts/backtest_combos.py     combinations of them (組合篩選) -> data/combo
   the 模擬戰 or the page's "可進場" as profitable, and do not quote the +19% without the rest. Subgroups (shorts
   better than longs, 15:00-24:00 Taipei better than 00:00-15:00, metals better than stocks, the second half
   better than the first) come from one window and many comparisons: hypotheses for data not yet seen, not rules.
+- Targets at half distance (owner, 2026-11-23: 「停利都設定在目標價格的一半就好…會不會賺得比較多」; `planTp`, runs
+  halfA* / halfB*, same bars and analyses as the first result, `"reuse"` in bt_request.json). A = both targets
+  at half their distance: by the rules 940 trades, 50.8% winners, -0.032R (se 0.037), 1,000 -> 764 (-23.6%),
+  drawdown 46.9%, spread 423; one step later 835 trades, -0.023R, +9.9%; no spread +0.047R. B = everything out
+  at half of the final target: 891 trades, 40.2%, -0.051R, -33.9%; one step later 790 trades, +0.038R, +77.5%
+  (one day +308); no spread +0.040R. Against the unchanged rules (-27.7% / +19.1%) A loses less and earns less,
+  B loses more and earns more: the sign of the difference turns with the five-minute detail, and every average
+  sits within one or two standard errors of zero and of the others. What does change: more winners with A
+  (37% -> 51%) but smaller ones (8.73 -> 6.24 a win), more trades and more spread, smaller swings per trade.
+  No evidence that nearer targets make more. Nine runs now exist on these 60 days: never quote the best one
+  (+77.5%) as a finding; a variant worth believing has to be declared first and run on days not yet seen (a
+  second paper account on the page would do that).
