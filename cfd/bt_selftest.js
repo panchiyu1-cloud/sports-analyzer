@@ -72,7 +72,14 @@ const win = R.windowOf(9, END - STEP), rows = {};
     ok(mx <= 3 && clsMax <= 2 && !dupInst, v.key + ': never more than 3 positions, 2 per class, 1 per instrument', { mx, clsMax });
     ok(tr.every(p => p.heldMs <= 6 * H1 + STEP || p.reason === 'lost' || Mkt.closedAt(p.cls, p.openedAt + 6 * H1, !!p.wk) || bars(p.instId).filter(r => r[0] >= p.openedAt + 6 * H1 && r[0] < p.closedAt).length === 0), v.key + ': nothing is held past 6 hours of trading');
     ok(tr.every(p => p.riskUsd <= p.eq0 * (p.gate ? 0.02 : 0.01) + 1e-9), v.key + ': risk per trade follows the rules (2% of the equity when queued, 1% when the gate fails)');
-    if (v.noCost) ok(tr.every(p => p.costUsd === 0), 'nocost: no spread charged'); else ok(tr.every(p => p.costUsd > 0), v.key + ': every trade pays the spread');
+    { // 停利：沒改的照原計畫；改過的兩個停利都在原計畫的一半，停損不動
+      const rowAt = p => rows[p.instId].find(r => r[0] === p.created), eq = (a, b) => Math.abs(a - b) < 1e-9;
+      ok(tr.every(p => { const r = rowAt(p); if (!r || !r[9]) return false; const e = r[11], h1 = e + (r[13] - e) / 2, h2 = e + (r[14] - e) / 2;
+        return p.sl === r[12] && (!v.tp ? p.tp1 === r[13] && p.tp2 === r[14] : eq(p.tp2, h2) && eq(p.tp1, v.tp === 'half' ? h1 : h2)); }), v.key + ': targets are ' + (v.tp ? 'at half the plan\'s distance' : 'the plan\'s own') + ', the stop is the plan\'s');
+      if (v.tp) ok(tr.some(p => p.reason === 'tp2') && tr.filter(p => p.reason === 'tp2').every(p => p.exit === p.tp2 || p.gap), v.key + ': target exits fill at the new target');
+      if (v.tp === 'one') ok(tr.every(p => p.reason !== 'be') && tr.filter(p => p.tp1At).every(p => p.reason === 'tp2' && p.tp1At === p.closedAt && eq(p.r, Math.abs(p.tp2 - p.entry) / p.risk)), v.key + ': the whole position leaves at one price', tr.filter(p => p.tp1At && p.reason !== 'tp2').map(p => [p.reason, p.tp1At, p.closedAt]).slice(0, 3));
+    }
+    if (v.noCost) ok(tr.every(p => p.costUsd === 0), v.key + ': no spread charged'); else ok(tr.every(p => p.costUsd > 0), v.key + ': every trade pays the spread');
     if (v.key === 'rule') { const wk = tr.filter(p => p.wk); ok(tr.some(p => p.reason === 'sl') && tr.some(p => p.pnl > 0), 'rule: both winners and stops occur', rep.byReason); ok(wk.every(p => Math.abs(p.costRate - (P.DEF.cost[p.cls] / 100) * 5) < 1e-12), 'rule: weekend trades pay the weekend spread', wk.length);
       ok(rep.daily.length >= 9 && rep.trades.every(t => t.length === R.TRADE_COLS.length) && JSON.stringify(rep).length < 3e6, 'report is complete and compact'); }
     if (v.key === 'slow') { const base = R.simulate(P, insts, data, rows, win, R.VARIANTS[0]).st.hist.filter(p => !p.cancel && p.type === 'market'); ok(Math.min(...tr.filter(p => p.type === 'market').map(p => p.openedAt - p.created)) >= STEP && base.length > 0, 'slow: entries wait one more step'); }
@@ -80,6 +87,13 @@ const win = R.windowOf(9, END - STEP), rows = {};
   // 同樣的資料跑兩次，結果一樣
   const a = R.report(P, R.simulate(P, insts, data, rows, win, R.VARIANTS[0]), win, 'a', 'a'), b = R.report(P, R.simulate(P, insts, data, rows, win, R.VARIANTS[0]), win, 'a', 'a');
   ok(JSON.stringify(a) === JSON.stringify(b), 'deterministic');
+}
+{ // 停利的改法：只動兩個停利價
+  const pl = { type: 'market', side: 'long', name: 'x', entry: 100, sl: 98, tp1: 103, tp2: 106 }, sh = { type: 'limit', side: 'short', name: 'y', entry: 50, sl: 51, tp1: 48.5, tp2: 47 };
+  ok(JSON.stringify(R.planTp(pl, 'half')) === JSON.stringify({ type: 'market', side: 'long', name: 'x', entry: 100, sl: 98, tp1: 101.5, tp2: 103 }) && R.planTp(sh, 'half').tp1 === 49.25 && R.planTp(sh, 'half').tp2 === 48.5, 'half: both targets at half the distance');
+  ok(R.planTp(pl, 'one').tp1 === 103 && R.planTp(pl, 'one').tp2 === 103 && R.planTp(sh, 'one').tp1 === 48.5 && R.planTp(sh, 'one').sl === 51, 'one: both targets at half of the final target');
+  ok(R.planTp(pl) === pl && R.planTp(null, 'half') === null && pl.tp1 === 103, 'no mode: the plan is left alone (and never changed in place)');
+  ok(R.VARIANTS.slice(0, 3).map(v => v.key).join() === 'rule,slow,nocost' && R.VARIANTS.slice(0, 3).every(v => !v.tp), 'the first three runs are the unchanged rules');
 }
 { // (4) 資料檔的小工具
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfdbt-')), csv = 'open_time,open,high,low,close,volume,close_time,q,n,tb,tq,i\n1790000100000,2,3,1,2.5,10,1790000399999,0,0,0,0,0\n1790000400000,2.5,3,2,2.2,5,1790000699999,0,0,0,0,0\n';

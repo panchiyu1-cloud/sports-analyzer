@@ -50,7 +50,11 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ]; then
             IN_DAYS=$(node -e "console.log(require('./cfd/bt_request.json').days)")
             IN_STAGE=$(node -e "console.log(require('./cfd/bt_request.json').stage)")
+            # "reuse": "<date>-<days>" = run again on the bars and analyses of that earlier run (same window, comparable results)
+            IN_REUSE=$(node -e "console.log(require('./cfd/bt_request.json').reuse || '')")
           fi
+          case "$IN_REUSE" in *[!0-9-]*) IN_REUSE="" ;; esac
+          echo "BT_REUSE=$IN_REUSE" >> "$GITHUB_ENV"
           case "$IN_DAYS" in ''|*[!0-9]*) IN_DAYS=60 ;; esac
           if [ "$IN_STAGE" != "fetch" ]; then IN_STAGE=all; fi
           echo "BT_DAYS=$IN_DAYS" >> "$GITHUB_ENV"
@@ -67,6 +71,14 @@ jobs:
           restore-keys: cfd-bt-
       - name: Fetch the bars
         run: |
+          if [ -n "$BT_REUSE" ]; then
+            dir="cfd-bt-cache/$BT_REUSE"
+            if [ ! -f "$dir/fetch_report.json" ]; then echo "::error::the bars of $BT_REUSE are no longer in the cache"; exit 1; fi
+            echo "bars and analyses: reused from $BT_REUSE"
+            echo "BT_DIR=$dir" >> "$GITHUB_ENV"
+            echo "BT_KEEP=--keep-rows" >> "$GITHUB_ENV"
+            exit 0
+          fi
           dir="cfd-bt-cache/$(date -u +%F)-$BT_DAYS"
           # bars fetched on another day (or for another window) are stale
           find cfd-bt-cache -mindepth 1 -maxdepth 1 ! -name "$(basename "$dir")" -exec rm -rf {} + 2>/dev/null || true
@@ -74,7 +86,7 @@ jobs:
           echo "BT_DIR=$dir" >> "$GITHUB_ENV"
       - name: Replay
         if: env.BT_STAGE != 'fetch'
-        run: node cfd/bt_replay.js --cache "$BT_DIR" --out "$RUNNER_TEMP/bt-out" --days "$BT_DAYS"
+        run: node cfd/bt_replay.js --cache "$BT_DIR" --out "$RUNNER_TEMP/bt-out" --days "$BT_DAYS" $BT_KEEP
       - name: Save the cache
         if: always()
         uses: actions/cache/save@v4

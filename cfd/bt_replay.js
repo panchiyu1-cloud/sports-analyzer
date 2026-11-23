@@ -7,7 +7,7 @@ const fs = require('fs'), path = require('path'), os = require('os'), { spawn } 
 const L = require('./bt_lib.js'), { STEP, M15, H1, Agg } = L;
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
-const TF = '15m', WIN = 300, GRADES = 'ABCD', PT = { market: 'm', limit: 'l', stop: 's' }, PTN = { m: 'market', l: 'limit', s: 'stop' };
+const TF = '15m', WIN = 300, ROWS_V = 1, GRADES = 'ABCD', PT = { market: 'm', limit: 'l', stop: 's' }, PTN = { m: 'market', l: 'limit', s: 'stop' };
 
 /* 這些商品不列入：網頁上它們只有 Yahoo 的延遲報價（期貨、指數慢 10–15 分鐘），真正的模擬戰碰到報價延遲 3 分鐘以上就不進場，所以回測也不做 */
 const DELAYED = new Set(['CORN', 'WHEAT', 'SOYBEAN', 'COFFEE', 'SUGAR', 'COCOA', 'US30', 'US2000', 'GER40', 'TWSE']);
@@ -53,6 +53,13 @@ function rowsFor(P, inst, data, win) {
   return out;
 }
 
+/* 改停利的試算（使用者 2026-11-23：「停利設定在目標價格的一半就好，不用等到真的抵達目標價格」）。只改兩個停利價，進場價與停損不動。
+   half：停利 1、停利 2 都拉近一半（還是先平一半、其餘保本，再等停利 2）；one：走到「最終目標（停利 2）的一半」就全部出場（兩個停利設在同一個價位） */
+function planTp(pl, mode) {
+  if (!pl || !mode) return pl;
+  const e = pl.entry, h1 = e + (pl.tp1 - e) / 2, h2 = e + (pl.tp2 - e) / 2;
+  return Object.assign({}, pl, mode === 'half' ? { tp1: h1, tp2: h2 } : { tp1: h2, tp2: h2 });
+}
 /* ---------- 第二段：讓模擬戰照時間走一遍 ---------- */
 function simulate(P, insts, data, rows, win, opt) {
   const { E, Mkt, Sim } = P, cfg = Object.assign({ histFull: 1e9, histMax: 1e9 }, opt.cfg || {}), st = Sim.init(cfg, win.from);
@@ -88,7 +95,7 @@ function simulate(P, insts, data, rows, win, opt) {
       info[id] = { pUp: up, price, t, off: false, wk, grade, score, basis: 'src' };
       const ok = score >= 55, pv = s.sig; s.sig = pv && pv.dir === d && pv.ok === ok ? pv : { dir: d, ok, t: t - (opt.sigLead || 0) }; // 這個方向的「可進場」從什麼時候開始
       if (!d || r.length < 10) continue;
-      const g = s.sig, age = t - g.t, pl = r[9] ? { type: PTN[r[9]] || r[9], side: r[10], name: r[15], entry: r[11], sl: r[12], tp1: r[13], tp2: r[14] } : null;
+      const g = s.sig, age = t - g.t, pl = r[9] ? planTp({ type: PTN[r[9]] || r[9], side: r[10], name: r[15], entry: r[11], sl: r[12], tp1: r[13], tp2: r[14] }, opt.tp) : null;
       cands.push({ id, name: inst.name, code: inst.code, cls: inst.cls, dp: inst.dp, tf: TF, tfMs: M15, dir: d, score, grade, label: '', action: '', notes: [], prob: d > 0 ? up : r[7], gate: !!r[8], gateWhy: null, plan: pl, price, t,
         sigOk: !!(g.ok && age >= st.cfg.sigMs), sigWait: g.ok ? Math.max(0, st.cfg.sigMs - age) : 0, off: false, lag: 0, eventSoon: false, closeIn: Mkt.closeIn(inst.cls, t, wk), wk,
         cost: opt.noCost ? 0 : (P.DEF.cost[inst.cls] || 0) / 100 * (wk ? wkMul : 1), regime: r[16] || '', src: (data[id] && data[id].src) || '', basis: 'src', unit: null, news: '', inter: '', nextEv: '' });
@@ -130,6 +137,13 @@ const VARIANTS = [
   { key: 'rule', name: '照模擬戰的規則', sigLead: STEP },                      // 訊號第一次出現就當成已經出現一陣子（下一步、5 分鐘後仍然成立才成交）
   { key: 'slow', name: '進場再晚 5 分鐘', sigLead: 0 },                          // 訊號要連續兩步才排單，第三步才成交
   { key: 'nocost', name: '不算點差（只看訊號本身）', sigLead: STEP, noCost: true },
+  // 停利拉近一半的兩種讀法，各配同樣三種算法（照規則、晚 5 分鐘、不算點差），才能和上面三個一對一比較
+  { key: 'halfA', name: 'A：兩個停利都拉近一半', sigLead: STEP, tp: 'half' },
+  { key: 'halfA_slow', name: 'A＋進場再晚 5 分鐘', sigLead: 0, tp: 'half' },
+  { key: 'halfA_nocost', name: 'A＋不算點差', sigLead: STEP, tp: 'half', noCost: true },
+  { key: 'halfB', name: 'B：走到最終目標的一半就全部出場', sigLead: STEP, tp: 'one' },
+  { key: 'halfB_slow', name: 'B＋進場再晚 5 分鐘', sigLead: 0, tp: 'one' },
+  { key: 'halfB_nocost', name: 'B＋不算點差', sigLead: STEP, tp: 'one', noCost: true },
 ];
 
 /* ---------- 主程式 ---------- */
@@ -152,9 +166,11 @@ async function main() {
   }
   console.log(`window ${win.first} .. ${win.last} (${days} weekdays), ${insts.length} instruments, ${missing.length} without data${missing.length ? ': ' + missing.join(' ') : ''}`);
   // 第一段：分給幾個子程序平行算（資料與網頁沒變就沿用上次的結果）
-  const sig = require('crypto').createHash('sha1').update(fs.readFileSync(arg('page') || L.PAGE)).update(fs.readFileSync(__filename)).update(fs.readFileSync(require.resolve('./bt_lib.js'))).update(JSON.stringify(win)).digest('hex').slice(0, 12);
+  // 第一段只和這四樣有關：網頁、bt_lib.js、視窗、逐步分析的寫法（feeder / rowsFor 有改就把 ROWS_V 加一）。第二段怎麼改都不用重算第一段。
+  const sig = require('crypto').createHash('sha1').update(fs.readFileSync(arg('page') || L.PAGE)).update(fs.readFileSync(require.resolve('./bt_lib.js'))).update('rows-v' + ROWS_V).update(JSON.stringify(win)).digest('hex').slice(0, 12);
+  const keep = process.argv.includes('--keep-rows'); // 已經有的第一段結果照用（2026-11-22 那一次是用舊的戳記算的，內容相同）
   const stamp = id => sig + ':' + data[id].m5.length + ':' + data[id].m5[data[id].m5.length - 1][0] + ':' + (data[id].h1 || []).length;
-  const todo = insts.filter(i => { const f = path.join(cache, 'rows', i.id + '.json.gz'), s = path.join(cache, 'rows', i.id + '.stamp'); return !(fs.existsSync(f) && fs.existsSync(s) && fs.readFileSync(s, 'utf8') === stamp(i.id)); });
+  const todo = insts.filter(i => { const f = path.join(cache, 'rows', i.id + '.json.gz'), s = path.join(cache, 'rows', i.id + '.stamp'); if (keep && fs.existsSync(f)) { fs.writeFileSync(s, stamp(i.id)); return false; } return !(fs.existsSync(f) && fs.existsSync(s) && fs.readFileSync(s, 'utf8') === stamp(i.id)); });
   if (todo.length) {
     const jobs = Math.max(1, Math.min(parseInt(arg('jobs', '0'), 10) || os.cpus().length, todo.length)), bins = Array.from({ length: jobs }, () => ({ w: 0, ids: [] }));
     for (const i of todo.slice().sort((a, b) => data[b.id].m5.length - data[a.id].m5.length)) { const b = bins.reduce((x, y) => (y.w < x.w ? y : x)); b.ids.push(i.id); b.w += data[i.id].m5.length; }
@@ -182,4 +198,4 @@ async function main() {
   console.log('wrote ' + path.join(out, 'sim_backtest.json'));
 }
 if (require.main === module) main().catch(e => { console.error(e && e.stack ? e.stack : e); process.exit(1); });
-module.exports = { windowOf, feeder, rowsFor, simulate, report, VARIANTS, DELAYED, TRADE_COLS, WIN };
+module.exports = { windowOf, feeder, rowsFor, simulate, report, planTp, VARIANTS, DELAYED, TRADE_COLS, WIN };
